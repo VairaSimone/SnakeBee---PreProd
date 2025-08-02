@@ -23,6 +23,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import stripeRouter from './routes/Stripe.router.js';
 import Stripe from 'stripe';
+import User from './models/User.js';
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 
@@ -90,6 +91,21 @@ app.post('/api/stripe/webhook', express.raw({ type: 'application/json' }), async
       await user.save();
       break;
     }
+
+    case 'invoice.paid': {
+  const invoice = event.data.object;
+  const subscription = await stripe.subscriptions.retrieve(invoice.subscription);
+
+  const customerId = subscription.customer;
+  const user = await User.findOne({ 'subscription.stripeCustomerId': customerId });
+  if (!user) break;
+
+  user.subscription.status = subscription.status;
+  user.subscription.currentPeriodEnd = new Date(subscription.current_period_end * 1000);
+  await user.save();
+  break;
+}
+
 
     case 'customer.subscription.updated':
     case 'customer.subscription.deleted': {
