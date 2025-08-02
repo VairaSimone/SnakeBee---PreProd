@@ -41,7 +41,7 @@ subscription: {
     default: null
   },
   currentPeriodEnd: { type: Date },
-  plan: { type: String, enum: ['basic', 'premium', null], default: null }
+  plan: { type: String, enum: ['free','basic', 'premium', null], default: 'free' }
 },
 
         isVerified: {

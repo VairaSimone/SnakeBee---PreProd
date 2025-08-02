@@ -11,9 +11,9 @@ const createCheckoutSession = async (req, res) => {
     if (!['basic', 'premium'].includes(plan)) {
       return res.status(400).json({ message: 'Piano non valido' });
     }
-if (!process.env.STRIPE_PRICE_ID_BASIC || !process.env.STRIPE_PRICE_ID_PREMIUM) {
-  throw new Error('Missing Stripe Price IDs in environment variables');
-}
+    if (!process.env.STRIPE_PRICE_ID_BASIC || !process.env.STRIPE_PRICE_ID_PREMIUM) {
+      throw new Error('Missing Stripe Price IDs in environment variables');
+    }
 
     const user = await User.findById(userId);
     if (!user) return res.status(404).json({ message: 'Utente non trovato' });
@@ -54,7 +54,7 @@ if (!process.env.STRIPE_PRICE_ID_BASIC || !process.env.STRIPE_PRICE_ID_PREMIUM) 
 };
 
 
- const getSessionDetails = async (req, res) => {
+const getSessionDetails = async (req, res) => {
   try {
     const { sessionId } = req.params;
     const session = await stripe.checkout.sessions.retrieve(sessionId, {
@@ -79,7 +79,7 @@ if (!process.env.STRIPE_PRICE_ID_BASIC || !process.env.STRIPE_PRICE_ID_PREMIUM) 
   }
 };
 
- const handleStripeWebhook = async (req, res) => {
+const handleStripeWebhook = async (req, res) => {
 
   const sig = req.headers['stripe-signature'];
 
@@ -117,12 +117,19 @@ if (!process.env.STRIPE_PRICE_ID_BASIC || !process.env.STRIPE_PRICE_ID_PREMIUM) 
         if (!user.subscription.stripeCustomerId) {
           user.subscription.stripeCustomerId = customerId;
         }
+        const periodEnd = subscription.current_period_end
+          ? new Date(subscription.current_period_end * 1000)
+          : null; // o throw, a seconda della tua logica
 
+        if (!periodEnd || isNaN(periodEnd.getTime())) {
+          console.error('Invalid subscription.current_period_end:', subscription.current_period_end);
+          return res.status(500).send('Invalid current_period_end from Stripe');
+        }
         user.subscription = {
           ...user.subscription,
           stripeSubscriptionId: subscription.id,
           status: subscription.status,
-          currentPeriodEnd: new Date(subscription.current_period_end * 1000),
+          currentPeriodEnd: periodEnd,
           plan: subscription.items.data[0].price.id === process.env.STRIPE_PRICE_ID_PREMIUM ? 'premium' : 'basic'
         };
 
@@ -132,14 +139,24 @@ if (!process.env.STRIPE_PRICE_ID_BASIC || !process.env.STRIPE_PRICE_ID_PREMIUM) 
 
       case 'invoice.paid': {
         const invoice = event.data.object;
+        if (!invoice.subscription) {
+          console.error('[Stripe] Missing subscription ID in invoice.paid event:', invoice.id);
+          return res.status(400).send('Missing subscription ID');
+        }
         const subscription = await stripe.subscriptions.retrieve(invoice.subscription);
 
         const customerId = subscription.customer;
         const user = await User.findOne({ 'subscription.stripeCustomerId': customerId });
         if (!user) return res.status(404).send('User not found');
+        const periodEnd = subscription.current_period_end
+          ? new Date(subscription.current_period_end * 1000)
+          : null;
 
+        if (!periodEnd || isNaN(periodEnd.getTime())) {
+          console.warn(`[Stripe] Invalid or missing current_period_end in subscription.${type.split('.').pop()}:`, subscription.id);
+        }
         user.subscription.status = subscription.status;
-        user.subscription.currentPeriodEnd = new Date(subscription.current_period_end * 1000);
+        user.subscription.currentPeriodEnd = periodEnd;
         await user.save();
         break;
       }
@@ -158,14 +175,49 @@ if (!process.env.STRIPE_PRICE_ID_BASIC || !process.env.STRIPE_PRICE_ID_PREMIUM) 
         break;
       }
 
+      case 'customer.subscription.created': {
+        const subscription = event.data.object;
+
+        const customerId = subscription.customer;
+        const user = await User.findOne({ 'subscription.stripeCustomerId': customerId });
+        if (!user) return res.status(404).send('User not found');
+
+        const periodEnd = subscription.current_period_end
+          ? new Date(subscription.current_period_end * 1000)
+          : null;
+
+        if (!periodEnd || isNaN(periodEnd.getTime())) {
+          console.error('[Stripe] Invalid current_period_end in subscription.created:', subscription.current_period_end);
+          return res.status(500).send('Invalid current_period_end');
+        }
+
+        user.subscription = {
+          ...user.subscription,
+          stripeSubscriptionId: subscription.id,
+          status: subscription.status,
+          currentPeriodEnd: periodEnd,
+          plan: subscription.items.data[0].price.id === process.env.STRIPE_PRICE_ID_PREMIUM ? 'premium' : 'basic'
+        };
+
+        await user.save();
+        break;
+      }
+
       case 'customer.subscription.updated':
       case 'customer.subscription.deleted': {
         const subscription = event.data.object;
         const user = await User.findOne({ 'subscription.stripeSubscriptionId': subscription.id });
         if (!user) return res.status(404).send('User not found');
+        const periodEnd = subscription.current_period_end
+          ? new Date(subscription.current_period_end * 1000)
+          : null;
 
+        if (!periodEnd || isNaN(periodEnd.getTime())) {
+          console.error('[Stripe] Invalid current_period_end in invoice.paid:', subscription.current_period_end);
+          return res.status(500).send('Invalid current_period_end');
+        }
         user.subscription.status = subscription.status;
-        user.subscription.currentPeriodEnd = new Date(subscription.current_period_end * 1000);
+        user.subscription.currentPeriodEnd = periodEnd;
         await user.save();
         break;
       }
