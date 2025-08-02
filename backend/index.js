@@ -22,7 +22,8 @@ import foodInventoryRoute from './routes/FoodInventory.router.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import stripeRouter from './routes/Stripe.router.js';
-
+import Stripe from 'stripe';
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 
 const __filename = fileURLToPath(import.meta.url);
