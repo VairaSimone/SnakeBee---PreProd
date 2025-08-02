@@ -21,6 +21,7 @@ import cloudinaryRouter from './routes/Cloudinary.router.js';
 import foodInventoryRoute from './routes/FoodInventory.router.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import stripeRouter from './routes/Stripe.router.js';
 
 
 
@@ -38,7 +39,7 @@ app.set('trust proxy', 1);
 
 const allowedOrigins = [process.env.FRONTEND_URL,   'http://localhost:3000', // sviluppo
   'http://snakebee.it',    // produzione
-  'https://snakebee.it',];
+  'https://snakebee.it','https://blog-api-ten-flax.vercel.app'];
 
 app.use(cors({
   origin: function (origin, callback) {
@@ -51,6 +52,64 @@ app.use(cors({
   credentials: true,
 }));
 app.use(cookieParser())
+
+app.post('/api/stripe/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
+  const sig = req.headers['stripe-signature'];
+
+  let event;
+  try {
+    event = stripe.webhooks.constructEvent(
+      req.body,
+      sig,
+      process.env.STRIPE_WEBHOOK_SECRET
+    );
+  } catch (err) {
+    console.log('Webhook signature verification failed.', err.message);
+    return res.status(400).send(`Webhook Error: ${err.message}`);
+  }
+
+  // Gestione eventi
+  switch (event.type) {
+    case 'checkout.session.completed': {
+      const session = event.data.object;
+      const customerId = session.customer;
+
+      const user = await User.findOne({ 'subscription.stripeCustomerId': customerId });
+      if (!user) break;
+
+      const subscription = await stripe.subscriptions.retrieve(session.subscription);
+
+      user.subscription = {
+        ...user.subscription,
+        stripeSubscriptionId: subscription.id,
+        status: subscription.status,
+        currentPeriodEnd: new Date(subscription.current_period_end * 1000),
+        plan: subscription.items.data[0].price.id === process.env.STRIPE_PRICE_ID_PREMIUM ? 'premium' : 'basic'
+      };
+      await user.save();
+      break;
+    }
+
+    case 'customer.subscription.updated':
+    case 'customer.subscription.deleted': {
+      const subscription = event.data.object;
+      const user = await User.findOne({ 'subscription.stripeSubscriptionId': subscription.id });
+      if (!user) break;
+
+      user.subscription.status = subscription.status;
+      user.subscription.currentPeriodEnd = new Date(subscription.current_period_end * 1000);
+      await user.save();
+      break;
+    }
+
+    default:
+      console.log(`Unhandled event type ${event.type}`);
+  }
+
+  res.json({ received: true });
+});
+
+
 app.use(express.json({ limit: '10kb' }));
 app.use(morgan("dev"))
 app.use(helmet())
@@ -66,6 +125,7 @@ mongoose
   app.get('/api/ping', (req, res) => {
   res.status(200).send('OK');
 });
+app.use('/api/stripe', stripeRouter);
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/api/inventory', foodInventoryRoute);
 app.use('/api/cloudinary', cloudinaryRouter);
