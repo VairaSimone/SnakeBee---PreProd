@@ -1,5 +1,5 @@
 import express from 'express';
-import stripeController from '../controllers/Stripe_controller.js';
+import {stripeController, getSessionDetails} from '../controllers/Stripe_controller.js';
 import { authenticateJWT } from '../middlewares/Auth.js';
 
 const stripeRouter = express.Router();
