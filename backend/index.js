@@ -25,6 +25,7 @@ import stripeRouter from './routes/Stripe.router.js';
 import Stripe from 'stripe';
 import User from './models/User.js';
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+import stripeController from './controllers/Stripe_controller.js';
 
 
 const __filename = fileURLToPath(import.meta.url);
@@ -55,76 +56,8 @@ app.use(cors({
 }));
 app.use(cookieParser())
 
-app.post('/api/stripe/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
-  const sig = req.headers['stripe-signature'];
-
-  let event;
-  try {
-    event = stripe.webhooks.constructEvent(
-      req.body,
-      sig,
-      process.env.STRIPE_WEBHOOK_SECRET
-    );
-  } catch (err) {
-    console.log('Webhook signature verification failed.', err.message);
-    return res.status(400).send(`Webhook Error: ${err.message}`);
-  }
-
-  // Gestione eventi
-  switch (event.type) {
-    case 'checkout.session.completed': {
-      const session = event.data.object;
-      const customerId = session.customer;
-
-      const user = await User.findOne({ 'subscription.stripeCustomerId': customerId });
-      if (!user) break;
-
-      const subscription = await stripe.subscriptions.retrieve(session.subscription);
-
-      user.subscription = {
-        ...user.subscription,
-        stripeSubscriptionId: subscription.id,
-        status: subscription.status,
-        currentPeriodEnd: new Date(subscription.current_period_end * 1000),
-        plan: subscription.items.data[0].price.id === process.env.STRIPE_PRICE_ID_PREMIUM ? 'premium' : 'basic'
-      };
-      await user.save();
-      break;
-    }
-
-    case 'invoice.paid': {
-  const invoice = event.data.object;
-  const subscription = await stripe.subscriptions.retrieve(invoice.subscription);
-
-  const customerId = subscription.customer;
-  const user = await User.findOne({ 'subscription.stripeCustomerId': customerId });
-  if (!user) break;
-
-  user.subscription.status = subscription.status;
-  user.subscription.currentPeriodEnd = new Date(subscription.current_period_end * 1000);
-  await user.save();
-  break;
-}
-
-
-    case 'customer.subscription.updated':
-    case 'customer.subscription.deleted': {
-      const subscription = event.data.object;
-      const user = await User.findOne({ 'subscription.stripeSubscriptionId': subscription.id });
-      if (!user) break;
-
-      user.subscription.status = subscription.status;
-      user.subscription.currentPeriodEnd = new Date(subscription.current_period_end * 1000);
-      await user.save();
-      break;
-    }
-
-    default:
-      console.log(`Unhandled event type ${event.type}`);
-  }
-
-  res.json({ received: true });
-});
+// IMPORTANTE: questa route DEVE essere dichiarata prima di express.json()
+app.post('/api/stripe/webhook', express.raw({ type: 'application/json' }), stripeController.handleStripeWebhook)
 
 
 app.use(express.json({ limit: '10kb' }));
