@@ -2,7 +2,11 @@ import Stripe from 'stripe';
 import User from '../models/User.js';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-
+const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
+if (!endpointSecret) {
+  // Fallire subito all’avvio se manca la secret, così te ne accorgi subito
+  throw new Error('⚠️ STRIPE_WEBHOOK_SECRET non definita in env!');
+}
 const createCheckoutSession = async (req, res) => {
   try {
     const { plan } = req.body;
@@ -71,7 +75,7 @@ const getSessionDetails = async (req, res) => {
       amount_total: session.amount_total,
       planName,
       customer_email: session.customer_details.email,
-      subscriptionId: session.subscription,
+       subscriptionId: session.subscription.id
     });
   } catch (error) {
     console.error('Errore getSessionDetails:', error);
@@ -80,182 +84,95 @@ const getSessionDetails = async (req, res) => {
 };
 
 const handleStripeWebhook = async (req, res) => {
-
-  const sig = req.headers['stripe-signature'];
-
+const sig = req.headers['stripe-signature'];
   let event;
+
   try {
-    event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
+    // Se la raw body non è esattamente quella inviata da Stripe, scatta l’errore
+    event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
   } catch (err) {
-    console.error('[Stripe] Webhook signature verification failed:', err.message);
+    console.error('⚠️ Webhook signature verification failed:', err.message);
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
-  const { type, id } = event;
+  const data = event.data.object;
+  const type = event.type;
 
-  console.log(`[Stripe] Webhook received: ${type} (${id})`);
+  // Helper per aggiornare lo stato sul DB
+  const updateSubscription = async ({ customerId, status, periodEnd, plan }) => {
+    const user = await User.findOne({ 'subscription.stripeCustomerId': customerId });
+    if (!user) {
+      console.warn(`Utente non trovato per customer ${customerId}`); // potrebbe succedere se migrano dati fuori sync
+      return;
+    }
+    user.subscription.status = status;
+    if (periodEnd) user.subscription.currentPeriodEnd = new Date(periodEnd * 1000);
+    if (plan) user.subscription.plan = plan;
+    await user.save();
+  };
 
   try {
     switch (type) {
-      case 'checkout.session.completed': {
-        const session = event.data.object;
-
-        if (!session.customer || !session.subscription) {
-          console.warn(`[Stripe] Missing customer or subscription in session: ${session.id}`);
-          return res.status(400).send('Missing customer or subscription');
+      case 'checkout.session.completed':
+        // Abbonamento iniziato
+        if (data.mode === 'subscription') {
+          await updateSubscription({
+            customerId: data.customer,
+            status: 'active',
+            periodEnd: data.subscription.current_period_end,
+            plan: data.metadata.plan || null,
+          });
         }
-
-        const customerId = session.customer;
-        const subscriptionId = session.subscription;
-
-        const user = await User.findOne({ 'subscription.stripeCustomerId': customerId });
-        if (!user) return res.status(404).send('User not found');
-
-        const subscription = await stripe.subscriptions.retrieve(subscriptionId);
-
-        // Assicura che il customerId sia salvato
-        if (!user.subscription.stripeCustomerId) {
-          user.subscription.stripeCustomerId = customerId;
-        }
-        const periodEnd = subscription.current_period_end
-          ? new Date(subscription.current_period_end * 1000)
-          : null; // o throw, a seconda della tua logica
-
-        if (!periodEnd || isNaN(periodEnd.getTime())) {
-          console.error('Invalid subscription.current_period_end:', subscription.current_period_end);
-          return res.status(500).send('Invalid current_period_end from Stripe');
-        }
-        user.subscription = {
-          ...user.subscription,
-          stripeSubscriptionId: subscription.id,
-          status: subscription.status,
-          currentPeriodEnd: periodEnd,
-          plan: subscription.items.data[0].price.id === process.env.STRIPE_PRICE_ID_PREMIUM ? 'premium' : 'basic'
-        };
-
-        await user.save();
         break;
-      }
 
-      case 'invoice.paid': {
-        const invoice = event.data.object;
-        if (!invoice.subscription) {
-          console.error('[Stripe] Missing subscription ID in invoice.paid event:', invoice.id);
-          return res.status(400).send('Missing subscription ID');
-        }
-        const subscription = await stripe.subscriptions.retrieve(invoice.subscription);
-
-        const customerId = subscription.customer;
-        const user = await User.findOne({ 'subscription.stripeCustomerId': customerId });
-        if (!user) return res.status(404).send('User not found');
-        const periodEnd = subscription.current_period_end
-          ? new Date(subscription.current_period_end * 1000)
-          : null;
-
-        if (!periodEnd || isNaN(periodEnd.getTime())) {
-          console.warn(`[Stripe] Invalid or missing current_period_end in subscription.${type.split('.').pop()}:`, subscription.id);
-        }
-        user.subscription.status = subscription.status;
-        user.subscription.currentPeriodEnd = periodEnd;
-        await user.save();
+      case 'invoice.payment_succeeded':
+        // Pagamento ricorrente OK: mantieni attivo
+        await updateSubscription({
+          customerId: data.customer,
+          status: 'active',
+          periodEnd: data.lines.data[0].period.end,
+        });
         break;
-      }
 
-      case 'invoice.payment_failed': {
-        const invoice = event.data.object;
-        const customerId = invoice.customer;
-
-        const user = await User.findOne({ 'subscription.stripeCustomerId': customerId });
-        if (!user) return res.status(404).send('User not found');
-
-        user.subscription.status = 'past_due';
-        await user.save();
-
-        console.warn(`[Stripe] Payment failed for user ${user.email}`);
+      case 'invoice.payment_failed':
+        // Fallimento pagamento: potresti inviare email o sospendere
+        await updateSubscription({
+          customerId: data.customer,
+          status: 'past_due',
+        });
+        // TODO: invia email di sollecito
         break;
-      }
-
-      case 'customer.subscription.created': {
-        const subscription = event.data.object;
-
-        const customerId = subscription.customer;
-        const user = await User.findOne({ 'subscription.stripeCustomerId': customerId });
-        if (!user) return res.status(404).send('User not found');
-
-        const periodEnd = subscription.current_period_end
-          ? new Date(subscription.current_period_end * 1000)
-          : null;
-
-        if (!periodEnd || isNaN(periodEnd.getTime())) {
-          console.error('[Stripe] Invalid current_period_end in subscription.created:', subscription.current_period_end);
-          return res.status(500).send('Invalid current_period_end');
-        }
-
-        user.subscription = {
-          ...user.subscription,
-          stripeSubscriptionId: subscription.id,
-          status: subscription.status,
-          currentPeriodEnd: periodEnd,
-          plan: subscription.items.data[0].price.id === process.env.STRIPE_PRICE_ID_PREMIUM ? 'premium' : 'basic'
-        };
-
-        await user.save();
-        break;
-      }
 
       case 'customer.subscription.updated':
-      case 'customer.subscription.deleted': {
-        const subscription = event.data.object;
-        const user = await User.findOne({ 'subscription.stripeSubscriptionId': subscription.id });
-        if (!user) return res.status(404).send('User not found');
-        const periodEnd = subscription.current_period_end
-          ? new Date(subscription.current_period_end * 1000)
-          : null;
-
-        if (!periodEnd || isNaN(periodEnd.getTime())) {
-          console.error('[Stripe] Invalid current_period_end in invoice.paid:', subscription.current_period_end);
-          return res.status(500).send('Invalid current_period_end');
-        }
-        user.subscription.status = subscription.status;
-        user.subscription.currentPeriodEnd = periodEnd;
-        await user.save();
+        // Aggiornamento abbonamento (es. cambio piano, riattivo, cancellazioni)
+        await updateSubscription({
+          customerId: data.customer,
+          status: data.status,
+          periodEnd: data.current_period_end,
+          plan: data.items.data[0].price.nickname || null,
+        });
         break;
-      }
 
-      case 'checkout.session.expired': {
-        const session = event.data.object;
-        console.log(`[Stripe] Checkout session expired: ${session.id}`);
-        // Qui potresti loggare o notificare l’utente
+      case 'customer.subscription.deleted':
+        // Cancellazione definitiva
+        await updateSubscription({
+          customerId: data.customer,
+          status: 'canceled',
+        });
         break;
-      }
-
-      case 'customer.deleted': {
-        const customer = event.data.object;
-        const user = await User.findOne({ 'subscription.stripeCustomerId': customer.id });
-        if (!user) return res.status(404).send('User not found');
-
-        user.subscription = {
-          stripeCustomerId: null,
-          stripeSubscriptionId: null,
-          status: null,
-          currentPeriodEnd: null,
-          plan: null
-        };
-        await user.save();
-        break;
-      }
 
       default:
-        console.log(`[Stripe] Unhandled event type: ${type}`);
+        // Eventi non gestiti esplicitamente: loggarli per debug
+        console.log(`⚡ Evento Stripe ricevuto ma ignorato: ${type}`);
     }
 
-    // ✅ Risposta OK a Stripe
-    res.status(200).send('received');
-  } catch (error) {
-    console.error(`[Stripe] Error handling ${type}:`, error);
-    res.status(500).send('Webhook internal error');
+    // Risposta 2xx a Stripe per non ripetere
+    res.json({ received: true });
+  } catch (err) {
+    console.error('❌ Errore interno nel webhook handler:', err);
+    // Status 500 fa sì che Stripe riprovi dopo qualche ora (fino a 3 giorni)
+    res.status(500).send('Internal Server Error');
   }
 };
-
 
 export default { createCheckoutSession, getSessionDetails, handleStripeWebhook };
