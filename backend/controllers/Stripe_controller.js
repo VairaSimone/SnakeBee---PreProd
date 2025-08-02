@@ -54,4 +54,29 @@ if (!process.env.STRIPE_PRICE_ID_BASIC || !process.env.STRIPE_PRICE_ID_PREMIUM) 
 };
 
 
-export default { createCheckoutSession };
+ const getSessionDetails = async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    const session = await stripe.checkout.sessions.retrieve(sessionId, {
+      expand: ['subscription', 'line_items.data.price.product']
+    });
+
+    if (!session) return res.status(404).json({ message: 'Sessione non trovata' });
+
+    const planName = session.line_items.data[0].price.product.name || 'N/A';
+
+    res.json({
+      id: session.id,
+      status: session.payment_status,
+      amount_total: session.amount_total,
+      planName,
+      customer_email: session.customer_details.email,
+      subscriptionId: session.subscription,
+    });
+  } catch (error) {
+    console.error('Errore getSessionDetails:', error);
+    res.status(500).json({ message: 'Errore nel recupero sessione Stripe' });
+  }
+};
+
+export default { createCheckoutSession, getSessionDetails };
