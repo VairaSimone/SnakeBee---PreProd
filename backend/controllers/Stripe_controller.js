@@ -40,6 +40,9 @@ const createCheckoutSession = async (req, res) => {
       mode: 'subscription',
       payment_method_types: ['card'],
       customer: user.subscription.stripeCustomerId,
+        metadata: {
+    plan,
+  },
       line_items: [
         {
           price: plan === 'basic' ? process.env.STRIPE_PRICE_ID_BASIC : process.env.STRIPE_PRICE_ID_PREMIUM,
