@@ -1,14 +1,35 @@
 Cose da fare:
 
-✅ 1. Utenti furbi che creano più account free
-❗️Problema:
-Ti faranno aggirare il limite dei 10 rettili. Non fidarti dell’utente medio: è creativo.
-Soluzioni:
-Tracking IP: grezza ma utile.
-Email verification + blocco su mail temporanee (Mailinator, ecc.) 
+1. Utenti furbi che creano più account free
+USER: registrationInfo: {
+  ip: String,
+  userAgent: String,
+  createdAt: Date
+}
 
-✅ 2. Pesi in grammi e kg
-mettere tutti i pesi in gr e kg. 
+
+2. Pesi in grammi e kg
+Feeding:     weightPerUnit:      { type: Number, required: true },    // ← qui
+
+
+
+6. Eliminare immagini inutili
+8. Da "dati madre/padre" a "morph madre/padre" + consanguineità
+
+12. Audit log
+schema log
+
+7. Migliorare accoppiamenti
+reptile:  stats: {
+    breedings: { type: Number, default: 0 },
+    successCount: { type: Number, default: 0 },
+    offspringCount: { type: Number, default: 0 }
+  }
+
+ 10. Gestione permessi admin e ban utenti
+🔧 Idee:
+Sistema roles: user, admin, mod, banned
+Dashboard admin: CRUD utenti, log accessi, flag di abuso
 
 ✅ 3. Backup automatici
 🔧 Idee:
@@ -16,10 +37,6 @@ MongoDB: usa mongodump con cronjob giornaliero.
 
 Archiviali su:
 Dropbox (API), Google Drive, o un bucket S3
-
-✅ 4. Piani a pagamento
- pensare a come mettere tre piani a pagamento e come sblocca le funzionalità
-Provare usare paddle altrimenti stripe.
 
 ✅ 5. Auto-restart se crashano Node e React
 🔧 Soluzione:
@@ -33,59 +50,26 @@ React: se è una SPA, servita da NGINX, non crasha. Se usi vite dev, no buono: m
 
 PM2 monitora anche uso RAM e CPU, può loggare crash.
 
-
-✅ 6. Eliminare immagini inutili
-🔧 Suggerimento:
-Quando cancelli un rettile o account:
-
-Triggera una funzione che elimina anche i file associati.
-
-
-✅ 7. Migliorare accoppiamenti
-Idee:
-Tabella o schema accoppiamenti con:
-
-Data inizio e fine
-
-Esito (fecondo, infertile, aborto)
-
-Uova deposte: numero, incubazione, nati vivi
-
-✅ 8. Da "dati madre/padre" a "morph madre/padre" + consanguineità
-
 ✅ 9. Inserire lingua inglese, se si vuole anche tedesco e francese
 🔧 Soluzioni:
 React: react-i18next
 
 Node.js: middleware i18n per messaggi server, anche nei log/errori
 
-✅ 10. Gestione permessi admin e ban utenti
-🔧 Idee:
-Sistema roles: user, admin, mod, banned
-Dashboard admin: CRUD utenti, log accessi, flag di abuso
 
-✅ 11. Statistiche
-🔧 Dashboard:
-Rettile più pesante
-
-Frequenza alimentazione media
-
-Percentuali muta/accoppiamenti riusciti
-
-Peso medio, crescita mensile
-
-Grafici in React con Chart.js o Recharts
-
-✅ 12. Audit log
- Fatto bene:
-Tabella logs o actions:
-
-user_id
-
-tipo azione (edit_rettile, delete_img, login_fail, ecc.)
-
-timestamp
-
-old_value / new_value
-
-Crea funzione helper logAction(user, action, details)
+✅ 4. Piani a pagamento
+user: subscription: {
+  plan: {
+    type: String,
+    enum: ['free', 'hobby', 'pro'],
+    default: 'free'
+  },
+  paddleUserId: String, // ID dell'utente su Paddle
+  subscriptionId: String, // ID dell'abbonamento su Paddle
+  nextBillingDate: Date,
+  status: {
+    type: String,
+    enum: ['active', 'past_due', 'canceled', 'paused'],
+    default: 'active'
+  }
+}

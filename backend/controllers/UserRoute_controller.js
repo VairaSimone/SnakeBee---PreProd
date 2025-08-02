@@ -8,6 +8,8 @@ import Breeding from '../models/Breeding.js';
 import RevokedToken from "../models/RevokedToken.js";
 import jwt from "jsonwebtoken";
 import cloudinary from '../config/CloudinaryConfig.js'; 
+import { deleteFileIfExists } from "../utils/deleteFileIfExists.js";
+import { logAction } from "../utils/logAction.js";
 
 export const GetAllUser = async (req, res) => {
   try {
@@ -62,8 +64,12 @@ export const PutUser = async (req, res) => {
     if (req.file) {
       // Qui prendi il file salvato da multer
       // Costruisci l'URL o path locale (dipende da come servi i file)
+         if (user.avatar) {
+        await deleteFileIfExists(user.avatar);
+      }
       userData.avatar = `/uploads/${req.file.filename}`;
     }
+     await logAction(req.user.userid, "Moodify User");
 
     const fieldsAllowed = ['name', 'avatar'];
     const updates = {};
@@ -120,6 +126,11 @@ export const DeleteUser = async (req, res) => {
       await Feeding.deleteMany({ reptile: reptile._id });
       await Event.deleteMany({ reptile: reptile._id });
       await Notification.deleteMany({ reptile: reptile._id });
+
+      if (reptile.image) {
+        await deleteFileIfExists(reptile.image);
+      }
+    
     }
 
     // Elimina i rettili
@@ -130,9 +141,12 @@ export const DeleteUser = async (req, res) => {
 
     // Elimina notifiche dell'utente
     await Notification.deleteMany({ user: userId });
-
+    if (user.avatar) {
+      await deleteFileIfExists(user.avatar);
+    }
     // Elimina utente
     await User.findByIdAndDelete(userId);
+     await logAction(req.user.userid, "Delete User");
 
     // Revoca token se presente
     const token = req.header('Authorization')?.split(' ')[1];
@@ -151,5 +165,33 @@ export const DeleteUser = async (req, res) => {
   } catch (error) {
     console.error('Errore durante l\'eliminazione dell\'utente:', error);
     return res.status(500).json({ message: 'Errore del server' });
+  }
+};
+
+
+export const UpdateUserRole = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { role } = req.body;
+
+    if (!['user', 'banned'].includes(role)) {
+      return res.status(400).json({ message: 'Ruolo non valido' });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: 'Utente non trovato' });
+
+    user.role = role;
+
+    if (role === 'banned') {
+      // logout forzato: rimuovi refresh tokens
+      user.refreshTokens = [];
+    }
+
+    await user.save();
+    return res.json({ message: `Ruolo aggiornato in "${role}"`, user });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Errore aggiornamento ruolo utente' });
   }
 };

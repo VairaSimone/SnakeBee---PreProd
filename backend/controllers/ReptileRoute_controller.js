@@ -7,6 +7,8 @@ import fs from 'fs/promises';
 import streamifier from 'streamifier';
 
 import { parseDateOrNull } from '../utils/parseReptileHelpers.js';
+import { deleteFileIfExists } from "../utils/deleteFileIfExists.js";
+import { logAction } from "../utils/logAction.js";
 
 export const GetAllReptile = async (req, res) => {
     try {
@@ -82,8 +84,8 @@ export const PostReptile = async (req, res) => {
     try {
         const { name, species, morph, birthDate, sex, isBreeder, notes, parents, documents } = req.body;
         const userId = req.user.userid;
-const parsedParents = typeof parents === 'string' ? JSON.parse(parents) : parents;
-const parsedDocuments = typeof documents === 'string' ? JSON.parse(documents) : documents;
+        const parsedParents = typeof parents === 'string' ? JSON.parse(parents) : parents;
+        const parsedDocuments = typeof documents === 'string' ? JSON.parse(documents) : documents;
 
         // Controllo limite massimo
         const reptileCount = await Reptile.countDocuments({ user: userId });
@@ -93,7 +95,7 @@ const parsedDocuments = typeof documents === 'string' ? JSON.parse(documents) : 
         let imageUrl = '';
 
         if (req.file) {
-                  imageUrl = `/uploads/${req.file.filename}`;
+            imageUrl = `/uploads/${req.file.filename}`;
 
         }
 
@@ -109,11 +111,12 @@ const parsedDocuments = typeof documents === 'string' ? JSON.parse(documents) : 
             sex,
             isBreeder,
             notes,
-              parents: parsedParents,
-  documents: parsedDocuments,
+            parents: parsedParents,
+            documents: parsedDocuments,
         });
 
         const createdReptile = await newReptile.save();
+        await logAction(req.user.userid, "Create reptile");
 
         res.status(201).send(createdReptile);
     } catch (error) {
@@ -125,19 +128,19 @@ const parsedDocuments = typeof documents === 'string' ? JSON.parse(documents) : 
 export const PutReptile = async (req, res) => {
     try {
         const id = req.params.reptileId;
-        const { name, species, morph, sex, notes, birthDate, isBreeder, label,parents, documents } = req.body;
-let parsedParents, parsedDocuments;
-if ('parents' in req.body) {
-  parsedParents = typeof req.body.parents === 'string'
-    ? JSON.parse(req.body.parents)
-    : req.body.parents;
-}
+        const { name, species, morph, sex, notes, birthDate, isBreeder, label, parents, documents } = req.body;
+        let parsedParents, parsedDocuments;
+        if ('parents' in req.body) {
+            parsedParents = typeof req.body.parents === 'string'
+                ? JSON.parse(req.body.parents)
+                : req.body.parents;
+        }
 
-if ('documents' in req.body) {
-  parsedDocuments = typeof req.body.documents === 'string'
-    ? JSON.parse(req.body.documents)
-    : req.body.documents;
-}
+        if ('documents' in req.body) {
+            parsedDocuments = typeof req.body.documents === 'string'
+                ? JSON.parse(req.body.documents)
+                : req.body.documents;
+        }
         let reptile = await Reptile.findById(id);
 
         if (!reptile) {
@@ -148,7 +151,10 @@ if ('documents' in req.body) {
 
         if (req.file) {
             // Carica buffer su Cloudinary
-              imageUrl = `/uploads/${req.file.filename}`;
+            if (reptile.image) {
+                await deleteFileIfExists(reptile.image);
+            }
+            imageUrl = `/uploads/${req.file.filename}`;
 
         }
         const parseDateOrNull = (value) => {
@@ -162,6 +168,7 @@ if ('documents' in req.body) {
         };
 
         const birthDateObject = birthDate ? new Date(birthDate) : reptile.birthDate;
+     await logAction(req.user.userid, "Modify reptile");
 
         if ('name' in req.body) reptile.name = name;
         reptile.species = species || reptile.species;
@@ -181,8 +188,8 @@ if ('documents' in req.body) {
 
         reptile.isBreeder = isBreeder === 'true' || isBreeder === true;
         if ('notes' in req.body) reptile.notes = notes;
-if ('parents' in req.body) reptile.parents = parsedParents;
-if ('documents' in req.body) reptile.documents = parsedDocuments;
+        if ('parents' in req.body) reptile.parents = parsedParents;
+        if ('documents' in req.body) reptile.documents = parsedDocuments;
         const updatedReptile = await reptile.save();
 
         res.send(updatedReptile);
@@ -197,12 +204,15 @@ export const DeleteReptile = async (req, res) => {
         const reptileId = req.params.reptileId;
         const reptile = await Reptile.findById(reptileId);
         if (!reptile) return res.status(404).send({ message: 'Reptile not found' });
-
+        if (reptile.image) {
+            await deleteFileIfExists(reptile.image);
+        }
         await Feeding.deleteMany({ reptile: reptileId });
 
         await Notification.deleteMany({ reptile: reptileId });
 
         await Reptile.findByIdAndDelete(reptileId);
+     await logAction(req.user.userid, "Delete reptile");
 
         res.send({ message: 'Reptile and associated data successfully deleted' });
     } catch (err) {

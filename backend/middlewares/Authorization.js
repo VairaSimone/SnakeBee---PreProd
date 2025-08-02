@@ -4,6 +4,12 @@ export const isAdmin = (req, res, next) => {
     }
     return res.status(403).json({ message: 'Access denied. Admins only.' });
 };
+export const blockIfBanned = (req, res, next) => {
+  if (req.user?.role === 'banned') {
+    return res.status(403).json({ message: 'Account bannato. Contatta il supporto.' });
+  }
+  next();
+};
 
 export const isOwnerOrAdmin = (model, idField = 'userId') => async (req, res, next) => {
     try {

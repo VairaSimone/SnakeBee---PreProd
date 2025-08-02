@@ -170,7 +170,7 @@ const downloadPDF = async () => {
                     <li key={i} className={`p-3 rounded glow-hover fade-in-up ${feed.wasEaten ? 'bg-[#EDE7D6]' : 'bg-red-100 border border-red-300'}`}>
                       <p><strong>Data:</strong> {new Date(feed.date).toLocaleDateString()}</p>
                       <p><strong>Tipo cibo:</strong> {feed.foodType}</p>
-                      <p><strong>Quantità:</strong> {feed.quantity || 'N/A'}</p>
+                      <p><strong>Quantità:</strong> {feed.quantity || 'N/A'} x {feed.weightPerUnit || '-'}g</p>
 
                       {feed.wasEaten ? (
                         <>

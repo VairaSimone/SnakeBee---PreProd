@@ -7,6 +7,7 @@ import { loginLimiter, registerLimiter, refreshLimiter } from '../middlewares/Ra
 import * as validateAuth from "../validate/validateAuth.js";
 import validateBody from "../middlewares/validate.js";
 import User from "../models/User.js";
+import { blockIfBanned } from '../middlewares/Authorization.js';
 
 
 const authRouter = express.Router();

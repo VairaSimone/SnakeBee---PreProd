@@ -6,10 +6,12 @@ import Event from '../models/Event.js';
 import Feeding from '../models/Feeding.js';
 import Breeding from '../models/Breeding.js';
 import mongoose from 'mongoose';
+import { logAction } from '../utils/logAction.js';
 
 export const exportReptileData = async (req, res) => {
   try {
     const userId = req.params.userId;
+     await logAction(req.user.userid, "ExportReptile");
 
     const reptiles = await Reptile.find({ user: userId }).lean();
     const reptileMap = reptiles.reduce((acc, r) => {

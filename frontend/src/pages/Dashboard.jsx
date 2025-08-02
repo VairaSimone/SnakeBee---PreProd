@@ -31,7 +31,6 @@ const Dashboard = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showFeedingModal, setShowFeedingModal] = useState(false);
-  const [showBreedingModal, setShowBreedingModal] = useState(false);
 const [stats, setStats] = useState({
   successRate: null,
   feedingRefusalRate: null,
@@ -367,10 +366,6 @@ const fetchStats = async () => {
         handleClose={() => setShowFeedingModal(false)}
         reptileId={selectedReptile?._id}
         onSuccess={fetchReptiles}
-      />
-      <BreedingModal
-        show={showBreedingModal}
-        handleClose={() => setShowBreedingModal(false)}
       />
       <EventModal
         show={showEventModal}

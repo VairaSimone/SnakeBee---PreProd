@@ -7,12 +7,20 @@ import crypto from 'crypto';
 import { logSecurityEvent } from "../utils/securityLogger.js";
 
 import { sendVerificationEmail, sendPasswordResetEmail } from "../config/mailer.config.js";
+import { logAction } from "../utils/logAction.js";
 const MAX_VERIFICATION_EMAILS = 5;
 async function pwnedPassword() {
   const { pwnedPassword } = await import("hibp");
   return pwnedPassword;
 }
-
+const isTempEmail = (email) => {
+  const tempDomains = [
+    "mailinator.com", "10minutemail.com", "guerrillamail.com",
+    "tempmail.dev", "yopmail.com", "trashmail.com", "fakeinbox.com"
+  ];
+  const domain = email.split("@")[1].toLowerCase();
+  return tempDomains.includes(domain);
+};
 const generateAccessToken = (user) => {
   return jwt.sign({ userid: user.id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '2h' });
 };
@@ -62,8 +70,10 @@ export const login = async (req, res, next) => {
     if (!user.isVerified) {
       return res.status(403).json({ message: "Email non verificata. Controlla la tua casella di posta per il codice di verifica." });
     }
-
-    const validPassword = await bcrypt.compareSync(req.body.password, user.password);
+  if (user.role === 'banned') {
+    return res.status(403).json({ message: 'Account bannato. Contatta il supporto.' });
+  }
+    const validPassword = await bcrypt.compare(req.body.password, user.password);
     if (!validPassword) {
       user.loginAttempts = (user.loginAttempts || 0) + 1;
       if (user.loginAttempts >= MAX_LOGIN_ATTEMPTS) {
@@ -76,6 +86,7 @@ export const login = async (req, res, next) => {
     }
     user.loginAttempts = 0;
     user.accountLockedUntil = null;
+    await logAction(user._id, "Login");
 
     const accessToken = generateAccessToken(user);
     const refreshToken = generateRefreshToken(user);
@@ -104,7 +115,7 @@ export const login = async (req, res, next) => {
       user.loginHistory = user.loginHistory.slice(-20);
     }
     await user.save();
-    return res.json({ accessToken, refreshToken  });
+    return res.json({ accessToken, refreshToken });
   } catch (error) {
     console.log(error)
     return res.status(500).json({ message: "Server Error" });
@@ -127,6 +138,19 @@ export const register = async (req, res, next) => {
     if (count > 0) {
       return res.status(400).json({ message: "Questa password è troppo comune o compromessa. Scegline un'altra." });
     }
+
+    if (isTempEmail(normalizedEmail)) {
+      return res.status(400).json({ message: "Non è possibile usare email temporanee." });
+    }
+    const recentUsers = await User.find({
+      'registrationInfo.ip': req.ip,
+      createdAt: { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000) }
+    });
+
+    if (recentUsers.length >= 2) {
+      return res.status(429).json({ message: "Troppe registrazioni da questo IP. Riprova più tardi." });
+    }
+
     const pwd = await bcrypt.hash(req.body.password, 12);
     const newUser = new User({
       name: req.body.name,
@@ -141,6 +165,11 @@ export const register = async (req, res, next) => {
       }
     });
 
+    newUser.registrationInfo = {
+      ip: req.ip,
+      userAgent: req.get('User-Agent') || 'unknown',
+      createdAt: new Date()
+    };
 
     // Invia l'email di verifica
     await newUser.save();
@@ -182,7 +211,7 @@ export const logout = async (req, res, next) => {
     const filteredTokens = [];
     let matched = false;
     for (const rt of user.refreshTokens) {
-      const match = await bcrypt.compareSync(token, rt.token);
+      const match = await bcrypt.compare(token, rt.token);
       if (!match) {
         filteredTokens.push(rt);
       } else {
@@ -228,10 +257,10 @@ export const callBackGoogle = async (req, res, next) => {
         name: name || "User",
         email,
         avatar: profile._json.picture || defaultAvatarURL,
-            privacyConsent: {
-      accepted: true,
-      timestamp: new Date()
-    }
+        privacyConsent: {
+          accepted: true,
+          timestamp: new Date()
+        }
       });
       user.loginHistory = user.loginHistory || [];
       user.loginHistory.push({
@@ -261,7 +290,7 @@ export const callBackGoogle = async (req, res, next) => {
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
-res.redirect(`${process.env.FRONTEND_URL}/login-google-callback?accessToken=${accessToken}&refreshToken=${refreshToken}`);
+    res.redirect(`${process.env.FRONTEND_URL}/login-google-callback?accessToken=${accessToken}&refreshToken=${refreshToken}`);
   } catch (err) {
     console.error("Errore nell'autenticazione con Google:", err);
     res.status(500).send("Errore del server");
@@ -301,6 +330,7 @@ export const changePassword = async (req, res, next) => {
     // Hash della nuova password
     const hashedPassword = await bcrypt.hash(newPassword, 12);
     user.password = hashedPassword;
+    await logAction(user._id, "Cange password");
 
     // Salva l'aggiornamento nel database
     await user.save();
@@ -381,7 +411,7 @@ export const verifyEmail = async (req, res, next) => {
     if (user.verificationCode !== code.toUpperCase()) { // Confronta con il codice salvato
       return res.status(400).json({ message: "Codice di verifica non valido." });
     }
-
+        await logAction(user._id, "Verify-email");
     // Verifica riuscita: aggiorna l'utente
     user.isVerified = true;
     user.verificationCode = null;
@@ -411,7 +441,7 @@ export const changeEmailAndResendVerification = async (req, res, next) => {
       return res.status(400).json({ message: "Questo account non ha una password impostata. Risulta essere impossibile effettuare modifiche su un account creato con Google" });
     }
 
-    const isPasswordValid = await bcrypt.compareSync(password, user.password);
+    const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
       return res.status(401).json({ message: "Password non corretta." });
     }
@@ -433,6 +463,7 @@ export const changeEmailAndResendVerification = async (req, res, next) => {
       const timeLeft = Math.ceil((EMAIL_RESEND_COOLDOWN - timeSinceLast) / 1000);
       return res.status(429).json({ message: `Attendi ${timeLeft}s prima di un nuovo invio.` });
     }
+    await logAction(user._id, "Change-Email");
 
     const code = crypto.randomBytes(3).toString("hex").toUpperCase();
     user.email = newEmail;
@@ -556,6 +587,9 @@ export const resetPassword = async (req, res, next) => {
       await user.save();
       return res.status(400).json({ message: "Codice di reset scaduto. Richiedi un nuovo reset password." });
     }
+
+        await logAction(user._id, "Reset-password");
+
 
     // Se il codice è valido e non scaduto:
     // 1. Hasher la nuova password

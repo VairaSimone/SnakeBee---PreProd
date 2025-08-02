@@ -1,15 +1,35 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { PlusCircle, Utensils, HeartPulse, EggFried } from "lucide-react";
+import PaddleCheckoutButton from './components/PaddleCheckoutButton';
+
 
 const Home = () => {
-    
 
-    
+    const itemsList = [
+        {
+            priceId: 'pri_01gsz8ntc6z7npqqp6j4ys0w1w',
+            quantity: 5
+        },
+        {
+            priceId: 'pri_01h1vjfevh5etwq3rb416a23h2',
+            quantity: 1
+        }];
+
     return (
         <div className="min-h-screen bg-[#FAF3E0] text-[#2B2B2B] font-sans">
             <main className="max-w-6xl mx-auto p-6">
+                <div>
+                    <h1>Abbonati al nostro servizio di gestione rettili</h1>
 
+                    <PaddleCheckoutButton
+                        items={itemsList}
+                        environment="sandbox"            
+                        token={process.env.REACT_APP_PADDLE_TOKEN}
+                    >
+                        Registrati subito
+                    </PaddleCheckoutButton>
+                </div>
                 {/* Hero */}
                 <section className="text-center py-16 sm:py-24">
                     <h1 className="text-4xl sm:text-5xl font-extrabold mb-6">La tua piattaforma per gestire rettili</h1>

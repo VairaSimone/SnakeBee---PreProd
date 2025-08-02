@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import Event from '../models/Event.js';
+import { logAction } from '../utils/logAction.js';
 
 // GET /events/:reptileId
 export const GetEvents = async (req, res) => {
@@ -29,6 +30,7 @@ export const CreateEvent = async (req, res) => {
       }
       newEventData.weight = weight;
     }
+     await logAction(req.user.userid, "Create Event");
 
     const newEvent = new Event(newEventData);
     const saved = await newEvent.save();

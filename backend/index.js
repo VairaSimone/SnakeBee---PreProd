@@ -21,6 +21,10 @@ import cloudinaryRouter from './routes/Cloudinary.router.js';
 import foodInventoryRoute from './routes/FoodInventory.router.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import {paddleWebhookHandler} from './controllers/Subscription_controller.js';
+import bodyParser from 'body-parser';
+
+
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -55,6 +59,7 @@ app.use(helmet())
 app.use(helmet.crossOriginResourcePolicy({ policy: 'same-site' })); // o 'same-origin'
 app.use(helmet.crossOriginEmbedderPolicy({ policy: 'require-corp' }));
 passport.use("google", googleStrategy)
+app.use(express.urlencoded({ extended: false }));
 
 mongoose
   .connect(process.env.MONGO_STRING)
@@ -64,7 +69,7 @@ mongoose
   res.status(200).send('OK');
 });
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-
+app.post('/webhooks/paddle', paddleWebhookHandler);
 app.use('/api/inventory', foodInventoryRoute);
 app.use('/api/cloudinary', cloudinaryRouter);
 app.use("/api/api/v1/", authRouter)

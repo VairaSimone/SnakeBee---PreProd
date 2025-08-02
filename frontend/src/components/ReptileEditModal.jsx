@@ -214,7 +214,7 @@ formDataToSubmit.append('documents', JSON.stringify(formData.documents));
 <h3 className="text-md font-semibold text-gray-700">Genitori</h3>
 <div className="grid md:grid-cols-2 gap-4">
   <div>
-    <label className={labelClasses}>ID Padre</label>
+    <label className={labelClasses}>Morph Padre</label>
     <input
       type="text"
       name="father"
@@ -229,7 +229,7 @@ formDataToSubmit.append('documents', JSON.stringify(formData.documents));
     />
   </div>
   <div>
-    <label className={labelClasses}>ID Madre</label>
+    <label className={labelClasses}>Morph Madre</label>
     <input
       type="text"
       name="mother"

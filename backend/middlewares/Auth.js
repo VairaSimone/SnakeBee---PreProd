@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import RevokedToken from '../models/RevokedToken.js';
+import User from '../models/User.js';
 
 //Route Authentication
 export const authenticateJWT = async (req, res, next) => {
@@ -19,7 +20,18 @@ export const authenticateJWT = async (req, res, next) => {
         }
 
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    const user = await User.findById(decoded.userid).select('role');
+    if (!user) {
+      return res.status(401).json({ message: 'Utente non trovato' });
+    }
+
+    if (user.role === 'banned') {
+      return res.status(403).json({ message: 'Account bannato. Contatta il supporto.' });
+    }
+
         req.user = decoded;
+        req.user.role = user.role;
         next();
     } catch (error) {
         const status = error.name === 'TokenExpiredError' ? 401 : 403;

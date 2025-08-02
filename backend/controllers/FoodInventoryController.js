@@ -60,6 +60,7 @@ existing.quantity = Number(existing.quantity) + Number(quantity);
       quantity,
       weightPerUnit,
     });
+     await logAction(req.user.userid, "Create Inventory");
 
     await newItem.save();
     res.status(201).json(newItem);

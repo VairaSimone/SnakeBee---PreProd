@@ -2,243 +2,165 @@ import Breeding from '../models/Breeding.js';
 import Reptile from '../models/Reptile.js';
 import mongoose from 'mongoose';
 
-import { validateDatesSequence } from '../utils/validators.js';
+// 🧠 Funzione utilità per evitare coppie duplicate nello stesso anno
+async function isDuplicatePair(maleId, femaleId, year, userId) {
+  return await Breeding.exists({ male: maleId, female: femaleId, year, user: userId });
+}
 
-export const createBreeding = async (req, res) => {
-  const {
-    male, female,
-    pairingDate, ovulationDate, clutchDate,
-    incubationStart, incubationEnd, incubationNotes,
-    notes, hatchlings = []
-  } = req.body;
-  const userId = req.user.userid;
-
-  // validazione preliminare
-  if (male === female)
-    return res.status(400).json({ message: "Non puoi accoppiare lo stesso animale" });
-
-  const [maleR, femaleR] = await Promise.all([
-    Reptile.findById(male), Reptile.findById(female)
-  ]);
-  if (!maleR || !femaleR)
-    return res.status(404).json({ message: "Uno dei due rettili non esiste" });
-  if (maleR.user.toString() !== userId || femaleR.user.toString() !== userId)
-    return res.status(403).json({ message: "I rettili devono appartenere allo stesso utente" });
-
-  // controllo coerenza date
-  const seqErr = validateDatesSequence({ pairingDate, ovulationDate, clutchDate, incubationStart, incubationEnd });
-  if (seqErr) return res.status(400).json({ message: seqErr });
-
+// 🔒 Funzione base: crea una nuova sessione di accoppiamento
+export const createBreedingPair = async (req, res) => {
   try {
-const year = pairingDate ? new Date(pairingDate).getFullYear() : new Date().getFullYear();
-    const events = [];
-    if (pairingDate) events.push({ type: 'pairing', date: new Date(pairingDate), notes });
-    if (ovulationDate)    events.push({ type: 'ovulation',    date: new Date(ovulationDate) });
-    if (clutchDate)       events.push({ type: 'clutch',       date: new Date(clutchDate) });
-    if (incubationStart)  events.push({ type: 'incubationStart', date: new Date(incubationStart) });
-    if (incubationEnd)    events.push({ type: 'incubationEnd',   date: new Date(incubationEnd) });
+    const { male, female, year, species, morphCombo, isLiveBirth } = req.body;
+    const user = req.user.userid ;
+    console.log('User autenticato:', user.toString());
 
-    const breeding = new Breeding({
-      male, female, user: userId,
-      pairingDate, ovulationDate, clutchDate,
-      incubationStart, incubationEnd, incubationNotes, notes,
-      seasonYear: year,
-      events, hatchlings
-    });
-    const saved = await breeding.save();
-    return res.status(201).json({ message: 'Creato con successo', breeding: saved });
-  } catch (err) {
-    console.error(err);
-    return res.status(500).json({ message: 'Errore nella creazione dell’evento di riproduzione' });
-  }
-};
-
-
-export const getBreedingForReptile = async (req, res) => {
-  const { reptileId } = req.params;
-
-  try {
-    const breedings = await Breeding.find({
-      $or: [{ male: reptileId }, { female: reptileId }]
-    })
-    .populate('male', 'name species sex')
-    .populate('female', 'name species sex')
-    .sort({ pairingDate: -1 });
-
-    res.json(breedings);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Errore nel recupero delle riproduzioni per rettile' });
-  }
-};
-export const getBreedingByUser = async (req, res) => {
-const userId = req.user.userid;
-  const page     = parseInt(req.query.page) || 1;
-  const perPage  = parseInt(req.query.perPage) || 10;
-
-  try {
-    const [breedings, total] = await Promise.all([
-      Breeding.find({ user: userId })
-        .populate('male', 'name species sex')
-        .populate('female', 'name species sex')
-        .sort({ pairingDate: -1 })
-        .skip((page - 1) * perPage)
-        .limit(perPage),
-      Breeding.countDocuments({ user: userId })
-    ]);
-
-    res.json({
-      dati: breedings,
-      page,
-      perPage,
-      totalResults: total,
-      totalPages: Math.ceil(total / perPage)
-    });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Errore nel recupero delle riproduzioni' });
-  }
-};
-export const getReptileBreedingSummary = async (req, res) => {
-  const { reptileId } = req.params;
-  const userId = req.user.userid;
-
-  try {
-    const summary = await Breeding.aggregate([
-      {
-        $match: {
-          user: mongoose.Types.ObjectId(userId),
-          $or: [
-            { male: mongoose.Types.ObjectId(reptileId) },
-            { female: mongoose.Types.ObjectId(reptileId) }
-          ]
-        }
-      },
-      {
-        $group: {
-          _id: '$seasonYear',
-          breedCount: { $sum: 1 },
-          hatchlingsCount: { $sum: { $size: '$hatchlings' } }
-        }
-      },
-      { $sort: { _id: -1 } }
-    ]);
-
-    res.json({ reptileId, summary });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Errore nel calcolo del riepilogo' });
-  }
-};
-
-export const updateBreeding = async (req, res) => {
-  const { breedingId } = req.params;
-  const userId = req.user.userid;
-  const { events, hatchlings, notes } = req.body;
-
-  try {
-    const breeding = await Breeding.findById(breedingId);
-    if (!breeding) return res.status(404).json({ message: "Riproduzione non trovata" });
-
-    // Check che l'utente sia il proprietario
-    if (breeding.user.toString() !== userId) {
-      return res.status(403).json({ message: "Non autorizzato" });
+    // 🛡️ Validazioni:
+    if (!mongoose.Types.ObjectId.isValid(male) || !mongoose.Types.ObjectId.isValid(female)) {
+      return res.status(400).json({ error: 'ID rettili non validi' });
     }
 
-    // Validazione sequenza eventi
-    const error = validateDatesSequence(events);
-    if (error) {
-      return res.status(400).json({ message: error });
+    if (male === female) {
+      return res.status(400).json({ error: 'Maschio e femmina non possono essere lo stesso rettile' });
     }
 
-    // Aggiornamento completo
-    breeding.events = events;
-    breeding.hatchlings = hatchlings;
-    breeding.notes = notes;
+    const [maleReptile, femaleReptile] = await Promise.all([
+      Reptile.findOne({ _id: male, user }),
+      Reptile.findOne({ _id: female, user }),
+    ]);
 
-    const updated = await breeding.save();
-    res.status(200).json({ message: 'Riproduzione aggiornata', breeding: updated });
+    if (!maleReptile || !femaleReptile) {
+      return res.status(404).json({ error: 'Uno o entrambi i rettili non esistono' });
+    }
+
+    if (maleReptile.sex !== 'M' || femaleReptile.sex !== 'F') {
+      return res.status(400).json({ error: 'Controlla il sesso dei rettili (M/F)' });
+    }
+
+    const duplicate = await isDuplicatePair(male, female, year, user);
+    if (duplicate) {
+      return res.status(409).json({ error: 'Questa coppia esiste già per quest\'anno' });
+    }
+
+    const newBreeding = await Breeding.create({
+      male, female, year, species, morphCombo, isLiveBirth, user
+    });
+
+    res.status(201).json(newBreeding);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Errore durante l’aggiornamento' });
+    console.error('Errore creazione breeding:', err);
+    res.status(500).json({ error: 'Errore interno del server' });
   }
 };
 
-
-export const deleteBreeding = async (req, res) => {
-  const { breedingId } = req.params;
+// 🔁 Aggiunta eventi (Ovulazione, Incubazione, ecc.)
+export const addBreedingEvent = async (req, res) => {
   try {
-    const deleted = await Breeding.findByIdAndDelete(breedingId);
-    if (!deleted)
-      return res.status(404).json({ message: "Evento non trovato" });
+    const { breedingId } = req.params;
+    const { type, date, notes } = req.body;
+    const user = req.user.userid;
 
+    const breeding = await Breeding.findOne({ _id: breedingId, user });
+    if (!breeding) {
+      return res.status(404).json({ error: 'Riproduzione non trovata' });
+    }
 
-    res.json({ message: "Evento di riproduzione eliminato" });
+    // ⛔ Eventi doppi ridicoli (es: 5 ovulazioni in 1 settimana)
+    const sameWeekEvents = breeding.events.filter(e =>
+      e.type === type && Math.abs(new Date(date) - new Date(e.date)) < 7 * 24 * 60 * 60 * 1000
+    );
+    if (sameWeekEvents.length > 0) {
+      return res.status(409).json({ error: `Evento "${type}" già presente in questa settimana` });
+    }
+
+    breeding.events.push({ type, date, notes });
+    await breeding.save();
+    res.status(200).json(breeding);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Errore durante l’eliminazione' });
+    console.error('Errore evento breeding:', err);
+    res.status(500).json({ error: 'Errore interno' });
   }
 };
 
-export const addEventToBreeding = async (req, res) => {
-  const { breedingId } = req.params;
+// 📅 Filtra per anno
+export const getBreedingByYear = async (req, res) => {
+  try {
+    const user = req.user.userid;
+    const { year } = req.query;
+
+    const filter = { user };
+    if (year) {
+      filter.year = parseInt(year);
+    }
+
+    const breedings = await Breeding.find(filter)
+      .populate('male', 'name species morph')
+      .populate('female', 'name species morph')
+      .sort({ year: -1 });
+
+    res.status(200).json(breedings);
+  } catch (err) {
+    console.error('Errore fetch breeding:', err);
+    res.status(500).json({ error: 'Errore interno' });
+  }
+};
+
+// 🧼 Update esito e risultati (uova o cuccioli)
+export const updateBreedingOutcome = async (req, res) => {
+  try {
+    const { breedingId } = req.params;
+    const { clutchSize, outcome } = req.body;
+    const user = req.user.userid;
+
+    const breeding = await Breeding.findOne({ _id: breedingId, user });
+    if (!breeding) {
+      return res.status(404).json({ error: 'Riproduzione non trovata' });
+    }
+
+if (!breeding.processedStats) {
+  const male = await Reptile.findById(breeding.male);
+  const fem = await Reptile.findById(breeding.female);
+  male.stats.breedings++;
+  fem.stats.breedings++;
+  if (outcome === 'Success') {
+    male.stats.successCount++;
+    fem.stats.successCount++;
+    male.stats.offspringCount += (clutchSize?.hatchedOrBorn || 0);
+    fem.stats.offspringCount += (clutchSize?.hatchedOrBorn || 0);
+  }
+  await male.save();
+  await fem.save();
+  breeding.processedStats = true;
+}
+breeding.outcome = outcome;
+breeding.clutchSize = clutchSize;
+await breeding.save();;
+    res.status(200).json(breeding);
+  } catch (err) {
+    console.error('Errore aggiornamento outcome:', err);
+    res.status(500).json({ error: 'Errore interno' });
+  }
+};
+
+
+// controllers
+
+export const deleteBreedingEvent = async (req, res) => {
+  const { breedingId, eventId } = req.params;
+  const breeding = await Breeding.findOne({ _id: breedingId, user: req.user.userid });
+  if (!breeding) return res.status(404).json({ error: 'Riproduzione non trovata' });
+  breeding.events.id(eventId)?.remove();
+  await breeding.save();
+  res.json(breeding);
+};
+
+export const updateBreedingEvent = async (req, res) => {
+  const { breedingId, eventId } = req.params;
   const { type, date, notes } = req.body;
-
-  try {
-    const breeding = await Breeding.findById(breedingId);
-    if (!breeding) return res.status(404).json({ message: "Riproduzione non trovata" });
-
-
-    const newEvent = { type, date: new Date(date), notes };
-    breeding.events.push(newEvent);
-
-    await breeding.save();
-    res.status(200).json({ message: 'Evento aggiunto correttamente', breeding });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Errore durante l’aggiunta dell’evento' });
-  }
-};
-
-export const addHatchlingToBreeding = async (req, res) => {
-  const { breedingId } = req.params;
-  const { morph, weight, sex, photoUrl } = req.body;
-
-  try {
-    const breeding = await Breeding.findById(breedingId);
-    if (!breeding) return res.status(404).json({ message: "Riproduzione non trovata" });
-
-
-    breeding.hatchlings.push({ morph, weight, sex, photoUrl });
-    await breeding.save();
-
-    res.status(200).json({ message: 'Hatchling aggiunto correttamente', breeding });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Errore durante l’aggiunta del hatchling' });
-  }
-};
-
-export const getSeasonRecap = async (req, res) => {
-  const { year } = req.params;
-  const userId = req.user.userid;
-
-  try {
-    const breedings = await Breeding.find({
-      user: userId,
-      seasonYear: parseInt(year)
-    })
-    .populate('male', 'name species sex')
-    .populate('female', 'name species sex')
-    .sort({ pairingDate: 1 });
-
-    res.json({
-      season: year,
-      count: breedings.length,
-      data: breedings
-    });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Errore nel recupero della stagione' });
-  }
+  const breeding = await Breeding.findOne({ _id: breedingId, user: req.user.userid });
+  if (!breeding) return res.status(404).json({ error: 'Not found' });
+  const ev = breeding.events.id(eventId);
+  if (!ev) return res.status(404).json({ error: 'Evento non trovato' });
+  ev.type = type; ev.date = date; ev.notes = notes;
+  await breeding.save();
+  res.json(breeding);
 };

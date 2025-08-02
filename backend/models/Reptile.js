@@ -20,6 +20,11 @@ const reptileSchema = new Schema(
       type: Boolean,
       default: false,
     },
+      stats: {
+    breedings: { type: Number, default: 0 },
+    successCount: { type: Number, default: 0 },
+    offspringCount: { type: Number, default: 0 }
+  },
     notes: {
       type: String,
     },
@@ -62,3 +67,4 @@ const reptileSchema = new Schema(
 
 const Reptile = mongoose.models.Reptile || mongoose.model("Reptile", reptileSchema)
 export default Reptile
+
