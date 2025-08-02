@@ -27,6 +27,9 @@ import Breeding from './pages/Breeding';
 import NotFound from './pages/NotFound';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import InventoryPage from './pages/InventoryPage';
+import SubscriptionPage from './pages/SubscriptionPage';
+import SuccessPage from './pages/SuccessPage';
+import CancelPage from './pages/CancelPage';
 
 function AppContent() {
   const location = useLocation();
@@ -76,6 +79,10 @@ function AppContent() {
         <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
         <Route path="/reptiles/:reptileId" element={<ProtectedRoute><ReptileDetails /></ProtectedRoute>} />
         <Route path="*" element={<NotFound />} />
+
+          <Route path="/abbonamenti" element={<SubscriptionPage />} />
+  <Route path="/success" element={<SuccessPage />} />
+  <Route path="/cancel" element={<CancelPage />} />
       </Routes>
 
       {/* Footer + banner sempre visibili */}
