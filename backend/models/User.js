@@ -42,22 +42,6 @@ const userSchema = new Schema(
             userAgent: String,
             date: { type: Date, default: Date.now }
         }],
-subscription: {
-  plan: {
-    type: String,
-    enum: ['free', 'hobby', 'pro'],
-    default: 'free'
-  },
-  paddleUserId: String, // ID dell'utente su Paddle
-  subscriptionId: String, // ID dell'abbonamento su Paddle
-  nextBillingDate: Date,
-  status: {
-    type: String,
-    enum: ['active', 'past_due', 'canceled', 'paused'],
-    default: 'active'
-  }
-}
-,
         lastVerificationEmailSentAt: {
             type: Date,
         },

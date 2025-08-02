@@ -1,46 +1,8 @@
-import React from "react";
 import { Link } from "react-router-dom";
-import { PlusCircle, Utensils, EggFried } from "lucide-react";
-import { useEffect } from "react";
-import { useState } from "react";
+import { PlusCircle, Utensils, HeartPulse, EggFried } from "lucide-react";
 
 
 const Home = () => {
-
-  const [paddleReady, setPaddleReady] = useState(false);
-
-  const itemsList = [
-    {
-      priceId: "pri_01k1kwftqjyce1859j0tka07x2",
-      quantity: 1
-    }
-  ];
-
-  const openCheckout = (items) => {
-    if (window.Paddle && window.Paddle.Checkout) {
-      window.Paddle.Checkout.open({ items });
-    } else {
-      console.error("Paddle non è pronto.");
-    }
-  };
-
-  useEffect(() => {
-    const script = document.createElement("script");
-    script.src = "https://cdn.paddle.com/paddle/sdk.js";
-    script.async = true;
-
-    script.onload = () => {
-      if (window.Paddle) {
-        window.Paddle.Environment.set("sandbox");
-        window.Paddle.Initialize({
-          token: "test_5e2a60376dc16a423002c624799"
-        });
-        setPaddleReady(true);
-      }
-    };
-
-    document.body.appendChild(script);
-  }, []);
 
     return (
         <div className="min-h-screen bg-[#FAF3E0] text-[#2B2B2B] font-sans">
@@ -50,9 +12,7 @@ const Home = () => {
                 <section className="text-center py-16 sm:py-24">
                     <h1 className="text-4xl sm:text-5xl font-extrabold mb-6">La tua piattaforma per gestire rettili</h1>
                     <p className="text-lg text-gray-700 max-w-2xl mx-auto mb-8">
-                           <a href="#" onClick={() => openCheckout(itemsList)}>
-      <b>Sign up now</b>
-    </a>SnakeBee è nata per semplificare la gestione quotidiana di allevamenti di serpenti, gechi e altri rettili. Tutto in un’unica app.
+    SnakeBee è nata per semplificare la gestione quotidiana di allevamenti di serpenti, gechi e altri rettili. Tutto in un’unica app.
                     </p>
                     <div className="flex flex-col sm:flex-row gap-4 justify-center">
                         <Link
