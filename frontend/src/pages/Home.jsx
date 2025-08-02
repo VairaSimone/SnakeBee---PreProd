@@ -33,7 +33,7 @@ const Home = () => {
       if (window.Paddle) {
         window.Paddle.Environment.set("sandbox");
         window.Paddle.Initialize({
-          token: "test_50a993f4d8975e7db21e1594835"
+          token: "test_5e2a60376dc16a423002c624799"
         });
         setPaddleReady(true);
       }
