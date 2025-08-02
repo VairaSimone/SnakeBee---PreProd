@@ -26,7 +26,7 @@ const SubscriptionPage = () => {
     setError(null);
 
     try {
-      const res = await api.post('/api/stripe/create-checkout-session', { plan });
+      const res = await api.post('/stripe/create-checkout-session', { plan });
       window.location.href = res.data.url; // Redirect to Stripe Checkout
     } catch (err) {
       console.error('Errore durante la creazione della sessione:', err);
