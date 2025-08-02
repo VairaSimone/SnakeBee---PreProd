@@ -1,40 +1,58 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { PlusCircle, Utensils, HeartPulse, EggFried } from "lucide-react";
-import PaddleCheckoutButton from './components/PaddleCheckoutButton';
+import { PlusCircle, Utensils, EggFried } from "lucide-react";
+import { useEffect } from "react";
+import { useState } from "react";
 
 
 const Home = () => {
 
-    const itemsList = [
-        {
-            priceId: 'pri_01gsz8ntc6z7npqqp6j4ys0w1w',
-            quantity: 5
-        },
-        {
-            priceId: 'pri_01h1vjfevh5etwq3rb416a23h2',
-            quantity: 1
-        }];
+  const [paddleReady, setPaddleReady] = useState(false);
+
+  const itemsList = [
+    {
+      priceId: "pri_01k1kwftqjyce1859j0tka07x2",
+      quantity: 1
+    }
+  ];
+
+  const openCheckout = (items) => {
+    if (window.Paddle && window.Paddle.Checkout) {
+      window.Paddle.Checkout.open({ items });
+    } else {
+      console.error("Paddle non è pronto.");
+    }
+  };
+
+  useEffect(() => {
+    const script = document.createElement("script");
+    script.src = "https://cdn.paddle.com/paddle/sdk.js";
+    script.async = true;
+
+    script.onload = () => {
+      if (window.Paddle) {
+        window.Paddle.Environment.set("sandbox");
+        window.Paddle.Initialize({
+          token: "test_50a993f4d8975e7db21e1594835"
+        });
+        setPaddleReady(true);
+      }
+    };
+
+    document.body.appendChild(script);
+  }, []);
 
     return (
         <div className="min-h-screen bg-[#FAF3E0] text-[#2B2B2B] font-sans">
             <main className="max-w-6xl mx-auto p-6">
-                <div>
-                    <h1>Abbonati al nostro servizio di gestione rettili</h1>
-
-                    <PaddleCheckoutButton
-                        items={itemsList}
-                        environment="sandbox"            
-                        token={process.env.REACT_APP_PADDLE_TOKEN}
-                    >
-                        Registrati subito
-                    </PaddleCheckoutButton>
-                </div>
+  
                 {/* Hero */}
                 <section className="text-center py-16 sm:py-24">
                     <h1 className="text-4xl sm:text-5xl font-extrabold mb-6">La tua piattaforma per gestire rettili</h1>
                     <p className="text-lg text-gray-700 max-w-2xl mx-auto mb-8">
-                        SnakeBee è nata per semplificare la gestione quotidiana di allevamenti di serpenti, gechi e altri rettili. Tutto in un’unica app.
+                           <a href="#" onClick={() => openCheckout(itemsList)}>
+      <b>Sign up now</b>
+    </a>SnakeBee è nata per semplificare la gestione quotidiana di allevamenti di serpenti, gechi e altri rettili. Tutto in un’unica app.
                     </p>
                     <div className="flex flex-col sm:flex-row gap-4 justify-center">
                         <Link
