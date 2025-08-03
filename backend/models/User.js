@@ -37,7 +37,7 @@ subscription: {
   stripeSubscriptionId: { type: String },
   status: {
     type: String,
-    enum: ['active', 'incomplete', 'canceled', 'past_due', 'unpaid', null],
+    enum: ['active', 'incomplete', 'canceled', 'paused', 'past_due', 'unpaid', null],
     default: null
   },
   currentPeriodEnd: { type: Date },

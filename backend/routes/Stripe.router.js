@@ -6,5 +6,8 @@ const stripeRouter = express.Router();
 
 stripeRouter.post('/create-checkout-session', authenticateJWT, stripeController.createCheckoutSession);
 stripeRouter.get('/session/:sessionId', authenticateJWT, stripeController.getSessionDetails);
+stripeRouter.post('/cancel-subscription', authenticateJWT, stripeController.cancelSubscription);
+stripeRouter.post('/change-subscription-plan', authenticateJWT, stripeController.changeSubscriptionPlan); 
+stripeRouter.get('/status', authenticateJWT, stripeController.getSubscriptionStatus);
 
 export default stripeRouter;

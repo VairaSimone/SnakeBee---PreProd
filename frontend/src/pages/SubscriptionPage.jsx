@@ -20,7 +20,18 @@ const plans = [
 const SubscriptionPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-
+const [subscriptionStatus, setSubscriptionStatus] = useState(null);
+useEffect(() => {
+  const fetchStatus = async () => {
+    try {
+      const res = await api.get('/stripe/status');
+      setSubscriptionStatus(res.data);
+    } catch (err) {
+      console.error('Errore nel recupero abbonamento:', err);
+    }
+  };
+  fetchStatus();
+}, []);
   const handleSubscribe = async (plan) => {
     setLoading(true);
     setError(null);
@@ -35,10 +46,35 @@ const SubscriptionPage = () => {
       setLoading(false);
     }
   };
+const handleCancel = async () => {
+  try {
+    await api.post('/stripe/cancel-subscription');
+    alert('Abbonamento disdetto! Resterà attivo fino alla scadenza.');
+    // eventualmente fai anche un reload o aggiorna lo stato locale
+  } catch (err) {
+    console.error('Errore nella disdetta:', err);
+    setError('Errore nella disdetta, riprova.');
+  }
+};
+const handleChangePlan = async (plan) => {
+  try {
+    await api.post('/stripe/change-subscription-plan', { plan });
+    alert(`Piano aggiornato a ${plan}`);
+  } catch (err) {
+    console.error('Errore nel cambio piano:', err);
+    setError('Errore nel cambio piano, riprova.');
+  }
+};
 
   return (
     <div className="subscription-page" style={{ padding: '2rem' }}>
       <h1>Abbonamenti SnakeBee 🐍</h1>
+      {subscriptionStatus?.status === 'active' && (
+  <p style={{ color: 'green' }}>
+    Hai già un piano attivo: {subscriptionStatus.plan}
+  </p>
+)}
+
       <p>Scegli il piano per sbloccare più funzionalità!</p>
       {error && <p style={{ color: 'red' }}>{error}</p>}
 
@@ -58,7 +94,7 @@ const SubscriptionPage = () => {
             <p>{plan.description}</p>
             <p><strong>{plan.price}</strong></p>
             <button
-              disabled={loading}
+  disabled={loading || subscriptionStatus?.status === 'active'}
               onClick={() => handleSubscribe(plan.value)}
               style={{
                 padding: '0.5rem 1rem',
@@ -66,13 +102,44 @@ const SubscriptionPage = () => {
                 color: 'white',
                 border: 'none',
                 borderRadius: '4px',
-                cursor: 'pointer'
+    cursor: loading || subscriptionStatus?.status === 'active' ? 'not-allowed' : 'pointer'
               }}
             >
               {loading ? 'Reindirizzamento...' : 'Abbonati'}
             </button>
+            
           </div>
         ))}
+        <button
+  onClick={handleCancel}
+  style={{
+    marginTop: '2rem',
+    backgroundColor: '#f44336',
+    color: 'white',
+    padding: '0.5rem 1rem',
+    border: 'none',
+    borderRadius: '4px',
+    cursor: 'pointer'
+  }}
+>
+  Disdici Abbonamento
+</button>
+<button
+  disabled={loading}
+  onClick={() => handleChangePlan(plan.value)}
+  style={{
+    padding: '0.5rem 1rem',
+    backgroundColor: '#2196F3',
+    color: 'white',
+    border: 'none',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    marginTop: '1rem',
+  }}
+>
+  Cambia piano
+</button>
+
       </div>
     </div>
   );

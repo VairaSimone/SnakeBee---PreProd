@@ -187,5 +187,33 @@ const sendPasswordResetEmail = async (to, code) => {
   }
 };
 
+const sendStripeNotificationEmail = async (to, subject, bodyHtml, bodyText = '') => {
+  const mailOptions = {
+    from: `"SnakeBee" <noreply@snakebee.it>`,
+    to,
+    subject,
+    text: bodyText || subject,
+    html: `
+      <div style="font-family: 'Poppins', sans-serif; padding: 20px; max-width: 600px; margin: auto; background: #fdfcf8; border-radius: 12px;">
+        <div style="text-align: center; margin-bottom: 20px;">
+          <img src="${process.env.LOGO_URL}" alt="SnakeBee Logo" style="max-width: 160px;" />
+        </div>
+        ${bodyHtml}
+        <p style="font-size: 12px; color: #777; margin-top: 40px; text-align: center;">
+          Questa è una notifica automatica. Non rispondere a questa email.
+        </p>
+      </div>
+    `
+  };
 
-export { sendVerificationEmail, sendPasswordResetEmail, transporter };
+  try {
+    await transporter.sendMail(mailOptions);
+    console.log(`📧 Email Stripe inviata a ${to}: ${subject}`);
+  } catch (err) {
+    console.error('❌ Errore invio email Stripe:', err);
+  }
+};
+
+
+
+export { sendVerificationEmail, sendStripeNotificationEmail, sendPasswordResetEmail, transporter };
