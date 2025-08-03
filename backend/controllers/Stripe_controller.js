@@ -52,15 +52,17 @@ const createCheckoutSession = async (req, res) => {
         email: user.email,
         metadata: { userId: user._id.toString() }
       });
-await StripeCustomer.findOneAndUpdate(
-  { userId: user._id },
-  {
-    userId: user._id,
-    customerId: customer.id,
-    email: user.email,
-  },
-  { upsert: true, new: true }
-);
+      await StripeCustomer.findOneAndUpdate(
+        { userId: user._id },
+        {
+          userId: user._id,
+          customerId: customer.id,
+          email: user.email,
+          updatedAt: new Date()
+
+        },
+        { upsert: true, new: true }
+      );
       user.subscription = {
         ...user.subscription,
         stripeCustomerId: customer.id
@@ -185,7 +187,7 @@ const handleStripeWebhook = async (req, res) => {
   const type = event.type;
 
   // Helper per aggiornare lo stato sul DB
-  const updateSubscription = async ({ customerId, status, periodEnd, plan }) => {
+  const updateSubscription = async ({ customerId, status, periodEnd, plan, eventType, rawEvent }) => {
     const user = await User.findOne({ 'subscription.stripeCustomerId': customerId });
     if (!user) {
       console.warn(`Utente non trovato per customer ${customerId}`); // potrebbe succedere se migrano dati fuori sync
@@ -205,48 +207,48 @@ const handleStripeWebhook = async (req, res) => {
     await user.save();
 
 
-      const nextBilling = user.subscription.currentPeriodEnd?.toLocaleDateString('it-IT') || 'N/A';
-  let subject, body, notifMsg;
+    const nextBilling = user.subscription.currentPeriodEnd?.toLocaleDateString('it-IT') || 'N/A';
+    let subject, body, notifMsg;
 
-  switch (status) {
-    case 'active':
-      subject = 'Abbonamento attivo - SnakeBee 🐍';
-      body = `
+    switch (status) {
+      case 'active':
+        subject = 'Abbonamento attivo - SnakeBee 🐍';
+        body = `
         <h2>Grazie per esserti abbonato a SnakeBee!</h2>
         <p>Hai attivato il piano <strong>${plan}</strong>.</p>
         <p>Il prossimo rinnovo sarà il <strong>${nextBilling}</strong>.</p>
       `;
-          notifMsg = `Abbonamento attivato (${plan}). Rinnovo il ${nextBilling}`;
+        notifMsg = `Abbonamento attivato (${plan}). Rinnovo il ${nextBilling}`;
 
-      break;
+        break;
 
-    case 'past_due':
-      subject = 'Pagamento fallito - SnakeBee ⚠️';
-      body = `
+      case 'past_due':
+        subject = 'Pagamento fallito - SnakeBee ⚠️';
+        body = `
         <h2>Ops, c'è stato un problema con il tuo pagamento.</h2>
         <p>Il tuo abbonamento <strong>${plan}</strong> è in stato <strong>past_due</strong>.</p>
         <p>Ti invitiamo a verificare il metodo di pagamento per evitare l'interruzione del servizio.</p>
       `;
-          notifMsg = `Pagamento fallito per il piano ${plan}`;
+        notifMsg = `Pagamento fallito per il piano ${plan}`;
 
-      break;
+        break;
 
-    case 'canceled':
-      subject = 'Abbonamento cancellato - SnakeBee ❌';
-      body = `
+      case 'canceled':
+        subject = 'Abbonamento cancellato - SnakeBee ❌';
+        body = `
         <h2>Hai cancellato il tuo abbonamento.</h2>
         <p>Ci dispiace vederti andare via. Il tuo accesso resterà valido fino al <strong>${nextBilling}</strong>.</p>
       `;
-          notifMsg = `Hai cancellato il tuo abbonamento (${plan}).`;
+        notifMsg = `Hai cancellato il tuo abbonamento (${plan}).`;
 
-      break;
+        break;
 
-    default:
-      return; // Non notificare per stati non gestiti
-  }
+      default:
+        return; // Non notificare per stati non gestiti
+    }
 
-  await sendStripeNotificationEmail(user.email, subject, body);
-  await createBillingNotification(user._id, notifMsg);
+    await sendStripeNotificationEmail(user.email, subject, body);
+    await createBillingNotification(user._id, notifMsg);
 
   };
 
@@ -260,7 +262,6 @@ const handleStripeWebhook = async (req, res) => {
             status: 'active',
             periodEnd: data.subscription.current_period_end,
             plan: data.metadata.plan || null,
-            subscription: user.subscription.stripeSubscriptionId,
             rawEvent: data,
             eventType: type,
           });
