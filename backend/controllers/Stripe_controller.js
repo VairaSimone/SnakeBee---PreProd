@@ -4,6 +4,10 @@ import GhostCustomer from '../models/GhostCustomer.js';
 import StripeCustomer from '../models/StripeCustomer.js';
 import { sendStripeNotificationEmail } from '../config/mailer.config.js'; // path corretto al tuo modulo
 import Notification from '../models/Notification.js';
+const PRICE_ID_TO_PLAN = {
+  [process.env.STRIPE_PRICE_ID_BASIC]: 'basic',
+  [process.env.STRIPE_PRICE_ID_PREMIUM]: 'premium',
+};
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
@@ -257,11 +261,13 @@ const handleStripeWebhook = async (req, res) => {
       case 'checkout.session.completed':
         // Abbonamento iniziato
         if (data.mode === 'subscription') {
+              const subscription = await stripe.subscriptions.retrieve(data.subscription);
+
           await updateSubscription({
             customerId: data.customer,
-            status: 'active',
-            periodEnd: data.subscription.current_period_end,
-            plan: data.metadata.plan || null,
+      status: subscription.status,
+      periodEnd: subscription.current_period_end,
+plan: PRICE_ID_TO_PLAN[data.items.data[0].price.id] || null,
             rawEvent: data,
             eventType: type,
           });
@@ -295,7 +301,7 @@ const handleStripeWebhook = async (req, res) => {
           customerId: data.customer,
           status: data.status,
           periodEnd: data.current_period_end,
-          plan: data.items.data[0].price.nickname || null,
+          plan: data.items.data[0].price.id || null,
           rawEvent: data,
           eventType: type,
         });
@@ -307,7 +313,7 @@ const handleStripeWebhook = async (req, res) => {
           customerId: data.customer,
           status: data.status,
           periodEnd: data.current_period_end,
-          plan: data.items.data[0].price.nickname || null,
+plan: PRICE_ID_TO_PLAN[data.items.data[0].price.id] || null,
           rawEvent: data,
           eventType: type,
         });

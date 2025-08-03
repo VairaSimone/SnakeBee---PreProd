@@ -50,6 +50,7 @@ const SubscriptionPage = () => {
   const handleCancel = async () => {
     try {
       await api.post('/stripe/cancel-subscription');
+      setSubscriptionStatus(null);
       alert('Abbonamento disdetto! Resterà attivo fino alla scadenza.');
       // eventualmente fai anche un reload o aggiorna lo stato locale
     } catch (err) {
@@ -57,15 +58,28 @@ const SubscriptionPage = () => {
       setError('Errore nella disdetta, riprova.');
     }
   };
-  const handleChangePlan = async (plan) => {
-    try {
-      await api.post('/stripe/change-subscription-plan', { plan });
-      alert(`Piano aggiornato a ${plan}`);
-    } catch (err) {
-      console.error('Errore nel cambio piano:', err);
-      setError('Errore nel cambio piano, riprova.');
-    }
-  };
+const handleChangePlan = async (plan) => {
+  if (subscriptionStatus?.plan === plan) {
+    setError('Hai già questo piano attivo.');
+    return;
+  }
+
+  setLoading(true);
+  setError(null);
+
+  try {
+    const res = await api.post('/stripe/change-subscription-plan', { plan });
+    alert(`Piano aggiornato a ${plan}. Il cambiamento sarà visibile al prossimo rinnovo o immediatamente, a seconda del piano.`);
+    // aggiorna stato per riflettere cambiamento
+    setSubscriptionStatus((prev) => ({ ...prev, plan }));
+  } catch (err) {
+    console.error('Errore nel cambio piano:', err);
+    setError('Errore nel cambio piano, riprova.');
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <div className="subscription-page" style={{ padding: '2rem' }}>
@@ -111,9 +125,17 @@ const SubscriptionPage = () => {
             >
               {loading ? 'Reindirizzamento...' : 'Abbonati'}
             </button>
+            {subscriptionStatus?.plan === plan.value && (
+  <p style={{ color: 'gray', fontSize: '0.9em' }}>
+    Questo piano è già attivo.
+  </p>
+)}
+
 <button
-  disabled={loading}
-  onClick={() => handleChangePlan(plan.value)}
+disabled={
+  loading ||
+  (subscriptionStatus?.status === 'active' && subscriptionStatus?.plan === plan.value)
+}  onClick={() => handleChangePlan(plan.value)}
   style={{
     padding: '0.5rem 1rem',
     backgroundColor: '#2196F3',
@@ -130,6 +152,7 @@ const SubscriptionPage = () => {
         ))}
         <button
           onClick={handleCancel}
+          disabled={loading || !subscriptionStatus?.status}
           style={{
             marginTop: '2rem',
             backgroundColor: '#f44336',
