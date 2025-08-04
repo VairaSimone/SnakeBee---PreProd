@@ -21,6 +21,7 @@ import foodInventoryRoute from './routes/FoodInventory.router.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import stripeRouter from './routes/Stripe.router.js';
+import * as stripeController from './controllers/Stripe_controller.js';
 
 
 const __filename = fileURLToPath(import.meta.url);
@@ -51,7 +52,7 @@ app.use(cors({
 }));
 app.use(cookieParser())
 
-
+app.post('/webhook', express.raw({ type: 'application/json' }), stripeController.stripeWebhook);
 
 app.use(express.json({ limit: '10kb' }));
 app.use(morgan("dev"))
