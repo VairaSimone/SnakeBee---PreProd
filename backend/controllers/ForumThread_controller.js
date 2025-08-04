@@ -10,7 +10,7 @@ export const getThread = async (req, res) => {
     }
     res.json(thread);
   } catch (error) {
-    res.status(500).json({ message: 'Error retrieving thread' });
+    res.status(500).json({ message: 'Error  retrieving thread' });
   }
 };
 
