@@ -27,7 +27,7 @@ const createBillingNotification = async (userId, message) => {
       read: false,
       reptile: [],
     });
-    console.log(`🔔 Notifica Stripe salvata per utente ${userId}`);
+    console.log(`🔔 Notifica  Stripe salvata per utente ${userId}`);
   } catch (err) {
     console.error('Errore nel salvare la notifica Stripe:', err);
   }
