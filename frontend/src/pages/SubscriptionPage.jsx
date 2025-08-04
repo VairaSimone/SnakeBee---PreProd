@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { createStripeCheckout } from '../services/api.js'; // Assicurati che il percorso sia corretto
+import { selectUser } from '../features/userSlice.jsx';
 
 // Componente per una singola card di un piano
 const PlanCard = ({ title, price, features, planKey, onSubscribe, isLoading, isCurrentPlan }) => {
@@ -38,7 +39,7 @@ const SubscriptionPage = () => {
   const [error, setError] = useState(null);
 
   // Ottieni i dati dell'utente dal Redux store
-  const user = useSelector((state) => state.user.data); // Assumo questa struttura per lo store
+  const user = useSelector(selectUser); // Assumo questa struttura per lo store
 
   const handleSubscribe = async (plan) => {
     if (!user || !user._id) {
