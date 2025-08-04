@@ -14,7 +14,6 @@ import breedingRouter from './routes/Breeding.router.js';
 import './config/FeedingJob.js';
 import './config/RemoveTokenJob.js';
 import notificationRouter from './routes/Notification.router.js';
-import forum from './routes/Forum.router.js';
 import googleStrategy from './config/Passport.config.js ';
 import './config/RetryFailedEmails.js';
 import cloudinaryRouter from './routes/Cloudinary.router.js';
@@ -22,10 +21,6 @@ import foodInventoryRoute from './routes/FoodInventory.router.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import stripeRouter from './routes/Stripe.router.js';
-import Stripe from 'stripe';
-import User from './models/User.js';
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-import stripeController from './controllers/Stripe_controller.js';
 
 
 const __filename = fileURLToPath(import.meta.url);
@@ -56,8 +51,6 @@ app.use(cors({
 }));
 app.use(cookieParser())
 
-// IMPORTANTE: questa route DEVE essere dichiarata prima di express.json()
-app.post('/api/stripe/webhook', express.raw({ type: 'application/json' }), stripeController.handleStripeWebhook)
 
 
 app.use(express.json({ limit: '10kb' }));

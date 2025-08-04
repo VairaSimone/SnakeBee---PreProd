@@ -4,6 +4,7 @@ import { loginUser, logoutUser } from '../features/userSlice';
 export const getEvents = (reptileId) => api.get(`reptile/events/${reptileId}`);
 export const postEvent = (event) => api.post('reptile/events', event);
 export const deleteEvent = (eventId) => api.delete(`reptile/events/${eventId}`);
+export const createStripeCheckout = (plan, userId) => api.post('/stripe/create-checkout-session', { plan, userId });
 
 const api = axios.create({
     baseURL: process.env.REACT_APP_BACKEND_URL,
