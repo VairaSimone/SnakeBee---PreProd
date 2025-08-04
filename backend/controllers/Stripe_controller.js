@@ -261,13 +261,14 @@ const handleStripeWebhook = async (req, res) => {
       case 'checkout.session.completed':
         // Abbonamento iniziato
         if (data.mode === 'subscription') {
-              const subscription = await stripe.subscriptions.retrieve(data.subscription);
+          const subscription = await stripe.subscriptions.retrieve(data.subscription);
+          const priceId = subscription.items.data[0]?.price?.id;
 
           await updateSubscription({
             customerId: data.customer,
-      status: subscription.status,
-      periodEnd: subscription.current_period_end,
-plan: PRICE_ID_TO_PLAN[data.items.data[0].price.id] || null,
+            status: subscription.status,
+            periodEnd: subscription.current_period_end,
+            plan: PRICE_ID_TO_PLAN[priceId] || null,
             rawEvent: data,
             eventType: type,
           });
@@ -313,7 +314,7 @@ plan: PRICE_ID_TO_PLAN[data.items.data[0].price.id] || null,
           customerId: data.customer,
           status: data.status,
           periodEnd: data.current_period_end,
-plan: PRICE_ID_TO_PLAN[data.items.data[0].price.id] || null,
+          plan: PRICE_ID_TO_PLAN[data.items.data[0].price.id] || null,
           rawEvent: data,
           eventType: type,
         });
