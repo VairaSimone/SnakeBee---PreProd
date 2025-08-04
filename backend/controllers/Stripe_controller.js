@@ -130,34 +130,43 @@ export const stripeWebhook = async (req, res) => {
         break;
       }
 
-      case 'invoice.payment_succeeded': {
-        // Il pagamento è stato confermato, l'abbonamento è ufficialmente attivo.
-        const stripeSubscriptionId = dataObject.subscription;
-        const subscription = await stripeClient.subscriptions.retrieve(stripeSubscriptionId);
-        const user = await User.findOne({ 'subscription.stripeSubscriptionId': stripeSubscriptionId });
+case 'invoice.payment_succeeded': {
+  let stripeSubscriptionId = dataObject?.subscription;
 
-        if (user) {
-          user.subscription.status = 'active';
-          user.subscription.currentPeriodEnd = new Date(subscription.current_period_end * 1000);
-          await user.save();
+  // Fallback se non presente direttamente
+  if (!stripeSubscriptionId) {
+    stripeSubscriptionId = dataObject?.parent?.subscription_details?.subscription;
+  }
 
-          // Invia email di conferma
-          await sendStripeNotificationEmail(
-            user.email,
-            'Il tuo abbonamento è attivo! 🎉',
-            `<h1>Ciao ${user.name},</h1><p>Il tuo pagamento è stato ricevuto e il tuo abbonamento al piano <strong>${user.subscription.plan}</strong> è ora attivo. Grazie per esserti unito a noi!</p>`
-          );
+  if (!stripeSubscriptionId || typeof stripeSubscriptionId !== 'string') {
+    console.error(`❌ subscription ID mancante o invalido: ${stripeSubscriptionId}`);
+    return res.status(400).json({ error: 'subscription ID mancante o invalido' });
+  }
 
-          // Crea una notifica in-app
-          await Notification.create({
-            user: user._id,
-            type: 'billing',
-            message: `Il tuo abbonamento al piano ${user.subscription.plan} è stato attivato con successo.`,
-            date: new Date(),
-          });
-        }
-        break;
-      }
+  const subscription = await stripeClient.subscriptions.retrieve(stripeSubscriptionId);
+  const user = await User.findOne({ 'subscription.stripeSubscriptionId': stripeSubscriptionId });
+
+  if (user) {
+    user.subscription.status = 'active';
+    user.subscription.currentPeriodEnd = new Date(subscription.current_period_end * 1000);
+    await user.save();
+
+    await sendStripeNotificationEmail(
+      user.email,
+      'Il tuo abbonamento è attivo! 🎉',
+      `<h1>Ciao ${user.name},</h1><p>Il tuo pagamento è stato ricevuto e il tuo abbonamento al piano <strong>${user.subscription.plan}</strong> è ora attivo. Grazie per esserti unito a noi!</p>`
+    );
+
+    await Notification.create({
+      user: user._id,
+      type: 'billing',
+      message: `Il tuo abbonamento al piano ${user.subscription.plan} è stato attivato con successo.`,
+      date: new Date(),
+    });
+  }
+
+  break;
+}
 
       case 'invoice.payment_failed': {
         // Il rinnovo automatico o il pagamento iniziale è fallito.
