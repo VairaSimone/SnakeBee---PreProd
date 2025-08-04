@@ -178,7 +178,11 @@ const getSessionDetails = async (req, res) => {
 const handleStripeWebhook = async (req, res) => {
   const sig = req.headers['stripe-signature'];
   let event;
-
+        const priceId = data.items.data[0]?.price?.id;
+const planName = PRICE_ID_TO_PLAN[priceId] || null;
+const periodEndUnix = data.current_period_end
+    ?? data.items.data[0]?.current_period_end
+    ?? null;
   try {
     // Se la raw body non è esattamente quella inviata da Stripe, scatta l’errore
     event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
@@ -268,7 +272,7 @@ const handleStripeWebhook = async (req, res) => {
             customerId: data.customer,
             status: subscription.status,
             periodEnd: subscription.current_period_end,
-            plan: PRICE_ID_TO_PLAN[priceId] || null,
+  plan: planName,
             rawEvent: data,
             eventType: type,
           });
@@ -298,11 +302,14 @@ const handleStripeWebhook = async (req, res) => {
         // TODO: invia email di sollecito
         break;
       case 'customer.subscription.created':
+const periodEndUnix = data.current_period_end
+    ?? data.items.data[0]?.current_period_end
+    ?? null;
         await updateSubscription({
           customerId: data.customer,
           status: data.status,
-          periodEnd: data.current_period_end,
-          plan: data.items.data[0].price.id || null,
+          periodEnd: periodEndUnix,
+          plan: planName,
           rawEvent: data,
           eventType: type,
         });
@@ -310,12 +317,13 @@ const handleStripeWebhook = async (req, res) => {
 
       case 'customer.subscription.updated':
         // Aggiornamento abbonamento (es. cambio piano, riattivo, cancellazioni)
+        
         await updateSubscription({
           customerId: data.customer,
           status: data.status,
-          periodEnd: data.current_period_end,
-          plan: PRICE_ID_TO_PLAN[data.items.data[0].price.id] || null,
-          rawEvent: data,
+          periodEnd: periodEndUnix,
+ plan: planName,
+           rawEvent: data,
           eventType: type,
         });
         break;
