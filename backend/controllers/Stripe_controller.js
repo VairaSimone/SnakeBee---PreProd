@@ -178,11 +178,7 @@ const getSessionDetails = async (req, res) => {
 const handleStripeWebhook = async (req, res) => {
   const sig = req.headers['stripe-signature'];
   let event;
-        const priceId = data.items.data[0]?.price?.id;
-const planName = PRICE_ID_TO_PLAN[priceId] || null;
-const periodEndUnix = data.current_period_end
-    ?? data.items.data[0]?.current_period_end
-    ?? null;
+
   try {
     // Se la raw body non è esattamente quella inviata da Stripe, scatta l’errore
     event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
@@ -193,7 +189,11 @@ const periodEndUnix = data.current_period_end
 
   const data = event.data.object;
   const type = event.type;
-
+        const priceId = data.items.data[0]?.price?.id;
+const planName = PRICE_ID_TO_PLAN[priceId] || null;
+const periodEndUnix = data.current_period_end
+    ?? data.items.data[0]?.current_period_end
+    ?? null;
   // Helper per aggiornare lo stato sul DB
   const updateSubscription = async ({ customerId, status, periodEnd, plan, eventType, rawEvent }) => {
     const user = await User.findOne({ 'subscription.stripeCustomerId': customerId });
