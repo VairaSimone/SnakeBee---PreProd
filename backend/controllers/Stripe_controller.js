@@ -211,7 +211,7 @@ export const stripeWebhook = async (req, res) => {
     res.status(200).json({ received: true });
 
   } catch (error) {
-    console.error("Errore nella gestione del webhook:", error);
+    console.error("Errore  nella gestione del webhook:", error);
     res.status(500).json({ error: 'Errore del server durante l\'elaborazione del webhook.' });
   }
 };
