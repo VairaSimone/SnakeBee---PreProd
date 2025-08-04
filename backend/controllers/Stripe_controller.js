@@ -107,7 +107,16 @@ export const manageSubscription = async (req, res) => {
                 id: currentItemId,
                 price: subscriptionPlans[newPlan],
             }],
-            proration_behavior: 'create_prorations', // Calcola addebiti/crediti per il cambio piano.
+            // --- MODIFICA CHIAVE ---
+            // 'always_invoice' crea immediatamente una fattura per il cambio.
+            // - Per un UPGRADE: addebita subito la differenza proporzionale.
+            // - Per un DOWNGRADE: crea subito un credito per il cliente.
+            // Questo comportamento è trasparente e previene abusi, ma non resetta
+            // il ciclo di fatturazione.
+            proration_behavior: 'always_invoice',
+            // Per addebitare immediatamente l'intero importo e resettare il ciclo,
+            // si dovrebbe usare `proration_behavior: 'none'` e creare una nuova fattura manualmente,
+            // ma 'always_invoice' è un'ottima via di mezzo.
         });
 
         // Aggiorna il piano nel DB locale. Il webhook `customer.subscription.updated` farà il resto.
