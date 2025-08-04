@@ -52,7 +52,7 @@ app.use(cors({
 }));
 app.use(cookieParser())
 
-app.post('/webhook', express.raw({ type: 'application/json' }), stripeController.stripeWebhook);
+app.post('/api/stripe/webhook', express.raw({ type: 'application/json' }), stripeController.stripeWebhook);
 
 app.use(express.json({ limit: '10kb' }));
 app.use(morgan("dev"))
