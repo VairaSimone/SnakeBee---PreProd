@@ -31,8 +31,9 @@ const getPlanNameByPriceId = (priceId) => {
  * Crea una sessione di checkout di Stripe per un nuovo abbonamento.
  */
 export const createCheckoutSession = async (req, res) => {
-  const { plan, userId } = req.body;
+  const { plan } = req.body;    
 
+const userId = req.user.userid;
   if (!userId) {
     return res.status(400).json({ error: 'ID utente non fornito.' });
   }
@@ -86,7 +87,8 @@ export const createCheckoutSession = async (req, res) => {
  * Modifica (upgrade/downgrade) un abbonamento esistente.
  */
 export const manageSubscription = async (req, res) => {
-  const { userId, newPlan } = req.body;
+  const { newPlan } = req.body;
+const userId = req.user.userid;
 
   if (!userId || !newPlan) {
     return res.status(400).json({ error: 'ID utente e nuovo piano sono richiesti.' });
@@ -159,7 +161,7 @@ export const manageSubscription = async (req, res) => {
  * Annulla un abbonamento alla fine del periodo di fatturazione corrente.
  */
 export const cancelSubscription = async (req, res) => {
-  const { userId } = req.body;
+const userId = req.user.userid;
 
   if (!userId) {
     return res.status(400).json({ error: 'ID utente non fornito.' });
@@ -194,7 +196,7 @@ export const cancelSubscription = async (req, res) => {
  * Crea una sessione del portale clienti di Stripe.
  */
 export const createCustomerPortalSession = async (req, res) => {
-  const { userId } = req.body;
+const userId = req.user.userid;
 
   try {
     const user = await User.findById(userId);
