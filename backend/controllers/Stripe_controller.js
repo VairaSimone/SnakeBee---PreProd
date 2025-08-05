@@ -244,7 +244,8 @@ export const stripeWebhook = async (req, res) => {
 
         if (user) {
           const periodEnd = new Date(dataObject.period_end * 1000);
-          const priceId = dataObject.lines.data[0]?.price?.id;
+const line = dataObject.lines.data[0];
+const priceId = line?.pricing?.price_details?.price;
           const planName = getPlanNameByPriceId(priceId);
 
           user.subscription.status = 'active';
@@ -264,6 +265,8 @@ export const stripeWebhook = async (req, res) => {
             user: user._id,
             type: 'billing',
             message: `Il tuo abbonamento al piano ${user.subscription.plan} è stato attivato con successo.`,
+           date: new Date(),
+
           });
         } else {
           console.error(`❌ Abbonamento ${stripeSubscriptionId} non trovato nel DB, non posso aggiornare lo stato.`);
