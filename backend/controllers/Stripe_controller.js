@@ -11,7 +11,13 @@ const subscriptionPlans = {
   basic: process.env.STRIPE_PRICE_ID_BASIC,
   premium: process.env.STRIPE_PRICE_ID_PREMIUM,
 };
-
+ function parsePeriodEnd(obj) {
+  const ts1 = obj.current_period_end;
+  const ts2 = obj.items?.data[0]?.current_period_end;
+  const ts = ts1 ?? ts2;
+  if (!ts || typeof ts !== 'number') return null;
+  return new Date(ts * 1000);
+}
 /**
  * Trova il nome del piano ('basic', 'premium') dato un Price ID di Stripe.
  * @param {string} priceId - L'ID del prezzo di Stripe.
@@ -94,6 +100,24 @@ export const manageSubscription = async (req, res) => {
     const user = await User.findById(userId);
     if (!user || !user.subscription?.stripeSubscriptionId) {
       return res.status(404).json({ error: 'Utente o abbonamento non trovato.' });
+    }
+    // --- NUOVA LOGICA: peso dei piani per identificare downgrade ---
+    const planWeights = { basic: 1, premium: 2 };
+    const currentPlan = user.subscription.plan;
+    if (!planWeights[currentPlan]) {
+      console.warn(`Piano corrente sconosciuto: ${currentPlan}`);
+    }
+    // Se il peso del nuovo piano è inferiore, è un downgrade → errore
+    if (planWeights[newPlan] < planWeights[currentPlan]) {
+      return res.status(400).json({
+        error: `Downgrade non supportato in automatico. ` +
+               `Cancella l'abbonamento corrente e sottoscrivi di nuovo il piano "${newPlan}".`
+      });
+    }
+
+    // Se siamo qui, o è un upgrade o lo stesso piano
+    if (newPlan === currentPlan) {
+      return res.status(400).json({ error: 'Selezionato lo stesso piano. Nessuna modifica effettuata.' });
     }
 
     const subscriptionId = user.subscription.stripeSubscriptionId;
@@ -268,7 +292,7 @@ const priceId = line?.pricing?.price_details?.price;
            date: new Date(),
 
           });
-        } else {
+        } else {updated 
           console.error(`❌ Abbonamento ${stripeSubscriptionId} non trovato nel DB, non posso aggiornare lo stato.`);
         }
         break;
@@ -297,7 +321,13 @@ const priceId = line?.pricing?.price_details?.price;
 
           user.subscription.status = dataObject.status;
           if (newPlanName) user.subscription.plan = newPlanName;
-          user.subscription.currentPeriodEnd = new Date(dataObject.current_period_end * 1000);
+
+  const periodEndDate = parsePeriodEnd(dataObject);
+  if (periodEndDate) {
+    user.subscription.currentPeriodEnd = periodEndDate;
+  } else {
+    console.warn(`⚠️ Impossibile parsare currentPeriodEnd per ${dataObject.id}`);
+  }
 
           // Se la cancellazione è stata programmata
           if (dataObject.cancel_at_period_end) {
