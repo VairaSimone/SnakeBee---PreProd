@@ -202,7 +202,7 @@ export const stripeWebhook = async (req, res) => {
 
   try {
     // Usa il raw body per la verifica
-    event = stripeClient.webhooks.constructEvent(req.rawBody, sig, endpointSecret);
+    event = stripeClient.webhooks.constructEvent(req.body, sig, endpointSecret);
   } catch (err) {
     console.error(`❌ Errore nella verifica della firma del webhook: ${err.message}`);
     return res.status(400).send(`Webhook Error: ${err.message}`);
