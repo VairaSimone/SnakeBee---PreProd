@@ -5,6 +5,7 @@ import Redis from 'ioredis';
 import Redlock from 'redlock';
 import FailedEmail from '../models/FailedEmail.js';
 import { transporter } from '../config/mailer.config.js';
+import { getUserPlan } from '../utils/getUserPlans.js';
 
 /*
 const redis = new Redis(process.env.REDIS_URL || "redis://localhost:6379");
@@ -29,7 +30,7 @@ const getReptileDisplayName = (reptile) => {
 
 cron.schedule('0 0 * * *', async () => {
   try {
-   // const lock = await redlock.acquire(['locks:feedingJob'], 5 * 60 * 1000); // 5 min TTL
+    // const lock = await redlock.acquire(['locks:feedingJob'], 5 * 60 * 1000); // 5 min TTL
     console.log('JOB - Feeding Job');
 
     try {
@@ -56,7 +57,7 @@ cron.schedule('0 0 * * *', async () => {
           }
         }
       ]);
-            const feedingIds = aggregatedFeedings.map(f => f.feeding._id);
+      const feedingIds = aggregatedFeedings.map(f => f.feeding._id);
 
       // Find all the feedings that need to be fed today
       const feedings = await Feeding.find({ _id: { $in: feedingIds } }).populate({
@@ -66,7 +67,7 @@ cron.schedule('0 0 * * *', async () => {
           select: 'email name receiveFeedingEmails'
         }
       });
-      
+
       // Group feedings by user
       const notificationsByUser = {};
 
@@ -88,25 +89,32 @@ cron.schedule('0 0 * * *', async () => {
         if (!notificationsByUser[userId]) {
           notificationsByUser[userId] = {
             user,
-reptilesMap: new Map(),
+            reptilesMap: new Map(),
           };
         }
-notificationsByUser[userId].reptilesMap.set(
-  reptile._id.toString(),
-  getReptileDisplayName(reptile)
-);
+        notificationsByUser[userId].reptilesMap.set(
+          reptile._id.toString(),
+          getReptileDisplayName(reptile)
+        );
       }
 
       // Create a notification for each user and send summary emails
-for (const userId in notificationsByUser) {
-  const user = notificationsByUser[userId].user;
-  const reptiles = Array.from(notificationsByUser[userId].reptilesMap.entries()).map(
-    ([reptileId, name]) => ({
-      name,
-      reptileId
-    })
-  );
-          let emailsSent = 0;
+      for (const userId in notificationsByUser) {
+        const user = notificationsByUser[userId].user;
+
+        const { plan } = getUserPlan(user);
+        if (plan !== 'premium') {
+          console.log(`FeedingJob: utente ${user.email} ha piano ${plan}. Email non inviata.`);
+          continue;
+        }
+
+        const reptiles = Array.from(notificationsByUser[userId].reptilesMap.entries()).map(
+          ([reptileId, name]) => ({
+            name,
+            reptileId
+          })
+        );
+        let emailsSent = 0;
         let emailsFailed = 0;
 
         const reptileList = reptiles.map((r) => r.name).join(', ');

@@ -1,10 +1,9 @@
 import Reptile from "../models/Reptile.js";
 import mongoose from 'mongoose';
-import cloudinary from '../config/CloudinaryConfig.js';
 import Feeding from "../models/Feeding.js";
 import Notification from "../models/Notification.js";
-import fs from 'fs/promises';
-import streamifier from 'streamifier';
+import User from "../models/User.js";
+import { getUserPlan } from '../utils/getUserPlans.js'
 
 import { parseDateOrNull } from '../utils/parseReptileHelpers.js';
 import { deleteFileIfExists } from "../utils/deleteFileIfExists.js";
@@ -88,15 +87,28 @@ export const PostReptile = async (req, res) => {
         const parsedDocuments = typeof documents === 'string' ? JSON.parse(documents) : documents;
 
         // Controllo limite massimo
+        const user = await User.findById(userId);
+const { plan: userPlan, limits } = getUserPlan(user);
         const reptileCount = await Reptile.countDocuments({ user: userId });
-        if (reptileCount >= 10) {
-            return res.status(400).json({ message: 'Hai raggiunto il limite massimo di animali, contatta il supporto per aggiornamenti su un piano più elevato' });
+
+
+        if (reptileCount >= limits.reptiles) {
+            return res.status(400).json({
+                message: `Hai raggiunto il limite massimo (${limits.reptiles}) di rettili per il piano "${userPlan}".`
+            });
+
         }
-        let imageUrl = '';
 
-        if (req.file) {
-            imageUrl = `/uploads/${req.file.filename}`;
+        let imageUrls = [];
 
+        if (req.files && req.files.length > 0) {
+            if (req.files?.length > limits.imagesPerReptile) {
+                return res.status(400).json({
+                    message: `Il tuo piano (${userPlan}) permette al massimo ${limits.imagesPerReptile} immagini per rettile.`
+                });
+            }
+
+            imageUrls = req.files.map(file => `/uploads/${file.filename}`);
         }
 
         const birthDateObject = parseDateOrNull(birthDate);
@@ -106,7 +118,7 @@ export const PostReptile = async (req, res) => {
             species,
             morph,
             user: userId,
-            image: imageUrl,
+            image: imageUrls,
             birthDate: birthDateObject,
             sex,
             isBreeder,
@@ -127,7 +139,10 @@ export const PostReptile = async (req, res) => {
 
 export const PutReptile = async (req, res) => {
     try {
+
         const id = req.params.reptileId;
+        const user = await User.findById(userId);
+const { plan: userPlan, limits } = getUserPlan(user);
         const { name, species, morph, sex, notes, birthDate, isBreeder, label, parents, documents } = req.body;
         let parsedParents, parsedDocuments;
         if ('parents' in req.body) {
@@ -141,22 +156,28 @@ export const PutReptile = async (req, res) => {
                 ? JSON.parse(req.body.documents)
                 : req.body.documents;
         }
+
+
         let reptile = await Reptile.findById(id);
 
         if (!reptile) {
             return res.status(404).send({ message: 'Reptile not found' });
         }
 
-        let imageUrl = reptile.image;
+        let imageUrls = reptile.image || []; // immagini esistenti
 
-        if (req.file) {
-            // Carica buffer su Cloudinary
-            if (reptile.image) {
-                await deleteFileIfExists(reptile.image);
+        if (req.files && req.files.length > 0) {
+            if (req.files?.length > limits.imagesPerReptile) {
+                return res.status(400).json({
+                    message: `Puoi avere al massimo ${limits.imagesPerReptile} immagini per rettile con il piano "${userPlan}".`
+                });
             }
-            imageUrl = `/uploads/${req.file.filename}`;
 
+            const newImages = req.files.map(file => `/uploads/${file.filename}`);
+            imageUrls = [...imageUrls, ...newImages];
         }
+
+
         const parseDateOrNull = (value) => {
             if (!value || value === 'null') return null;
             return new Date(value);
@@ -168,13 +189,13 @@ export const PutReptile = async (req, res) => {
         };
 
         const birthDateObject = birthDate ? new Date(birthDate) : reptile.birthDate;
-     await logAction(req.user.userid, "Modify reptile");
+        await logAction(req.user.userid, "Modify reptile");
 
         if ('name' in req.body) reptile.name = name;
         reptile.species = species || reptile.species;
         reptile.morph = morph || reptile.morph;
         reptile.birthDate = birthDateObject;
-        reptile.image = imageUrl;
+        reptile.image = imageUrls;
         reptile.sex = sex || reptile.sex;
         if ('label' in req.body) {
             try {
@@ -199,6 +220,41 @@ export const PutReptile = async (req, res) => {
     }
 };
 
+export const DeleteReptileImage = async (req, res) => {
+    try {
+        const { reptileId, imageIndex } = req.params;
+
+        const reptile = await Reptile.findById(reptileId);
+        if (!reptile) return res.status(404).json({ message: 'Reptile not found' });
+
+        const index = parseInt(imageIndex);
+        if (isNaN(index) || index < 0 || index >= reptile.image.length) {
+            return res.status(400).json({ message: 'Indice immagine non valido' });
+        }
+
+        const imageToRemove = reptile.image[index];
+
+        // Rimuovi file dal filesystem
+        await deleteFileIfExists(imageToRemove); // Assicurati che gestisca il path corretto
+
+        // Rimuovi dal DB
+        reptile.image.splice(index, 1);
+        await reptile.save();
+
+        await logAction(req.user.userid, `Delete reptile image at index ${index}`);
+
+        res.status(200).json({
+            message: `Immagine rimossa con successo`,
+            remainingImages: reptile.image
+        });
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Errore nella rimozione dell\'immagine' });
+    }
+};
+
+
 export const DeleteReptile = async (req, res) => {
     try {
         const reptileId = req.params.reptileId;
@@ -212,7 +268,7 @@ export const DeleteReptile = async (req, res) => {
         await Notification.deleteMany({ reptile: reptileId });
 
         await Reptile.findByIdAndDelete(reptileId);
-     await logAction(req.user.userid, "Delete reptile");
+        await logAction(req.user.userid, "Delete reptile");
 
         res.send({ message: 'Reptile and associated data successfully deleted' });
     } catch (err) {

@@ -1,6 +1,7 @@
 import Breeding from '../models/Breeding.js';
 import Reptile from '../models/Reptile.js';
 import mongoose from 'mongoose';
+import { logAction } from "../utils/logAction.js";
 
 // 🧠 Funzione utilità per evitare coppie duplicate nello stesso anno
 async function isDuplicatePair(maleId, femaleId, year, userId) {
@@ -44,6 +45,7 @@ export const createBreedingPair = async (req, res) => {
     const newBreeding = await Breeding.create({
       male, female, year, species, morphCombo, isLiveBirth, user
     });
+     await logAction(req.user.userid, "Create Breeding");
 
     res.status(201).json(newBreeding);
   } catch (err) {
@@ -71,6 +73,7 @@ export const addBreedingEvent = async (req, res) => {
     if (sameWeekEvents.length > 0) {
       return res.status(409).json({ error: `Evento "${type}" già presente in questa settimana` });
     }
+     await logAction(req.user.userid, "Add event Breeding");
 
     breeding.events.push({ type, date, notes });
     await breeding.save();
@@ -149,6 +152,8 @@ export const deleteBreedingEvent = async (req, res) => {
   const breeding = await Breeding.findOne({ _id: breedingId, user: req.user.userid });
   if (!breeding) return res.status(404).json({ error: 'Riproduzione non trovata' });
   breeding.events.id(eventId)?.remove();
+       await logAction(req.user.userid, "Delete Breeding");
+
   await breeding.save();
   res.json(breeding);
 };

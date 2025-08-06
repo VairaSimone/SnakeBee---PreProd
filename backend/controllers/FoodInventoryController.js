@@ -1,10 +1,20 @@
 // controllers/FoodInventoryController.js
 import FoodInventory from '../models/FoodInventory.js';
+import { getUserPlan } from '../utils/getUserPlans.js'
+
+function isInventoryAccessAllowed(user) {
+  const { plan } = getUserPlan(user);
+  return plan === 'premium';
+}
 
 export const getInventory = async (req, res) => {
   try {
     if (!req.user || !req.user.userid) {
       return res.status(401).json({ message: 'Utente non autenticato' });
+    }
+
+        if (!isInventoryAccessAllowed(req.user)) {
+      return res.status(403).json({ message: 'Il tuo piano non consente la gestione dell\'inventario. Solo per utenti Premium.' });
     }
 
     const inventory = await FoodInventory.find({ user: req.user.userid });
@@ -18,6 +28,10 @@ export const getInventory = async (req, res) => {
 export const updateInventoryItem = async (req, res) => {
   const { id } = req.params;
   const { quantity, weightPerUnit } = req.body;
+
+    if (!isInventoryAccessAllowed(req.user)) {
+    return res.status(403).json({ message: 'Solo gli utenti Premium possono aggiornare l\'inventario.' });
+  }
 
   try {
     const item = await FoodInventory.findOneAndUpdate(
@@ -37,6 +51,10 @@ export const updateInventoryItem = async (req, res) => {
 export const addInventoryItem = async (req, res) => {
   const { foodType, quantity, weightPerUnit } = req.body;
   const userId = req.user.userid; // <-- Preso dal token JWT
+
+    if (!isInventoryAccessAllowed(req.user)) {
+    return res.status(403).json({ message: 'Funzionalità riservata agli utenti Premium.' });
+  }
 
  try {
     // Cerca se esiste già un item con stesso tipo e peso per unità
@@ -72,6 +90,10 @@ existing.quantity = Number(existing.quantity) + Number(quantity);
 
 export const deleteFeeding = async (req, res) => {
   const { id } = req.params;
+
+    if (!isInventoryAccessAllowed(req.user)) {
+    return res.status(403).json({ message: 'Solo gli utenti Premium possono eliminare elementi dall\'inventario.' });
+  }
 
   try {
     const deleted = await FoodInventory.findOneAndDelete({

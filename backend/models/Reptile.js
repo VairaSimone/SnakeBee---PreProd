@@ -28,9 +28,10 @@ const reptileSchema = new Schema(
     notes: {
       type: String,
     },
-    image: {
-      type: String
-    },
+image: {
+  type: [String], // array di immagini
+  default: []
+},
       birthDate: {
       type: Date
     },

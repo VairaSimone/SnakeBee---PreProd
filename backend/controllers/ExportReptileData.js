@@ -7,11 +7,13 @@ import Feeding from '../models/Feeding.js';
 import Breeding from '../models/Breeding.js';
 import mongoose from 'mongoose';
 import { logAction } from '../utils/logAction.js';
+import User from '../models/User.js';
+import { getUserPlan } from '../utils/getUserPlans.js'
 
 export const exportReptileData = async (req, res) => {
   try {
     const userId = req.params.userId;
-     await logAction(req.user.userid, "ExportReptile");
+    await logAction(req.user.userid, "ExportReptile");
 
     const reptiles = await Reptile.find({ user: userId }).lean();
     const reptileMap = reptiles.reduce((acc, r) => {
@@ -77,7 +79,7 @@ export const exportReptileData = async (req, res) => {
       pattern: 'solid',
       fgColor: { argb: 'FF4CAF50' }, // verde brillante
     };
-reptileSheet.views = [{ state: 'frozen', ySplit: 1 }];
+    reptileSheet.views = [{ state: 'frozen', ySplit: 1 }];
 
     reptileSheet.columns.forEach(col => {
       let maxLength = col.header.length;
@@ -117,7 +119,7 @@ reptileSheet.views = [{ state: 'frozen', ySplit: 1 }];
       pattern: 'solid',
       fgColor: { argb: 'FF4CAF50' }, // verde brillante
     };
-feedingSheet.views = [{ state: 'frozen', ySplit: 1 }];
+    feedingSheet.views = [{ state: 'frozen', ySplit: 1 }];
 
     feedingSheet.columns.forEach(col => {
       let maxLength = col.header.length;
@@ -136,18 +138,18 @@ feedingSheet.views = [{ state: 'frozen', ySplit: 1 }];
       { header: 'Peso (g)', key: 'weight' },
     ];
     const translateEventType = (type) => {
-  const map = {
-    shed: 'Muta',
-    feces: 'Feci',
-    vet: 'Visita veterinaria',
-    weight: 'Peso',
-  };
-  return map[type] || type; // fallback all'originale se non trovato
-};
+      const map = {
+        shed: 'Muta',
+        feces: 'Feci',
+        vet: 'Visita veterinaria',
+        weight: 'Peso',
+      };
+      return map[type] || type; // fallback all'originale se non trovato
+    };
 
     eventSheet.addRows(events.map(e => ({
       reptile: `${reptileMap[e.reptile]?.morph} - ${reptileMap[e.reptile]?.sex}`,
-type: translateEventType(e.type),
+      type: translateEventType(e.type),
       date: e.date ? new Date(e.date).toLocaleDateString() : '',
       notes: e.notes || '',
       weight: e.type === 'weight' ? e.weight : '',
@@ -264,10 +266,24 @@ type: translateEventType(e.type),
   }
 };
 
-export async function generateReptilePDF(reptileId, res) {
+export async function generateReptilePDF(req, res) {
+
+
   const doc = new PDFDocument({ margin: 40, size: 'A4' });
+  const reptileId = req.params.reptileId;
 
   try {
+
+    const userId = req.user.userid;
+    const user = await User.findById(userId);
+    const { plan } = getUserPlan(user);
+
+    if (plan === 'free') {
+      return res.status(403).json({
+        message: 'Il download del PDF è disponibile solo per utenti con piano Basic o Premium attivo.'
+      });
+    }
+
     const reptile = await Reptile.findById(reptileId).lean();
     const events = await Event.find({ reptile: reptileId }).sort({ date: -1 }).lean();
     const feedings = await Feeding.find({ reptile: reptileId }).sort({ date: -1 }).lean();

@@ -10,7 +10,10 @@ import jwt from "jsonwebtoken";
 import cloudinary from '../config/CloudinaryConfig.js'; 
 import { deleteFileIfExists } from "../utils/deleteFileIfExists.js";
 import { logAction } from "../utils/logAction.js";
-
+import Stripe from "stripe";
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+  apiVersion: '2024-08-01', // o la versione che usi tu
+});
 export const GetAllUser = async (req, res) => {
   try {
 
@@ -118,6 +121,20 @@ export const DeleteUser = async (req, res) => {
     const user = await User.findById(userId);
     if (!user) return res.status(404).json({ message: 'Utente non trovato' });
 
+
+    const subId = user.subscription?.stripeSubscriptionId;
+    const subStatus = user.subscription?.status;
+
+    if (subId && ['active', 'incomplete', 'past_due', 'pending_cancellation'].includes(subStatus)) {
+      try {
+        await stripe.subscriptions.del(subId);
+        await logAction(user._id, 'stripe_subscription_cancelled_on_user_deletion', `Sub ID: ${subId}`);
+      } catch (stripeErr) {
+        console.error('Errore Stripe durante cancellazione abbonamento:', stripeErr);
+        return res.status(500).json({ message: 'Errore nella cancellazione dell’abbonamento Stripe' });
+      }
+    }
+
     // Trova tutti i rettili dell'utente
     const reptiles = await Reptile.find({ user: userId });
 
@@ -144,9 +161,10 @@ export const DeleteUser = async (req, res) => {
     if (user.avatar) {
       await deleteFileIfExists(user.avatar);
     }
+    await logAction(req.user.userid, "user_deleted", `Cancellato utente ${userId}, tipo: self`);
+
     // Elimina utente
     await User.findByIdAndDelete(userId);
-     await logAction(req.user.userid, "Delete User");
 
     // Revoca token se presente
     const token = req.header('Authorization')?.split(' ')[1];

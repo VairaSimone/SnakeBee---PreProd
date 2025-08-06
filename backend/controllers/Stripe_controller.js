@@ -2,6 +2,7 @@ import stripe from 'stripe';
 import User from '../models/User.js';
 import Notification from '../models/Notification.js';
 import { sendStripeNotificationEmail } from '../config/mailer.config.js';
+import { logAction } from "../utils/logAction.js";
 
 // Inizializza Stripe con la tua chiave segreta
 const stripeClient = stripe(process.env.STRIPE_SECRET_KEY);
@@ -11,7 +12,7 @@ const subscriptionPlans = {
   basic: process.env.STRIPE_PRICE_ID_BASIC,
   premium: process.env.STRIPE_PRICE_ID_PREMIUM,
 };
- function parsePeriodEnd(obj) {
+function parsePeriodEnd(obj) {
   const ts1 = obj.current_period_end;
   const ts2 = obj.items?.data[0]?.current_period_end;
   const ts = ts1 ?? ts2;
@@ -31,9 +32,9 @@ const getPlanNameByPriceId = (priceId) => {
  * Crea una sessione di checkout di Stripe per un nuovo abbonamento.
  */
 export const createCheckoutSession = async (req, res) => {
-  const { plan } = req.body;    
+  const { plan } = req.body;
 
-const userId = req.user.userid;
+  const userId = req.user.userid;
   if (!userId) {
     return res.status(400).json({ error: 'ID utente non fornito.' });
   }
@@ -75,6 +76,7 @@ const userId = req.user.userid;
       cancel_url: `${process.env.FRONTEND_URL}/canceled`,
       metadata: { userId: user._id.toString(), plan: plan }
     });
+    await logAction(user._id, 'subscription_checkout_started', `Piano: ${plan}`);
 
     res.status(200).json({ url: session.url });
   } catch (error) {
@@ -88,7 +90,7 @@ const userId = req.user.userid;
  */
 export const manageSubscription = async (req, res) => {
   const { newPlan } = req.body;
-const userId = req.user.userid;
+  const userId = req.user.userid;
 
   if (!userId || !newPlan) {
     return res.status(400).json({ error: 'ID utente e nuovo piano sono richiesti.' });
@@ -113,7 +115,7 @@ const userId = req.user.userid;
     if (planWeights[newPlan] < planWeights[currentPlan]) {
       return res.status(400).json({
         error: `Downgrade non supportato in automatico. ` +
-               `Cancella l'abbonamento corrente e sottoscrivi di nuovo il piano "${newPlan}".`
+          `Cancella l'abbonamento corrente e sottoscrivi di nuovo il piano "${newPlan}".`
       });
     }
 
@@ -147,6 +149,8 @@ const userId = req.user.userid;
 
     // Aggiorna il piano nel DB locale. Il webhook `customer.subscription.updated` farà il resto.
     user.subscription.plan = newPlan;
+    await logAction(user._id, 'subscription_updated', `Da ${currentPlan} a ${newPlan}`);
+
     await user.save();
 
     res.status(200).json({ success: true, message: 'Abbonamento aggiornato con successo.', subscription: updatedSubscription });
@@ -161,7 +165,7 @@ const userId = req.user.userid;
  * Annulla un abbonamento alla fine del periodo di fatturazione corrente.
  */
 export const cancelSubscription = async (req, res) => {
-const userId = req.user.userid;
+  const userId = req.user.userid;
 
   if (!userId) {
     return res.status(400).json({ error: 'ID utente non fornito.' });
@@ -182,6 +186,8 @@ const userId = req.user.userid;
     // Lo status verrà aggiornato a 'canceled' dal webhook `customer.subscription.updated`.
     // Possiamo anticipare l'aggiornamento qui se necessario.
     user.subscription.status = 'pending_cancellation'; // Status personalizzato per indicare la cancellazione imminente
+    await logAction(user._id, 'subscription_cancellation_requested', `ID sub: ${user.subscription.stripeSubscriptionId}`);
+
     await user.save();
 
     res.status(200).json({ success: true, message: 'La cancellazione dell\'abbonamento è stata programmata.', subscription: canceledSubscription });
@@ -196,7 +202,7 @@ const userId = req.user.userid;
  * Crea una sessione del portale clienti di Stripe.
  */
 export const createCustomerPortalSession = async (req, res) => {
-const userId = req.user.userid;
+  const userId = req.user.userid;
 
   try {
     const user = await User.findById(userId);
@@ -208,6 +214,7 @@ const userId = req.user.userid;
       customer: user.subscription.stripeCustomerId,
       return_url: `${process.env.FRONTEND_URL}/profile`, // URL a cui l'utente torna dopo aver gestito l'abbonamento.
     });
+    await logAction(user._id, 'stripe_portal_opened');
 
     res.status(200).json({ url: portalSession.url });
 
@@ -257,6 +264,8 @@ export const stripeWebhook = async (req, res) => {
             user.subscription.status = 'incomplete';
             console.log(`Utente ${userId} ha completato il checkout, ma il pagamento è in stato '${dataObject.payment_status}'.`);
           }
+          await logAction(user._id, 'stripe_checkout_completed', `Status: ${user.subscription.status}, Piano: ${plan}`);
+
           await user.save();
           console.log(`Utente ${userId} ha completato il checkout per il piano ${plan}. In attesa della conferma di pagamento.`);
         }
@@ -270,8 +279,8 @@ export const stripeWebhook = async (req, res) => {
 
         if (user) {
           const periodEnd = new Date(dataObject.period_end * 1000);
-const line = dataObject.lines.data[0];
-const priceId = line?.pricing?.price_details?.price;
+          const line = dataObject.lines.data[0];
+          const priceId = line?.pricing?.price_details?.price;
           const planName = getPlanNameByPriceId(priceId);
 
           user.subscription.status = 'active';
@@ -291,10 +300,13 @@ const priceId = line?.pricing?.price_details?.price;
             user: user._id,
             type: 'billing',
             message: `Il tuo abbonamento al piano ${user.subscription.plan} è stato attivato con successo.`,
-           date: new Date(),
+            date: new Date(),
 
           });
-        } else {updated 
+          await logAction(user._id, 'stripe_invoice_paid', `Piano: ${user.subscription.plan}, Period end: ${periodEnd}`);
+
+        } else {
+          updated
           console.error(`❌ Abbonamento ${stripeSubscriptionId} non trovato nel DB, non posso aggiornare lo stato.`);
         }
         break;
@@ -305,6 +317,7 @@ const priceId = line?.pricing?.price_details?.price;
         if (user) {
           user.subscription.status = 'past_due';
           await user.save();
+await logAction(user._id, 'stripe_payment_failed', `Sub ID: ${dataObject.subscription}`);
 
           await sendStripeNotificationEmail(
             user.email,
@@ -324,12 +337,12 @@ const priceId = line?.pricing?.price_details?.price;
           user.subscription.status = dataObject.status;
           if (newPlanName) user.subscription.plan = newPlanName;
 
-  const periodEndDate = parsePeriodEnd(dataObject);
-  if (periodEndDate) {
-    user.subscription.currentPeriodEnd = periodEndDate;
-  } else {
-    console.warn(`⚠️ Impossibile parsare currentPeriodEnd per ${dataObject.id}`);
-  }
+          const periodEndDate = parsePeriodEnd(dataObject);
+          if (periodEndDate) {
+            user.subscription.currentPeriodEnd = periodEndDate;
+          } else {
+            console.warn(`⚠️ Impossibile parsare currentPeriodEnd per ${dataObject.id}`);
+          }
 
           // Se la cancellazione è stata programmata
           if (dataObject.cancel_at_period_end) {
@@ -338,6 +351,7 @@ const priceId = line?.pricing?.price_details?.price;
           }
 
           await user.save();
+await logAction(user._id, 'subscription_updated_webhook', `Status: ${dataObject.status}, Nuovo piano: ${newPlanName}`);
 
           const subject = 'Il tuo abbonamento è stato aggiornato';
           const body = `<h1>Ciao ${user.name},</h1><p>Il tuo abbonamento è stato aggiornato con successo al piano <strong>${newPlanName}</strong>.</p>`;
@@ -355,6 +369,7 @@ const priceId = line?.pricing?.price_details?.price;
           user.subscription.stripeSubscriptionId = null;
           user.subscription.currentPeriodEnd = null;
           await user.save();
+await logAction(user._id, 'subscription_cancelled', `Abbonamento terminato`);
 
           const subject = 'Il tuo abbonamento è stato cancellato';
           const body = `<h1>Ciao ${user.name},</h1><p>Come da tua richiesta, il tuo abbonamento è stato cancellato. Ci dispiace vederti andare via!</p>`;
@@ -370,6 +385,8 @@ const priceId = line?.pricing?.price_details?.price;
     res.status(200).json({ received: true });
 
   } catch (error) {
+    await logAction(null, 'webhook_unhandled', `Tipo evento: ${event.type}`);
+
     console.error("Errore nella gestione del webhook:", error);
     res.status(500).json({ error: 'Errore del server durante l\'elaborazione del webhook.' });
   }

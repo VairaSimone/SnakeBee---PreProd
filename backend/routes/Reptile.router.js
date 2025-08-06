@@ -27,4 +27,6 @@ reptileRouter.get('/analytics/shed-interval', authenticateJWT, averageShedInterv
 reptileRouter.get('/events/:reptileId',authenticateJWT,  GetEvents);
 reptileRouter.post('/events', authenticateJWT,   CreateEvent);
 reptileRouter.delete('/events/:eventId',authenticateJWT,   DeleteEvent);
+reptileRouter.delete('/:reptileId/image/:imageIndex', authenticateJWT, isOwnerOrAdmin(Reptile, 'reptileId'), reptileController.DeleteReptileImage);
+
 export default reptileRouter;
