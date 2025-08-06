@@ -127,7 +127,7 @@ export const DeleteUser = async (req, res) => {
 
     if (subId && ['active', 'incomplete', 'past_due', 'pending_cancellation'].includes(subStatus)) {
       try {
-        await stripe.subscriptions.del(subId);
+        await stripe.subscriptions.cancel(subId);
         await logAction(user._id, 'stripe_subscription_cancelled_on_user_deletion', `Sub ID: ${subId}`);
       } catch (stripeErr) {
         console.error('Errore Stripe durante cancellazione abbonamento:', stripeErr);

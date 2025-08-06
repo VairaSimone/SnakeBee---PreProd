@@ -73,3 +73,8 @@ user: subscription: {
     default: 'active'
   }
 }
+
+reptileimage: {
+  type: [String], // array di immagini
+  default: []
+},
