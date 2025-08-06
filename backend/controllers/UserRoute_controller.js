@@ -11,9 +11,7 @@ import cloudinary from '../config/CloudinaryConfig.js';
 import { deleteFileIfExists } from "../utils/deleteFileIfExists.js";
 import { logAction } from "../utils/logAction.js";
 import Stripe from "stripe";
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: '2024-08-01', // o la versione che usi tu
-});
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 export const GetAllUser = async (req, res) => {
   try {
 
