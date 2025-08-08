@@ -145,11 +145,11 @@ const Navbar = () => {
                       Profilo
                     </NavLink>
                             <NavLink
-                      to="/princing"
+                      to="/pricing"
                       className="block px-4 py-2 hover:bg-[#F1F1F1]"
                       onClick={() => setAvatarMenuOpen(false)}
                     >
-                      Profilo
+                      Abbonamento
                     </NavLink>
                     <button
                       onClick={handleLogout}

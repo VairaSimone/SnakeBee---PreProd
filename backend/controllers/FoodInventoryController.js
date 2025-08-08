@@ -2,10 +2,11 @@
 import FoodInventory from '../models/FoodInventory.js';
 import { getUserPlan } from '../utils/getUserPlans.js'
 
-function isInventoryAccessAllowed(user) {
-  const { plan } = getUserPlan(user);
-  return plan === 'premium';
+async function isInventoryAccessAllowed(userId) {
+  const user = await User.findById(userId);
+  return user?.subscription?.plan === 'premium';
 }
+
 
 export const getInventory = async (req, res) => {
   try {
@@ -13,9 +14,9 @@ export const getInventory = async (req, res) => {
       return res.status(401).json({ message: 'Utente non autenticato' });
     }
 
-        if (!isInventoryAccessAllowed(req.user)) {
-      return res.status(403).json({ message: 'Il tuo piano non consente la gestione dell\'inventario. Solo per utenti Premium.' });
-    }
+if (!await isInventoryAccessAllowed(req.user.userid)) {
+  return res.status(403).json({ message: 'Solo utenti Premium' });
+}
 
     const inventory = await FoodInventory.find({ user: req.user.userid });
     res.json(inventory);
