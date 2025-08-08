@@ -20,7 +20,7 @@ reptileRouter.get('/export/reptiles/:userId', authenticateJWT, exportReptileData
 
 reptileRouter.get('/:id/pdf', authenticateJWT, async (req, res) => {
   const { id } = req.params;
-  await generateReptilePDF(id, res);
+  await generateReptilePDF(req, res);
 });
 reptileRouter.get('/analytics/shed-interval', authenticateJWT, averageShedInterval);
 

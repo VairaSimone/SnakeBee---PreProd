@@ -1,5 +1,12 @@
 /** @type {import('tailwindcss').Config} */
 export default {
+  safelist: [
+        'text-blue-500', 'hover:bg-blue-500/10',
+        'text-amber', 'hover:bg-amber/10',
+        'text-purple-500', 'hover:bg-purple-500/10',
+        'text-brick', 'hover:bg-brick/10',
+        'bg-forest', 'bg-amber', 'bg-blue-500', 'bg-purple-500',
+    ],
   content: [
     "./src/**/*.{js,jsx,ts,tsx}",
   ],
@@ -21,5 +28,7 @@ export default {
       },
     },
   },
-plugins: [require('@tailwindcss/aspect-ratio')],
+plugins: [require('@tailwindcss/aspect-ratio'),
+  require('@tailwindcss/forms'),
+],
 }

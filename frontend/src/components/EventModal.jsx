@@ -16,6 +16,7 @@ const EventModal = ({ show, handleClose, reptileId }) => {
   const currentEvents = events.slice(indexOfFirstEvent, indexOfLastEvent);
   const totalPages = Math.ceil(events.length / eventsPerPage);
   const [weight, setWeight] = useState('');
+const [formError, setFormError] = useState('');
 
   const eventTypeLabels = {
     shed: 'Muta',
@@ -55,15 +56,20 @@ const EventModal = ({ show, handleClose, reptileId }) => {
       }
       newEvent.weight = parseFloat(weight);
     }
+try {
+  await postEvent(newEvent);
+  const updated = await getEvents(reptileId);
+  setEvents(updated.data);
+  setDate('');
+  setNotes('');
+  setWeight('');
+  setFormError(''); // resetta errori se tutto va bene
+} catch (err) {
+  const msg = err.response?.data?.message || 'Errore durante il salvataggio evento.';
+  setFormError(msg); // 👈 mostralo sotto al form
+}
 
-    await postEvent(newEvent);
-    const updated = await getEvents(reptileId);
-    setEvents(updated.data);
-    setDate('');
-    setNotes('');
-    setWeight('');
-
-  };
+};
 
   const handleDelete = async (eventId) => {
     await deleteEvent(eventId);
@@ -154,6 +160,11 @@ const EventModal = ({ show, handleClose, reptileId }) => {
                   </div>
                 )}
 
+{formError && (
+  <div className="mt-4 text-sm text-red-600 bg-red-100 border border-red-300 rounded p-2">
+    {formError}
+  </div>
+)}
 
                 <div className="mt-6 text-right">
                   <button

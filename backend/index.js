@@ -52,6 +52,7 @@ app.use(cors({
 }));
 app.use(cookieParser())
 
+
 app.post('/api/stripe/webhook', express.raw({ type: 'application/json' }), stripeController.stripeWebhook);
 
 app.use(express.json({ limit: '10kb' }));
@@ -80,7 +81,12 @@ app.use('/api/feedings', feedingRouter);
 app.use('/api/breeding', breedingRouter);
 app.use('/api/notifications', notificationRouter);
 //app.use('/api/forum', forum);
-
+app.use((err, req, res, next) => {
+  if (err.message === 'Solo file immagine sono ammessi') {
+    return res.status(400).json({ message: err.message });
+  }
+  next(err);
+});
 app.listen(port, '0.0.0.0', () => {
   console.log(`Server is running on ${process.env.BACKEND_URL}:${process.env.PORT}`);
 

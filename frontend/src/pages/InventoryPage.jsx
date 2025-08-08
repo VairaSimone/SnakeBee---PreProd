@@ -9,6 +9,7 @@ const InventoryPage = () => {
   const [formData, setFormData] = useState({ foodType: '', quantity: '', weightPerUnit: '' });
   const [editingId, setEditingId] = useState(null);
 const user = useSelector(selectUser);
+const [errorMessage, setErrorMessage] = useState('');
 
 const fetchInventory = async () => {
   try {
@@ -19,8 +20,13 @@ const fetchInventory = async () => {
     });
     setInventory(data);
   } catch (err) {
-    console.error('Errore caricamento inventario:', err);
-  }
+    if (err.response && err.response.status === 403) {
+      setErrorMessage('Accesso inventario riservato utenti Premium.');
+      setInventory([]); // o gestisci come preferisci
+    } else {
+      console.error('Errore caricamento inventario:', err);
+      setErrorMessage('Errore caricamento inventario');
+    }  }
 };
 
   useEffect(() => {
@@ -29,7 +35,7 @@ const fetchInventory = async () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+setErrorMessage('');
       if (!user || !user._id) {
     console.error('Utente non autenticato');
     return;
@@ -45,8 +51,11 @@ const fetchInventory = async () => {
       setEditingId(null);
       fetchInventory();
     } catch (err) {
-      console.error('Errore invio:', err);
-    }
+  if (err.response && err.response.status === 403) {
+      setErrorMessage('Funzionalità riservata agli utenti Premium. Aggiorna il tuo account.');
+    } else {
+      setErrorMessage('Errore invio: ' + (err.message || 'Unknown error'));
+    }    }
   };
 
   const handleEdit = (item) => {
@@ -82,6 +91,12 @@ return (
     </h1>
 
     {/* FORM */}
+    {errorMessage && (
+  <div className="mb-4 p-3 bg-red-100 text-red-700 rounded">
+    {errorMessage}
+  </div>
+)}
+
     <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
       <div className="flex flex-col">
         <label htmlFor="foodType" className="mb-1 text-gray-700 font-semibold">Tipo Cibo</label>

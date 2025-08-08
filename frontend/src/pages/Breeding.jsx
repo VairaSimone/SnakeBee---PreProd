@@ -6,7 +6,15 @@ import { useSelector } from 'react-redux';
 import { BarChart, LineChart, XAxis, YAxis, Tooltip, Bar, Line } from 'recharts';
 import { useMemo } from 'react';
 
-
+function hasPaidPlan(user) {
+  if (!user?.subscription) return false;
+  const { plan, status } = user.subscription;
+  // Solo se piano è basic o premium e status è active
+  if ((plan === 'basic' || plan === 'premium') && status === 'active') {
+    return true;
+  }
+  return false;
+}
 export default function BreedingPage() {
   const [reptiles, setReptiles] = useState([]);
   const [breedings, setBreedings] = useState([]);
@@ -239,7 +247,15 @@ export default function BreedingPage() {
       alert(err.response?.data?.error || 'Errore creazione coppia');
     }
   };
-
+  if (!hasPaidPlan(user)) {
+    return (
+      <div className="p-6 text-center text-red-600">
+        <h1 className="text-3xl font-bold mb-4">Accesso Negato</h1>
+        <p>La pagina Riproduzione è disponibile solo per utenti con abbonamento a pagamento attivo.</p>
+        <p>Per favore, aggiorna il tuo piano per accedere a questa funzionalità.</p>
+      </div>
+    );
+  }
   return (
     <div className="p-6 space-y-8">
 

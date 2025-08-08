@@ -380,10 +380,26 @@ const UserProfile = () => {
                 id="emailFeedingToggle"
                 type="checkbox"
                 checked={emailFeedingNotifications}
-                onChange={(e) => setEmailFeedingNotifications(e.target.checked)}
+                 onChange={(e) => {
+        if (user.subscription?.plan !== 'premium') {
+          addToast('⚠️ Solo utenti Premium possono usare questa funzione.', 'error');
+          return;
+        }
+        setEmailFeedingNotifications(e.target.checked);
+      }}
+      disabled={user.subscription?.plan !== 'premium'}
                 className="h-5 w-5 text-[#228B22] border-gray-300 rounded"
               />
             </div>
+
+              {user.subscription?.plan !== 'premium' && (
+    <p className="text-xs text-red-600 mt-1">
+      La funzione Email per alimentazione è riservata agli utenti Premium.{' '}
+      <Link to="/abbonamenti" className="underline text-blue-600 hover:text-blue-800">
+        Scopri di più
+      </Link>
+    </p>
+  )}
             <button
               onClick={handleNotificationSave}
               className="btn-animate mt-4 bg-[#228B22] text-white px-4 py-2 rounded hover:bg-green-700"
