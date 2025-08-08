@@ -80,7 +80,7 @@ function AppContent() {
         <Route path="/reptiles/:reptileId" element={<ProtectedRoute><ReptileDetails /></ProtectedRoute>} />
         <Route path="*" element={<NotFound />} />
 
-          <Route path="/abbonamenti" element={<SubscriptionPage />} />
+          <Route path="/pricing" element={<SubscriptionPage />} />
   <Route path="/success" element={<SuccessPage />} />
   <Route path="/cancel" element={<CancelPage />} />
       </Routes>

@@ -280,7 +280,7 @@ export const stripeWebhook = async (req, res) => {
         if (user) {
           const periodEnd = new Date(dataObject.period_end * 1000);
           const line = dataObject.lines.data[0];
-          const priceId = line?.pricing?.price_details?.price;
+const priceId = line?.price?.id;
           const planName = getPlanNameByPriceId(priceId);
 
           user.subscription.status = 'active';

@@ -87,6 +87,12 @@ const Navbar = () => {
               }>
                 Registrati
               </NavLink>
+              <NavLink to="/pricing" className={({ isActive }) =>
+                `hover:text-[#228B22] transition ${isActive ? 'text-[#228B22] underline underline-offset-4 font-semibold' : ''
+                }`
+              }>
+                Abbonamento
+              </NavLink>
             </>
           ) : (
             <>
@@ -138,6 +144,13 @@ const Navbar = () => {
                     >
                       Profilo
                     </NavLink>
+                            <NavLink
+                      to="/princing"
+                      className="block px-4 py-2 hover:bg-[#F1F1F1]"
+                      onClick={() => setAvatarMenuOpen(false)}
+                    >
+                      Profilo
+                    </NavLink>
                     <button
                       onClick={handleLogout}
                       className="w-full text-left px-4 py-2 text-red-600 hover:bg-[#F1F1F1]"
@@ -160,6 +173,8 @@ const Navbar = () => {
               <>
                 <NavLink to="/login" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-2 rounded hover:bg-[#E0D8C3] transition">Login</NavLink>
                 <NavLink to="/register" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-2 rounded hover:bg-[#E0D8C3] transition">Registrati</NavLink>
+                              <NavLink to="/pricing" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-2 rounded hover:bg-[#E0D8C3] transition">Abbonamento</NavLink>
+
               </>
             ) : (
               <>
