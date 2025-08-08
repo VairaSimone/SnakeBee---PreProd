@@ -12,8 +12,8 @@ const reptileRouter = express.Router();
 reptileRouter.get('/', authenticateJWT, reptileController.GetAllReptile);
 reptileRouter.get('/:reptileId', authenticateJWT, isOwnerOrAdmin(Reptile, 'reptileId'), reptileController.GetIDReptile);
 reptileRouter.get('/:userId/AllReptile', authenticateJWT, reptileController.GetAllReptileByUser);
-reptileRouter.post('/', authenticateJWT, upload.single('image'), reptileController.PostReptile);
-reptileRouter.put('/:reptileId', authenticateJWT, upload.single('image'), validateReptile, isOwnerOrAdmin(Reptile, 'reptileId'), reptileController.PutReptile);
+reptileRouter.post('/', authenticateJWT, upload.array('image') , reptileController.PostReptile);
+reptileRouter.put('/:reptileId', authenticateJWT, upload.array('image') , validateReptile, isOwnerOrAdmin(Reptile, 'reptileId'), reptileController.PutReptile);
 reptileRouter.delete('/:reptileId', authenticateJWT, isOwnerOrAdmin(Reptile, 'reptileId'), reptileController.DeleteReptile);
 
 reptileRouter.get('/export/reptiles/:userId', authenticateJWT, exportReptileData);

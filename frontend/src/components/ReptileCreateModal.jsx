@@ -30,8 +30,8 @@ const ReptileCreateModal = ({ show, handleClose, setReptiles, onSuccess }) => {
   };
 
   const handleFileChange = (e) => {
-    setFormData({ ...formData, image: e.target.files[0] });
-  };
+  const files = Array.from(e.target.files);
+  setFormData({ ...formData, image: files });  };
 
   useEffect(() => {
     if (show) {
@@ -89,8 +89,11 @@ const ReptileCreateModal = ({ show, handleClose, setReptiles, onSuccess }) => {
     setLoading(true);
     const formDataToSend = new FormData();
     Object.entries(formData).forEach(([key, val]) => {
-      if (key === 'image' && val) {
-        formDataToSend.append('image', val);}
+if (key === 'image' && val?.length > 0) {
+  val.forEach(file => {
+    formDataToSend.append('image', file);
+  });
+}
       else if (['parents', 'documents'].includes(key)) {} 
       else {formDataToSend.append(key, val);}
 
@@ -198,7 +201,7 @@ formDataToSend.append('documents', JSON.stringify(formData.documents));
 
                   <div>
                     <label className={labelClasses}>Immagine</label>
-                    <input type="file" onChange={handleFileChange} className="w-full text-sm text-gray-700 bg-white border border-gray-300 rounded file:bg-[#228B22] file:text-white file:rounded file:px-4 file:py-1" />
+                    <input type="file"  multiple onChange={handleFileChange} className="w-full text-sm text-gray-700 bg-white border border-gray-300 rounded file:bg-[#228B22] file:text-white file:rounded file:px-4 file:py-1" />
                   </div>
 
                   <hr className="my-4" />
