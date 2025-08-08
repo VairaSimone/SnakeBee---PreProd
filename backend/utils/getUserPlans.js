@@ -4,7 +4,7 @@ export function getUserPlan(user) {
   const plan = user.subscription?.plan || 'free';
   const status = user.subscription?.status;
 
-  const isActive = status === 'active';
+  const isActive = status === 'active' || status === 'pending_cancellation';
 
   if (!isActive || !PLAN_LIMITS[plan]) {
     return {
