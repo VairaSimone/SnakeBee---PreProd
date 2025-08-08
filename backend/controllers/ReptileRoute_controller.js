@@ -164,18 +164,22 @@ const { plan: userPlan, limits } = getUserPlan(user);
             return res.status(404).send({ message: 'Reptile not found' });
         }
 
-        let imageUrls = reptile.image || []; // immagini esistenti
+   let imageUrls = reptile.image || [];
 
-        if (req.files && req.files.length > 0) {
-            if (req.files?.length > limits.imagesPerReptile) {
-                return res.status(400).json({
-                    message: `Puoi avere al massimo ${limits.imagesPerReptile} immagini per rettile con il piano "${userPlan}".`
-                });
-            }
+if (req.files && req.files.length > 0) {
+  const currentImageCount = imageUrls.length;
+  const newImageCount = req.files.length;
+  const totalImages = currentImageCount + newImageCount;
 
-            const newImages = req.files.map(file => `/uploads/${file.filename}`);
-            imageUrls = [...imageUrls, ...newImages];
-        }
+  if (totalImages > limits.imagesPerReptile) {
+    return res.status(400).json({
+      message: `Hai già ${currentImageCount} immagini. Il tuo piano (${userPlan}) consente al massimo ${limits.imagesPerReptile} immagini per rettile.`
+    });
+  }
+
+  const newImages = req.files.map(file => `/uploads/${file.filename}`);
+  imageUrls = [...imageUrls, ...newImages];
+}
 
 
         const parseDateOrNull = (value) => {
@@ -251,7 +255,7 @@ export const DeleteReptileImage = async (req, res) => {
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: 'Errore nella rimozione dell\'immagine' });
-    }
+    }a
 };
 
 

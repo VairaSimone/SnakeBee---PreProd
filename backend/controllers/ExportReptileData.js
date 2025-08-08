@@ -270,7 +270,7 @@ export async function generateReptilePDF(req, res) {
 
 
   const doc = new PDFDocument({ margin: 40, size: 'A4' });
-  const reptileId = req.params.reptileId;
+const reptileId = req.params.id;
 
   try {
 
@@ -285,6 +285,7 @@ export async function generateReptilePDF(req, res) {
     }
 
     const reptile = await Reptile.findById(reptileId).lean();
+    
     const events = await Event.find({ reptile: reptileId }).sort({ date: -1 }).lean();
     const feedings = await Feeding.find({ reptile: reptileId }).sort({ date: -1 }).lean();
     const breedings = await Breeding.find({
