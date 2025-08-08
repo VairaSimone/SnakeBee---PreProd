@@ -26,11 +26,16 @@ const [formError, setFormError] = useState('');
 
   };
 
-  useEffect(() => {
-    if (reptileId && show) {
-      getEvents(reptileId).then(res => setEvents(res.data));
-    }
-  }, [reptileId, show]);
+useEffect(() => {
+  if (reptileId && show) {
+    getEvents(reptileId).then(res => {
+      // Ordina per data crescente (dal più vecchio al più recente)
+      const sortedEvents = res.data.sort((a, b) => new Date(a.date) - new Date(b.date));
+      setEvents(sortedEvents);
+    });
+  }
+}, [reptileId, show]);
+
 
   const toggleNote = (id) => {
     setExpandedNotes(prev => ({
@@ -58,8 +63,10 @@ const [formError, setFormError] = useState('');
     }
 try {
   await postEvent(newEvent);
-  const updated = await getEvents(reptileId);
-  setEvents(updated.data);
+const updated = await getEvents(reptileId);
+const sortedEvents = updated.data.sort((a, b) => new Date(a.date) - new Date(b.date));
+setEvents(sortedEvents);
+
   setDate('');
   setNotes('');
   setWeight('');

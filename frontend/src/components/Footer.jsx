@@ -24,7 +24,7 @@ const Footer = () => {
           <ul className="space-y-2 text-sm">
             <li><Link to="/home#chi-siamo" className="hover:text-[#228B22] transition">Chi siamo</Link></li>
             <li><Link to="/home#contatti" className="hover:text-[#228B22] transition">Contatti</Link></li>
-            <a href="https://www.iubenda.com/privacy-policy/71616687" class="iubenda-white iubenda-noiframe iubenda-embed iubenda-noiframe " title="Privacy Policy ">Privacy Policy</a>
+            <a href="https://www.iubenda.com/privacy-policy/71616687" className="iubenda-white iubenda-noiframe iubenda-embed iubenda-noiframe " title="Privacy Policy ">Privacy Policy</a>
           </ul>
         </div>
 

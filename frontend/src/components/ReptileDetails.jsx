@@ -6,7 +6,7 @@ const ReptileDetails = () => {
   const { reptileId } = useParams();
   const [reptile, setReptile] = useState(null);
   const [feedings, setFeedings] = useState([]);
-  const [breeding, setBreeding] = useState([]);
+ // const [breeding, setBreeding] = useState([]);
   const [loading, setLoading] = useState(true);
   const [visibleFeedings, setVisibleFeedings] = useState(0);
   const [events, setEvents] = useState([]);
@@ -14,53 +14,53 @@ const ReptileDetails = () => {
   const [visibleFeces, setVisibleFeces] = useState(5);
   const [visibleVet, setVisibleVet] = useState(5);
   const [visibleWeight, setVisibleWeight] = useState(5);
-const [pdfError, setPdfError] = useState('');
-const carouselRef = React.useRef(null);
+  const [pdfError, setPdfError] = useState('');
+  const carouselRef = React.useRef(null);
 
-const baseUrl = process.env.REACT_APP_BACKEND_URL_IMAGE?.endsWith('/')
-  ? process.env.REACT_APP_BACKEND_URL_IMAGE
-  : `${process.env.REACT_APP_BACKEND_URL_IMAGE}`;
+  const baseUrl = process.env.REACT_APP_BACKEND_URL_IMAGE?.endsWith('/')
+    ? process.env.REACT_APP_BACKEND_URL_IMAGE
+    : `${process.env.REACT_APP_BACKEND_URL_IMAGE}`;
   const handleShowMore = () => {
     setVisibleFeedings(prev => prev + 5);
   };
-const downloadPDF = async () => {
-  try {
-    setPdfError('');
+  const downloadPDF = async () => {
+    try {
+      setPdfError('');
 
-    const response = await api.get(`/reptile/${reptileId}/pdf`, {
-      responseType: 'blob',
-      validateStatus: () => true, // 🔥 forza Axios a NON lanciare errori sulle status diverse da 2xx
-    });
+      const response = await api.get(`/reptile/${reptileId}/pdf`, {
+        responseType: 'blob',
+        validateStatus: () => true, // 🔥 forza Axios a NON lanciare errori sulle status diverse da 2xx
+      });
 
-    // Se è un errore JSON travestito da blob
-    const contentType = response.headers['content-type'];
-    if (contentType && contentType.includes('application/json')) {
-      const text = await response.data.text(); // perché response.data è ancora un Blob
-      const json = JSON.parse(text);
-      setPdfError(`⚠️ ${json.message || 'Errore sconosciuto'}`);
-      return;
-    }
+      // Se è un errore JSON travestito da blob
+      const contentType = response.headers['content-type'];
+      if (contentType && contentType.includes('application/json')) {
+        const text = await response.data.text(); // perché response.data è ancora un Blob
+        const json = JSON.parse(text);
+        setPdfError(`⚠️ ${json.message || 'Errore sconosciuto'}`);
+        return;
+      }
 
-    // Se lo status code è comunque un errore (es. 403), ma con content-type corretto
-    if (response.status !== 200) {
+      // Se lo status code è comunque un errore (es. 403), ma con content-type corretto
+      if (response.status !== 200) {
+        setPdfError('⚠️ Errore durante il download. Riprova più tardi.');
+        return;
+      }
+
+      // Tutto ok, scarica il file
+      const url = window.URL.createObjectURL(response.data);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${reptile.name || 'reptile'}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Errore nel download del PDF:', error);
       setPdfError('⚠️ Errore durante il download. Riprova più tardi.');
-      return;
     }
-
-    // Tutto ok, scarica il file
-    const url = window.URL.createObjectURL(response.data);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${reptile.name || 'reptile'}.pdf`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    window.URL.revokeObjectURL(url);
-  } catch (error) {
-    console.error('Errore nel download del PDF:', error);
-    setPdfError('⚠️ Errore durante il download. Riprova più tardi.');
-  }
-};
+  };
 
 
   const handleShowLess = () => {
@@ -72,17 +72,24 @@ const downloadPDF = async () => {
       try {
         // Dati del rettile
         const { data: reptileData } = await api.get(`/reptile/${reptileId}`);
+if (!reptileData) {
+  throw new Error('Reptile data is null or undefined');
+}
         setReptile(reptileData);
-const imagesArray = reptile.images || [reptile.image];
-
+        const imagesArray = reptileData.images || [reptileData.image];
+console.log('fetchAll partito')
         // Alimentazione
         const { data: feedingData } = await api.get(`/feedings/${reptileId}?page=1`);
         setFeedings(feedingData.dati || []);
         // Riproduzione (nuovo endpoint specifico)
-        const { data: breedingData } = await api.get(`/breeding/reptile/${reptileId}`);
-        setBreeding(breedingData || []);
+       // const { data: breedingData } = await api.get(`/breeding/reptile/${reptileId}`);
+       // setBreeding(breedingData || []);
         const ev = await getEvents(reptileId).then(r => r.data);
+        console.log('EVENTI RICEVUTI:', ev); // 👈 metti questo
+
         setEvents(ev);
+        console.log('Tutti i tipi evento:', ev.map(e => e.type));
+
         setLoading(false);
       } catch (err) {
         console.error('Errore nel caricamento:', err);
@@ -102,14 +109,14 @@ const imagesArray = reptile.images || [reptile.image];
     await deleteEvent(id);
     setEvents(events.filter(e => e._id !== id));
   };
-const scrollCarousel = (e, direction) => {
-  e.preventDefault();
-  const scrollAmount = carouselRef.current.offsetWidth;
-  carouselRef.current.scrollBy({
-    left: scrollAmount * direction,
-    behavior: 'smooth'
-  });
-};
+  const scrollCarousel = (e, direction) => {
+    e.preventDefault();
+    const scrollAmount = carouselRef.current.offsetWidth;
+    carouselRef.current.scrollBy({
+      left: scrollAmount * direction,
+      behavior: 'smooth'
+    });
+  };
 
   if (loading) return <div className="text-center mt-10">🌀 Caricamento...</div>;
   if (!reptile) return <div className="text-red-600 text-center mt-10">❌ Rettile non trovato</div>;
@@ -122,44 +129,44 @@ const scrollCarousel = (e, direction) => {
         {/* LEFT COLUMN */}
         <div>
 
-<div className="relative h-48 w-full overflow-hidden rounded border border-[#EDE7D6]">
-  {reptile.image?.length > 1 ? (
-    <>
-      <div
-        className="flex overflow-x-auto scroll-smooth snap-x snap-mandatory no-scrollbar h-full"
-        ref={carouselRef}
-      >
-        {reptile.image.map((img, idx) => (
-          <img
-            key={idx}
-            src={img ? `${baseUrl}${img}` : 'https://res.cloudinary.com/tuafallback.png'}
-            alt={`reptile-${idx}`}
-            className="object-cover w-full h-full flex-shrink-0 snap-center transition-transform duration-500"
-          />
-        ))}
-      </div>
+          <div className="relative h-48 w-full overflow-hidden rounded border border-[#EDE7D6]">
+            {reptile.image?.length > 1 ? (
+              <>
+                <div
+                  className="flex overflow-x-auto scroll-smooth snap-x snap-mandatory no-scrollbar h-full"
+                  ref={carouselRef}
+                >
+                  {reptile.image.map((img, idx) => (
+                    <img
+                      key={idx}
+                      src={img ? `${baseUrl}${img}` : 'https://res.cloudinary.com/tuafallback.png'}
+                      alt={`reptile-${idx}`}
+                      className="object-cover w-full h-full flex-shrink-0 snap-center transition-transform duration-500"
+                    />
+                  ))}
+                </div>
 
-      <button
-        onClick={(e) => scrollCarousel(e, -1)}
-        className="absolute left-0 top-1/2 -translate-y-1/2 h-full w-10 bg-black/20 text-white flex items-center justify-center z-10"
-      >
-        ‹
-      </button>
-      <button
-        onClick={(e) => scrollCarousel(e, 1)}
-        className="absolute right-0 top-1/2 -translate-y-1/2 h-full w-10 bg-black/20 text-white flex items-center justify-center z-10"
-      >
-        ›
-      </button>
-    </>
-  ) : (
-    <img
-      src={reptile.image?.[0] ? `${baseUrl}${reptile.image[0]}` : 'https://res.cloudinary.com/tuafallback.png'}
-      alt={reptile.name}
-      className="object-cover w-full h-full transition-transform duration-500"
-    />
-  )}
-</div>
+                <button
+                  onClick={(e) => scrollCarousel(e, -1)}
+                  className="absolute left-0 top-1/2 -translate-y-1/2 h-full w-10 bg-black/20 text-white flex items-center justify-center z-10"
+                >
+                  ‹
+                </button>
+                <button
+                  onClick={(e) => scrollCarousel(e, 1)}
+                  className="absolute right-0 top-1/2 -translate-y-1/2 h-full w-10 bg-black/20 text-white flex items-center justify-center z-10"
+                >
+                  ›
+                </button>
+              </>
+            ) : (
+              <img
+                src={reptile.image?.[0] ? `${baseUrl}${reptile.image[0]}` : 'https://res.cloudinary.com/tuafallback.png'}
+                alt={reptile.name}
+                className="object-cover w-full h-full transition-transform duration-500"
+              />
+            )}
+          </div>
 
 
           <button
@@ -168,11 +175,11 @@ const scrollCarousel = (e, direction) => {
           >
             📄 Scarica PDF informazioni
           </button>
-{pdfError && (
-  <p className="mt-2 text-red-600 text-sm font-medium fade-in">
-    {pdfError}
-  </p>
-)}
+          {pdfError && (
+            <p className="mt-2 text-red-600 text-sm font-medium fade-in">
+              {pdfError}
+            </p>
+          )}
 
           <h2 className="text-3xl font-bold mt-4 text-[#228B22]">{reptile.name}</h2>
 
