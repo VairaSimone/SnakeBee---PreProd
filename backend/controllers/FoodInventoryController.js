@@ -2,6 +2,7 @@
 import FoodInventory from '../models/FoodInventory.js';
 import User from '../models/User.js';
 import { getUserPlan } from '../utils/getUserPlans.js'
+import { logAction } from '../utils/logAction.js';
 
 async function isInventoryAccessAllowed(userId) {
   const user = await User.findById(userId);
