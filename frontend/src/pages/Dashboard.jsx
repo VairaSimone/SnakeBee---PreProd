@@ -10,6 +10,7 @@ import BreedingModal from '../components/BreedingModal.jsx';
 import ConfirmDeleteModal from '../components/ConfirmDeleteModal.jsx';
 import { FaMars, FaVenus } from 'react-icons/fa';
 import EventModal from '../components/EventModal.jsx';
+import { useRef } from 'react';
 
 const Dashboard = () => {
   const user = useSelector(selectUser);
@@ -31,32 +32,43 @@ const Dashboard = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showFeedingModal, setShowFeedingModal] = useState(false);
-const [stats, setStats] = useState({
-  successRate: null,
-  feedingRefusalRate: null,
-  averageShedInterval: null,
-  incubationBySpecies: []
-});
+  const [stats, setStats] = useState({
+    successRate: null,
+    feedingRefusalRate: null,
+    averageShedInterval: null,
+    incubationBySpecies: []
+  });
+  const carouselRefs = useRef({});
 
-const fetchStats = async () => {
-  try {
-    const [success, refusal, shed, incubation] = await Promise.all([
-      api.get('breeding/analytics/success-rate'),
-      api.get('feedings/analytics/refused-feedings'),
-      api.get('reptile/analytics/shed-interval'),
-      api.get('breeding/analytics/incubation')
-    ]);
+  const scrollCarousel = (e, direction, reptileId) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const scrollAmount = 200;
+    const node = carouselRefs.current[reptileId];
+    if (node) {
+      node.scrollBy({ left: scrollAmount * direction, behavior: 'smooth' });
+    }
+  };
 
-    setStats({
-      successRate: success.data.successRate,
-      feedingRefusalRate: refusal.data.refusalRate,
-      averageShedInterval: shed.data.averageIntervalDays,
-      incubationBySpecies: incubation.data
-    });
-  } catch (err) {
-    console.error('Errore nel recupero delle statistiche:', err);
-  }
-};
+  const fetchStats = async () => {
+    try {
+      const [success, refusal, shed, incubation] = await Promise.all([
+        api.get('breeding/analytics/success-rate'),
+        api.get('feedings/analytics/refused-feedings'),
+        api.get('reptile/analytics/shed-interval'),
+        api.get('breeding/analytics/incubation')
+      ]);
+
+      setStats({
+        successRate: success.data.successRate,
+        feedingRefusalRate: refusal.data.refusalRate,
+        averageShedInterval: shed.data.averageIntervalDays,
+        incubationBySpecies: incubation.data
+      });
+    } catch (err) {
+      console.error('Errore nel recupero delle statistiche:', err);
+    }
+  };
 
   const fetchReptiles = async () => {
     if (!user?._id) return;
@@ -148,11 +160,11 @@ const fetchStats = async () => {
 
   return (
     <div className="p-4 bg-[#FAF3E0] min-h-screen animate-dashboard-fade-in">
-   
 
-   
-   
-   
+
+
+
+
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
         <div>
           <h2 className="text-2xl font-bold text-[#2B2B2B]">La tua Dashboard</h2>
@@ -238,42 +250,89 @@ const fetchStats = async () => {
               key={reptile._id}
               className="bg-white rounded-xl shadow p-4 transition cursor-pointer relative block animate-card-appear group hover:scale-[1.02] hover:shadow-xl hover:ring-2 hover:ring-[#228B22] duration-300 ease-out card-glow"
             >
-<div className="relative aspect-w-16 aspect-h-10 mb-2">
-{reptile.label?.text && (
-  <div
-    className="
-      absolute -top-2 left-2
-      px-2 py-[2px]
-      rounded-full text-[10px] sm:text-xs
-      font-semibold text-white shadow-md z-20
-      transition-transform group-hover:scale-105
-      truncate
-      max-w-[50%] sm:max-w-[40%] md:max-w-[30%]
-            max-h-[20px] sm:max-h-[22px] md:max-h-[24px]
+              <div className="relative aspect-w-16 aspect-h-10 mb-2">
+                {reptile.label?.text && (
+                  <div
+                    className="
+                              absolute -top-2 left-2
+                              px-2 py-[2px]
+                              rounded-full text-[10px] sm:text-xs
+                              font-semibold text-white shadow-md z-20
+                              transition-transform group-hover:scale-105
+                              truncate
+                              max-w-[50%] sm:max-w-[40%] md:max-w-[30%]
+                                    max-h-[20px] sm:max-h-[22px] md:max-h-[24px]
 
-    "
-    style={{
-      backgroundColor: reptile.label.color || '#228B22',
-      boxShadow: '0 1px 4px rgba(0, 0, 0, 0.2)',
-      border: '1px solid rgba(255, 255, 255, 0.15)',
-      backdropFilter: 'blur(2px)',
-      letterSpacing: '0.3px',
-      fontFamily: `'Segoe UI', 'Helvetica Neue', sans-serif`,
-      lineHeight: '1.1',
-      whiteSpace: 'nowrap',
-    }}
-    title={reptile.label.text}
-  >
-    {reptile.label.text}
-  </div>
-)}
+                            "
+                    style={{
+                      backgroundColor: reptile.label.color || '#228B22',
+                      boxShadow: '0 1px 4px rgba(0, 0, 0, 0.2)',
+                      border: '1px solid rgba(255, 255, 255, 0.15)',
+                      backdropFilter: 'blur(2px)',
+                      letterSpacing: '0.3px',
+                      fontFamily: `'Segoe UI', 'Helvetica Neue', sans-serif`,
+                      lineHeight: '1.1',
+                      whiteSpace: 'nowrap',
+                    }}
+                    title={reptile.label.text}
+                  >
+                    {reptile.label.text}
+                  </div>
+                )}
 
-  <img
-    src={reptile.image || 'https://res.cloudinary.com/dg2wcqflh/image/upload/v1753088270/sq1upmjw7xgrvpkghotk.png'}
-    alt={reptile.name}
-    className="object-cover w-full h-full rounded transition-transform duration-300 ease-out group-hover:scale-105 group-hover:rotate-[0.5deg]"
-  />
+
+
+<div className="relative aspect-w-16 aspect-h-10 mb-2 group">
+  {reptile.label?.text && (
+    <div className="absolute -top-2 left-2 px-2 py-[2px] rounded-full text-[10px] sm:text-xs font-semibold text-white shadow-md z-20 truncate max-w-[50%] sm:max-w-[40%] md:max-w-[30%] max-h-[24px]" style={{ backgroundColor: reptile.label.color || '#228B22', boxShadow: '0 1px 4px rgba(0, 0, 0, 0.2)' }}>
+      {reptile.label.text}
+    </div>
+  )}
+
+  {reptile.image?.length > 1 ? (
+    <>
+      <div
+        className="flex overflow-x-auto scroll-smooth no-scrollbar rounded"
+        ref={(el) => (carouselRefs.current[reptile._id] = el)}
+      >
+        {reptile.image.map((img, idx) => (
+          <img
+            key={idx}
+            src={`${process.env.REACT_APP_BACKEND_URL_IMAGE || ''}${img}`}
+            alt={`${reptile.name}-${idx}`}
+            className="object-cover w-full flex-shrink-0"
+          />
+        ))}
+      </div>
+
+      <button
+        onClick={(e) => scrollCarousel(e, -1, reptile._id)}
+        className="absolute left-0 top-0 h-full w-12 bg-black/20 hover:bg-black/30 text-white text-xl flex items-center justify-center z-10 opacity-0 group-hover:opacity-100 transition"
+      >
+        ‹
+      </button>
+      <button
+        onClick={(e) => scrollCarousel(e, 1, reptile._id)}
+        className="absolute right-0 top-0 h-full w-12 bg-black/20 hover:bg-black/30 text-white text-xl flex items-center justify-center z-10 opacity-0 group-hover:opacity-100 transition"
+      >
+        ›
+      </button>
+    </>
+  ) : (
+    <img
+      src={
+        reptile.image?.[0]
+          ? `${process.env.REACT_APP_BACKEND_URL_IMAGE || ''}${reptile.image[0]}`
+          : 'https://res.cloudinary.com/dg2wcqflh/image/upload/v1753088270/sq1upmjw7xgrvpkghotk.png'
+      }
+      alt={reptile.name}
+      className="object-cover w-full h-full rounded transition-transform duration-300 ease-out group-hover:scale-105 group-hover:rotate-[0.5deg]"
+    />
+  )}
 </div>
+
+
+              </div>
 
 
               <div className="flex items-center justify-between">

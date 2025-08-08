@@ -18,28 +18,28 @@ const ReptileDetails = () => {
   const handleShowMore = () => {
     setVisibleFeedings(prev => prev + 5);
   };
-const downloadPDF = async () => {
-  try {
-    const response = await api.get(`/reptile/${reptileId}/pdf`, {
-      responseType: 'blob', // fondamentale per scaricare i file
-    });
+  const downloadPDF = async () => {
+    try {
+      const response = await api.get(`/reptile/${reptileId}/pdf`, {
+        responseType: 'blob', // fondamentale per scaricare i file
+      });
 
-    const blob = response.data;
-    const url = window.URL.createObjectURL(blob);
+      const blob = response.data;
+      const url = window.URL.createObjectURL(blob);
 
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${reptile.name || 'reptile'}.pdf`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${reptile.name || 'reptile'}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
 
-    window.URL.revokeObjectURL(url);
-  } catch (error) {
-    console.error('Errore nel download del PDF:', error);
-    alert('Errore durante il download del PDF. Riprova più tardi.');
-  }
-};
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Errore nel download del PDF:', error);
+      alert('Errore durante il download del PDF. Riprova più tardi.');
+    }
+  };
 
 
   const handleShowLess = () => {
@@ -52,6 +52,7 @@ const downloadPDF = async () => {
         // Dati del rettile
         const { data: reptileData } = await api.get(`/reptile/${reptileId}`);
         setReptile(reptileData);
+const imagesArray = reptile.images || [reptile.image];
 
         // Alimentazione
         const { data: feedingData } = await api.get(`/feedings/${reptileId}?page=1`);
@@ -91,15 +92,24 @@ const downloadPDF = async () => {
       <div className="grid md:grid-cols-2 gap-6 bg-white p-6 rounded-lg shadow-lg">
         {/* LEFT COLUMN */}
         <div>
-          <img src={reptile.image || 'https://res.cloudinary.com/dg2wcqflh/image/upload/v1753088270/sq1upmjw7xgrvpkghotk.png'}
 
-            className="w-full h-auto object-cover rounded-md border border-[#EDE7D6] avatar-animated" />
-<button
-  onClick={downloadPDF}
-  className="mt-4 inline-block bg-green-700 text-white px-4 py-2 rounded hover:bg-green-800 transition-all duration-200"
->
-  📄 Scarica PDF informazioni
-</button>
+<div className="flex space-x-4 overflow-x-auto pb-2">
+  {(reptile.images || [reptile.image]).map((img, idx) => (
+    <img
+      key={idx}
+      src={img || 'https://res.cloudinary.com/dg2wcqflh/image/upload/v1753088270/sq1upmjw7xgrvpkghotk.png'}
+      alt={`reptile-${idx}`}
+      className="h-48 min-w-[12rem] object-cover rounded border border-[#EDE7D6] avatar-animated"
+    />
+  ))}
+</div>
+
+          <button
+            onClick={downloadPDF}
+            className="mt-4 inline-block bg-green-700 text-white px-4 py-2 rounded hover:bg-green-800 transition-all duration-200"
+          >
+            📄 Scarica PDF informazioni
+          </button>
 
           <h2 className="text-3xl font-bold mt-4 text-[#228B22]">{reptile.name}</h2>
 
@@ -126,32 +136,32 @@ const downloadPDF = async () => {
               </div>
             )}
 
-             <h3 className="mt-4 font-semibold text-gray-700">Genitori</h3>
-      <ul className="list-disc ml-6 text-gray-800">
-        <li>
-          <strong>Padre:</strong>{' '}
-       {reptile.parents?.father || 'Non specificato'}
-        </li>
-        <li>
-          <strong>Madre:</strong>{' '}
-          { reptile.parents?.mother || 'Non specificato'}
-        </li>
-      </ul>
+            <h3 className="mt-4 font-semibold text-gray-700">Genitori</h3>
+            <ul className="list-disc ml-6 text-gray-800">
+              <li>
+                <strong>Padre:</strong>{' '}
+                {reptile.parents?.father || 'Non specificato'}
+              </li>
+              <li>
+                <strong>Madre:</strong>{' '}
+                {reptile.parents?.mother || 'Non specificato'}
+              </li>
+            </ul>
 
-      <h3 className="mt-4 font-semibold text-gray-700">Documenti</h3>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-gray-800">
-        <div>
-          <strong>CITES:</strong><br />
-          Numero: {reptile.documents?.cites?.number || 'N/D'}<br />
-          Data rilascio: {reptile.documents?.cites?.issueDate?.split('T')[0] || 'N/D'}<br />
-          Ente: {reptile.documents?.cites?.issuer || 'N/D'}
-        </div>
-        <div>
-          <strong>Microchip:</strong><br />
-          Codice: {reptile.documents?.microchip?.code || 'N/D'}<br />
-          Impiantato il: {reptile.documents?.microchip?.implantDate?.split('T')[0] || 'N/D'}
-        </div>
-      </div>
+            <h3 className="mt-4 font-semibold text-gray-700">Documenti</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-gray-800">
+              <div>
+                <strong>CITES:</strong><br />
+                Numero: {reptile.documents?.cites?.number || 'N/D'}<br />
+                Data rilascio: {reptile.documents?.cites?.issueDate?.split('T')[0] || 'N/D'}<br />
+                Ente: {reptile.documents?.cites?.issuer || 'N/D'}
+              </div>
+              <div>
+                <strong>Microchip:</strong><br />
+                Codice: {reptile.documents?.microchip?.code || 'N/D'}<br />
+                Impiantato il: {reptile.documents?.microchip?.implantDate?.split('T')[0] || 'N/D'}
+              </div>
+            </div>
           </div>
         </div>
 

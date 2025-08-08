@@ -49,7 +49,7 @@ export const GetIDReptile = async (req, res) => {
 
 export const GetAllReptileByUser = async (req, res) => {
     try {
-        const userId = req.params.userId;
+        const userId = req.user.userid;
 
         const page = parseInt(req.query.page) || 1;
         const perPage = parseInt(req.query.perPage) || 10;
@@ -141,7 +141,7 @@ export const PutReptile = async (req, res) => {
     try {
 
         const id = req.params.reptileId;
-        const user = await User.findById(userId);
+        const user = await User.findById(req.user.userid);
 const { plan: userPlan, limits } = getUserPlan(user);
         const { name, species, morph, sex, notes, birthDate, isBreeder, label, parents, documents } = req.body;
         let parsedParents, parsedDocuments;
