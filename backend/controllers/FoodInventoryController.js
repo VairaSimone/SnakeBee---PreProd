@@ -31,7 +31,7 @@ export const updateInventoryItem = async (req, res) => {
   const { id } = req.params;
   const { quantity, weightPerUnit } = req.body;
 
-    if (!isInventoryAccessAllowed(req.user)) {
+    if (!isInventoryAccessAllowed(req.user.userid)) {
     return res.status(403).json({ message: 'Solo gli utenti Premium possono aggiornare l\'inventario.' });
   }
 
@@ -54,7 +54,7 @@ export const addInventoryItem = async (req, res) => {
   const { foodType, quantity, weightPerUnit } = req.body;
   const userId = req.user.userid; // <-- Preso dal token JWT
 
-    if (!isInventoryAccessAllowed(req.user)) {
+    if (!isInventoryAccessAllowed(req.user.userid)) {
     return res.status(403).json({ message: 'Funzionalità riservata agli utenti Premium.' });
   }
 
@@ -93,7 +93,7 @@ existing.quantity = Number(existing.quantity) + Number(quantity);
 export const deleteFeeding = async (req, res) => {
   const { id } = req.params;
 
-    if (!isInventoryAccessAllowed(req.user)) {
+    if (!isInventoryAccessAllowed(req.user.userid)) {
     return res.status(403).json({ message: 'Solo gli utenti Premium possono eliminare elementi dall\'inventario.' });
   }
 
