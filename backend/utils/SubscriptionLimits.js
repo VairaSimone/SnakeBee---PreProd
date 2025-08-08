@@ -8,10 +8,12 @@ export const PLAN_LIMITS = {
   },
   basic: {
     reptiles: 20,
-    imagesPerReptile: 3
+    imagesPerReptile: 3,
+    eventsPerTypePerReptile: null
   },
   premium: {
     reptiles: 100,
-    imagesPerReptile: 5
+    imagesPerReptile: 5,
+    eventsPerTypePerReptile: null
   }
 }

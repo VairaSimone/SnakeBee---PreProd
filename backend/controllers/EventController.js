@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 import Event from '../models/Event.js';
 import { logAction } from '../utils/logAction.js';
 import { getUserPlan } from '../utils/getUserPlans.js'
+import User from '../models/User.js'; // importa il modello User se non l’hai già
 
 // GET /events/:reptileId
 export const GetEvents = async (req, res) => {
@@ -17,16 +18,25 @@ export const GetEvents = async (req, res) => {
 export const CreateEvent = async (req, res) => {
   try {
     const { reptileId, type, date, notes, weight } = req.body;
-const { plan, limits } = getUserPlan(req.user);
 
-if (limits.eventsPerTypePerReptile) {
-  const existingCount = await Event.countDocuments({ reptile: reptileId, type });
-  if (existingCount >= limits.eventsPerTypePerReptile) {
-    return res.status(403).send({
-      message: `Limite massimo di 10 eventi di tipo "${type}" raggiunto per questo rettile. Passa a Premium per sbloccare eventi illimitati.`
-    });
-  }
-}
+    // ⚠️ Carica lo user aggiornato dal DB
+    const user = await User.findById(req.user.userid).lean(); // o .select('+subscription') se è escluso
+    if (!user) {
+      return res.status(404).send({ message: 'Utente non trovato.' });
+    }
+
+    const { plan, limits } = getUserPlan(user); // 🔁 ora usi dati affidabili
+
+    // Applicazione limite solo per utenti free
+    if (plan === 'free' && limits.eventsPerTypePerReptile) {
+      const existingCount = await Event.countDocuments({ reptile: reptileId, type });
+      if (existingCount >= limits.eventsPerTypePerReptile) {
+        return res.status(403).send({
+          message: `Limite massimo di ${limits.eventsPerTypePerReptile} eventi di tipo "${type}" raggiunto per questo rettile. Passa a Premium per eventi illimitati.`
+        });
+      }
+    }
+
     const newEventData = {
       reptile: reptileId,
       type,

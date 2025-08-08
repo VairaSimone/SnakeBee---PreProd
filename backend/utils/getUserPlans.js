@@ -3,6 +3,7 @@ import { PLAN_LIMITS } from './SubscriptionLimits.js';
 export function getUserPlan(user) {
   const plan = user.subscription?.plan || 'free';
   const status = user.subscription?.status;
+console.log("User plan info:", plan + status);
 
   const isActive = status === 'active' || status === 'pending_cancellation';
 
