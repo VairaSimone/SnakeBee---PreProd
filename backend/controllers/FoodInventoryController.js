@@ -1,5 +1,6 @@
 // controllers/FoodInventoryController.js
 import FoodInventory from '../models/FoodInventory.js';
+import User from '../models/User.js';
 import { getUserPlan } from '../utils/getUserPlans.js'
 
 async function isInventoryAccessAllowed(userId) {
