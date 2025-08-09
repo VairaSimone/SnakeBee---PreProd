@@ -55,8 +55,10 @@ export const GetIDUser = async (req, res) => {
 
 export const PutUser = async (req, res) => {
   try {
-    const id = req.params.userId;
+    const id = req.user.userid;
     const userData = req.body;
+const user = await User.findById(id);
+if (!user) return res.status(404).json({ message: "User not found" });
 
     if (userData.role && req.user.role !== 'admin') {
       return res.status(403).json({ message: 'You cannot change your role.' });

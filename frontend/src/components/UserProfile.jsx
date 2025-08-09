@@ -262,7 +262,7 @@ const UserProfile = () => {
           </div>
 
           <div className="text-center">
-            <img src={avatarPreview || 'https://res.cloudinary.com/dg2wcqflh/image/upload/v1753088270/sq1upmjw7xgrvpkghotk.png'} alt="Avatar" className="w-24 h-24 rounded-full mx-auto border-4 border-[#FFD700] transition duration-300 hover:shadow-[0_0_20px_5px_rgba(255,215,0,0.6)]" onClick={() => addToast("👀 Bel tentativo, ma non si può cambiare così!", "success")}/>
+            <img src={process.env.REACT_APP_BACKEND_URL_IMAGE + avatarPreview || 'https://res.cloudinary.com/dg2wcqflh/image/upload/v1753088270/sq1upmjw7xgrvpkghotk.png'} alt="Avatar" className="w-24 h-24 rounded-full mx-auto border-4 border-[#FFD700] transition duration-300 hover:shadow-[0_0_20px_5px_rgba(255,215,0,0.6)]" onClick={() => addToast("👀 Bel tentativo, ma non si può cambiare così!", "success")}/>
             <h3 className="mt-2 text-lg font-medium">{name}</h3>
             <p className="text-sm text-gray-500">{email}</p>
           </div>

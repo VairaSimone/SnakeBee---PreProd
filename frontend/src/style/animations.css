@@ -289,3 +289,43 @@
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/* In src/index.css o il tuo file CSS principale */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+body {
+  background-color: #FAF3E0;
+}
+@layer components {
+  /* Stili per i bottoni */
+  .btn {
+    @apply inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-semibold rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 transition-transform transform hover:scale-[1.02];
+  }
+  .btn-sm {
+      @apply px-3 py-1.5 text-xs;
+  }
+  .btn-primary {
+    @apply text-white bg-forest hover:bg-olive focus:ring-forest;
+  }
+  .btn-secondary {
+    @apply text-white bg-amber hover:bg-amber/80 focus:ring-amber;
+  }
+  .btn-danger {
+    @apply text-white bg-brick hover:bg-brick/80 focus:ring-brick;
+  }
+  
+  .btn-primary-outline {
+    @apply text-forest bg-forest/10 border-forest/20 hover:bg-forest/20 focus:ring-forest;
+  }
+  .btn-secondary-outline {
+    @apply text-slate-700 bg-slate-100 border-slate-300 hover:bg-slate-200 focus:ring-slate-400;
+  }
+
+  /* Stili per i campi di input e select */
+  .input-field {
+    @apply block w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm shadow-sm placeholder-slate-400
+           focus:outline-none focus:border-forest focus:ring-1 focus:ring-forest
+           disabled:bg-slate-50 disabled:text-slate-500 disabled:border-slate-200 disabled:shadow-none;
+  }
+}

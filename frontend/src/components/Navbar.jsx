@@ -129,7 +129,7 @@ const Navbar = () => {
               <div className="relative" ref={avatarMenuRef}>
                 <button onClick={() => setAvatarMenuOpen(!avatarMenuOpen)}>
                   <img
-                    src={user?.avatar?.trim() ? user.avatar : '/default-avatar.png'}
+                    src={user?.avatar?.trim() ? process.env.REACT_APP_BACKEND_URL_IMAGE + user.avatar : '/default-avatar.png'}
                     alt="Avatar"
                     onError={(e) => { e.target.src = '/default-avatar.png'; }}
                     className="w-9 h-9 rounded-full border-2 border-[#228B22] hover:ring-2 ring-offset-2 ring-[#FFD700] transition"

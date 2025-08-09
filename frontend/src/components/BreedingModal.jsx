@@ -6,7 +6,14 @@ export default function Modal({ children, onClose }) {
       if (e.key === "Escape") onClose();
     };
     document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
+
+    // Disabilita lo scroll della pagina
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = ""; // Ripristina lo scroll
+    };
   }, [onClose]);
 
   return (
@@ -14,11 +21,11 @@ export default function Modal({ children, onClose }) {
       role="dialog"
       aria-modal="true"
       onClick={onClose}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30"
+className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-10"
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="bg-white p-6 rounded shadow-md w-full max-w-md max-h-[90vh] overflow-y-auto relative"
+        className="bg-white p-6 rounded shadow-md w-full max-w-md max-h-[90vh] overflow-y-auto relative text-black"
       >
         <button
           onClick={onClose}
