@@ -16,41 +16,37 @@ const validationSchema = Yup.object().shape({
     .string()
     .required('Seleziona un alimento'),
 
-  customFoodType: Yup
-    .string()
-    .when('foodType', (foodType, schema) =>
-      foodType === 'Altro'
-        ? schema.required('Inserisci tipo di alimento')
-        : schema
-    ),
+customFoodType: Yup.string().when('foodType', (foodType, schema) =>
+  foodType === 'Altro'
+    ? schema.required('Inserisci tipo di alimento')
+    : schema.notRequired()
+),
 
-  customWeight: Yup
-    .number()
-    .transform((val, orig) => orig === '' ? undefined : val)  
-    .when('foodType', (foodType, schema) =>
-      foodType === 'Altro'
-        ? schema
-            .typeError('Inserisci un numero valido')
-            .required('Inserisci il peso')
-            .positive('Deve essere positivo')
-        : schema.notRequired()
-    ),
+customWeight: Yup.number()
+  .transform((val, orig) => (orig === '' ? undefined : val))
+  .when('foodType', {
+    is: 'Altro',
+    then: (schema) =>
+      schema
+        .typeError('Inserisci un numero valido')
+        .required('Inserisci il peso per unità')
+        .positive('Deve essere positivo'),
+    otherwise: (schema) => schema.notRequired(),
+  }),
 
-  customWeightUnit: Yup
-    .string()
-    .when('foodType', (foodType, schema) =>
-      foodType === 'Altro'
-        ? schema.oneOf(['g', 'kg'], 'Unità non valida')
-        : schema.notRequired()
-    ),
-
-  quantity: Yup
-    .number()
+customWeightUnit: Yup.string().when('foodType', {
+  is: 'Altro',
+  then: (schema) =>
+    schema
+      .required('Seleziona unità di misura')
+      .oneOf(['g', 'kg'], 'Unità non valida'),
+  otherwise: (schema) => schema.notRequired(),
+}),
+  quantity: Yup.number()
+    .transform((val, orig) => (orig === '' ? undefined : val))
     .typeError('Inserisci un numero valido')
     .positive('Deve essere positivo')
-    .required('Quantità obbligatoria'),
-
-  // trasformiamo i valori stringa "true"/"false" in Boolean
+    .required('Quantità obbligatoria'),  // trasformiamo i valori stringa "true"/"false" in Boolean
   wasEaten: Yup
     .boolean()
     .transform((val, orig) => {
@@ -157,22 +153,34 @@ const handleDelete = async (feedingId) => {
   }, [show, reptileId, page]);
 
   const onSubmit = async (formData) => {
-    setIsSubmitting(true);
-    setSubmissionError('');
+     if (!formData.foodType) {
+    setSubmissionError("Seleziona un alimento prima di procedere");
+    return;
+  }
 
     // Determino peso/unità
     const isCustom = formData.foodType === 'Altro';
     let weightPerUnit;
     let foodType;
     if (isCustom) {
+          if (!formData.customFoodType) {
+      setSubmissionError("Inserisci tipo di alimento personalizzato");
+      return;
+    }
       foodType = formData.customFoodType;
       const w = parseFloat(formData.customWeight);
       weightPerUnit = formData.customWeightUnit === 'kg' ? w * 1000 : w;
     } else {
-      const item = inventory.find(i => i._id === formData.foodType);
-      foodType = item.foodType;
-      weightPerUnit = item.weightPerUnit;
+    const item = inventory.find(i => i._id === formData.foodType);
+    if (!item) {
+      setSubmissionError("Alimento selezionato non valido");
+      return;
     }
+        setIsSubmitting(true);
+    setSubmissionError('');
+
+    foodType = item.foodType;
+    weightPerUnit = item.weightPerUnit;    }
 
     const payload = {
       date: formData.date,

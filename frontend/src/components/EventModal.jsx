@@ -16,25 +16,25 @@ const EventModal = ({ show, handleClose, reptileId }) => {
   const currentEvents = events.slice(indexOfFirstEvent, indexOfLastEvent);
   const totalPages = Math.ceil(events.length / eventsPerPage);
   const [weight, setWeight] = useState('');
-const [formError, setFormError] = useState('');
+  const [formError, setFormError] = useState('');
 
   const eventTypeLabels = {
     shed: 'Muta',
     feces: 'Feci',
     vet: 'Visita veterinaria',
-      weight: 'Aggiornamento peso'
+    weight: 'Aggiornamento peso'
 
   };
 
-useEffect(() => {
-  if (reptileId && show) {
-    getEvents(reptileId).then(res => {
-      // Ordina per data crescente (dal più vecchio al più recente)
-      const sortedEvents = res.data.sort((a, b) => new Date(a.date) - new Date(b.date));
-      setEvents(sortedEvents);
-    });
-  }
-}, [reptileId, show]);
+  useEffect(() => {
+    if (reptileId && show) {
+      getEvents(reptileId).then(res => {
+        // Ordina per data crescente (dal più vecchio al più recente)
+        const sortedEvents = res.data.sort((a, b) => new Date(a.date) - new Date(b.date));
+        setEvents(sortedEvents);
+      });
+    }
+  }, [reptileId, show]);
 
 
   const toggleNote = (id) => {
@@ -47,12 +47,12 @@ useEffect(() => {
   const handleSubmit = async () => {
     if (!date) return;
 
-      const newEvent = {
-    reptileId,
-    type,
-    date,
-    notes
-  };
+    const newEvent = {
+      reptileId,
+      type,
+      date,
+      notes
+    };
 
     if (type === 'weight') {
       if (!weight || isNaN(weight)) {
@@ -61,22 +61,22 @@ useEffect(() => {
       }
       newEvent.weight = parseFloat(weight);
     }
-try {
-  await postEvent(newEvent);
-const updated = await getEvents(reptileId);
-const sortedEvents = updated.data.sort((a, b) => new Date(a.date) - new Date(b.date));
-setEvents(sortedEvents);
+    try {
+      await postEvent(newEvent);
+      const updated = await getEvents(reptileId);
+      const sortedEvents = updated.data.sort((a, b) => new Date(a.date) - new Date(b.date));
+      setEvents(sortedEvents);
 
-  setDate('');
-  setNotes('');
-  setWeight('');
-  setFormError(''); // resetta errori se tutto va bene
-} catch (err) {
-  const msg = err.response?.data?.message || 'Errore durante il salvataggio evento.';
-  setFormError(msg); // 👈 mostralo sotto al form
-}
+      setDate('');
+      setNotes('');
+      setWeight('');
+      setFormError(''); // resetta errori se tutto va bene
+    } catch (err) {
+      const msg = err.response?.data?.message || 'Errore durante il salvataggio evento.';
+      setFormError(msg); // 👈 mostralo sotto al form
+    }
 
-};
+  };
 
   const handleDelete = async (eventId) => {
     await deleteEvent(eventId);
@@ -167,11 +167,11 @@ setEvents(sortedEvents);
                   </div>
                 )}
 
-{formError && (
-  <div className="mt-4 text-sm text-red-600 bg-red-100 border border-red-300 rounded p-2">
-    {formError}
-  </div>
-)}
+                {formError && (
+                  <div className="mt-4 text-sm text-red-600 bg-red-100 border border-red-300 rounded p-2">
+                    {formError}
+                  </div>
+                )}
 
                 <div className="mt-6 text-right">
                   <button
@@ -208,27 +208,27 @@ setEvents(sortedEvents);
                             </button>
                           </div>
 
-<div className="text-sm text-gray-800 whitespace-pre-wrap break-words overflow-hidden">
-  {e.notes && (
-    <>
-      {displayedNote}
-      {e.notes.length > 100 && (
-        <button
-          onClick={() => toggleNote(e._id)}
-          className="ml-1 text-blue-600 text-xs hover:underline"
-        >
-          {isExpanded ? 'Mostra meno' : 'Mostra di più'}
-        </button>
-      )}
-    </>
-  )}
+                          <div className="text-sm text-gray-800 whitespace-pre-wrap break-words overflow-hidden">
+                            {e.notes && (
+                              <>
+                                {displayedNote}
+                                {e.notes.length > 100 && (
+                                  <button
+                                    onClick={() => toggleNote(e._id)}
+                                    className="ml-1 text-blue-600 text-xs hover:underline"
+                                  >
+                                    {isExpanded ? 'Mostra meno' : 'Mostra di più'}
+                                  </button>
+                                )}
+                              </>
+                            )}
 
-  {e.type === 'weight' && e.weight && (
-    <div className="mt-2 text-sm text-gray-700">
-      <span className="font-medium text-gray-800">Peso:</span> {e.weight} g
-    </div>
-  )}
-</div>
+                            {e.type === 'weight' && e.weight && (
+                              <div className="mt-2 text-sm text-gray-700">
+                                <span className="font-medium text-gray-800">Peso:</span> {e.weight} g
+                              </div>
+                            )}
+                          </div>
                         </div>
                       );
                     })

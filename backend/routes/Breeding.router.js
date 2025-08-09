@@ -4,7 +4,7 @@ import {
   createBreedingPair,
   addBreedingEvent,
   getBreedingByYear,
-  updateBreedingOutcome, deleteBreedingEvent, updateBreedingEvent
+  updateBreedingOutcome, deleteBreedingEvent, updateBreedingEvent, getSuccessRate, getIncubationStats
 } from '../controllers/BreedingController.js';
 
 const breedingRouter = express.Router();
@@ -14,7 +14,8 @@ breedingRouter.post('/', createBreedingPair);
 breedingRouter.post('/:breedingId/event', addBreedingEvent);
 breedingRouter.get('/', getBreedingByYear);
 breedingRouter.patch('/:breedingId/outcome', updateBreedingOutcome);
-breedingRouter.delete('/breeding/:breedingId/event/:eventId', deleteBreedingEvent);
-breedingRouter.patch('/breeding/:breedingId/event/:eventId', updateBreedingEvent);
-
+breedingRouter.delete('/:breedingId/event/:eventId', deleteBreedingEvent);
+breedingRouter.patch('/:breedingId/event/:eventId', updateBreedingEvent);
+breedingRouter.get('/analytics/success-rate', getSuccessRate);
+breedingRouter.get('/analytics/incubation', getIncubationStats);
 export default breedingRouter;

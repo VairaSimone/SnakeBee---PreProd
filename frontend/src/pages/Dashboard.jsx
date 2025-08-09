@@ -40,8 +40,8 @@ const Dashboard = () => {
     averageShedInterval: null,
     incubationBySpecies: []
   });
-  const carouselRefs = useRef({});
 
+  const carouselRefs = useRef({});
   // Tutte le funzioni (fetchReptiles, fetchStats, handleDelete, etc.) rimangono le stesse
   const scrollCarousel = (e, direction, reptileId) => {
     e.preventDefault();
@@ -64,12 +64,15 @@ const Dashboard = () => {
       setStats({
         successRate: success.data.successRate,
         feedingRefusalRate: refusal.data.refusalRate,
-        averageShedInterval: shed.data.averageIntervalDays,
+averageShedInterval: Number(shed.data.averageIntervalDays),
         incubationBySpecies: incubation.data
       });
+      console.log(stats.incubationBySpecies);
+
     } catch (err) {
       console.error('Errore nel recupero delle statistiche:', err);
     }
+    
   };
 
   const fetchReptiles = async () => {
@@ -160,6 +163,13 @@ const Dashboard = () => {
       </div>
     </div>
   );
+  const top3Incubations = React.useMemo(() => {
+  if (!stats.incubationBySpecies || stats.incubationBySpecies.length === 0) return [];
+
+  return [...stats.incubationBySpecies]
+    .sort((a, b) => b.count - a.count) // ordina per count decrescente
+    .slice(0, 3); // prendi i primi 3
+}, [stats.incubationBySpecies]);
 
   return (
     <div className="bg-clay min-h-screen font-sans text-charcoal p-4 sm:p-6 lg:p-8">
@@ -187,17 +197,18 @@ const Dashboard = () => {
           <h2 className="text-2xl font-bold text-charcoal mb-4 flex items-center gap-2"><FaChartBar />Statistiche Veloci</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <StatCard icon={<FaPercentage />} title="Successo Riproduttivo" value={stats.successRate} unit="%" bgColor="bg-forest" />
-            <StatCard icon={<FaUtensils />} title="Rifiuto Cibo" value={stats.feedingRefusalRate} unit="%" bgColor="bg-amber" />
-            <StatCard icon={<FaSyncAlt />} title="Intervallo Muta Medio" value={stats.averageShedInterval?.toFixed(1)} unit="giorni" bgColor="bg-blue-500" />
-            <StatCard icon={<FaEgg />} title="Incubazione per Specie" bgColor="bg-purple-500">
-              <div className="text-sm space-y-1 mt-1">
-                {stats.incubationBySpecies.length > 0 ? stats.incubationBySpecies.map(s => (
-                  <div key={s.species}>
-                    <span className="font-semibold">{s.species}:</span> {s.avgIncubationDays.toFixed(0)} giorni
-                  </div>
-                )) : <p className="text-base">Nessun dato</p>}
-              </div>
-            </StatCard>
+            <StatCard icon={<FaUtensils />} title="Rifiuto Cibo" value={stats.feedingRefusalRate} bgColor="bg-amber" />
+            <StatCard icon={<FaSyncAlt />} title="Intervallo Muta Medio" value={typeof stats.averageShedInterval === 'number' ? stats.averageShedInterval.toFixed(1) : 'N/A'} unit="giorni" bgColor="bg-blue-500" />
+<StatCard icon={<FaEgg />} title="Incubazione per Specie" bgColor="bg-purple-500">
+  <div className="text-sm space-y-1 mt-1">
+    {top3Incubations.length > 0 ? top3Incubations.map(s => (
+      <div key={s.species}>
+        <span className="font-semibold">{s.species}:</span> 
+        {!isNaN(Number(s.averageIncubationDays)) ? Number(s.averageIncubationDays).toFixed(0) : 'N/A'} giorni
+      </div>
+    )) : <p className="text-base">Nessun dato</p>}
+  </div>
+</StatCard>
           </div>
         </section>
 
