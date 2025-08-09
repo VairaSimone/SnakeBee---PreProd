@@ -16,7 +16,7 @@ const PlanCard = ({ title, price, features, planKey, onAction, isLoading, button
             <p className="text-4xl font-extrabold my-4 text-gray-900">{price}<span className="text-base font-medium text-gray-500">/mese</span></p>
             <ul className="text-left my-6 space-y-2 flex-grow">
                 {features.map((feature, index) => (
-                    <li key={index} className="flex items-center">
+                    <li key={index} className="flex items-center text-black">
                         <svg className="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
                         {feature}
                     </li>
