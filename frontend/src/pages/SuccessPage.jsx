@@ -90,7 +90,6 @@ const styles = {
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#fff',
     padding: '1rem',
   },
   container: {
