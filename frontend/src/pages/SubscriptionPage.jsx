@@ -206,7 +206,7 @@ const SubscriptionPage = () => {
                     <PlanCard
                         title="Basic"
                         price="€4.99"
-                        features={['Accesso a tutte le funzionalità base', 'Supporto via email', 'Fino a 5 rettili monitorati']}
+                        features={['Max 20 rettili', '3 immagini per rettile', 'PDF dettagli animale', 'riproduzione', ]}
                         planKey="basic"
                         onAction={handlePlanAction}
                         isLoading={loadingAction === 'basic'}
@@ -216,7 +216,7 @@ const SubscriptionPage = () => {
                     <PlanCard
                         title="Premium"
                         price="€9.99"
-                        features={['Tutto del piano Basic', 'Notifiche avanzate', 'Rettili illimitati', 'Accesso anticipato a nuove feature']}
+                        features={['Tutto del piano Basic', 'Max 100 rettili', '5 immagini per rettile', 'Notifiche email', 'Automazioni cibo avanzate',]}
                         planKey="premium"
                         onAction={handlePlanAction}
                         isLoading={loadingAction === 'premium'}
