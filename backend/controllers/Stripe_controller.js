@@ -198,6 +198,37 @@ export const cancelSubscription = async (req, res) => {
   }
 };
 
+export const getSessionDetails = async (req, res) => {
+  const { sessionId } = req.params;
+
+  if (!sessionId) return res.status(400).json({ error: 'Session ID mancante' });
+
+  try {
+    // Recupera la sessione di checkout da Stripe
+    const session = await stripeClient.checkout.sessions.retrieve(sessionId, {
+      expand: ['subscription', 'line_items.data.price'], // Espandi per avere più info utili
+    });
+
+    if (!session) return res.status(404).json({ error: 'Sessione non trovata' });
+
+    // Estrai dati utili da passare al frontend
+    const planPriceId = session.line_items?.data[0]?.price?.id || null;
+    const amount_total = session.amount_total || 0;
+    const planName = getPlanNameByPriceId(planPriceId); // Usa la tua funzione già definita
+
+    res.json({
+      sessionId: session.id,
+      planName,
+      amount_total,
+      payment_status: session.payment_status,
+      subscriptionId: session.subscription,
+      customerId: session.customer,
+    });
+  } catch (error) {
+    console.error('Errore recupero sessione Stripe:', error);
+    res.status(500).json({ error: 'Errore server recupero sessione' });
+  }
+};
 /**
  * Crea una sessione del portale clienti di Stripe.
  */

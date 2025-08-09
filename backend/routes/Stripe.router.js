@@ -8,5 +8,6 @@ stripeRouter.post('/create-checkout-session', authenticateJWT, stripeController.
 stripeRouter.post('/manage-subscription', authenticateJWT, stripeController.manageSubscription);
 stripeRouter.post('/cancel-subscription', authenticateJWT, stripeController.cancelSubscription);
 stripeRouter.post('/create-portal-session', authenticateJWT, stripeController.createCustomerPortalSession);
+stripeRouter.get('/session/:sessionId', authenticateJWT, stripeController.getSessionDetails);
 
 export default stripeRouter;
