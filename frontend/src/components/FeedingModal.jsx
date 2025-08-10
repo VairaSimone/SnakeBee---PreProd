@@ -5,7 +5,6 @@ import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as Yup from 'yup';
 
-// Schema di validazione con Yup
 const validationSchema = Yup.object().shape({
   date: Yup
     .date()
@@ -16,37 +15,37 @@ const validationSchema = Yup.object().shape({
     .string()
     .required('Seleziona un alimento'),
 
-customFoodType: Yup.string().when('foodType', (foodType, schema) =>
-  foodType === 'Altro'
-    ? schema.required('Inserisci tipo di alimento')
-    : schema.notRequired()
-),
+  customFoodType: Yup.string().when('foodType', (foodType, schema) =>
+    foodType === 'Altro'
+      ? schema.required('Inserisci tipo di alimento')
+      : schema.notRequired()
+  ),
 
-customWeight: Yup.number()
-  .transform((val, orig) => (orig === '' ? undefined : val))
-  .when('foodType', {
+  customWeight: Yup.number()
+    .transform((val, orig) => (orig === '' ? undefined : val))
+    .when('foodType', {
+      is: 'Altro',
+      then: (schema) =>
+        schema
+          .typeError('Inserisci un numero valido')
+          .required('Inserisci il peso per unità')
+          .positive('Deve essere positivo'),
+      otherwise: (schema) => schema.notRequired(),
+    }),
+
+  customWeightUnit: Yup.string().when('foodType', {
     is: 'Altro',
     then: (schema) =>
       schema
-        .typeError('Inserisci un numero valido')
-        .required('Inserisci il peso per unità')
-        .positive('Deve essere positivo'),
+        .required('Seleziona unità di misura')
+        .oneOf(['g', 'kg'], 'Unità non valida'),
     otherwise: (schema) => schema.notRequired(),
   }),
-
-customWeightUnit: Yup.string().when('foodType', {
-  is: 'Altro',
-  then: (schema) =>
-    schema
-      .required('Seleziona unità di misura')
-      .oneOf(['g', 'kg'], 'Unità non valida'),
-  otherwise: (schema) => schema.notRequired(),
-}),
   quantity: Yup.number()
     .transform((val, orig) => (orig === '' ? undefined : val))
     .typeError('Inserisci un numero valido')
     .positive('Deve essere positivo')
-    .required('Quantità obbligatoria'),  // trasformiamo i valori stringa "true"/"false" in Boolean
+    .required('Quantità obbligatoria'),
   wasEaten: Yup
     .boolean()
     .transform((val, orig) => {
@@ -62,9 +61,9 @@ customWeightUnit: Yup.string().when('foodType', {
     .when('wasEaten', (wasEaten, schema) =>
       wasEaten === false
         ? schema
-            .typeError('Inserisci un numero valido')
-            .required('Giorni obbligatori')
-            .positive('Deve essere positivo')
+          .typeError('Inserisci un numero valido')
+          .required('Giorni obbligatori')
+          .positive('Deve essere positivo')
         : schema.notRequired()
     ),
 
@@ -109,21 +108,19 @@ const FeedingModal = ({ show, handleClose, reptileId, onFeedingAdded, onSuccess 
   const dateValue = watch('date');
 
   const todayString = new Date().toISOString().split('T')[0];
-// Cancella un feeding e ricarica la lista
-const handleDelete = async (feedingId) => {
-  setIsSubmitting(true);
-  try {
-    // endpoint DELETE: /feedings/:feedingId
-    await api.delete(`/feedings/${feedingId}`);
-    // ricarica cronologia e inventario
-    await fetchFeedings(page);
-    await fetchInventory();
-  } catch (err) {
-    console.error('Errore durante l\'eliminazione:', err);
-  } finally {
-    setIsSubmitting(false);
-  }
-};
+  const handleDelete = async (feedingId) => {
+    setIsSubmitting(true);
+    try {
+      // endpoint DELETE: /feedings/:feedingId
+      await api.delete(`/feedings/${feedingId}`);
+      await fetchFeedings(page);
+      await fetchInventory();
+    } catch (err) {
+      console.error('Errore durante l\'eliminazione:', err);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const fetchInventory = async () => {
     try {
@@ -144,7 +141,6 @@ const handleDelete = async (feedingId) => {
     }
   };
 
-  // Quando apro il modal o cambio page
   useEffect(() => {
     if (show && reptileId) {
       fetchFeedings(page);
@@ -153,34 +149,34 @@ const handleDelete = async (feedingId) => {
   }, [show, reptileId, page]);
 
   const onSubmit = async (formData) => {
-     if (!formData.foodType) {
-    setSubmissionError("Seleziona un alimento prima di procedere");
-    return;
-  }
+    if (!formData.foodType) {
+      setSubmissionError("Seleziona un alimento prima di procedere");
+      return;
+    }
 
-    // Determino peso/unità
     const isCustom = formData.foodType === 'Altro';
     let weightPerUnit;
     let foodType;
     if (isCustom) {
-          if (!formData.customFoodType) {
-      setSubmissionError("Inserisci tipo di alimento personalizzato");
-      return;
-    }
+      if (!formData.customFoodType) {
+        setSubmissionError("Inserisci tipo di alimento personalizzato");
+        return;
+      }
       foodType = formData.customFoodType;
       const w = parseFloat(formData.customWeight);
       weightPerUnit = formData.customWeightUnit === 'kg' ? w * 1000 : w;
     } else {
-    const item = inventory.find(i => i._id === formData.foodType);
-    if (!item) {
-      setSubmissionError("Alimento selezionato non valido");
-      return;
-    }
-        setIsSubmitting(true);
-    setSubmissionError('');
+      const item = inventory.find(i => i._id === formData.foodType);
+      if (!item) {
+        setSubmissionError("Alimento selezionato non valido");
+        return;
+      }
+      setIsSubmitting(true);
+      setSubmissionError('');
 
-    foodType = item.foodType;
-    weightPerUnit = item.weightPerUnit;    }
+      foodType = item.foodType;
+      weightPerUnit = item.weightPerUnit;
+    }
 
     const payload = {
       date: formData.date,
@@ -196,7 +192,7 @@ const handleDelete = async (feedingId) => {
       await api.post(`/feedings/${reptileId}`, payload);
       await fetchFeedings(page);
       await fetchInventory();
-      reset(); // reset form
+      reset();
       onSuccess?.();
       onFeedingAdded?.();
     } catch (err) {
@@ -211,14 +207,14 @@ const handleDelete = async (feedingId) => {
     <Transition show={show} as={Fragment}>
       <Dialog as="div" className="relative z-50" onClose={handleClose}>
         {/* overlay */}
-        <Transition.Child /* ... */>
+        <Transition.Child>
           <div className="fixed inset-0 bg-black bg-opacity-25" />
         </Transition.Child>
 
         {/* panel */}
         <div className="fixed inset-0 overflow-y-auto">
           <div className="flex min-h-full items-center justify-center p-4">
-            <Transition.Child /* ... */>
+            <Transition.Child >
               <Dialog.Panel className="w-full max-w-4xl bg-white p-6 rounded-2xl shadow-xl">
                 <Dialog.Title className="text-lg font-semibold">Gestione Pasti</Dialog.Title>
                 <button onClick={handleClose} className="absolute top-4 right-4 text-xl">&times;</button>
@@ -289,7 +285,7 @@ const handleDelete = async (feedingId) => {
                       </>
                     )}
 
-                    {/* Quantità */}
+                    {/* Quantity */}
                     <div>
                       <input
                         type="number"
@@ -301,7 +297,6 @@ const handleDelete = async (feedingId) => {
                       {errors.quantity && <p className="text-red-500 text-sm">{errors.quantity.message}</p>}
                     </div>
 
-                    {/* Radio wasEaten */}
                     <div className="md:col-span-2">
                       <label className="block mb-1">L'animale ha mangiato?</label>
                       <div className="flex items-center space-x-4">
@@ -340,7 +335,7 @@ const handleDelete = async (feedingId) => {
                       </div>
                     )}
 
-                    {/* Note con counter */}
+                    {/* Note */}
                     <div className="md:col-span-2">
                       <textarea
                         rows={3}
@@ -356,7 +351,6 @@ const handleDelete = async (feedingId) => {
                     </div>
                   </div>
 
-                  {/* Pulsante con spinner e disable */}
                   <div className="text-right">
                     <button
                       type="submit"
@@ -369,91 +363,88 @@ const handleDelete = async (feedingId) => {
                   {submissionError && <p className="text-red-500 text-center mt-2">{submissionError}</p>}
                 </form>
 
-                {/* Cronologia e paginazione (stessi markup) */}
-                {/* ——— CRONOLOGIA PASTI ——— */}
-<h3 className="text-xl font-semibold mt-10 mb-4 text-gray-800">Cronologia Pasti</h3>
-<div className="overflow-auto text-sm max-h-64 md:max-h-80 border rounded-md">
-  <table className="w-full border text-gray-800">
-    <thead className="bg-gray-100">
-      <tr>
-        <th className="p-2">Data</th>
-        <th className="p-2">Cibo</th>
-        <th className="p-2">Quantità</th>
-        <th className="p-2">Prossimo Pasto</th>
-        <th className="p-2">Note</th>
-        <th className="p-2">Esito</th>
-        <th className="p-2">Azioni</th>
-      </tr>
-    </thead>
-    <tbody>
-      {feedings.length === 0 ? (
-        <tr>
-          <td colSpan="7" className="p-4 text-center text-gray-500">
-            Nessun pasto trovato
-          </td>
-        </tr>
-      ) : (
-        feedings.map(f => (
-          <tr key={f._id} className="odd:bg-white even:bg-gray-50">
-            <td className="p-2 whitespace-nowrap">
-              {new Date(f.date).toLocaleDateString()}
-            </td>
-            <td className="p-2 whitespace-nowrap">{f.foodType}</td>
-            <td className="p-2">
-              {f.quantity
-                ? `${f.quantity} × ${
-                    f.weightPerUnit >= 1000
-                      ? `${(f.weightPerUnit / 1000).toFixed(2)} kg`
-                      : `${f.weightPerUnit} g`
-                  }`
-                : '—'}
-            </td>
-            <td className="p-2 whitespace-nowrap">
-              {new Date(f.nextFeedingDate).toLocaleDateString()}
-            </td>
-            <td className="p-2 max-w-xs truncate" title={f.notes || ''}>
-              {f.notes || '—'}
-            </td>
-            <td className="p-2">
-              {f.wasEaten ? (
-                <span className="text-green-600 font-semibold">✅ Mang.</span>
-              ) : (
-                <span className="text-red-500 font-semibold">❌ Fallito</span>
-              )}
-            </td>
-            <td className="p-2">
-              <button
-                onClick={() => handleDelete(f._id)}
-                className="text-red-500 hover:text-red-700 font-semibold"
-                disabled={isSubmitting}
-              >
-                Elimina
-              </button>
-            </td>
-          </tr>
-        ))
-      )}
-    </tbody>
-  </table>
-</div>
+                {/* ——— MEAL HISTORY ——— */}
+                <h3 className="text-xl font-semibold mt-10 mb-4 text-gray-800">Cronologia Pasti</h3>
+                <div className="overflow-auto text-sm max-h-64 md:max-h-80 border rounded-md">
+                  <table className="w-full border text-gray-800">
+                    <thead className="bg-gray-100">
+                      <tr>
+                        <th className="p-2">Data</th>
+                        <th className="p-2">Cibo</th>
+                        <th className="p-2">Quantità</th>
+                        <th className="p-2">Prossimo Pasto</th>
+                        <th className="p-2">Note</th>
+                        <th className="p-2">Esito</th>
+                        <th className="p-2">Azioni</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {feedings.length === 0 ? (
+                        <tr>
+                          <td colSpan="7" className="p-4 text-center text-gray-500">
+                            Nessun pasto trovato
+                          </td>
+                        </tr>
+                      ) : (
+                        feedings.map(f => (
+                          <tr key={f._id} className="odd:bg-white even:bg-gray-50">
+                            <td className="p-2 whitespace-nowrap">
+                              {new Date(f.date).toLocaleDateString()}
+                            </td>
+                            <td className="p-2 whitespace-nowrap">{f.foodType}</td>
+                            <td className="p-2">
+                              {f.quantity
+                                ? `${f.quantity} × ${f.weightPerUnit >= 1000
+                                  ? `${(f.weightPerUnit / 1000).toFixed(2)} kg`
+                                  : `${f.weightPerUnit} g`
+                                }`
+                                : '—'}
+                            </td>
+                            <td className="p-2 whitespace-nowrap">
+                              {new Date(f.nextFeedingDate).toLocaleDateString()}
+                            </td>
+                            <td className="p-2 max-w-xs truncate" title={f.notes || ''}>
+                              {f.notes || '—'}
+                            </td>
+                            <td className="p-2">
+                              {f.wasEaten ? (
+                                <span className="text-green-600 font-semibold">✅ Mang.</span>
+                              ) : (
+                                <span className="text-red-500 font-semibold">❌ Fallito</span>
+                              )}
+                            </td>
+                            <td className="p-2">
+                              <button
+                                onClick={() => handleDelete(f._id)}
+                                className="text-red-500 hover:text-red-700 font-semibold"
+                                disabled={isSubmitting}
+                              >
+                                Elimina
+                              </button>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
 
-{/* ——— PAGINAZIONE ——— */}
-<div className="flex justify-center mt-6 space-x-2 flex-wrap">
-  {Array.from({ length: totalPages }, (_, i) => (
-    <button
-      key={i}
-      onClick={() => setPage(i + 1)}
-      className={`px-3 py-1 rounded ${
-        page === i + 1
-          ? 'bg-yellow-400 font-bold text-gray-800'
-          : 'bg-gray-200 hover:bg-gray-300'
-      }`}
-      disabled={isSubmitting}
-    >
-      {i + 1}
-    </button>
-  ))}
-</div>
+                {/* ——— PAGINATION ——— */}
+                <div className="flex justify-center mt-6 space-x-2 flex-wrap">
+                  {Array.from({ length: totalPages }, (_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setPage(i + 1)}
+                      className={`px-3 py-1 rounded ${page === i + 1
+                        ? 'bg-yellow-400 font-bold text-gray-800'
+                        : 'bg-gray-200 hover:bg-gray-300'
+                        }`}
+                      disabled={isSubmitting}
+                    >
+                      {i + 1}
+                    </button>
+                  ))}
+                </div>
 
               </Dialog.Panel>
             </Transition.Child>
@@ -466,5 +457,4 @@ const handleDelete = async (feedingId) => {
 
 export default FeedingModal;
 
-// Nota: definisci `inputClasses` come prima
 const inputClasses = "w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#228B22] focus:border-[#228B22] bg-white text-gray-800 text-sm";

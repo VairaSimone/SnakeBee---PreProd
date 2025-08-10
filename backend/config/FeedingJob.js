@@ -1,20 +1,10 @@
 import cron from 'node-cron';
 import Feeding from '../models/Feeding.js';
 import Notification from '../models/Notification.js';
-import Redis from 'ioredis';
-import Redlock from 'redlock';
 import FailedEmail from '../models/FailedEmail.js';
 import { transporter } from '../config/mailer.config.js';
 import { getUserPlan } from '../utils/getUserPlans.js';
 
-/*
-const redis = new Redis(process.env.REDIS_URL || "redis://localhost:6379");
-
-const redlock = new Redlock([redis], {
-  retryCount: 3,
-  retryDelay: 200, // ms
-});
-*/
 // Function to normalize the date to midnight
 const normalizeDate = (date) => {
   const normalizedDate = new Date(date);
@@ -30,7 +20,6 @@ const getReptileDisplayName = (reptile) => {
 
 cron.schedule('0 0 * * *', async () => {
   try {
-    // const lock = await redlock.acquire(['locks:feedingJob'], 5 * 60 * 1000); // 5 min TTL
     console.log('JOB - Feeding Job');
 
     try {
@@ -76,7 +65,6 @@ cron.schedule('0 0 * * *', async () => {
         const user = reptile ? reptile.user : null;
         if (!user || !user.email) continue;
         if (user.receiveFeedingEmails === false) {
-          console.log(`Utente ${user.email} ha disattivato le notifiche alimentazione.`);
           continue;
         }
         if (!reptile || !user) {
@@ -104,7 +92,6 @@ cron.schedule('0 0 * * *', async () => {
 
         const { plan } = getUserPlan(user);
         if (plan !== 'premium') {
-          console.log(`FeedingJob: utente ${user.email} ha piano ${plan}. Email non inviata.`);
           continue;
         }
 
@@ -120,12 +107,11 @@ cron.schedule('0 0 * * *', async () => {
         const reptileList = reptiles.map((r) => r.name).join(', ');
 
         if (!user.email) {
-          console.error(`Errore: L'utente con ID ${user._id} non ha un'email.`);
           continue;
         }
         let mailOptions;
         try {
-          // Verifica se esiste già una notifica identica per oggi
+          // Check if an identical notification already exists for today
           const existingNotification = await Notification.findOne({
             reptile: { $all: reptiles.map((r) => r.reptileId) },
             user: userId,
@@ -136,7 +122,7 @@ cron.schedule('0 0 * * *', async () => {
             },
           });
 
-          // Crea la notifica (status iniziale "pending")
+          // Create the notification (initial status "pending")
           const notification = new Notification({
             user: user._id,
             reptile: reptiles.map((r) => r.reptileId),
@@ -148,95 +134,93 @@ cron.schedule('0 0 * * *', async () => {
 
           await notification.save();
 
-          // Configura invio email
-          // Prepara il payload
+          // Configure email sending
           mailOptions = {
             from: `"SnakeBee" <noreply@snakebee.it>`,
             to: user.email,
             subject: 'Notifica di alimentazione rettili',
             text: `Ciao ${user.name},
 
-Oggi è il giorno della pappa per i tuoi rettili: ${reptileList}.
+          Oggi è il giorno della pappa per i tuoi rettili: ${reptileList}.
 
-Ricordati di alimentarli e aggiornare lo stato dalla tua dashboard!
+          Ricordati di alimentarli e aggiornare lo stato dalla tua dashboard!
 
-Vai su: ${process.env.FRONTEND_URL}/dashboard
+          Vai su: ${process.env.FRONTEND_URL}/dashboard
 
-Ricevi questa email perché hai attivato le notifiche alimentazione su SnakeBee.
-Puoi disattivarle dalle impostazioni del tuo account.`,
+          Ricevi questa email perché hai attivato le notifiche alimentazione su SnakeBee.
+          Puoi disattivarle dalle impostazioni del tuo account.`,
             html: `
-<div style="
-  font-family: 'Poppins', sans-serif;
-  max-width: 600px;
-  margin: 30px auto;
-  padding: 30px;
-  background-color: #FAF3E0; /* clay */
-  border-radius: 12px;
-  color: #2B2B2B; /* charcoal */
-">
-  <div style="text-align: center; margin-bottom: 20px;">
-    <img src="${process.env.LOGO_URL}" alt="SnakeBee Logo" style="max-width: 180px;" />
-  </div>
+          <div style="
+            font-family: 'Poppins', sans-serif;
+            max-width: 600px;
+            margin: 30px auto;
+            padding: 30px;
+            background-color: #FAF3E0; /* clay */
+            border-radius: 12px;
+            color: #2B2B2B; /* charcoal */
+          ">
+            <div style="text-align: center; margin-bottom: 20px;">
+              <img src="${process.env.LOGO_URL}" alt="SnakeBee Logo" style="max-width: 180px;" />
+            </div>
 
-  <h2 style="color: #228B22; text-align: center;">È ora di nutrire i tuoi rettili! 🐍🍽️</h2>
+            <h2 style="color: #228B22; text-align: center;">È ora di nutrire i tuoi rettili! 🐍🍽️</h2>
 
-  <p style="font-size: 16px; line-height: 1.6;">
-    Ciao <strong>${user.name}</strong>,
-  </p>
+            <p style="font-size: 16px; line-height: 1.6;">
+              Ciao <strong>${user.name}</strong>,
+            </p>
 
-  <p style="font-size: 16px; line-height: 1.6;">
-    Oggi è il giorno della pappa per i seguenti rettili:
-  </p>
+            <p style="font-size: 16px; line-height: 1.6;">
+              Oggi è il giorno della pappa per i seguenti rettili:
+            </p>
 
-  <ul style="
-    background-color: #EDE7D6; /* sand */
-    padding: 15px;
-    border-radius: 8px;
-    margin: 20px 0;
-    font-size: 16px;
-  ">
-    ${reptiles.map(r => `<li style="margin-bottom: 6px;">🐢 ${r.name}</li>`).join('')}
-  </ul>
+            <ul style="
+              background-color: #EDE7D6; /* sand */
+              padding: 15px;
+              border-radius: 8px;
+              margin: 20px 0;
+              font-size: 16px;
+            ">
+              ${reptiles.map(r => `<li style="margin-bottom: 6px;">🐢 ${r.name}</li>`).join('')}
+            </ul>
 
-  <p style="font-size: 16px; line-height: 1.6;">
-    Ricordati di aggiornare lo stato di alimentazione una volta completato!
-  </p>
+            <p style="font-size: 16px; line-height: 1.6;">
+              Ricordati di aggiornare lo stato di alimentazione una volta completato!
+            </p>
 
-  <div style="text-align: center; margin: 30px 0;">
-    <a href="${process.env.FRONTEND_URL}/dashboard"
-      style="
-        background-color: #228B22; /* forest */
-        color: #FFD700; /* honey */
-        padding: 14px 30px;
-        border-radius: 25px;
-        text-decoration: none;
-        font-weight: 600;
-        font-size: 16px;
-        display: inline-block;
-        box-shadow: 0 4px 8px rgba(34, 139, 34, 0.3);
-        transition: background-color 0.3s ease;
-      "
-    >
-      Vai alla Dashboard
-    </a>
-  </div>
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${process.env.FRONTEND_URL}/dashboard"
+                style="
+                  background-color: #228B22; /* forest */
+                  color: #FFD700; /* honey */
+                  padding: 14px 30px;
+                  border-radius: 25px;
+                  text-decoration: none;
+                  font-weight: 600;
+                  font-size: 16px;
+                  display: inline-block;
+                  box-shadow: 0 4px 8px rgba(34, 139, 34, 0.3);
+                  transition: background-color 0.3s ease;
+                "
+              >
+                Vai alla Dashboard
+              </a>
+            </div>
 
-  <p style="font-size: 13px; text-align: center; color: #777;">
-    Ricevi questa email perché hai attivato le notifiche alimentazione su SnakeBee.<br>
-    Puoi disattivarle in qualsiasi momento dalle impostazioni del tuo account.
-  </p>
-</div>  `
+            <p style="font-size: 13px; text-align: center; color: #777;">
+              Ricevi questa email perché hai attivato le notifiche alimentazione su SnakeBee.<br>
+              Puoi disattivarle in qualsiasi momento dalle impostazioni del tuo account.
+            </p>
+          </div>  `
           };
 
 
-          // Invia l’email
+          // Send the email
           emailsSent++;
           await transporter.sendMail(mailOptions);
 
-          // Aggiorna la notifica a "sent"
+          // Update the notification to "sent"
           notification.status = 'sent';
           await notification.save();
-          console.log(`Email inviata a ${user.email}`);
 
         } catch (err) {
           emailsFailed++;
@@ -252,9 +236,7 @@ Puoi disattivarle dalle impostazioni del tuo account.`,
 
         }
 
-
-        console.log(`JOB COMPLETATO: Email inviate: ${emailsSent}, fallite: ${emailsFailed}`);
-
+        console.log(`JOB COMPLETED: Emails sent: ${emailsSent}, failed: ${emailsFailed}`);
       }
 
     } catch (err) {

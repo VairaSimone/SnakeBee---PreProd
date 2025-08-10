@@ -3,19 +3,14 @@ import api from '../services/api.js';
 import { useSelector } from 'react-redux';
 import { selectUser } from '../features/userSlice.jsx';
 import { Link } from 'react-router-dom';
-
-// Componenti Modal (nessuna modifica necessaria qui)
 import ReptileCreateModal from '../components/ReptileCreateModal.jsx';
 import ReptileEditModal from '../components/ReptileEditModal.jsx';
 import FeedingModal from '../components/FeedingModal.jsx';
 import EventModal from '../components/EventModal.jsx';
 import ConfirmDeleteModal from '../components/ConfirmDeleteModal.jsx';
-
-// Icone per una UI più intuitiva
 import { FaMars, FaVenus, FaPlus, FaTag, FaPencilAlt, FaDrumstickBite, FaCalendarAlt, FaTrash, FaChartBar, FaPercentage, FaUtensils, FaEgg, FaSyncAlt } from 'react-icons/fa';
 
 const Dashboard = () => {
-  // La logica e gli state rimangono invariati
   const user = useSelector(selectUser);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [pendingDelete, setPendingDelete] = useState(null);
@@ -42,11 +37,10 @@ const Dashboard = () => {
   });
 
   const carouselRefs = useRef({});
-  // Tutte le funzioni (fetchReptiles, fetchStats, handleDelete, etc.) rimangono le stesse
   const scrollCarousel = (e, direction, reptileId) => {
     e.preventDefault();
     e.stopPropagation();
-    const scrollAmount = 250; // Aumentato per uno scroll più deciso
+    const scrollAmount = 250; 
     const node = carouselRefs.current[reptileId];
     if (node) {
       node.scrollBy({ left: scrollAmount * direction, behavior: 'smooth' });
@@ -64,7 +58,7 @@ const Dashboard = () => {
       setStats({
         successRate: success.data.successRate,
         feedingRefusalRate: refusal.data.refusalRate,
-averageShedInterval: Number(shed.data.averageIntervalDays),
+        averageShedInterval: Number(shed.data.averageIntervalDays),
         incubationBySpecies: incubation.data
       });
       console.log(stats.incubationBySpecies);
@@ -72,7 +66,7 @@ averageShedInterval: Number(shed.data.averageIntervalDays),
     } catch (err) {
       console.error('Errore nel recupero delle statistiche:', err);
     }
-    
+
   };
 
   const fetchReptiles = async () => {
@@ -102,13 +96,12 @@ averageShedInterval: Number(shed.data.averageIntervalDays),
   const handleDelete = async (id) => {
     try {
       await api.delete(`/reptile/${id}`);
-      fetchReptiles(); // refetch dopo eliminazione
+      fetchReptiles(); 
     } catch (err) {
       console.error('Errore eliminazione rettile', err);
     }
   };
 
-  // Tutti gli useEffect rimangono gli stessi
   useEffect(() => {
     let filtered = [...allReptiles];
     if (filterMorph.trim() !== '') {
@@ -143,11 +136,10 @@ averageShedInterval: Number(shed.data.averageIntervalDays),
       if (document.visibilityState === 'visible' && user?._id) {
         fetchReptiles();
       }
-    }, 1000 * 60 * 2); // ogni 2 minuti
+    }, 1000 * 60 * 2); 
     return () => clearInterval(interval);
   }, [user]);
 
-  // Card per le statistiche
   const StatCard = ({ icon, title, value, unit, bgColor, children }) => (
     <div className={`flex-1 p-4 rounded-xl shadow-md flex items-start gap-4 ${bgColor}`}>
       <div className="text-2xl text-white bg-white/20 p-3 rounded-lg">{icon}</div>
@@ -164,12 +156,12 @@ averageShedInterval: Number(shed.data.averageIntervalDays),
     </div>
   );
   const top3Incubations = React.useMemo(() => {
-  if (!stats.incubationBySpecies || stats.incubationBySpecies.length === 0) return [];
+    if (!stats.incubationBySpecies || stats.incubationBySpecies.length === 0) return [];
 
-  return [...stats.incubationBySpecies]
-    .sort((a, b) => b.count - a.count) // ordina per count decrescente
-    .slice(0, 3); // prendi i primi 3
-}, [stats.incubationBySpecies]);
+    return [...stats.incubationBySpecies]
+      .sort((a, b) => b.count - a.count) 
+      .slice(0, 3); 
+  }, [stats.incubationBySpecies]);
 
   return (
     <div className="bg-clay min-h-screen font-sans text-charcoal p-4 sm:p-6 lg:p-8">
@@ -192,27 +184,27 @@ averageShedInterval: Number(shed.data.averageIntervalDays),
           </button>
         </header>
 
-        {/* === SEZIONE STATISTICHE - NUOVA! === */}
+        {/* === STATISTICS SECTION === */}
         <section className="mb-8">
           <h2 className="text-2xl font-bold text-charcoal mb-4 flex items-center gap-2"><FaChartBar />Statistiche Veloci</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <StatCard icon={<FaPercentage />} title="Successo Riproduttivo" value={stats.successRate} unit="%" bgColor="bg-forest" />
             <StatCard icon={<FaUtensils />} title="Rifiuto Cibo" value={stats.feedingRefusalRate} bgColor="bg-amber" />
             <StatCard icon={<FaSyncAlt />} title="Intervallo Muta Medio" value={typeof stats.averageShedInterval === 'number' ? stats.averageShedInterval.toFixed(1) : 'N/A'} unit="giorni" bgColor="bg-blue-500" />
-<StatCard icon={<FaEgg />} title="Incubazione per Specie" bgColor="bg-purple-500">
-  <div className="text-sm space-y-1 mt-1">
-    {top3Incubations.length > 0 ? top3Incubations.map(s => (
-      <div key={s.species}>
-        <span className="font-semibold">{s.species}:</span> 
-        {!isNaN(Number(s.averageIncubationDays)) ? Number(s.averageIncubationDays).toFixed(0) : 'N/A'} giorni
-      </div>
-    )) : <p className="text-base">Nessun dato</p>}
-  </div>
-</StatCard>
+            <StatCard icon={<FaEgg />} title="Incubazione per Specie" bgColor="bg-purple-500">
+              <div className="text-sm space-y-1 mt-1">
+                {top3Incubations.length > 0 ? top3Incubations.map(s => (
+                  <div key={s.species}>
+                    <span className="font-semibold">{s.species}:</span>
+                    {!isNaN(Number(s.averageIncubationDays)) ? Number(s.averageIncubationDays).toFixed(0) : 'N/A'} giorni
+                  </div>
+                )) : <p className="text-base">Nessun dato</p>}
+              </div>
+            </StatCard>
           </div>
         </section>
 
-        {/* === CONTROLLI E FILTRI === */}
+        {/* === CONTROLS AND FILTERS === */}
         <div className="bg-sand p-4 rounded-xl flex flex-col sm:flex-row flex-wrap items-center gap-4 mb-8 shadow-sm">
           <div className="flex-1 min-w-[200px]">
             <label className="block text-sm font-bold text-charcoal/80 mb-1">Ordina per</label>
@@ -245,7 +237,7 @@ averageShedInterval: Number(shed.data.averageIntervalDays),
           </div>
         </div>
 
-        {/* === GRIGLIA RETTILI === */}
+        {/* === REPTILES GRID === */}
         <main>
           {loading ? (
             <div className="text-center py-20">
@@ -324,7 +316,7 @@ averageShedInterval: Number(shed.data.averageIntervalDays),
           )}
         </main>
 
-        {/* === PAGINAZIONE === */}
+        {/* === PAGINATION === */}
         {totalPages > 1 && (
           <footer className="flex justify-center mt-8 gap-2">
             {Array.from({ length: totalPages }, (_, i) => (
@@ -340,7 +332,6 @@ averageShedInterval: Number(shed.data.averageIntervalDays),
         )}
       </div>
 
-      {/* I MODAL rimangono invariati */}
       <ReptileCreateModal show={showCreateModal} handleClose={() => setShowCreateModal(false)} onSuccess={fetchReptiles} setReptiles={setAllReptiles} />
       <ReptileEditModal show={showEditModal} handleClose={() => setShowEditModal(false)} reptile={selectedReptile} onSuccess={fetchReptiles} setReptiles={setAllReptiles} />
       <FeedingModal show={showFeedingModal} handleClose={() => setShowFeedingModal(false)} reptileId={selectedReptile?._id} onSuccess={fetchReptiles} setReptiles={setAllReptiles} />

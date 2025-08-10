@@ -4,13 +4,13 @@ import Feeding from "../models/Feeding.js";
 import Notification from "../models/Notification.js";
 import Event from '../models/Event.js';
 import Breeding from '../models/Breeding.js';
-
 import RevokedToken from "../models/RevokedToken.js";
 import jwt from "jsonwebtoken";
-import cloudinary from '../config/CloudinaryConfig.js'; 
 import { deleteFileIfExists } from "../utils/deleteFileIfExists.js";
 import { logAction } from "../utils/logAction.js";
 import Stripe from "stripe";
+import { sendStripeNotificationEmail } from '../config/mailer.config.js'; 
+
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 export const GetAllUser = async (req, res) => {
   try {
@@ -21,7 +21,7 @@ export const GetAllUser = async (req, res) => {
     const user = await User.find({})
       .sort({ name: 1 })
       .skip((page - 1) * perPage)
-      .limit(perPage).select('-password -verificationCode -resetPasswordCode -refreshTokens -lastPasswordResetEmailSentAt -resetPasswordExpires -accountLockedUntil -loginAttempts'); if (!user) return res.status(404).json({ message: 'User not found' });
+      .limit(perPage).select('-password -verificationCode -resetPasswordCode -refreshTokens -lastPasswordResetEmailSentAt -resetPasswordExpires -accountLockedUntil -loginAttempts'); if (!user) return res.status(404).json({ message: 'Utente non trovato' });
     ;
 
     const totalResults = await User.countDocuments();
@@ -43,13 +43,13 @@ export const GetIDUser = async (req, res) => {
   try {
     const id = req.params.userId;
 
-    const user = await User.findById(id).select('-password -verificationCode -resetPasswordCode -refreshTokens -lastPasswordResetEmailSentAt -resetPasswordExpires -accountLockedUntil -loginAttempts'); if (!user) return res.status(404).json({ message: 'User not found' });
+    const user = await User.findById(id).select('-password -verificationCode -resetPasswordCode -refreshTokens -lastPasswordResetEmailSentAt -resetPasswordExpires -accountLockedUntil -loginAttempts'); if (!user) return res.status(404).json({ message: 'Utente non trovato' });
     ;
     if (!user) res.status(404).send();
     else res.send(user);
   } catch (err) {
     console.log(err);
-    res.status(500).send({ message: 'Not Found' });
+    res.status(500).send({ message: 'Utente non trovato' });
   }
 };
 
@@ -57,22 +57,21 @@ export const PutUser = async (req, res) => {
   try {
     const id = req.user.userid;
     const userData = req.body;
-const user = await User.findById(id);
-if (!user) return res.status(404).json({ message: "User not found" });
+    const user = await User.findById(id);
+    if (!user) return res.status(404).json({ message: "Utente non trovato" });
 
     if (userData.role && req.user.role !== 'admin') {
-      return res.status(403).json({ message: 'You cannot change your role.' });
+      return res.status(403).json({ message: 'Non puoi cambiare il tuo ruolo.' });
     }
 
     if (req.file) {
-      // Qui prendi il file salvato da multer
-      // Costruisci l'URL o path locale (dipende da come servi i file)
-         if (user.avatar) {
+
+      if (user.avatar) {
         await deleteFileIfExists(user.avatar);
       }
       userData.avatar = `/uploads/${req.file.filename}`;
     }
-     await logAction(req.user.userid, "Moodify User");
+    await logAction(req.user.userid, "Moodify User");
 
     const fieldsAllowed = ['name', 'avatar'];
     const updates = {};
@@ -85,7 +84,7 @@ if (!user) return res.status(404).json({ message: "User not found" });
     const updatedUser = await User.findByIdAndUpdate(id, updates, { new: true });
     res.send(updatedUser);
   } catch (err) {
-    console.error('Errore aggiornamento utente:', err);
+    console.error('User update error:', err);
     res.status(500).send();
   }
 };
@@ -95,7 +94,7 @@ export const updateEmailPreferences = async (req, res) => {
   try {
     const { receiveFeedingEmails } = req.body;
     if (typeof receiveFeedingEmails !== 'boolean') {
-      return res.status(400).json({ message: 'Valore non valido per receiveFeedingEmails' });
+      return res.status(400).json({ message: 'Valore non valido' });
     }
     const id = req.params.userId;
 
@@ -110,10 +109,55 @@ export const updateEmailPreferences = async (req, res) => {
       receiveFeedingEmails: user.receiveFeedingEmails
     });
   } catch (err) {
-    console.error('Errore aggiornamento preferenze email:', err);
+    console.error('Error updating email preferences:', err);
     res.status(500).json({ message: 'Errore del server' });
   }
 };
+
+async function cancelStripeSubscription(user) {
+  const subId = user.subscription?.stripeSubscriptionId;
+  const subStatus = user.subscription?.status;
+
+  if (subId && ['active', 'incomplete', 'past_due', 'pending_cancellation'].includes(subStatus)) {
+    try {
+      await stripe.subscriptions.cancel(subId);
+      await logAction(user._id, 'stripe_subscription_cancelled_on_user_deletion', `Sub ID: ${subId}`);
+      return true;
+    } catch (err) {
+      console.error('Stripe cancellation error:', err);
+      throw new Error('Errore nella cancellazione dell’abbonamento Stripe');
+    }
+  }
+  return false;
+}
+
+async function deleteUserRelatedData(userId) {
+  const reptiles = await Reptile.find({ user: userId });
+
+  for (const reptile of reptiles) {
+    await Feeding.deleteMany({ reptile: reptile._id });
+    await Event.deleteMany({ reptile: reptile._id });
+    await Notification.deleteMany({ reptile: reptile._id });
+
+    if (reptile.image) await deleteFileIfExists(reptile.image);
+  }
+
+  await Reptile.deleteMany({ user: userId });
+  await Breeding.deleteMany({ user: userId });
+  await Notification.deleteMany({ user: userId });
+}
+
+async function revokeUserToken(token) {
+  if (!token) return;
+  const decoded = jwt.decode(token);
+  if (!decoded) return;
+
+  const revokedToken = new RevokedToken({
+    token,
+    expiresAt: new Date(decoded.exp * 1000),
+  });
+  await revokedToken.save();
+}
 
 export const DeleteUser = async (req, res) => {
   try {
@@ -121,71 +165,36 @@ export const DeleteUser = async (req, res) => {
     const user = await User.findById(userId);
     if (!user) return res.status(404).json({ message: 'Utente non trovato' });
 
-
-    const subId = user.subscription?.stripeSubscriptionId;
-    const subStatus = user.subscription?.status;
-
-    if (subId && ['active', 'incomplete', 'past_due', 'pending_cancellation'].includes(subStatus)) {
-      try {
-        await stripe.subscriptions.cancel(subId);
-        await logAction(user._id, 'stripe_subscription_cancelled_on_user_deletion', `Sub ID: ${subId}`);
-      } catch (stripeErr) {
-        console.error('Errore Stripe durante cancellazione abbonamento:', stripeErr);
-        return res.status(500).json({ message: 'Errore nella cancellazione dell’abbonamento Stripe' });
-      }
+    try {
+      await cancelStripeSubscription(user);
+    } catch (stripeErr) {
+      return res.status(500).json({ message: stripeErr.message });
     }
-
-    // Trova tutti i rettili dell'utente
-    const reptiles = await Reptile.find({ user: userId });
-
-    // Per ogni rettile elimina feedings, eventi, notifiche
-    for (const reptile of reptiles) {
-      await Feeding.deleteMany({ reptile: reptile._id });
-      await Event.deleteMany({ reptile: reptile._id });
-      await Notification.deleteMany({ reptile: reptile._id });
-
-      if (reptile.image) {
-        await deleteFileIfExists(reptile.image);
-      }
-    
-    }
-
-    // Elimina i rettili
-    await Reptile.deleteMany({ user: userId });
-
-    // Elimina riproduzioni legate all'utente
-    await Breeding.deleteMany({ user: userId });
-
-    // Elimina notifiche dell'utente
-    await Notification.deleteMany({ user: userId });
+    await deleteUserRelatedData(userId);
     if (user.avatar) {
       await deleteFileIfExists(user.avatar);
     }
-    await logAction(req.user.userid, "user_deleted", `Cancellato utente ${userId}, tipo: self`);
 
-    // Elimina utente
     await User.findByIdAndDelete(userId);
 
-    // Revoca token se presente
     const token = req.header('Authorization')?.split(' ')[1];
-    if (token) {
-      const decoded = jwt.decode(token);
-      if (decoded) {
-        const revokedToken = new RevokedToken({
-          token,
-          expiresAt: new Date(decoded.exp * 1000),
-        });
-        await revokedToken.save();
-      }
-    }
+    await revokeUserToken(token);
+
+    await logAction(req.user.userid, "user_deleted", `User deleted ${userId}`);
+
+    sendStripeNotificationEmail(
+      user.email,
+      'Conferma cancellazione account SnakeBee',
+      `<p>Ciao ${user.name},<br>ti confermiamo che il tuo account è stato eliminato correttamente, inclusi i dati e l’abbonamento associato.</p>`,
+      `Ciao ${user.name}, ti confermiamo che il tuo account è stato eliminato correttamente, inclusi i dati e l’abbonamento associato.`
+    ).catch(e => console.error('Errore invio email conferma cancellazione:', e));
 
     return res.status(200).json({ message: 'Utente e dati collegati eliminati con successo' });
   } catch (error) {
-    console.error('Errore durante l\'eliminazione dell\'utente:', error);
+    console.error('Error deleting user:', error);
     return res.status(500).json({ message: 'Errore del server' });
   }
 };
-
 
 export const UpdateUserRole = async (req, res) => {
   try {
@@ -202,7 +211,6 @@ export const UpdateUserRole = async (req, res) => {
     user.role = role;
 
     if (role === 'banned') {
-      // logout forzato: rimuovi refresh tokens
       user.refreshTokens = [];
     }
 

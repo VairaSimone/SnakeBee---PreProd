@@ -1,13 +1,12 @@
-import React from "react";
 import { HashLink as Link } from "react-router-hash-link";
-import { Facebook, Instagram } from "lucide-react"; // oppure usa <i> se resti su FontAwesome
+import { Facebook, Instagram } from "lucide-react";
 
 const Footer = () => {
   return (
     <footer className="bg-[#EDE7D6] text-[#2B2B2B] px-6 pt-10 pb-6 mt-10">
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row flex-wrap justify-between gap-10">
-        
-        {/* Brand e descrizione */}
+
+        {/* Brand and description */}
         <div className="md:w-1/3">
           <div className="flex items-center gap-2 mb-4">
             <img src="/icona.png" alt="SnakeBee logo" className="h-10" />
@@ -18,7 +17,7 @@ const Footer = () => {
           </p>
         </div>
 
-        {/* Sezione Link Informativi */}
+        {/* Information Links Section */}
         <div className="md:w-1/4">
           <h5 className="text-lg font-semibold mb-3">Informazioni</h5>
           <ul className="space-y-2 text-sm">
@@ -28,7 +27,7 @@ const Footer = () => {
           </ul>
         </div>
 
-        {/* Sezione Servizi */}
+        {/* Services Section */}
         <div className="md:w-1/4">
           <h5 className="text-lg font-semibold mb-3">Servizi</h5>
           <ul className="space-y-2 text-sm">
@@ -52,14 +51,13 @@ const Footer = () => {
         </div>
       </div>
 
-      {/* Linea divisoria */}
       <div className="mt-10 border-t border-[#d0caba] pt-4 text-center text-xs text-gray-600">
         © 2025 SnakeBee. Tutti i diritti riservati.
       </div>
     </footer>
-    
+
   );
-  
+
 };
 
 export default Footer;

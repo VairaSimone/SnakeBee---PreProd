@@ -5,14 +5,16 @@ import { body, validationResult } from 'express-validator';
 import RevokedToken from '../models/RevokedToken.js';
 import crypto from 'crypto';
 import { logSecurityEvent } from "../utils/securityLogger.js";
-
 import { sendVerificationEmail, sendPasswordResetEmail } from "../config/mailer.config.js";
 import { logAction } from "../utils/logAction.js";
+
+
 const MAX_VERIFICATION_EMAILS = 5;
 async function pwnedPassword() {
   const { pwnedPassword } = await import("hibp");
   return pwnedPassword;
 }
+
 const isTempEmail = (email) => {
   const tempDomains = [
     "mailinator.com", "10minutemail.com", "guerrillamail.com",
@@ -21,6 +23,7 @@ const isTempEmail = (email) => {
   const domain = email.split("@")[1].toLowerCase();
   return tempDomains.includes(domain);
 };
+
 const generateAccessToken = (user) => {
   return jwt.sign({ userid: user.id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '2h' });
 };
@@ -29,11 +32,12 @@ const generateAccessToken = (user) => {
 const generateRefreshToken = (user) => {
   return jwt.sign({ userid: user.id }, process.env.JWT_REFRESH_SECRET, { expiresIn: '7d' });
 };
-// Tempo minimo tra gli invii della stessa email (in millisecondi)
-const EMAIL_RESEND_COOLDOWN = 60 * 1000; // 60 secondi
 
-// Tempo di validità del codice di reset password (in millisecondi)
-const PASSWORD_RESET_CODE_EXPIRY = 60 * 60 * 1000; // 1 ora
+// Minimum time between sending the same email (in milliseconds)
+const EMAIL_RESEND_COOLDOWN = 60 * 1000; // 60 seconds
+
+// Password reset code validity time (in milliseconds)
+const PASSWORD_RESET_CODE_EXPIRY = 60 * 60 * 1000; // 1 hour
 
 export const validateLogin = [
   body('email').isEmail().withMessage('Email non valida'),
@@ -49,13 +53,13 @@ export const validateLogin = [
 export const login = async (req, res, next) => {
   try {
     const MAX_LOGIN_ATTEMPTS = 5;
-    // Durata del blocco in millisecondi (15 minuti)
+    // Lock duration in milliseconds (15 minutes)
     const LOCKOUT_DURATION = 15 * 60 * 1000;
 
     const email = await req.body.email.toLowerCase();
 
     const user = await User.findOne({ email });
-    if (!user) return res.status(401).json({ message: "Error in the credentials entered" });
+    if (!user) return res.status(401).json({ message: "Errore nelle credenziali inserite" });
     if (user.accountLockedUntil && new Date() < user.accountLockedUntil) {
       const timeLeft = Math.ceil((user.accountLockedUntil - new Date()) / 1000);
       return res.status(403).json({ message: `Account bloccato. Riprova tra ${timeLeft} secondi.` });
@@ -64,15 +68,15 @@ export const login = async (req, res, next) => {
       return res.status(400).json({ message: 'Account creato tramite Google: effettua il login con Google.' });
     }
     if (user.isBanned) {
-      return res.status(403).json({ message: "Il tuo account è stato bannato. Contatta l'assistenza per informazioni." });
+      return res.status(403).json({ message: "Il tuo account è stato bannato. Contatta l'assistenza (info@snakebee.it) per informazioni." });
     }
-    // Controllo email verificata
+    // Check verified email
     if (!user.isVerified) {
       return res.status(403).json({ message: "Email non verificata. Controlla la tua casella di posta per il codice di verifica." });
     }
-  if (user.role === 'banned') {
-    return res.status(403).json({ message: 'Account bannato. Contatta il supporto.' });
-  }
+    if (user.role === 'banned') {
+      return res.status(403).json({ message: 'Account bannato. Contatta il supporto. (info@snakebee.it)' });
+    }
     const validPassword = await bcrypt.compare(req.body.password, user.password);
     if (!validPassword) {
       user.loginAttempts = (user.loginAttempts || 0) + 1;
@@ -82,7 +86,7 @@ export const login = async (req, res, next) => {
         await user.save();
         return res.status(403).json({ message: `Troppi tentativi falliti. Account bloccato per ${LOCKOUT_DURATION / 60000} minuti.` });
       }
-      return res.status(401).json({ message: "Error in the credentials entered" });
+      return res.status(401).json({ message: "Errore nelle credenziali inserite" });
     }
     user.loginAttempts = 0;
     user.accountLockedUntil = null;
@@ -118,7 +122,7 @@ export const login = async (req, res, next) => {
     return res.json({ accessToken, refreshToken });
   } catch (error) {
     console.log(error)
-    return res.status(500).json({ message: "Server Error" });
+    return res.status(500).json({ message: "Errore del server" });
   }
 };
 
@@ -132,8 +136,8 @@ export const register = async (req, res, next) => {
     if (!req.body.privacyConsent) {
       return res.status(400).json({ message: "Devi accettare la Privacy Policy per registrarti." });
     }
-    // Genera un codice di verifica
-    const verificationCode = crypto.randomBytes(3).toString('hex').toUpperCase(); // Es. codice di 6 caratteri
+    // Generate a verification code
+    const verificationCode = crypto.randomBytes(3).toString('hex').toUpperCase();
     const count = await pwnedPassword(req.body.password);
     if (count > 0) {
       return res.status(400).json({ message: "Questa password è troppo comune o compromessa. Scegline un'altra." });
@@ -171,15 +175,14 @@ export const register = async (req, res, next) => {
       createdAt: new Date()
     };
 
-    // Invia l'email di verifica
+    // Send verification email
     await newUser.save();
     await sendVerificationEmail(newUser.email, verificationCode);
-    // Modifica il messaggio di risposta
     res.status(201).json({ message: "Registrazione quasi completata! Controlla la tua email per il codice di verifica." });
   } catch (e) {
-    // Se l'errore è dovuto a email/username duplicato, gestiscilo specificamente
+    // If the error is due to duplicate email/username, handle it specifically
     if (e.name === 'SequelizeUniqueConstraintError') {
-      return res.status(400).json({ message: "Errore: Username o Email già in uso!" });
+      return res.status(400).json({ message: "Errore: Email già in uso!" });
     }
     next(e);
   }
@@ -191,23 +194,23 @@ export const getMe = async (req, res, next) => {
     const user = await User.findById(req.user.userid).select('-password -verificationCode -resetPasswordCode -refreshTokens -lastPasswordResetEmailSentAt -resetPasswordExpires -accountLockedUntil -loginAttempts'); if (!user) return res.status(404).json({ message: 'User not found' });
     return res.json(user);
   } catch (error) {
-    return res.status(500).json({ message: "Server Error" });
+    return res.status(500).json({ message: "Errore del server" });
   }
 };
 
 export const logout = async (req, res, next) => {
   const token = req.cookies.refreshToken;
-  if (!token) return res.status(400).json({ message: "Token not found" });
+  if (!token) return res.status(400).json({ message: "Token non trovato" });
 
   try {
-    // Decodifica il token (non verifica, serve solo userId)
+    // Decode the token (does not verify, only userId is needed)
     const decoded = jwt.decode(token);
-    if (!decoded) return res.status(400).json({ message: "Invalid token decoding" });
+    if (!decoded) return res.status(400).json({ message: "Decodifica del token non valida" });
 
     const user = await User.findById(decoded.userid);
-    if (!user) return res.status(400).json({ message: "Invalid user" });
+    if (!user) return res.status(400).json({ message: "Utente non valido" });
 
-    // Verifica se esiste e rimuovilo
+    // Check if it exists and remove it
     const filteredTokens = [];
     let matched = false;
     for (const rt of user.refreshTokens) {
@@ -238,10 +241,10 @@ export const logout = async (req, res, next) => {
       secure: true
     });
 
-    return res.status(200).json({ message: "Logout successful" });
+    return res.status(200).json({ message: "Disconnessione avvenuta con successol" });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ message: "Server Error" });
+    return res.status(500).json({ message: "Errore del server" });
   }
 };
 
@@ -292,7 +295,7 @@ export const callBackGoogle = async (req, res, next) => {
 
     res.redirect(`${process.env.FRONTEND_URL}/login-google-callback?accessToken=${accessToken}&refreshToken=${refreshToken}`);
   } catch (err) {
-    console.error("Errore nell'autenticazione con Google:", err);
+    console.error("Google authentication error:", err);
     res.status(500).send("Errore del server");
   }
 };
@@ -308,7 +311,7 @@ export const changePassword = async (req, res, next) => {
     if (newPassword !== confirmPassword) {
       return res.status(400).json({ message: "Le password non corrispondono." });
     }
-    // Recupera l'utente loggato usando l'ID ottenuto dal token
+    // Retrieve the logged in user using the ID obtained from the token
     const user = await User.findById(req.user.userid);
     if (!user) {
       return res.status(404).json({ message: "Utente non trovato." });
@@ -317,7 +320,7 @@ export const changePassword = async (req, res, next) => {
       return res.status(400).json({ message: "Impossibile cambiare password: account creato con Google" });
     }
 
-    // Verifica che la vecchia password corrisponda
+    // Verify that the old password matches
     const isMatch = await bcrypt.compare(oldPassword, user.password);
     if (!isMatch) {
       return res.status(401).json({ message: "La vecchia password non è corretta." });
@@ -327,12 +330,12 @@ export const changePassword = async (req, res, next) => {
     if (count > 0) {
       return res.status(400).json({ message: "Questa password è troppo comune o compromessa. Scegline un'altra." });
     }
-    // Hash della nuova password
+    // Hash of the new password
     const hashedPassword = await bcrypt.hash(newPassword, 12);
     user.password = hashedPassword;
     await logAction(user._id, "Cange password");
 
-    // Salva l'aggiornamento nel database
+    // Save the update to the database
     await user.save();
     await logSecurityEvent({
       userId: user.id,
@@ -357,7 +360,6 @@ export const resendVerificationEmail = async (req, res, next) => {
 
     const user = await User.findOne({ email: new RegExp(`^${email}$`, 'i') });
 
-    // Per sicurezza non svelare se l'utente esiste o meno
     if (!user || user.isVerified) {
       return res.status(200).json({ message: "Se l'email è corretta, riceverai un codice di verifica." });
     }
@@ -408,11 +410,12 @@ export const verifyEmail = async (req, res, next) => {
       return res.status(400).json({ message: "Email già verificata." });
     }
 
-    if (user.verificationCode !== code.toUpperCase()) { // Confronta con il codice salvato
+    if (user.verificationCode !== code.toUpperCase()) {
       return res.status(400).json({ message: "Codice di verifica non valido." });
     }
-        await logAction(user._id, "Verify-email");
-    // Verifica riuscita: aggiorna l'utente
+    await logAction(user._id, "Verify-email");
+
+    // Verification successful: Update user
     user.isVerified = true;
     user.verificationCode = null;
     await user.save();
@@ -424,7 +427,7 @@ export const verifyEmail = async (req, res, next) => {
   }
 };
 
-// Funzione per cambiare l'email e rinviare l'email di verifica
+// Function to change the email and resend the verification email
 export const changeEmailAndResendVerification = async (req, res, next) => {
   try {
     const { newEmail, password } = req.body;
@@ -479,12 +482,12 @@ export const changeEmailAndResendVerification = async (req, res, next) => {
     await sendVerificationEmail(newEmail, code);
     res.json({ message: "Email aggiornata! Verifica la nuova casella.", forceLogout: true });
   } catch (e) {
-    console.error("Errore nel cambio email:", e);
+    console.error("Error changing email address:", e);
     next(e);
   }
 };
 
-// Controller per richiedere il reset password
+// Controller to request password reset
 export const forgotPassword = async (req, res, next) => {
   try {
     const { email } = req.body;
@@ -495,63 +498,47 @@ export const forgotPassword = async (req, res, next) => {
 
     const user = await User.findOne({ email: new RegExp(`^${email}$`, 'i') });
 
-    // Per sicurezza, non rivelare se l'utente esiste o meno.
-    // Invia sempre lo stesso messaggio di successo parziale.
     if (!user) {
       return res.status(200).json({ message: "Se un utente con questa email esiste, un'email per il reset della password è stata inviata." });
     }
 
-    // Controllo del rate limiting per il reset password
+    // Control rate limiting for password reset
     if (user.lastPasswordResetEmailSentAt) {
       const timeSinceLastSend = Date.now() - new Date(user.lastPasswordResetEmailSentAt).getTime();
       if (timeSinceLastSend < EMAIL_RESEND_COOLDOWN) {
-        // Non bloccare completamente, ma potresti registrare un tentativo non riuscito o ritardare.
-        // Per semplicità qui inviamo lo stesso messaggio di "successo" ma non inviamo l'email.
         console.warn(`Rate limit hit for password reset email to ${user.email}`);
         return res.status(200).json({ message: "Se un utente con questa email esiste, un'email per il reset della password è stata inviata." });
       }
     }
 
-
-    // Genera un codice di reset unico (es. 6 caratteri esadecimali)
+    // Generate a unique reset code (e.g. 6 hexadecimal characters)
     const resetCode = crypto.randomBytes(3).toString('hex').toUpperCase(); // 6 caratteri
 
-    // Imposta la data di scadenza (es. 1 ora da ora)
+    // Set the expiration date (e.g. 1 hour from now)
     const resetExpires = new Date(Date.now() + PASSWORD_RESET_CODE_EXPIRY);
 
-    // Salva il codice di reset e la scadenza nell'utente
+    // Save the reset code and expiration in the user
     user.resetPasswordCode = resetCode;
     user.resetPasswordExpires = resetExpires;
     user.lastPasswordResetEmailSentAt = new Date();
     await user.save();
 
-    // Invia l'email con il codice di reset
-    // Usiamo un try/catch separato per l'invio dell'email
-    // per non impedire il salvataggio del codice se l'email fallisce,
-    // ma gestiamo l'errore di invio.
     try {
       await sendPasswordResetEmail(user.email, resetCode);
       res.status(200).json({ message: "Se un utente con questa email esiste, un'email per il reset della password è stata inviata." });
     } catch (emailError) {
-      console.error("Errore critico nell'invio dell'email di reset password:", emailError);
-      // Potresti voler loggare l'errore o notificare un admin
-      // e rispondere comunque al client con un messaggio generico
-      // per evitare di esporre dettagli interni.
+      console.error("Critical error sending password reset email:", emailError);
       res.status(500).json({ message: "Si è verificato un errore durante l'invio dell'email di reset. Riprova più tardi." });
-
-      // Optional: Potresti voler annullare il salvataggio del codice se l'email fallisce
-      // o marcare l'utente in qualche modo. Questo rende il flusso più complesso.
-      // Per ora, lasciamo il codice salvato ma logghiamo l'errore di invio.
     }
 
 
   } catch (e) {
-    console.error("Errore nella richiesta di reset password:", e);
-    next(e); // Passa altri errori al gestore generale
+    console.error("Error in password reset request:", e);
+    next(e);
   }
 };
 
-// Controller per resettare la password usando il codice
+// Controller to reset password using code
 export const resetPassword = async (req, res, next) => {
   try {
     const { email, code, newPassword, confirmPassword } = req.body;
@@ -562,48 +549,41 @@ export const resetPassword = async (req, res, next) => {
     if (!email || !code || !newPassword) {
       return res.status(400).json({ message: "Email, codice di reset e nuova password sono richiesti." });
     }
-
-    // Cerca l'utente per email E codice di reset
-    // Questo previene attacchi che tentano di indovinare il codice
-    // sapendo solo l'email.
     const user = await User.findOne({
 
       email: new RegExp(`^${email}$`, 'i'),
-      resetPasswordCode: code.toUpperCase() // Confronta il codice (rendilo case-insensitive se necessario)
+      resetPasswordCode: code.toUpperCase()
 
     });
 
-
-    // Se l'utente non è stato trovato con quel codice O il codice è nullo
+    // If the user was not found with that code OR the code is null
     if (!user) {
       return res.status(400).json({ message: "Codice di reset non valido o email non corrispondente." });
     }
 
-    // Controlla se il codice è scaduto
+    // Check if the code has expired
     if (user.resetPasswordExpires < new Date()) {
-      // Pulisci i campi di reset password scaduti
       user.resetPasswordCode = null;
       user.resetPasswordExpires = null;
       await user.save();
       return res.status(400).json({ message: "Codice di reset scaduto. Richiedi un nuovo reset password." });
     }
 
-        await logAction(user._id, "Reset-password");
+    await logAction(user._id, "Reset-password");
 
-
-    // Se il codice è valido e non scaduto:
-    // 1. Hasher la nuova password
+    // If the code is valid and has not expired:
+    // 1. Hasher the new password
     const hashedNewPassword = await bcrypt.hash(newPassword, 12);
 
-    // 2. Aggiornare la password dell'utente
+    // 2. Update the user's password
     user.password = hashedNewPassword;
 
-    // 3. Invalidare il codice di reset
+    // 3. Invalidate the reset code
     user.resetPasswordCode = null;
-    user.resetPasswordExpires = null;
-    user.lastPasswordResetEmailSentAt = null; // Reset anche il timestamp di invio per sicurezza/pulizia
+    user.resetPasswordExpires = null
+    user.lastPasswordResetEmailSentAt = null;
 
-    // 4. Salvare l'utente
+    // 4. Save the user
     await user.save();
     await logSecurityEvent({
       userId: user.id,
@@ -614,8 +594,8 @@ export const resetPassword = async (req, res, next) => {
     res.status(200).json({ message: "Password resettata con successo. Ora puoi effettuare il login con la nuova password." });
 
   } catch (e) {
-    console.error("Errore nel reset password:", e);
-    next(e); // Passa altri errori al gestore generale
+    console.error("Password reset error:", e);
+    next(e);
   }
 };
 

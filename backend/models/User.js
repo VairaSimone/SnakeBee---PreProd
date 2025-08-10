@@ -32,17 +32,17 @@ const userSchema = new Schema(
             type: Number,
             default: 0,
         },
-subscription: {
-  stripeCustomerId: { type: String },
-  stripeSubscriptionId: { type: String },
-  status: {
-    type: String,
-    enum: ['active', 'incomplete', `pending_cancellation`, 'canceled', 'paused', 'past_due', 'unpaid', null],
-    default: null
-  },
-  currentPeriodEnd: { type: Date },
-  plan: { type: String, enum: ['free','basic', 'premium', null], default: 'free' }
-},
+        subscription: {
+            stripeCustomerId: { type: String },
+            stripeSubscriptionId: { type: String },
+            status: {
+                type: String,
+                enum: ['active', 'incomplete', 'processing', `pending_cancellation`, 'canceled', 'paused', 'past_due', 'unpaid', null],
+                default: null
+            },
+            currentPeriodEnd: { type: Date },
+            plan: { type: String, enum: ['free', 'basic', 'premium', null], default: 'free' }
+        },
 
         isVerified: {
             type: Boolean,
@@ -70,7 +70,7 @@ subscription: {
 
         isBanned: {
             type: Boolean,
-            default: false // Di default l'utente non è bannato
+            default: false 
         }, loginAttempts: {
             type: Number,
         },
@@ -103,12 +103,10 @@ subscription: {
             token: { type: String, required: true },
             createdAt: { type: Date, default: Date.now }
         }], reptiles: [{ type: mongoose.Schema.Types.ObjectId, ref: "Reptile" }],
-        //     threads: [{ type: mongoose.Schema.Types.ObjectId, ref: "ForumThread" }],
-        //    posts: [{ type: mongoose.Schema.Types.ObjectId, ref: "ForumPost" }]
     },
     {
         collection: "User",
-        timestamps: true 
+        timestamps: true
     }
 )
 userSchema.pre('validate', function (next) {

@@ -1,7 +1,5 @@
-// controllers/FoodInventoryController.js
 import FoodInventory from '../models/FoodInventory.js';
 import User from '../models/User.js';
-import { getUserPlan } from '../utils/getUserPlans.js'
 import { logAction } from '../utils/logAction.js';
 
 async function isInventoryAccessAllowed(userId) {
@@ -16,14 +14,14 @@ export const getInventory = async (req, res) => {
       return res.status(401).json({ message: 'Utente non autenticato' });
     }
 
-if (!await isInventoryAccessAllowed(req.user.userid)) {
-  return res.status(403).json({ message: 'Solo utenti Premium' });
-}
+    if (!await isInventoryAccessAllowed(req.user.userid)) {
+      return res.status(403).json({ message: 'la funzione può essere utilizzata soltanto da utenti Premium' });
+    }
 
     const inventory = await FoodInventory.find({ user: req.user.userid });
     res.json(inventory);
   } catch (err) {
-    console.error('Errore nel recupero dell\'inventario:', err);
+    console.error('Error retrieving inventory:', err);
     res.status(500).json({ message: 'Errore nel recupero dell\'inventario' });
   }
 };
@@ -32,7 +30,7 @@ export const updateInventoryItem = async (req, res) => {
   const { id } = req.params;
   const { quantity, weightPerUnit } = req.body;
 
-    if (!isInventoryAccessAllowed(req.user.userid)) {
+  if (!isInventoryAccessAllowed(req.user.userid)) {
     return res.status(403).json({ message: 'Solo gli utenti Premium possono aggiornare l\'inventario.' });
   }
 
@@ -53,35 +51,35 @@ export const updateInventoryItem = async (req, res) => {
 
 export const addInventoryItem = async (req, res) => {
   const { foodType, quantity, weightPerUnit } = req.body;
-  const userId = req.user.userid; // <-- Preso dal token JWT
+  const userId = req.user.userid;
 
-    if (!isInventoryAccessAllowed(req.user.userid)) {
+  if (!isInventoryAccessAllowed(req.user.userid)) {
     return res.status(403).json({ message: 'Funzionalità riservata agli utenti Premium.' });
   }
 
- try {
-    // Cerca se esiste già un item con stesso tipo e peso per unità
+  try {
+    // Check if an item with the same type and weight per unit already exists
     const existing = await FoodInventory.findOne({
       user: userId,
       foodType,
-      weightPerUnit, // deve combaciare anche il peso per unità
+      weightPerUnit,
     });
 
     if (existing) {
-      // Se già esiste, somma la quantità ma NON toccare il weightPerUnit
-existing.quantity = Number(existing.quantity) + Number(quantity);
+      // If it already exists, add the quantity but do NOT touch the weightPerUnit
+      existing.quantity = Number(existing.quantity) + Number(quantity);
       await existing.save();
       return res.json(existing);
     }
 
-    // Altrimenti, crea un nuovo elemento
+    // Otherwise, create a new element
     const newItem = new FoodInventory({
       user: userId,
       foodType,
       quantity,
       weightPerUnit,
     });
-     await logAction(req.user.userid, "Create Inventory");
+    await logAction(req.user.userid, "Create Inventory");
 
     await newItem.save();
     res.status(201).json(newItem);
@@ -94,7 +92,7 @@ existing.quantity = Number(existing.quantity) + Number(quantity);
 export const deleteFeeding = async (req, res) => {
   const { id } = req.params;
 
-    if (!isInventoryAccessAllowed(req.user.userid)) {
+  if (!isInventoryAccessAllowed(req.user.userid)) {
     return res.status(403).json({ message: 'Solo gli utenti Premium possono eliminare elementi dall\'inventario.' });
   }
 
@@ -110,7 +108,7 @@ export const deleteFeeding = async (req, res) => {
 
     res.json({ message: 'Elemento eliminato con successo' });
   } catch (err) {
-    console.error('Errore durante eliminazione:', err);
+    console.error('Error while deleting:', err);
     res.status(500).json({ message: 'Errore durante l\'eliminazione dell\'elemento' });
   }
 };

@@ -54,8 +54,7 @@ const ReptileCreateModal = ({ show, handleClose, setReptiles, onSuccess }) => {
     const errors = {};
     const today = new Date();
     const minDate = new Date();
-    minDate.setFullYear(today.getFullYear() - 100); // massimo 100 anni fa
-
+    minDate.setFullYear(today.getFullYear() - 100);
     if (!formData.species.trim()) errors.species = 'La specie è obbligatoria';
     if (!formData.sex) errors.sex = 'Il sesso è obbligatorio';
     if (formData.birthDate) {

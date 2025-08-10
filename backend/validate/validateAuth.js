@@ -40,17 +40,3 @@ export const resetPasswordSchema = Joi.object({
   confirmPassword: Joi.string().valid(Joi.ref('newPassword')).required()
     .messages({ 'any.only': 'La conferma della password non corrisponde' }),
 });
-export const updateProfileSchema = Joi.object({
-  name: Joi.string().min(3).max(50),
-  userType: Joi.string().valid("private", "breeder", "business"),
-  farmName: Joi.string().allow(""),
-  address: Joi.string().allow(""),
-  city: Joi.string().allow(""),
-  province: Joi.string().length(2).allow(""),
-  zipCode: Joi.string().length(5).pattern(/^[0-9]+$/).allow(""),
-  phone: Joi.string().allow(""),
-  website: Joi.string().uri().allow(""),
-  latitude: Joi.number().min(-90).max(90).allow(null),
-  longitude: Joi.number().min(-180).max(180).allow(null),
-  bio: Joi.string().max(1000).allow("")
-});

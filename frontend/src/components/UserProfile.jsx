@@ -4,7 +4,6 @@ import { useDispatch } from 'react-redux';
 import { logoutUser } from '../features/userSlice';
 import { Link, useNavigate } from 'react-router-dom';
 
-// Toast component centralizzato
 const Toast = ({ toasts, removeToast }) => {
   return (
     <div className="fixed top-5 right-5 z-50 space-y-2">
@@ -23,7 +22,7 @@ const Toast = ({ toasts, removeToast }) => {
   );
 };
 
-// Modal per la conferma
+// Confirmation modal
 const ConfirmModal = ({ show, title, message, onConfirm, onCancel }) => {
   if (!show) return null;
   return (
@@ -98,7 +97,7 @@ const UserProfile = () => {
     const fetchUser = async () => {
 
       try {
-        const { data } = await api.get('/api/v1/me');
+        const { data } = await api.get('/v1/me');
         setUser(data);
         setName(data.name);
         setEmail(data.email);
@@ -157,7 +156,7 @@ const UserProfile = () => {
       return;
     }
     try {
-      const { data } = await api.post('/api/v1/change-email', {
+      const { data } = await api.post('/v1/change-email', {
         newEmail,
         password: passwordForEmail,
       });
@@ -166,7 +165,7 @@ const UserProfile = () => {
       setNewEmail('');
       setPasswordForEmail('');
       if (data.forceLogout) {
-        await api.post('/api/v1/logout', null, { withCredentials: true });
+        await api.post('/v1/logout', null, { withCredentials: true });
         dispatch(logoutUser());
         localStorage.removeItem('token');
 
@@ -190,7 +189,7 @@ const UserProfile = () => {
       return;
     }
     try {
-      await api.post('/api/v1/change-password', { oldPassword, newPassword, confirmPassword });
+      await api.post('/v1/change-password', { oldPassword, newPassword, confirmPassword });
       addToast('Password aggiornata correttamente.', 'success');
       setOldPassword('');
       setNewPassword('');
@@ -231,7 +230,6 @@ const UserProfile = () => {
         responseType: 'blob',
       });
 
-      // Crea un link temporaneo per il download
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
@@ -254,7 +252,7 @@ const UserProfile = () => {
     <div className="relative">
       <Toast toasts={toasts} removeToast={removeToast} />
 
-<div className="max-w-4xl mx-auto px-4 py-10 text-gray-800 animate-fade-slide-up">
+      <div className="max-w-4xl mx-auto px-4 py-10 text-gray-800 animate-fade-slide-up">
         <div className="bg-white rounded-lg shadow-md p-6 space-y-6">
           <div className="flex justify-between items-center">
             <h2 className="text-2xl font-semibold text-[#228B22]">Il tuo Profilo</h2>
@@ -262,12 +260,12 @@ const UserProfile = () => {
           </div>
 
           <div className="text-center">
-            <img src={process.env.REACT_APP_BACKEND_URL_IMAGE + avatarPreview || 'https://res.cloudinary.com/dg2wcqflh/image/upload/v1753088270/sq1upmjw7xgrvpkghotk.png'} alt="Avatar" className="w-24 h-24 rounded-full mx-auto border-4 border-[#FFD700] transition duration-300 hover:shadow-[0_0_20px_5px_rgba(255,215,0,0.6)]" onClick={() => addToast("👀 Bel tentativo, ma non si può cambiare così!", "success")}/>
+            <img src={process.env.REACT_APP_BACKEND_URL_IMAGE + avatarPreview || 'https://res.cloudinary.com/dg2wcqflh/image/upload/v1753088270/sq1upmjw7xgrvpkghotk.png'} alt="Avatar" className="w-24 h-24 rounded-full mx-auto border-4 border-[#FFD700] transition duration-300 hover:shadow-[0_0_20px_5px_rgba(255,215,0,0.6)]" onClick={() => addToast("👀 Bel tentativo, ma non si può cambiare così!", "success")} />
             <h3 className="mt-2 text-lg font-medium">{name}</h3>
             <p className="text-sm text-gray-500">{email}</p>
           </div>
 
-          {/* Aggiorna profilo */}
+          {/* Update profile */}
           <form onSubmit={handleUpdateProfile} className="space-y-4">
             <div>
               <label className="block text-sm font-medium">Nome</label>
@@ -294,7 +292,7 @@ const UserProfile = () => {
 
           <hr className="border-t" />
 
-          {/* Cambio email */}
+          {/* Change email */}
           <div animate-section-fade>
             <h3 className="text-xl font-semibold text-[#2B2B2B]">Cambio Email</h3>
             <form onSubmit={handleChangeEmail} className="space-y-4 mt-2">
@@ -334,7 +332,7 @@ const UserProfile = () => {
 
           <hr className="border-t" />
 
-          {/* Cambio password */}
+          {/* Change password */}
           <div animate-section-fade>
             <h3 className="text-xl font-semibold text-[#2B2B2B]">Cambio Password</h3>
             <form onSubmit={handleChangePassword} className="space-y-4 mt-2">
@@ -368,7 +366,7 @@ const UserProfile = () => {
 
           <hr className="border-t" />
 
-          {/* Notifiche email */}
+          {/* Email notifications */}
           <div animate-section-fade>
             <h3 className="text-xl font-semibold text-[#2B2B2B]">Notifiche Email</h3>
             {notificationMsg && <p className="text-sm text-gray-700 mb-2">{notificationMsg}</p>}
@@ -380,26 +378,26 @@ const UserProfile = () => {
                 id="emailFeedingToggle"
                 type="checkbox"
                 checked={emailFeedingNotifications}
-                 onChange={(e) => {
-        if (user.subscription?.plan !== 'premium') {
-          addToast('⚠️ Solo utenti Premium possono usare questa funzione.', 'error');
-          return;
-        }
-        setEmailFeedingNotifications(e.target.checked);
-      }}
-      disabled={user.subscription?.plan !== 'premium'}
+                onChange={(e) => {
+                  if (user.subscription?.plan !== 'premium') {
+                    addToast('⚠️ Solo utenti Premium possono usare questa funzione.', 'error');
+                    return;
+                  }
+                  setEmailFeedingNotifications(e.target.checked);
+                }}
+                disabled={user.subscription?.plan !== 'premium'}
                 className="h-5 w-5 text-[#228B22] border-gray-300 rounded"
               />
             </div>
 
-              {user.subscription?.plan !== 'premium' && (
-    <p className="text-xs text-red-600 mt-1">
-      La funzione Email per alimentazione è riservata agli utenti Premium.{' '}
-      <Link to="/abbonamenti" className="underline text-blue-600 hover:text-blue-800">
-        Scopri di più
-      </Link>
-    </p>
-  )}
+            {user.subscription?.plan !== 'premium' && (
+              <p className="text-xs text-red-600 mt-1">
+                La funzione Email per alimentazione è riservata agli utenti Premium.{' '}
+                <Link to="/abbonamenti" className="underline text-blue-600 hover:text-blue-800">
+                  Scopri di più
+                </Link>
+              </p>
+            )}
             <button
               onClick={handleNotificationSave}
               className="btn-animate mt-4 bg-[#228B22] text-white px-4 py-2 rounded hover:bg-green-700"
@@ -409,7 +407,7 @@ const UserProfile = () => {
           </div>
 
           <hr className="border-t" />
-          {/* Esporta dati in Excel */}
+          {/* Export data to Excel*/}
           <div animate-section-fade>
             <h3 className="text-xl font-semibold text-[#2B2B2B]">Esporta i tuoi dati</h3>
             <p className="text-sm text-gray-500 mb-2">
@@ -424,7 +422,7 @@ const UserProfile = () => {
           </div>
           <hr className="border-t" />
 
-          {/* Elimina account */}
+          {/* Delete account */}
           <div animate-section-fade>
             <h3 className="text-xl font-semibold text-red-600">Elimina Account</h3>
             <p className="text-sm text-gray-500 mb-3">Attenzione! Questa azione è irreversibile.</p>

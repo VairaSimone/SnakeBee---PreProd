@@ -13,13 +13,13 @@ const Register = () => {
   const [privacyConsent, setPrivacyConsent] = useState(false);
   const [privacyConsentGoogle, setPrivacyConsentGoogle] = useState(false);
   const [googleError, setGoogleError] = useState('');
-    const handleGoogleLogin = () => {
-      if (!privacyConsentGoogle) {
-        setGoogleError('Devi accettare la Privacy Policy per registrarti con Google.');
-        return;
-      }
-      window.location.href = `${process.env.REACT_APP_BACKEND_URL}/api/v1/login-google`;
-    };
+  const handleGoogleLogin = () => {
+    if (!privacyConsentGoogle) {
+      setGoogleError('Devi accettare la Privacy Policy per registrarti con Google.');
+      return;
+    }
+    window.location.href = `${process.env.REACT_APP_BACKEND_URL}/v1/login-google`;
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -52,7 +52,7 @@ const Register = () => {
     }
 
     try {
-      await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/v1/register`, {
+      await axios.post(`${process.env.REACT_APP_BACKEND_URL}/v1/register`, {
         name,
         email,
         password,
@@ -181,7 +181,7 @@ const Register = () => {
           />
           <label htmlFor="privacyConsentGoogle" className="text-sm text-[#2B2B2B]">
             Accetto il trattamento dei dati personali secondo la             <a href="https://www.iubenda.com/privacy-policy/71616687" class="iubenda-white iubenda-noiframe iubenda-embed iubenda-noiframe " title="Privacy Policy ">Privacy Policy</a>
-.
+            .
           </label>
         </div>
         {googleError && <p className="text-red-600 text-sm animate-shake transition-all duration-300">{googleError}</p>}

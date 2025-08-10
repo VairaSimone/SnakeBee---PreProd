@@ -19,7 +19,7 @@ const tips = [
   "Alcune specie di lucertole rigenerano la coda, ma non è un trucco illimitato. Attenzione! 🔁",
   "Pulisci regolarmente la ciotola dell'acqua: molti batteri amano i beverini stagnanti 🚰",
   "I rettili non sono 'freddi': sono eterotermi! Usano il calore esterno per funzionare 🌞",
-    "Mai dare cibo più grande della testa del serpente. È una bocca, non una valigia 🧳🐍",
+  "Mai dare cibo più grande della testa del serpente. È una bocca, non una valigia 🧳🐍",
   "Un terrario senza nascondigli è come una casa senza bagno: non vivibile 😅",
   "Non tutti i rettili mordono… ma quelli che lo fanno hanno perfetta mira 😬🎯",
   "Alcuni serpenti fischiano o soffiano. Non sono arrabbiati. Sono solo drama queen 🐍💨",
@@ -55,7 +55,7 @@ const quizzes = [
       "Esatto! Sei un esperto di camouflage mentale 🧠🎨",
       "Hmm, questa non è una sfilata di moda 😅"
     ]
-  },{
+  }, {
     question: "Quale tra questi NON è un rettile?",
     options: [
       "Geco",
@@ -167,145 +167,145 @@ const quizzes = [
       "Nope, non sono gechi 😅"
     ]
   }, {
-  question: "Cosa succede se maneggi un serpente subito dopo che ha mangiato?",
-  options: [
-    "Si affeziona di più",
-    "Potrebbe rigurgitare",
-    "Diventa più docile"
-  ],
-  correctIndex: 1,
-  reactions: [
-    "Affezionato sì, ma con calma 😅",
-    "Esatto! Potrebbe rigurgitare per stress 🤮",
-    "Eh no, lo stress lo rende nervoso, non docile 😬"
-  ]
-},
-{
-  question: "I gechi leopardo hanno palpebre?",
-  options: [
-    "Sì, e possono anche sbatterle",
-    "No, usano la lingua per pulirsi gli occhi",
-    "Solo i maschi"
-  ],
-  correctIndex: 0,
-  reactions: [
-    "Giusto! Sono tra i pochi gechi con palpebre vere 💤",
-    "Quelli senza palpebre fanno così, ma non i leopardini 🦎👁️",
-    "Questa la inventi tu eh 😂"
-  ]
-},
-{
-  question: "Che tipo di luce serve per la sintesi della vitamina D3 nei rettili?",
-  options: [
-    "Luce LED",
-    "Luce UVB",
-    "Luce infrarossa"
-  ],
-  correctIndex: 1,
-  reactions: [
-    "No, i LED sono belli ma inutili per questo 😎",
-    "Perfetto! L'UVB è fondamentale per le ossa 💡🦎",
-    "L'infrarosso scalda, ma non aiuta col calcio 🔥"
-  ]
-},
-{
-  question: "Un serpente può chiudere gli occhi?",
-  options: [
-    "Sì, quando dorme",
-    "No, ha una scala oculare",
-    "Solo se è arrabbiato"
-  ],
-  correctIndex: 1,
-  reactions: [
-    "Nope, niente palpebre per loro 😴❌",
-    "Esattamente! Ha una squama trasparente sull’occhio 👁️🐍",
-    "Se potesse farlo ti giudicherebbe ad occhi chiusi 😆"
-  ]
-},
-{
-  question: "Qual è il comportamento tipico di un rettile stressato?",
-  options: [
-    "Sbadiglia",
-    "Rimane immobile o scappa",
-    "Si mette a cantare"
-  ],
-  correctIndex: 1,
-  reactions: [
-    "Lo sbadiglio può essere altro, ma non è stress diretto 😬",
-    "Esatto! È un meccanismo difensivo o di fuga 🏃‍♂️🐢",
-    "Se inizia a cantare, vendilo a Netflix 🎤🦎"
-  ]
-},
-{
-  question: "Quale substrato è *pericoloso* per i serpenti?",
-  options: [
-    "Giornale",
-    "Sabbia fine",
-    "Fibre di cocco"
-  ],
-  correctIndex: 1,
-  reactions: [
-    "Il giornale non è bello, ma almeno è sicuro 🗞️",
-    "Bravo! La sabbia può causare ostruzioni intestinali 🚫🐍",
-    "Cocco va bene, se tenuto pulito 🥥"
-  ]
-},
-{
-  question: "Ogni quanto muta un serpente sano, in media?",
-  options: [
-    "Ogni 3–4 mesi",
-    "Ogni settimana",
-    "Ogni 4–6 settimane"
-  ],
-  correctIndex: 2,
-  reactions: [
-    "Un po’ troppo poco… mutano più spesso! 🔁",
-    "Settimana?! Non è Spider-Man 🕸️",
-    "Esatto! Circa una volta al mese, se cresce normalmente 🐍"
-  ]
-},
-{
-  question: "Cosa indica una lingua biforcuta nei serpenti?",
-  options: [
-    "Serve a respirare meglio",
-    "Serve per percepire odori direzionali",
-    "È solo estetica"
-  ],
-  correctIndex: 1,
-  reactions: [
-    "Respirano dal naso, non dalla lingua! 👃",
-    "Perfetto! È come avere due nasi mobili 😁",
-    "No dai, non sono influencer 😅"
-  ]
-},
-{
-  question: "Qual è la temperatura ideale nella zona calda per un pitone reale?",
-  options: [
-    "20–23°C",
-    "28–32°C",
-    "35–40°C"
-  ],
-  correctIndex: 1,
-  reactions: [
-    "Troppo freddo, povero pitone 🥶",
-    "Esatto! Perfetto per digerire e stare attivo 🔥🐍",
-    "Troppo caldo: si fa il barbecue da solo 😨"
-  ]
-},
-{
-  question: "Cosa succede se non dai abbastanza calcio a un rettile?",
-  options: [
-    "Diventa albino",
-    "Sviluppa MBD (malattia metabolica ossea)",
-    "Perde la coda"
-  ],
-  correctIndex: 1,
-  reactions: [
-    "No, l'albinismo è genetico 🎨",
-    "Esatto! Il calcio è vitale per lo scheletro 🦴🦎",
-    "Perdere la coda ha altre cause (e spesso solo i gechi) 🔁"
-  ]
-}
+    question: "Cosa succede se maneggi un serpente subito dopo che ha mangiato?",
+    options: [
+      "Si affeziona di più",
+      "Potrebbe rigurgitare",
+      "Diventa più docile"
+    ],
+    correctIndex: 1,
+    reactions: [
+      "Affezionato sì, ma con calma 😅",
+      "Esatto! Potrebbe rigurgitare per stress 🤮",
+      "Eh no, lo stress lo rende nervoso, non docile 😬"
+    ]
+  },
+  {
+    question: "I gechi leopardo hanno palpebre?",
+    options: [
+      "Sì, e possono anche sbatterle",
+      "No, usano la lingua per pulirsi gli occhi",
+      "Solo i maschi"
+    ],
+    correctIndex: 0,
+    reactions: [
+      "Giusto! Sono tra i pochi gechi con palpebre vere 💤",
+      "Quelli senza palpebre fanno così, ma non i leopardini 🦎👁️",
+      "Questa la inventi tu eh 😂"
+    ]
+  },
+  {
+    question: "Che tipo di luce serve per la sintesi della vitamina D3 nei rettili?",
+    options: [
+      "Luce LED",
+      "Luce UVB",
+      "Luce infrarossa"
+    ],
+    correctIndex: 1,
+    reactions: [
+      "No, i LED sono belli ma inutili per questo 😎",
+      "Perfetto! L'UVB è fondamentale per le ossa 💡🦎",
+      "L'infrarosso scalda, ma non aiuta col calcio 🔥"
+    ]
+  },
+  {
+    question: "Un serpente può chiudere gli occhi?",
+    options: [
+      "Sì, quando dorme",
+      "No, ha una scala oculare",
+      "Solo se è arrabbiato"
+    ],
+    correctIndex: 1,
+    reactions: [
+      "Nope, niente palpebre per loro 😴❌",
+      "Esattamente! Ha una squama trasparente sull’occhio 👁️🐍",
+      "Se potesse farlo ti giudicherebbe ad occhi chiusi 😆"
+    ]
+  },
+  {
+    question: "Qual è il comportamento tipico di un rettile stressato?",
+    options: [
+      "Sbadiglia",
+      "Rimane immobile o scappa",
+      "Si mette a cantare"
+    ],
+    correctIndex: 1,
+    reactions: [
+      "Lo sbadiglio può essere altro, ma non è stress diretto 😬",
+      "Esatto! È un meccanismo difensivo o di fuga 🏃‍♂️🐢",
+      "Se inizia a cantare, vendilo a Netflix 🎤🦎"
+    ]
+  },
+  {
+    question: "Quale substrato è *pericoloso* per i serpenti?",
+    options: [
+      "Giornale",
+      "Sabbia fine",
+      "Fibre di cocco"
+    ],
+    correctIndex: 1,
+    reactions: [
+      "Il giornale non è bello, ma almeno è sicuro 🗞️",
+      "Bravo! La sabbia può causare ostruzioni intestinali 🚫🐍",
+      "Cocco va bene, se tenuto pulito 🥥"
+    ]
+  },
+  {
+    question: "Ogni quanto muta un serpente sano, in media?",
+    options: [
+      "Ogni 3–4 mesi",
+      "Ogni settimana",
+      "Ogni 4–6 settimane"
+    ],
+    correctIndex: 2,
+    reactions: [
+      "Un po’ troppo poco… mutano più spesso! 🔁",
+      "Settimana?! Non è Spider-Man 🕸️",
+      "Esatto! Circa una volta al mese, se cresce normalmente 🐍"
+    ]
+  },
+  {
+    question: "Cosa indica una lingua biforcuta nei serpenti?",
+    options: [
+      "Serve a respirare meglio",
+      "Serve per percepire odori direzionali",
+      "È solo estetica"
+    ],
+    correctIndex: 1,
+    reactions: [
+      "Respirano dal naso, non dalla lingua! 👃",
+      "Perfetto! È come avere due nasi mobili 😁",
+      "No dai, non sono influencer 😅"
+    ]
+  },
+  {
+    question: "Qual è la temperatura ideale nella zona calda per un pitone reale?",
+    options: [
+      "20–23°C",
+      "28–32°C",
+      "35–40°C"
+    ],
+    correctIndex: 1,
+    reactions: [
+      "Troppo freddo, povero pitone 🥶",
+      "Esatto! Perfetto per digerire e stare attivo 🔥🐍",
+      "Troppo caldo: si fa il barbecue da solo 😨"
+    ]
+  },
+  {
+    question: "Cosa succede se non dai abbastanza calcio a un rettile?",
+    options: [
+      "Diventa albino",
+      "Sviluppa MBD (malattia metabolica ossea)",
+      "Perde la coda"
+    ],
+    correctIndex: 1,
+    reactions: [
+      "No, l'albinismo è genetico 🎨",
+      "Esatto! Il calcio è vitale per lo scheletro 🦴🦎",
+      "Perdere la coda ha altre cause (e spesso solo i gechi) 🔁"
+    ]
+  }
 ];
 
 const ReptileTipBanner = () => {
@@ -313,7 +313,7 @@ const ReptileTipBanner = () => {
   const [tip, setTip] = useState('');
   const [quiz, setQuiz] = useState(null);
   const [userAnswer, setUserAnswer] = useState(null);
-  
+
   useEffect(() => {
     if (sessionStorage.getItem('hideReptileTipBanner')) return;
 
@@ -335,17 +335,17 @@ const ReptileTipBanner = () => {
     sessionStorage.setItem('hideReptileTipBanner', 'true');
   };
 
-    const handleAnswer = (index) => {
+  const handleAnswer = (index) => {
     setUserAnswer(index);
     setTimeout(() => {
       handleClose();
-    }, 2500); // Chiude dopo il feedback
+    }, 2500); 
   };
 
   if (!show) return null;
 
   return (
- <div className="fixed top-4 left-4 bg-green-100 border border-green-300 text-green-900 px-4 py-3 rounded-lg shadow-lg z-50 max-w-xs animate-fade-in">
+    <div className="fixed top-4 left-4 bg-green-100 border border-green-300 text-green-900 px-4 py-3 rounded-lg shadow-lg z-50 max-w-xs animate-fade-in">
       <div className="flex items-start justify-between">
         <div className="w-full">
           <p className="text-sm font-semibold">{quiz ? "Quiz Reptiliano 🧠" : "Reptile Tip"}</p>

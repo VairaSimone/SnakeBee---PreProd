@@ -7,12 +7,12 @@ const Home = () => {
     return (
         <div className="min-h-screen bg-[#FAF3E0] text-[#2B2B2B] font-sans">
             <main className="max-w-6xl mx-auto p-6">
-  
+
                 {/* Hero */}
                 <section className="text-center py-16 sm:py-24">
                     <h1 className="text-4xl sm:text-5xl font-extrabold mb-6">La tua piattaforma per gestire rettili</h1>
                     <p className="text-lg text-gray-700 max-w-2xl mx-auto mb-8">
-    SnakeBee è nata per semplificare la gestione quotidiana di allevamenti di serpenti, gechi e altri rettili. Tutto in un’unica app.
+                        SnakeBee è nata per semplificare la gestione quotidiana di allevamenti di serpenti, gechi e altri rettili. Tutto in un’unica app.
                     </p>
                     <div className="flex flex-col sm:flex-row gap-4 justify-center">
                         <Link
@@ -30,7 +30,7 @@ const Home = () => {
                     </div>
                 </section>
 
-                {/* Come funziona */}
+                {/* How it works */}
                 <section id="come-funziona" className="py-16 border-t border-gray-300">
                     <h2 className="text-3xl font-bold text-center mb-12">Come funziona</h2>
                     <div className="grid sm:grid-cols-3 gap-8 text-center text-gray-800">
@@ -51,7 +51,7 @@ const Home = () => {
                         </div>
                     </div>
                 </section>
-                {/* Screenshot o preview */}
+                {/* Screenshot or preview */}
                 <section className="py-16 border-t border-gray-300 text-center">
                     <h2 className="text-3xl font-bold mb-6">SnakeBee mantiene i tuoi dati al sicuro</h2>
                     <p className="text-gray-700 mb-8">Un’interfaccia semplice, veloce e pensata per gli allevatori.</p>
@@ -62,7 +62,7 @@ const Home = () => {
                     />
                 </section>
 
-                {/* Servizi */}
+                {/* Services */}
                 <section id="servizi" className="py-16 border-t border-gray-300">
                     <h3 className="text-3xl font-bold mb-6">Cosa puoi fare con SnakeBee</h3>
                     <ul className="grid sm:grid-cols-2 gap-4 list-disc ml-6 text-gray-800">
@@ -72,7 +72,7 @@ const Home = () => {
                         <li><strong>Dati organizzati:</strong> filtra per specie, sesso, età o morph.</li>
                     </ul>
                 </section>
-                {/* Approfondimento Servizi */}
+                {/* In-depth Services */}
                 <section className="py-16 border-t border-gray-300">
                     <h2 className="text-3xl font-bold text-center mb-12">Approfondimento sui Servizi</h2>
                     <div className="space-y-8 text-gray-800 max-w-4xl mx-auto text-lg leading-relaxed">
@@ -104,7 +104,7 @@ const Home = () => {
                     </div>
                 </section>
 
-                {/* COSA VOGLIAMO COSTRUIRE */}
+                {/* WHAT WE WANT TO BUILD */}
                 <section className="py-16 border-t border-gray-300 text-center">
                     <h2 className="text-3xl font-bold mb-6">Cosa vogliamo costruire</h2>
                     <p className="text-lg text-gray-700 max-w-2xl mx-auto">
@@ -113,7 +113,7 @@ const Home = () => {
                     </p>
                 </section>
 
-                {/* SUPPORTO / DONAZIONI */}
+                {/* SUPPORT / DONATIONS */}
                 <section className="py-16 border-t border-gray-300 text-center">
                     <h3 className="text-3xl font-bold mb-4">Supporta il progetto</h3>
                     <p className="text-gray-700 mb-6 max-w-xl mx-auto">
@@ -128,7 +128,7 @@ const Home = () => {
                         💚 Fai una donazione
                     </a>
                 </section>
-                {/* CHI SIAMO */}
+                {/* WHO WE ARE */}
                 <section id="chi-siamo" className="py-16 border-t border-gray-300 text-center">
                     <h2 className="text-3xl font-bold mb-6">Chi siamo</h2>
                     <p className="max-w-3xl mx-auto text-gray-700 text-lg leading-relaxed">
@@ -139,7 +139,7 @@ const Home = () => {
                     </p>
                 </section>
 
-                {/* CONTATTI */}
+                {/* CONTACTS */}
                 <section id="contatti" className="py-12 border-t border-gray-300 text-center">
                     <h3 className="text-2xl font-semibold mb-4">Contattaci</h3>
                     <p className="text-gray-700">

@@ -1,9 +1,9 @@
 import nodemailer from 'nodemailer';
 
 const transporter = nodemailer.createTransport({
-  host: process.env.EMAIL_HOST, // es. 'smtp.gmail.com'
-  port: process.env.EMAIL_PORT, // es. 465 or 587
-  secure: process.env.EMAIL_SECURE === 'true', // true per 465, false per altri
+  host: process.env.EMAIL_HOST,
+  port: process.env.EMAIL_PORT,
+  secure: process.env.EMAIL_SECURE === 'true',
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
@@ -12,7 +12,7 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-//Email registrazione
+//Registration email
 const sendVerificationEmail = async (to, code) => {
   const verificationLink = `${process.env.FRONTEND_URL}/verify-email?email=${encodeURIComponent(to)}`;
   const mailOptions = {
@@ -21,7 +21,7 @@ const sendVerificationEmail = async (to, code) => {
     subject: 'Conferma il tuo indirizzo email per SnakeBee',
     text: `Benvenuto in SnakeBee!\n\nUtilizza questo codice per verificare la tua email: ${code}\nOppure clicca qui: ${verificationLink}`,
     html: `
-<div style="
+      <div style="
         max-width: 600px;
         margin: 20px auto;
         padding: 30px;
@@ -93,9 +93,8 @@ const sendVerificationEmail = async (to, code) => {
 
   try {
     await transporter.sendMail(mailOptions);
-    console.log('Email di verifica inviata a:', to);
   } catch (error) {
-    console.error("Errore nell'invio dell'email di verifica a:" + error, to);
+    console.error("Error sending verification email to:" + error, to);
   }
 };
 
@@ -108,7 +107,7 @@ const sendPasswordResetEmail = async (to, code) => {
     subject: 'Reset della Password - SnakeBee',
     text: `Hai richiesto il reset della password. Codice: ${code}\nLink diretto: ${resetLink}`,
     html: `
-<div style="
+      <div style="
         max-width: 600px;
         margin: 20px auto;
         padding: 30px;
@@ -180,9 +179,8 @@ const sendPasswordResetEmail = async (to, code) => {
 
   try {
     await transporter.sendMail(mailOptions);
-    console.log('Email di reset password inviata a:', to);
   } catch (error) {
-    console.error("Errore nell'invio dell'email di reset password a", to);
+    console.error("Error sending password reset email to", to);
     throw error;
   }
 };
@@ -208,9 +206,8 @@ const sendStripeNotificationEmail = async (to, subject, bodyHtml, bodyText = '')
 
   try {
     await transporter.sendMail(mailOptions);
-    console.log(`📧 Email Stripe inviata a ${to}: ${subject}`);
   } catch (err) {
-    console.error('❌ Errore invio email Stripe:', err);
+    console.error('Error sending Stripe email:', err);
   }
 };
 

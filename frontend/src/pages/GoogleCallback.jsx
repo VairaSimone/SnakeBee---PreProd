@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import axios from 'axios';
 import { loginUser } from '../features/userSlice';
-
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 const GoogleCallback = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -21,7 +22,7 @@ const GoogleCallback = () => {
     }
 
     if (accessToken) {
-      axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/v1/me`, {
+      axios.get(`${process.env.REACT_APP_BACKEND_URL}/v1/me`, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },
@@ -29,15 +30,16 @@ const GoogleCallback = () => {
       })
         .then((res) => {
           dispatch(loginUser(res.data));
+          toast.success('Login effettuato con successo! 🎉');
           navigate('/dashboard');
         })
         .catch((err) => {
           console.error('Error fetching user data:', err);
-          alert('Errore durante il recupero dei dati utente.');
+          toast.error('Errore durante il recupero dei dati utente.');
         });
     } else {
       console.error('Access token mancante');
-      alert('Access token mancante. Riprova ad accedere.');
+      toast.warning('Access token mancante. Riprova ad accedere.');
     }
   }, [navigate, dispatch]);
 

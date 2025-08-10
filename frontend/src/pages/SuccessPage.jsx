@@ -6,7 +6,6 @@ function useQuery() {
   return new URLSearchParams(useLocation().search);
 }
 
-// Mappa stati Stripe a traduzioni italiane
 const paymentStatusMap = {
   paid: 'Pagato',
   unpaid: 'Non pagato',
@@ -101,7 +100,7 @@ const styles = {
     borderRadius: 10,
     boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
     backgroundColor: '#fff',
-    color: 'black', // testo nero fisso
+    color: 'black',
   },
   title: {
     marginBottom: '1.5rem',

@@ -20,19 +20,19 @@ const reptileSchema = new Schema(
       type: Boolean,
       default: false,
     },
-      stats: {
-    breedings: { type: Number, default: 0 },
-    successCount: { type: Number, default: 0 },
-    offspringCount: { type: Number, default: 0 }
-  },
+    stats: {
+      breedings: { type: Number, default: 0 },
+      successCount: { type: Number, default: 0 },
+      offspringCount: { type: Number, default: 0 }
+    },
     notes: {
       type: String,
     },
-image: {
-  type: [String], // array di immagini
-  default: []
-},
-      birthDate: {
+    image: {
+      type: [String], 
+      default: []
+    },
+    birthDate: {
       type: Date
     },
     parents: {
@@ -44,9 +44,9 @@ image: {
       }
     }, documents: {
       cites: {
-        number: { type: String }, // es: codice identificativo CITES
+        number: { type: String }, 
         issueDate: { type: Date },
-        issuer: { type: String }, // ente che lo ha rilasciato
+        issuer: { type: String }, 
       },
       microchip: {
         code: { type: String },
@@ -54,9 +54,9 @@ image: {
       }
     },
 
-   label: {
+    label: {
       text: { type: String, maxlength: 30 },
-      color: { type: String, default: '#228B22' }, // es: verde di default
+      color: { type: String, default: '#228B22' }, 
     },
     user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
   },

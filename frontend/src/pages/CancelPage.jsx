@@ -4,7 +4,7 @@ const CancelPage = () => {
   const navigate = useNavigate();
 
   const goToSubscribe = () => navigate('/subscribe');
-  const goToPlans = () => navigate('/pricing'); // cambia la rotta se diversa
+  const goToPlans = () => navigate('/pricing');
 
   return (
     <div style={{
@@ -27,7 +27,7 @@ const CancelPage = () => {
         <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>❌</div>
         <h1 style={{ color: '#dc3545', marginBottom: '0.5rem' }}>Pagamento annullato</h1>
         <p style={{ color: '#6c757d', marginBottom: '2rem' }}>
-          Nessun addebito è stato effettuato.  
+          Nessun addebito è stato effettuato.
           Puoi riprovare o tornare alla pagina degli abbonamenti.
         </p>
 

@@ -1,4 +1,4 @@
-import { body, param ,validationResult } from 'express-validator';
+import { body, param } from 'express-validator';
 
 export const validateReptile = [
   body('name')
@@ -20,8 +20,3 @@ export const validateReptile = [
     .isFloat({ min: 0.1 }).withMessage('Peso deve essere un numero positivo'),
 ];
 
-export const reptileIdParam = [
-  param('id')
-    .exists().withMessage('ID rettile obbligatorio')
-    .isMongoId().withMessage('ID non valido'),
-];

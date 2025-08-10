@@ -40,7 +40,7 @@ const VerifyEmail = () => {
     setMessage(null);
     setError(null);
     try {
-      const res = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/v1/verify-email`, { email, code });
+      const res = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/v1/verify-email`, { email, code });
       setMessage(res.data.message);
       setTimeout(() => navigate('/login'), 2000);
     } catch (err) {
@@ -56,9 +56,9 @@ const VerifyEmail = () => {
     setResendMessage(null);
     setResendError(null);
     try {
-      const res = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/v1/resend-verification`, { email });
+      const res = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/v1/resend-verification`, { email });
       setResendMessage(res.data.message);
-      setCooldown(60); // 60 secondi
+      setCooldown(60);
       setResendCount((prev) => prev + 1);
     } catch (err) {
       const msg = err.response?.data?.message || 'Errore nel reinvio';

@@ -16,13 +16,11 @@ export const refreshToken = async (req, res) => {
     };
 
     const token = req.cookies.refreshToken;
-    if (!token) return res.status(403).json({ message: "Refresh token missing" });
-
+    if (!token) return res.status(403).json({ message: "Token di aggiornamento mancante" });
     try {
         const decoded = jwt.verify(token, process.env.JWT_REFRESH_SECRET);
         const user = await User.findById(decoded.userid);
-        if (!user) return res.status(403).json({ message: "Invalid token" });
-
+        if (!utente) return res.status(403).json({ messaggio: "Token non valido" });
 
         const isRevoked = await RevokedToken.findOne({ token });
         // Check reuse attack
@@ -32,7 +30,7 @@ export const refreshToken = async (req, res) => {
         const maxTokenAgeMs = 7 * 24 * 60 * 60 * 1000;
         const issuedAtMs = decoded.iat * 1000;
         if (Date.now() - issuedAtMs > maxTokenAgeMs) {
-            console.warn("Token troppo vecchio: potenziale rischio di replay attack");
+            console.warn("Token too old: potential risk of replay attack");
             return res.status(403).json({ message: "Refresh token troppo vecchio" });
         }
 
@@ -47,11 +45,11 @@ export const refreshToken = async (req, res) => {
         }
 
         if (!match) {
-            // Reuse o token non valido
-            console.warn("REUSE DETECTED: Refresh token usato ma non più valido.");
+            // Reuse or invalid token
+            console.warn("REUSE DETECTED: Refresh token used but no longer valid.");
             user.refreshTokens = [];
             await user.save();
-            return res.status(403).json({ message: "Token reuse detected. All sessions cleared." });
+            return res.status(403).json({ message: "Rilevato riutilizzo del token. Tutte le sessioni sono state cancellate." });
         }
 
         const newAccessToken = generateAccessToken(user);
@@ -90,6 +88,6 @@ export const refreshToken = async (req, res) => {
 
         return res.json({ accessToken: newAccessToken });
     } catch (error) {
-        return res.status(403).json({ message: "Invalid or expired token" });
+        return res.status(403).json({ message: "Token non valido o scaduto" });
     }
 };

@@ -7,12 +7,11 @@ export default function Modal({ children, onClose }) {
     };
     document.addEventListener("keydown", handleKeyDown);
 
-    // Disabilita lo scroll della pagina
     document.body.style.overflow = "hidden";
 
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
-      document.body.style.overflow = ""; // Ripristina lo scroll
+      document.body.style.overflow = ""; 
     };
   }, [onClose]);
 
@@ -21,7 +20,7 @@ export default function Modal({ children, onClose }) {
       role="dialog"
       aria-modal="true"
       onClick={onClose}
-className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-10"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-10"
     >
       <div
         onClick={(e) => e.stopPropagation()}

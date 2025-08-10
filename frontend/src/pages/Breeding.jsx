@@ -1,12 +1,32 @@
-// src/pages/BreedingPage.jsx
-
 import React, { useEffect, useState, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { BarChart, LineChart, XAxis, YAxis, Tooltip, Legend, Bar, Line, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { PlusIcon, CalendarIcon, PencilIcon, TrashIcon, ChevronDownIcon, XMarkIcon } from '@heroicons/react/24/solid';
 import api from '../services/api';
-import Modal from '../components/BreedingModal.jsx'; // Il tuo componente modale non cambia
+import Modal from '../components/BreedingModal.jsx';
 import { selectUser } from '../features/userSlice.jsx';
+
+function Toast({ message, type = 'error', onClose }) {
+  useEffect(() => {
+    const timer = setTimeout(() => onClose(), 3000);
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  const colors = {
+    error: 'bg-red-100 text-red-800 border-red-300',
+    success: 'bg-green-100 text-green-800 border-green-300',
+    warning: 'bg-yellow-100 text-yellow-800 border-yellow-300',
+    info: 'bg-blue-100 text-blue-800 border-blue-300',
+  };
+
+  return (
+    <div
+      className={`fixed top-6 right-6 px-4 py-2 rounded-lg shadow-md border ${colors[type]} transition-opacity`}
+    >
+      {message}
+    </div>
+  );
+}
 
 const translationMap = {
   Mating: 'Accoppiamento',
@@ -23,16 +43,13 @@ const translationMap = {
 
 const translate = (key) => translationMap[key] || key;
 
-// Funzione helper per determinare il piano dell'utente (invariata)
 function hasPaidPlan(user) {
   if (!user?.subscription) return false;
   const { plan, status } = user.subscription;
   return (plan === 'basic' || plan === 'premium') && status === 'active';
 }
-// Funzione helper per formattare le date
 const formatDate = (date) => new Date(date).toLocaleDateString('it-IT', { year: 'numeric', month: 'short', day: 'numeric' });
 
-// Componente per le card delle statistiche
 const StatCard = ({ title, children }) => (
   <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-slate-200/80">
     <h3 className="text-lg font-semibold text-charcoal mb-4">{title}</h3>
@@ -44,7 +61,6 @@ const StatCard = ({ title, children }) => (
   </div>
 );
 
-// Componente per le card degli accoppiamenti
 const BreedingCard = ({ breeding, onAddEvent, onUpdateOutcome, onEditEvent, onDeleteEventRequest }) => {
   const outcomeColors = {
     Success: 'bg-green-100 text-green-800',
@@ -55,7 +71,7 @@ const BreedingCard = ({ breeding, onAddEvent, onUpdateOutcome, onEditEvent, onDe
 
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden transition-shadow duration-300 hover:shadow-lg">
-      {/* Header della Card */}
+      {/* Header card */}
       <div className="p-4 border-b border-slate-200 flex justify-between items-start">
         <div>
           <h3 className="text-xl font-bold text-charcoal">
@@ -68,9 +84,8 @@ const BreedingCard = ({ breeding, onAddEvent, onUpdateOutcome, onEditEvent, onDe
         </div>
       </div>
 
-      {/* Corpo della Card */}
+      {/*  Card */}
       <div className="p-4 grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* Dettagli Clutch */}
         <div className="md:col-span-1 space-y-3">
           <h4 className="font-semibold text-slate-700">Dettagli Covata</h4>
           <div className="text-sm space-y-2">
@@ -91,7 +106,7 @@ const BreedingCard = ({ breeding, onAddEvent, onUpdateOutcome, onEditEvent, onDe
           </div>
         </div>
 
-        {/* Eventi */}
+        {/* Event */}
         <div className="md:col-span-2">
           <h4 className="font-semibold text-slate-700 mb-2">Eventi Registrati</h4>
           {breeding.events?.length > 0 ? (
@@ -125,7 +140,6 @@ const BreedingCard = ({ breeding, onAddEvent, onUpdateOutcome, onEditEvent, onDe
 
 
 export default function BreedingPage() {
-  // Tutti gli state e le funzioni logiche rimangono INVARIATE
   const [reptiles, setReptiles] = useState([]);
   const [breedings, setBreedings] = useState([]);
   const user = useSelector(selectUser);
@@ -140,10 +154,12 @@ export default function BreedingPage() {
   const [showModal, setShowModal] = useState(false);
   const [formData, setFormData] = useState({ male: '', female: '', species: '', morphCombo: '', isLiveBirth: false });
   const [outcomeData, setOutcomeData] = useState({ outcome: '', clutchSize: { total: '', fertile: '', hatchedOrBorn: '' } });
+  const [toast, setToast] = useState({ show: false, message: '', type: 'error' });
+  const showToast = (message, type = 'error') => {
+    setToast({ show: true, message, type });
+  };
+  const closeToast = () => setToast({ ...toast, show: false });
 
-  // Funzioni logiche (handleAddEvent, confirmDeleteEvent, etc.) sono OMESSE per brevità, ma devono rimanere nel tuo file.
-  // ... INSERISCI QUI TUTTE LE TUE FUNZIONI LOGICHE (da handleAddEvent a handleSubmit) ...
-  // Esempio:
   const handleAddEvent = (breedingId) => {
     setSelectedBreedingId(breedingId);
     setEditingEventId(null);
@@ -169,7 +185,7 @@ export default function BreedingPage() {
       );
     } catch (error) {
       console.error("Errore eliminazione evento", error);
-      alert("Impossibile eliminare l'evento.");
+      showToast("Impossibile eliminare l'evento.", 'error');
     } finally {
       setShowConfirmModal(false);
       setEventToDelete(null);
@@ -210,29 +226,28 @@ export default function BreedingPage() {
       );
       setShowOutcomeModal(false);
     } catch (err) {
-      alert(err.response?.data?.error || 'Errore aggiornamento outcome');
+      showToast(err.response?.data?.error || 'Errore aggiornamento outcome', 'error');
     }
   };
 
   const submitEvent = async () => {
     if (!eventData.type || !eventData.date) {
-      alert('Tipo e data sono obbligatori');
+      showToast('Tipo e data sono obbligatori', 'warning');
       return;
     }
     try {
       const res = await api.post(`/breeding/${selectedBreedingId}/event`, eventData);
-      // Il backend restituisce il breeding aggiornato con il nuovo evento (che ha un _id)
       const updatedBreeding = res.data;
       setBreedings(prev => prev.map(b => b._id === selectedBreedingId ? updatedBreeding : b));
       setShowEventModal(false);
     } catch (err) {
-      alert(err.response?.data?.error || 'Errore evento');
+      showToast(err.response?.data?.error || 'Errore creazione coppia', 'error');
     }
   };
 
   const openEditEventModal = (bid, ev) => {
     setSelectedBreedingId(bid);
-    setEventData({ type: ev.type, date: ev.date.split('T')[0], notes: ev.notes }); // Formatta la data per l'input type="date"
+    setEventData({ type: ev.type, date: ev.date.split('T')[0], notes: ev.notes });
     setEditingEventId(ev._id);
     setShowEventModal(true);
   };
@@ -245,28 +260,26 @@ export default function BreedingPage() {
       setShowEventModal(false);
       setEditingEventId(null);
     } catch (err) {
-      alert(err.response?.data?.error || 'Errore modifica evento');
+      showToast(err.response?.data?.error || 'Errore modifica evento', 'error');
     }
   };
 
   const handleSubmit = async () => {
     try {
       if (!formData.male || !formData.female || !formData.species) {
-        alert('Completa tutti i campi obbligatori.');
+        showToast("Completa i campi obbligatori.", 'warning');
         return;
       }
       const payload = { ...formData, year: yearFilter };
       const res = await api.post('/breeding', payload);
-      // Il backend restituisce la nuova coppia con i campi `male` e `female` popolati
       setBreedings(prev => [...prev, res.data]);
       setShowModal(false);
       setFormData({ male: '', female: '', species: '', morphCombo: '', isLiveBirth: false });
     } catch (err) {
-      alert(err.response?.data?.error || 'Errore creazione coppia');
+      showToast(err.response?.data?.error || 'Errore creazione coppia', 'error');
     }
   };
 
-  // Hooks useEffect (invariati)
   useEffect(() => {
     api.get(`/reptile/${user._id}/allreptile`)
       .then(res => {
@@ -282,7 +295,6 @@ export default function BreedingPage() {
     api.get(`/breeding?year=${yearFilter}`)
       .then(res => {
         if (!Array.isArray(res.data)) return;
-        // Ordina gli eventi per data più recente
         const sortedBreedings = res.data.map(b => ({
           ...b,
           events: b.events.sort((a, b) => new Date(b.date) - new Date(a.date))
@@ -292,7 +304,6 @@ export default function BreedingPage() {
       .catch(err => console.error('Errore fetch breeding:', err));
   }, [yearFilter, user._id]);
 
-  // Dati per i grafici (useMemo)
   const monthlyEventsData = useMemo(() => {
     const months = Array(12).fill(0).map((_, i) => ({
       name: new Date(0, i).toLocaleString('it-IT', { month: 'short' }),
@@ -335,17 +346,14 @@ export default function BreedingPage() {
         <h1 className="text-4xl font-bold mb-4">Accesso Riservato</h1>
         <p className="text-charcoal max-w-md">La sezione Riproduzione è una funzionalità avanzata, disponibile solo per gli utenti con un abbonamento attivo.</p>
         <p className="text-charcoal max-w-md mt-2">Passa a un piano Basic o Premium per sbloccare i grafici, il tracciamento delle covate e molto altro.</p>
-        {/* Potresti aggiungere un link per l'upgrade qui */}
       </div>
     );
   }
 
-  // --- RENDER DEL COMPONENTE ---
   return (
     <div className="">
       <main className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
 
-        {/* Sezione Statistiche */}
         <section className="mb-8">
           <h2 className="text-2xl font-bold text-charcoal mb-4">Dashboard Statistiche</h2>
           <div className="grid md:grid-cols-2 gap-6">
@@ -372,7 +380,6 @@ export default function BreedingPage() {
           </div>
         </section>
 
-        {/* Sezione Accoppiamenti */}
         <section>
           <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
             <h2 className="text-2xl font-bold text-charcoal">Accoppiamenti del {yearFilter}</h2>
@@ -424,7 +431,6 @@ export default function BreedingPage() {
         </section>
       </main>
 
-      {/* MODALI */}
       {showModal && (
         <Modal onClose={() => setShowModal(false)}>
           <h2 className="text-2xl font-bold text-charcoal mb-6">Crea Nuova Coppia</h2>
@@ -464,7 +470,7 @@ export default function BreedingPage() {
             <select className="input-field" value={eventData.type} onChange={e => setEventData({ ...eventData, type: e.target.value })}>
               <option value="">-- Tipo Evento --</option>
               {['Mating', 'Ovulation', 'Prelay Shed', 'Egg Laid', 'Birth', 'Hatching', 'Failed'].map(type => (
-                <option key={type} value={type}>{translate(type)}</option>
+                <option key={type} value={type}>{translate(type)}</option>
               ))}
             </select>
             <input type="date" className="input-field" value={eventData.date} onChange={e => setEventData({ ...eventData, date: e.target.value })} />
@@ -483,7 +489,7 @@ export default function BreedingPage() {
             <select className="input-field" value={outcomeData.outcome} onChange={e => setOutcomeData({ ...outcomeData, outcome: e.target.value })}>
               <option value="">-- Seleziona risultato --</option>
               {['Success', 'Partial', 'Failed', 'Unknown'].map(val => (
-                <option key={val} value={val}>{translate(val)}</option>
+                <option key={val} value={val}>{translate(val)}</option>
               ))}
             </select>
             <input className="input-field" type="number" placeholder="Uova/Cuccioli Totali" value={outcomeData.clutchSize.total} onChange={e => setOutcomeData(d => ({ ...d, clutchSize: { ...d.clutchSize, total: e.target.value } }))} />
@@ -503,7 +509,17 @@ export default function BreedingPage() {
             <button onClick={confirmDeleteEvent} className="btn btn-danger">Conferma ed Elimina</button>
           </div>
         </Modal>
+
+
       )}
+      {toast.show && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={closeToast}
+        />
+      )}
+
     </div>
   );
 }

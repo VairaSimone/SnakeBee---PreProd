@@ -3,13 +3,11 @@ import { useDispatch, useSelector } from 'react-redux';
 import { loginUser, selectUser } from './features/userSlice';
 import axios from 'axios';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-
 import NavBar from './components/Navbar';
 import Footer from './components/Footer';
 import CookieConsent from 'react-cookie-consent';
 import DonationBanner from './components/DonationBanner';
 import ReptileTipBanner from './components/ReptileTipBanner';
-
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Home from './pages/Home';
@@ -25,11 +23,11 @@ import Dashboard from './pages/Dashboard';
 import ProtectedLayout from './components/ProtectedLayout';
 import Breeding from './pages/Breeding';
 import NotFound from './pages/NotFound';
-import PrivacyPolicy from './pages/PrivacyPolicy';
 import InventoryPage from './pages/InventoryPage';
 import SubscriptionPage from './pages/SubscriptionPage';
 import SuccessPage from './pages/SuccessPage';
 import CancelPage from './pages/CancelPage';
+import { ToastContainer } from 'react-toastify';
 
 function AppContent() {
   const location = useLocation();
@@ -39,7 +37,7 @@ function AppContent() {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
-      axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/v1/me`, {
+      axios.get(`${process.env.REACT_APP_BACKEND_URL}/v1/me`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -56,14 +54,11 @@ function AppContent() {
 
   return (
     <>
-      {/* Navbar sempre visibile */}
       <NavBar />
 
-      {/* Routing dinamico */}
       <Routes>
         <Route path="/" element={<Navigate to="/home" />} />
         <Route path="/home" element={<Home />} />
-        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
@@ -71,7 +66,6 @@ function AppContent() {
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/login-google-callback" element={<GoogleCallback />} />
 
-        {/* Protette */}
         <Route path="/dashboard" element={<ProtectedRoute><ProtectedLayout><Dashboard /></ProtectedLayout></ProtectedRoute>} />
         <Route path="/breeding" element={<ProtectedRoute><ProtectedLayout><Breeding /></ProtectedLayout></ProtectedRoute>} />
         <Route path="/inventory" element={<ProtectedRoute><ProtectedLayout><InventoryPage /></ProtectedLayout></ProtectedRoute>} />
@@ -80,12 +74,13 @@ function AppContent() {
         <Route path="/reptiles/:reptileId" element={<ProtectedRoute><ReptileDetails /></ProtectedRoute>} />
         <Route path="*" element={<NotFound />} />
 
-          <Route path="/pricing" element={<SubscriptionPage />} />
-  <Route path="/success" element={<SuccessPage />} />
-  <Route path="/cancel" element={<CancelPage />} />
-      </Routes>
+        <Route path="/pricing" element={<SubscriptionPage />} />
+        <Route path="/success" element={<SuccessPage />} />
+        <Route path="/cancel" element={<CancelPage />} />
 
-      {/* Footer + banner sempre visibili */}
+      </Routes>
+      <ToastContainer position="top-right" autoClose={3000} />
+
       <Footer />
       <CookieConsent
         location="bottom"

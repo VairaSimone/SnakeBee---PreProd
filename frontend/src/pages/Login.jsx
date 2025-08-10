@@ -8,7 +8,7 @@ import { FaGoogle } from 'react-icons/fa';
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false); // 🔄
+  const [isLoading, setIsLoading] = useState(false);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [errorMessage, setErrorMessage] = useState('');
@@ -16,25 +16,25 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMessage('');
-    setIsLoading(true); // 🚀 inizio animazione
+    setIsLoading(true);
 
     try {
-      const res = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/v1/login`, { email, password }, {
+      const res = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/v1/login`, { email, password }, {
         withCredentials: true,
         headers: { 'Content-Type': 'application/json' }
       });
 
-      const { accessToken, refreshToken  } = res.data;
+      const { accessToken, refreshToken } = res.data;
       localStorage.setItem('token', accessToken);
-if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
+      if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
 
-      const userRes = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/v1/me`, {
+      const userRes = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/v1/me`, {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
 
       if (!userRes.data.isVerified) {
         setErrorMessage('Devi prima verificare la tua email prima di accedere.');
-        setIsLoading(false); // ⛔ stop animazione
+        setIsLoading(false);
         return;
       }
 
@@ -49,13 +49,13 @@ if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
       } else {
         setErrorMessage(msg || 'Errore durante il login. Riprova più tardi.');
       }
-      setIsLoading(false); // ⛔ stop animazione
+      setIsLoading(false);
     }
   };
 
   const handleGoogleLogin = () => {
     if (!isLoading) {
-      window.location.href = `${process.env.REACT_APP_BACKEND_URL}/api/v1/login-google`;
+      window.location.href = `${process.env.REACT_APP_BACKEND_URL}/v1/login-google`;
     }
   };
 
@@ -106,9 +106,8 @@ if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
           <button
             type="submit"
             disabled={isLoading}
-            className={`w-full py-2 rounded-md text-white transition ${
-              isLoading ? 'bg-gray-400 cursor-not-allowed animate-pulse' : 'bg-[#228B22] hover:bg-green-700'
-            }`}
+            className={`w-full py-2 rounded-md text-white transition ${isLoading ? 'bg-gray-400 cursor-not-allowed animate-pulse' : 'bg-[#228B22] hover:bg-green-700'
+              }`}
           >
             {isLoading ? (
               <span className="flex items-center justify-center gap-2">
@@ -142,8 +141,6 @@ if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
           </Link>
         </p>
       </div>
-
-      {/* Spinner CSS */}
 
     </div>
 

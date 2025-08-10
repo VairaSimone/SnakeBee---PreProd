@@ -2,11 +2,11 @@ import React, { useEffect, useState } from 'react';
 import api from '../services/api';
 import { Link, useParams } from 'react-router-dom';
 import { getEvents, deleteEvent } from '../services/api';
+
 const ReptileDetails = () => {
   const { reptileId } = useParams();
   const [reptile, setReptile] = useState(null);
   const [feedings, setFeedings] = useState([]);
- // const [breeding, setBreeding] = useState([]);
   const [loading, setLoading] = useState(true);
   const [visibleFeedings, setVisibleFeedings] = useState(0);
   const [events, setEvents] = useState([]);
@@ -29,25 +29,22 @@ const ReptileDetails = () => {
 
       const response = await api.get(`/reptile/${reptileId}/pdf`, {
         responseType: 'blob',
-        validateStatus: () => true, // 🔥 forza Axios a NON lanciare errori sulle status diverse da 2xx
+        validateStatus: () => true,
       });
 
-      // Se è un errore JSON travestito da blob
       const contentType = response.headers['content-type'];
       if (contentType && contentType.includes('application/json')) {
-        const text = await response.data.text(); // perché response.data è ancora un Blob
+        const text = await response.data.text();
         const json = JSON.parse(text);
         setPdfError(`⚠️ ${json.message || 'Errore sconosciuto'}`);
         return;
       }
 
-      // Se lo status code è comunque un errore (es. 403), ma con content-type corretto
       if (response.status !== 200) {
         setPdfError('⚠️ Errore durante il download. Riprova più tardi.');
         return;
       }
 
-      // Tutto ok, scarica il file
       const url = window.URL.createObjectURL(response.data);
       const a = document.createElement('a');
       a.href = url;
@@ -70,22 +67,18 @@ const ReptileDetails = () => {
   useEffect(() => {
     const fetchAll = async () => {
       try {
-        // Dati del rettile
         const { data: reptileData } = await api.get(`/reptile/${reptileId}`);
-if (!reptileData) {
-  throw new Error('Reptile data is null or undefined');
-}
+        if (!reptileData) {
+          throw new Error('Reptile data is null or undefined');
+        }
         setReptile(reptileData);
         const imagesArray = reptileData.images || [reptileData.image];
-console.log('fetchAll partito')
-        // Alimentazione
+        console.log('fetchAll partito')
         const { data: feedingData } = await api.get(`/feedings/${reptileId}?page=1`);
         setFeedings(feedingData.dati || []);
-        // Riproduzione (nuovo endpoint specifico)
-       // const { data: breedingData } = await api.get(`/breeding/reptile/${reptileId}`);
-       // setBreeding(breedingData || []);
+        ;
         const ev = await getEvents(reptileId).then(r => r.data);
-        console.log('EVENTI RICEVUTI:', ev); // 👈 metti questo
+        console.log('EVENTI RICEVUTI:', ev);
 
         setEvents(ev);
         console.log('Tutti i tipi evento:', ev.map(e => e.type));
@@ -100,7 +93,6 @@ console.log('fetchAll partito')
     fetchAll();
   }, [reptileId]);
   useEffect(() => {
-    // Ogni volta che cambia la lista dei feedings, resetta il conteggio visibile
     if (feedings.length > 0) {
       setVisibleFeedings(5);
     }
@@ -274,7 +266,7 @@ console.log('fetchAll partito')
 
                 </ul>
 
-                {/* Bottoni paginazione */}
+                {/* Pagination buttons */}
                 <div className="mt-3 space-x-2">
                   {visibleFeedings < feedings.length && (
                     <button
@@ -303,7 +295,7 @@ console.log('fetchAll partito')
             <div>
               <h3 className="text-xl font-semibold mb-2 border-b border-gray-300 pb-1">📅 Eventi</h3>
 
-              {/* Muta */}
+              {/* Mute */}
               <div className="mb-6">
                 <h4 className="text-lg font-bold text-[#228B22] mb-2">Muta</h4>
 
@@ -333,7 +325,7 @@ console.log('fetchAll partito')
                 )}
               </div>
 
-              {/* Feci */}
+              {/* Feces */}
               <div className="mb-6">
                 <h4 className="text-lg font-bold text-[#228B22] mb-2">Feci</h4>
                 {events.filter(e => e.type === 'feces').length > 0 ? (
@@ -361,7 +353,7 @@ console.log('fetchAll partito')
                   </div>
                 )}
               </div>
-              {/* Peso */}
+              {/* Weight */}
               <div className="mb-6">
                 <h4 className="text-lg font-bold text-[#228B22] mb-2">Peso</h4>
                 {events.filter(e => e.type === 'weight').length > 0 ? (
@@ -394,7 +386,7 @@ console.log('fetchAll partito')
                 )}
               </div>
 
-              {/* Visita veterinaria */}
+              {/* Veterinary visit */}
               <div className="mb-6">
                 <h4 className="text-lg font-bold text-[#228B22] mb-2">Visita Veterinaria</h4>
                 {events.filter(e => e.type === 'vet').length > 0 ? (

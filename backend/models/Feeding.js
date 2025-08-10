@@ -6,7 +6,7 @@ const feedingSchema = new Schema(
         date: { type: Date, required: true },
         foodType: { type: String, required: true },
         quantity: { type: Number },
-            weightPerUnit:      { type: Number, required: true },    // ← qui
+        weightPerUnit: { type: Number, required: true },  
         nextFeedingDate: { type: Date, required: function () { return this.wasEaten === true; } },
         notes: { type: String },
         wasEaten: { type: Boolean, default: true },

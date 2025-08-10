@@ -1,5 +1,3 @@
-// utils/SubscriptionLimits.js
-
 export const PLAN_LIMITS = {
   free: {
     reptiles: 8,

@@ -1,11 +1,6 @@
 import express from 'express';
 import { authenticateJWT } from '../middlewares/Auth.js';
-import {
-  createBreedingPair,
-  addBreedingEvent,
-  getBreedingByYear,
-  updateBreedingOutcome, deleteBreedingEvent, updateBreedingEvent, getSuccessRate, getIncubationStats
-} from '../controllers/BreedingController.js';
+import { createBreedingPair, addBreedingEvent, getBreedingByYear, updateBreedingOutcome, deleteBreedingEvent, updateBreedingEvent, getSuccessRate, getIncubationStats } from '../controllers/BreedingController.js';
 
 const breedingRouter = express.Router();
 

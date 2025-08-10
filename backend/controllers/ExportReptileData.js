@@ -5,7 +5,6 @@ import Reptile from '../models/Reptile.js';
 import Event from '../models/Event.js';
 import Feeding from '../models/Feeding.js';
 import Breeding from '../models/Breeding.js';
-import mongoose from 'mongoose';
 import { logAction } from '../utils/logAction.js';
 import User from '../models/User.js';
 import { getUserPlan } from '../utils/getUserPlans.js'
@@ -35,7 +34,7 @@ export const exportReptileData = async (req, res) => {
 
     const workbook = new ExcelJS.Workbook();
 
-    // 🐍 Foglio Reptiles
+    // Reptiles Sheet
     const reptileSheet = workbook.addWorksheet('Rettili');
     reptileSheet.columns = [
       { header: 'Nome', key: 'name' },
@@ -52,6 +51,7 @@ export const exportReptileData = async (req, res) => {
       { header: 'Ente rilasciante CITES', key: 'citesIssuer' },
       { header: 'Codice Microchip', key: 'microchipCode' },
       { header: 'Data impianto Microchip', key: 'microchipImplantDate' },
+      { header: 'Etichetta', key: 'labelText' },
     ];
 
 
@@ -71,13 +71,14 @@ export const exportReptileData = async (req, res) => {
       citesIssuer: r.documents?.cites?.issuer || '',
       microchipCode: r.documents?.microchip?.code || '',
       microchipImplantDate: r.documents?.microchip?.implantDate ? new Date(r.documents.microchip.implantDate).toLocaleDateString() : '',
+      labelText: r.label?.text || '',
 
     })));
     reptileSheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
     reptileSheet.getRow(1).fill = {
       type: 'pattern',
       pattern: 'solid',
-      fgColor: { argb: 'FF4CAF50' }, // verde brillante
+      fgColor: { argb: 'FF4CAF50' },
     };
     reptileSheet.views = [{ state: 'frozen', ySplit: 1 }];
 
@@ -89,35 +90,35 @@ export const exportReptileData = async (req, res) => {
       col.width = maxLength + 2;
     });
 
-    // 🍗 Feedings
+    //  Feedings
     const feedingSheet = workbook.addWorksheet('Alimentazione');
     feedingSheet.columns = [
       { header: 'Rettile (Morph - Sesso)', key: 'reptile' },
       { header: 'Data', key: 'date' },
       { header: 'Tipo di cibo', key: 'foodType' },
       { header: 'Quantità', key: 'quantity' },
+      { header: 'Peso per unità (g)', key: 'weightPerUnit' }, // nuovo
       { header: 'Prossimo pasto', key: 'nextFeedingDate' },
       { header: 'Mangiato', key: 'wasEaten' },
       { header: 'Riprovare dopo (giorni)', key: 'retryAfterDays' },
       { header: 'Note', key: 'notes' },
-
     ];
     feedingSheet.addRows(feedings.map(f => ({
       reptile: `${reptileMap[f.reptile]?.morph} - ${reptileMap[f.reptile]?.sex}`,
       date: f.date ? new Date(f.date).toLocaleDateString() : '',
       foodType: f.foodType,
       quantity: f.quantity,
+      weightPerUnit: f.weightPerUnit ?? '',
       nextFeedingDate: f.nextFeedingDate ? new Date(f.nextFeedingDate).toLocaleDateString() : '',
       wasEaten: f.wasEaten ? 'Yes' : 'No',
       retryAfterDays: f.retryAfterDays ?? '',
       notes: f.notes || ''
-
     })));
     feedingSheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
     feedingSheet.getRow(1).fill = {
       type: 'pattern',
       pattern: 'solid',
-      fgColor: { argb: 'FF4CAF50' }, // verde brillante
+      fgColor: { argb: 'FF4CAF50' },
     };
     feedingSheet.views = [{ state: 'frozen', ySplit: 1 }];
 
@@ -128,7 +129,7 @@ export const exportReptileData = async (req, res) => {
       });
       col.width = maxLength + 2;
     });
-    // 📅 Events
+    //  Events
     const eventSheet = workbook.addWorksheet('Eventi');
     eventSheet.columns = [
       { header: 'Rettile (Morph - Sesso)', key: 'reptile' },
@@ -144,7 +145,7 @@ export const exportReptileData = async (req, res) => {
         vet: 'Visita veterinaria',
         weight: 'Peso',
       };
-      return map[type] || type; // fallback all'originale se non trovato
+      return map[type] || type;
     };
 
     eventSheet.addRows(events.map(e => ({
@@ -159,7 +160,7 @@ export const exportReptileData = async (req, res) => {
     eventSheet.getRow(1).fill = {
       type: 'pattern',
       pattern: 'solid',
-      fgColor: { argb: 'FF4CAF50' }, // verde brillante
+      fgColor: { argb: 'FF4CAF50' },
     };
 
     eventSheet.columns.forEach(col => {
@@ -171,38 +172,54 @@ export const exportReptileData = async (req, res) => {
     });
     eventSheet.views = [{ state: 'frozen', ySplit: 1 }];
 
-    // 🐣 Breedings
+    // Breedings
+    const breedingEventMap = {
+      Mating: 'Accoppiamento',
+      Ovulation: 'Ovulazione',
+      'Prelay Shed': 'Muta pre-deposizione',
+      'Egg Laid': 'Deposte uova',
+      Birth: 'Parto',
+      Hatching: 'Schiusa',
+      Failed: 'Fallito'
+    };
+
     const breedingSheet = workbook.addWorksheet('Riproduzione');
     breedingSheet.columns = [
-      { header: 'Anno di stagione', key: 'seasonYear' },
+      { header: 'Anno', key: 'year' },
+      { header: 'Specie', key: 'species' },
+      { header: 'Combinazione morph', key: 'morphCombo' },
       { header: 'Maschio (Morph)', key: 'male' },
       { header: 'Femmina (Morph)', key: 'female' },
-      { header: 'Data accoppiamento', key: 'pairingDate' },
-      { header: 'Piccoli nati', key: 'hatchlings' },
-      { header: 'Data ovulazione', key: 'ovulationDate' },
-      { header: 'Data deposizione', key: 'clutchDate' },
-      { header: 'Inizio incubazione', key: 'incubationStart' },
-      { header: 'Fine incubazione', key: 'incubationEnd' },
-      { header: 'Note incubazione', key: 'incubationNotes' },
-      { header: 'Note riproduzione', key: 'notes' },];
+      { header: 'Parto vivo', key: 'isLiveBirth' },
+      { header: 'Uova/Cuccioli totali', key: 'clutchTotal' },
+      { header: 'Uova fertili', key: 'clutchFertile' },
+      { header: 'Nati/schiusi', key: 'clutchHatchedOrBorn' },
+      { header: 'Esito', key: 'outcome' },
+      { header: 'Eventi', key: 'events' },
+      { header: 'Note', key: 'notes' }
+    ];
     breedingSheet.addRows(breedings.map(b => ({
-      seasonYear: b.seasonYear,
+      year: b.year,
+      species: b.species,
+      morphCombo: b.morphCombo || '',
       male: `${b.male?.morph || 'No morph'}`,
       female: `${b.female?.morph || 'No morph'}`,
-      pairingDate: b.pairingDate ? new Date(b.pairingDate).toLocaleDateString() : '',
-      hatchlings: b.hatchlings?.length || 0,
-      ovulationDate: b.ovulationDate ? new Date(b.ovulationDate).toLocaleDateString() : '',
-      clutchDate: b.clutchDate ? new Date(b.clutchDate).toLocaleDateString() : '',
-      incubationStart: b.incubationStart ? new Date(b.incubationStart).toLocaleDateString() : '',
-      incubationEnd: b.incubationEnd ? new Date(b.incubationEnd).toLocaleDateString() : '',
-      incubationNotes: b.incubationNotes || '',
+      isLiveBirth: b.isLiveBirth ? 'Yes' : 'No',
+      clutchTotal: b.clutchSize?.total ?? '',
+      clutchFertile: b.clutchSize?.fertile ?? '',
+      clutchHatchedOrBorn: b.clutchSize?.hatchedOrBorn ?? '',
+      outcome: b.outcome || '',
+      events: b.events?.map(ev =>
+        `${breedingEventMap[ev.type] || ev.type} - ${new Date(ev.date).toLocaleDateString()}`
+      ).join(', ') || '',
       notes: b.notes || ''
     })));
+
     breedingSheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
     breedingSheet.getRow(1).fill = {
       type: 'pattern',
       pattern: 'solid',
-      fgColor: { argb: 'FF4CAF50' }, // verde brillante
+      fgColor: { argb: 'FF4CAF50' },
     };
 
     breedingSheet.columns.forEach(col => {
@@ -224,11 +241,10 @@ export const exportReptileData = async (req, res) => {
 
     breedings.forEach(b => {
       const entries = b.hatchlings?.map(h => ({
-        seasonYear: b.seasonYear,
+        seasonYear: b.year,
         morph: h.morph || '',
         sex: h.sex || 'U',
         weight: h.weight || '',
-        photoUrl: h.photoUrl || ''
       })) || [];
       hatchlingSheet.addRows(entries);
     });
@@ -237,7 +253,7 @@ export const exportReptileData = async (req, res) => {
     hatchlingSheet.getRow(1).fill = {
       type: 'pattern',
       pattern: 'solid',
-      fgColor: { argb: 'FF4CAF50' }, // verde brillante
+      fgColor: { argb: 'FF4CAF50' },
     };
 
     hatchlingSheet.columns.forEach(col => {
@@ -250,7 +266,7 @@ export const exportReptileData = async (req, res) => {
 
     hatchlingSheet.views = [{ state: 'frozen', ySplit: 1 }];
 
-    // ✨ Invio del file Excel come risposta
+    //  Sending the Excel file as a response
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     res.setHeader('Content-Disposition', 'attachment; filename=reptile_data.xlsx');
     workbook.worksheets.sort((a, b) => {
@@ -261,7 +277,7 @@ export const exportReptileData = async (req, res) => {
     await workbook.xlsx.write(res);
     res.end();
   } catch (err) {
-    console.error('Errore esportazione Excel:', err);
+    console.error('Excel export error:', err);
     res.status(500).send({ message: 'Errore durante esportazione' });
   }
 };
@@ -270,7 +286,7 @@ export async function generateReptilePDF(req, res) {
 
 
   const doc = new PDFDocument({ margin: 40, size: 'A4' });
-const reptileId = req.params.id;
+  const reptileId = req.params.id;
 
   try {
 
@@ -285,7 +301,7 @@ const reptileId = req.params.id;
     }
 
     const reptile = await Reptile.findById(reptileId).lean();
-    
+
     const events = await Event.find({ reptile: reptileId }).sort({ date: -1 }).lean();
     const feedings = await Feeding.find({ reptile: reptileId }).sort({ date: -1 }).lean();
     const breedings = await Breeding.find({
@@ -296,15 +312,15 @@ const reptileId = req.params.id;
     res.setHeader('Content-Disposition', `attachment; filename=${(reptile.morph || 'reptile').replace(/\s+/g, '_')}.pdf`);
     doc.pipe(res);
 
-    // --- Intestazione ---
+    // --- Header ---
     doc
       .font('Helvetica-Bold')
       .fontSize(26)
-      .fillColor('#2E8B57') // un verde carino da rettili
+      .fillColor('#2E8B57')
       .text(`Informazioni del rettile ${reptile.name || ''}`, { underline: true, align: 'center' })
       .moveDown(1.5);
 
-    // --- Informazioni Base ---
+    // --- Basic Information ---
     doc.fontSize(14).fillColor('black').font('Helvetica');
     doc.text('Informazioni Base', { underline: true });
     doc.moveDown(0.5);
@@ -321,24 +337,8 @@ const reptileId = req.params.id;
     baseInfo.forEach(line => doc.text(line));
     doc.moveDown();
 
-    // --- Immagine ---
-    if (reptile.image) {
-      try {
-        // Cornice semplice attorno all'immagine
-        const imgX = doc.x;
-        const imgY = doc.y;
-        const imgWidth = 150;
-        const imgHeight = 150;
 
-        doc.rect(imgX - 5, imgY - 5, imgWidth + 10, imgHeight + 10).stroke('#2E8B57');
-        doc.image(reptile.image, imgX, imgY, { fit: [imgWidth, imgHeight], align: 'center', valign: 'center' });
-        doc.moveDown(2);
-      } catch (e) {
-        console.warn('Impossibile caricare immagine:', e);
-      }
-    }
-
-    // --- Documentazione ---
+    // --- Documentation ---
     doc.fontSize(16).fillColor('#2E8B57').font('Helvetica-Bold').text('Documentazione', { underline: true });
     doc.moveDown(0.3);
     doc.fontSize(12).fillColor('black').font('Helvetica');
@@ -357,7 +357,7 @@ const reptileId = req.params.id;
     }
     doc.moveDown();
 
-    // --- Eventi registrati ---
+    // --- Recorded events ---
     doc.fontSize(16).fillColor('#2E8B57').font('Helvetica-Bold').text('Eventi registrati', { underline: true });
     doc.moveDown(0.3);
     doc.fontSize(12).fillColor('black').font('Helvetica');
@@ -379,19 +379,19 @@ const reptileId = req.params.id;
     }
     doc.moveDown();
 
-    // --- Alimentazione ---
+    // --- Diet ---
     doc.fontSize(16).fillColor('#2E8B57').font('Helvetica-Bold').text('Alimentazione', { underline: true });
     doc.moveDown(0.3);
     doc.fontSize(12).fillColor('black').font('Helvetica');
     if (feedings.length === 0) {
       doc.text('Nessun pasto registrato.');
     } else {
-      const pasti = feedings.map(feed => `- ${new Date(feed.date).toLocaleDateString()} | ${feed.foodType} x${feed.quantity || 1} | Esito: ${feed.wasEaten ? 'riuscito' : 'fallito'}${feed.retryAfterDays ? ` | Ritenta tra ${feed.retryAfterDays}g` : ''} | Note: ${feed.notes || '-'}`);
+      const pasti = feedings.map(feed => `- ${new Date(feed.date).toLocaleDateString()} | ${feed.foodType} x${feed.quantity || 1} (${feed.weightPerUnit}g ciascuno) | Esito: ${feed.wasEaten ? 'riuscito' : 'fallito'}${feed.retryAfterDays ? ` | Ritenta tra ${feed.retryAfterDays}g` : ''} | Note: ${feed.notes || '-'}`);
       doc.list(pasti);
     }
     doc.moveDown();
 
-    // --- Accoppiamenti ---
+    // --- Pairings ---
     doc.fontSize(16).fillColor('#2E8B57').font('Helvetica-Bold').text('Accoppiamenti', { underline: true });
     doc.moveDown(0.3);
     doc.fontSize(12).fillColor('black').font('Helvetica');
@@ -401,23 +401,25 @@ const reptileId = req.params.id;
       breedings.forEach(b => {
         const maschio = b.male?.morph || 'Maschio sconosciuto';
         const femmina = b.female?.morph || 'Femmina sconosciuta';
-        doc.text(`- Anno: ${b.seasonYear} | Maschio: ${maschio} | Femmina: ${femmina}`);
+        doc.text(`- Anno: ${b.year} | Maschio: ${maschio} | Femmina: ${femmina}`);
         const outcomes = {
           Success: 'Successo',
+          Partial: 'Parziale',
           Failed: 'Fallito',
           Unknown: 'Non terminato'
         };
         doc.text(`  Esito: ${outcomes[b.outcome] || b.outcome}`);
         if (b.notes) doc.text(`  Note: ${b.notes}`);
 
-        // Eventi riproduttivi
+        // Reproductive events
         const eventiTradotti = {
-          pairing: 'Accoppiamento',
-          ovulation: 'Ovulazione',
-          clutch: 'Deposizione delle uova',
-          incubationStart: 'Inizio incubazione',
-          incubationEnd: 'Fine incubazione',
-          birth: 'Nascita'
+          Mating: 'Accoppiamento',
+          Ovulation: 'Ovulazione',
+          'Prelay Shed': 'Muta pre-deposizione',
+          'Egg Laid': 'Deposizione delle uova',
+          Birth: 'Nascita',
+          Hatching: 'Schiusa',
+          Failed: 'Fallito'
         };
         if (b.events?.length) {
           b.events.forEach(evt => {
@@ -441,7 +443,7 @@ const reptileId = req.params.id;
     doc.end();
 
   } catch (error) {
-    console.error('Errore nella generazione PDF:', error);
+    console.error('Error generating PDF:', error);
     res.status(500).send('Errore nella generazione del PDF');
   }
 }

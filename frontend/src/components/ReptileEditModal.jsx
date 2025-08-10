@@ -16,14 +16,14 @@ const ReptileEditModal = ({ show, handleClose, reptile, setReptiles, onSuccess }
   const [images, setImages] = useState([]);
   const [errorMessage, setErrorMessage] = useState('');
   const [label, setLabel] = useState({ text: '', color: '#228B22' });
-const [existingImages, setExistingImages] = useState([]);
+  const [existingImages, setExistingImages] = useState([]);
 
   useEffect(() => {
     if (!reptile) return;
     const { parents = {}, documents = {} } = reptile;
     const { father, mother } = parents;
     const { cites = {}, microchip = {} } = documents;
-    
+
 
     setFormData({
       name: reptile.name || '',
@@ -58,8 +58,8 @@ const [existingImages, setExistingImages] = useState([]);
       }
 
     });
-    setLabel(reptile.label || { text: '', color: '#228B22' }); // aggiorna label stato!
-setExistingImages(reptile.image || []);
+    setLabel(reptile.label || { text: '', color: '#228B22' });
+    setExistingImages(reptile.image || []);
   }, [reptile]);
 
   const handleChange = (e) => {
@@ -72,7 +72,6 @@ setExistingImages(reptile.image || []);
 
   const handleFileChange = (e) => {
     const files = Array.from(e.target.files);
-    // filtra file validi
     const validFiles = files.filter(file => {
       if (!['image/jpeg', 'image/png', 'image/jpg'].includes(file.type)) {
         setErrorMessage('Formato immagine non valido');
@@ -107,34 +106,33 @@ setExistingImages(reptile.image || []);
 
     return true;
   };
-const handleDeleteImage = async (index) => {
-  const confirmDelete = window.confirm('Sei sicuro di voler eliminare questa immagine?');
-  if (!confirmDelete) return;
+  const handleDeleteImage = async (index) => {
+    const confirmDelete = window.confirm('Sei sicuro di voler eliminare questa immagine?');
+    if (!confirmDelete) return;
 
-  try {
-    setLoading(true);
-    const { data } = await api.delete(`/reptile/${reptile._id}/image/${index}`);
-    setToastMsg({ type: 'success', text: 'Immagine eliminata con successo!' });
-setExistingImages(data.remainingImages);
+    try {
+      setLoading(true);
+      const { data } = await api.delete(`/reptile/${reptile._id}/image/${index}`);
+      setToastMsg({ type: 'success', text: 'Immagine eliminata con successo!' });
+      setExistingImages(data.remainingImages);
 
-    // aggiorna il reptile modificato localmente
-    const updatedReptile = {
-      ...reptile,
-      image: data.remainingImages,
-    };
+      const updatedReptile = {
+        ...reptile,
+        image: data.remainingImages,
+      };
 
-    setReptiles((prev) => prev.map((r) => (r._id === updatedReptile._id ? updatedReptile : r)));
-    onSuccess?.();
-  } catch (err) {
-    let msg = 'Errore durante l\'eliminazione dell\'immagine';
-    if (err.response?.data?.message) {
-      msg = err.response.data.message;
+      setReptiles((prev) => prev.map((r) => (r._id === updatedReptile._id ? updatedReptile : r)));
+      onSuccess?.();
+    } catch (err) {
+      let msg = 'Errore durante l\'eliminazione dell\'immagine';
+      if (err.response?.data?.message) {
+        msg = err.response.data.message;
+      }
+      setToastMsg({ type: 'danger', text: msg });
+    } finally {
+      setLoading(false);
     }
-    setToastMsg({ type: 'danger', text: msg });
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -164,7 +162,7 @@ setExistingImages(data.remainingImages);
       onSuccess?.();
       handleClose();
     } catch (err) {
-            let msg = 'Errore durante la creazione del rettile';
+      let msg = 'Errore durante la creazione del rettile';
       if (err.response) {
         if (err.response.data?.message) {
           msg = err.response.data.message;
@@ -175,7 +173,7 @@ setExistingImages(data.remainingImages);
         msg = err.message;
       }
       setToastMsg({ type: 'danger', text: msg });
-  
+
     } finally {
       setLoading(false);
     }
@@ -261,36 +259,36 @@ setExistingImages(data.remainingImages);
                     <input type="file" accept="image/*" multiple onChange={handleFileChange} className="w-full text-sm text-gray-700 bg-white border border-gray-300 rounded file:bg-[#228B22] file:text-white file:rounded file:px-4 file:py-1" />
 
                   </div>
-{existingImages && existingImages.length > 0 && (
-  <div className="mt-4">
-    <label className={labelClasses}>Immagini esistenti</label>
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2">
-      {existingImages.map((imgPath, index) => {
-  const fullImageUrl = `${process.env.REACT_APP_BACKEND_URL_IMAGE}${imgPath}`;
-  return (
-    <div key={index} className="relative group">
-      <img
-        src={fullImageUrl}
-        alt={`image-${index}`}
-        className="rounded w-full h-32 object-cover border"
-        onError={(e) => {
-          e.target.onerror = null;
-          e.target.src = "/placeholder.jpg";
-        }}
-      />
-      <button
-        type="button"
-        onClick={() => handleDeleteImage(index)}
-        className="absolute top-1 right-1 bg-red-600 text-white text-xs px-2 py-1 rounded opacity-80 hover:opacity-100"
-      >
-        Elimina
-      </button>
-    </div>
-  );
-})}
-    </div>
-  </div>
-)}
+                  {existingImages && existingImages.length > 0 && (
+                    <div className="mt-4">
+                      <label className={labelClasses}>Immagini esistenti</label>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2">
+                        {existingImages.map((imgPath, index) => {
+                          const fullImageUrl = `${process.env.REACT_APP_BACKEND_URL_IMAGE}${imgPath}`;
+                          return (
+                            <div key={index} className="relative group">
+                              <img
+                                src={fullImageUrl}
+                                alt={`image-${index}`}
+                                className="rounded w-full h-32 object-cover border"
+                                onError={(e) => {
+                                  e.target.onerror = null;
+                                  e.target.src = "/placeholder.jpg";
+                                }}
+                              />
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteImage(index)}
+                                className="absolute top-1 right-1 bg-red-600 text-white text-xs px-2 py-1 rounded opacity-80 hover:opacity-100"
+                              >
+                                Elimina
+                              </button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
 
 
                   <hr className="my-4" />

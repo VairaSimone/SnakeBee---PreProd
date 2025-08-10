@@ -13,8 +13,8 @@ const googleStrategy = new GoogleStrategy({
   const googleStoredRefreshToken = googleRefreshToken;
 
   try {
-    // Cerchiamo o creiamo l'utente in DB
-    // Prima cerchi l'utente con googleId o (in mancanza) con email:
+    // Search or create the user in the DB
+    // First, search for the user by Google ID or (if not available) by email:
     let user = await User.findOne({
       $or: [
         { googleId: googleId },
@@ -31,14 +31,14 @@ const googleStrategy = new GoogleStrategy({
     } else {
       user = new User({
         googleId,
-        name: name || "Unknown Name",
+        name: name || "SnakeBee",
         email,
         avatar: picture || defaultAvatarURL,
         googleStoredRefreshToken
       });
     }
     await user.save();
-    // Generiamo i nostri token JWT
+    // Let's generate our JWT tokens
     const appAccessToken = jwt.sign(
       { userid: user._id, role: user.role },
       process.env.JWT_SECRET,
@@ -50,7 +50,7 @@ const googleStrategy = new GoogleStrategy({
       { expiresIn: "7d" }
     );
 
-    // Hashiamo e salviamo il refresh token JWT nel DB
+    // Hash and save the JWT refresh token to the DB
     const hashed = await bcrypt.hash(appRefreshToken, 12);
     user.refreshTokens = user.refreshTokens || [];
     if (user.refreshTokens.length >= 10) {
@@ -59,7 +59,7 @@ const googleStrategy = new GoogleStrategy({
     user.refreshTokens.push({ token: hashed });
     await user.save();
 
-    // Rimandiamo tutto a Passport
+    // Let's send everything back to Passport
     return passportNext(null, {
       accessToken: appAccessToken,
       refreshToken: appRefreshToken,

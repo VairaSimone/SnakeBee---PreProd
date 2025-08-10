@@ -1,4 +1,3 @@
-// components/EventModal.jsx
 import React, { useState, useEffect, Fragment } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { postEvent, getEvents, deleteEvent } from '../services/api';
@@ -14,9 +13,9 @@ const EventModal = ({ show, handleClose, reptileId }) => {
   const indexOfLastEvent = currentPage * eventsPerPage;
   const indexOfFirstEvent = indexOfLastEvent - eventsPerPage;
   const currentEvents = events.slice(indexOfFirstEvent, indexOfLastEvent);
-  const totalPages = Math.ceil(events.length / eventsPerPage);
   const [weight, setWeight] = useState('');
   const [formError, setFormError] = useState('');
+  const [weightError, setWeightError] = useState('');
 
   const eventTypeLabels = {
     shed: 'Muta',
@@ -29,7 +28,6 @@ const EventModal = ({ show, handleClose, reptileId }) => {
   useEffect(() => {
     if (reptileId && show) {
       getEvents(reptileId).then(res => {
-        // Ordina per data crescente (dal più vecchio al più recente)
         const sortedEvents = res.data.sort((a, b) => new Date(a.date) - new Date(b.date));
         setEvents(sortedEvents);
       });
@@ -56,9 +54,10 @@ const EventModal = ({ show, handleClose, reptileId }) => {
 
     if (type === 'weight') {
       if (!weight || isNaN(weight)) {
-        alert("Inserisci un peso valido.");
+        setWeightError('Inserisci un peso valido in grammi.');
         return;
       }
+      setWeightError('');
       newEvent.weight = parseFloat(weight);
     }
     try {
@@ -70,10 +69,10 @@ const EventModal = ({ show, handleClose, reptileId }) => {
       setDate('');
       setNotes('');
       setWeight('');
-      setFormError(''); // resetta errori se tutto va bene
+      setFormError('');
     } catch (err) {
-      const msg = err.response?.data?.message || 'Errore durante il salvataggio evento.';
-      setFormError(msg); // 👈 mostralo sotto al form
+      const msg = err.response?.data?.message || 'Errore durante il salvataggio evento. Se persiste, contatta il supporto';
+      setFormError(msg);
     }
 
   };
@@ -164,6 +163,9 @@ const EventModal = ({ show, handleClose, reptileId }) => {
                       placeholder="Inserisci il peso in grammi"
                       className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#228B22] focus:border-[#228B22] bg-white text-gray-800 text-sm"
                     />
+                    {weightError && (
+                      <p className="mt-1 text-xs text-red-600">{weightError}</p>
+                    )}
                   </div>
                 )}
 
@@ -184,7 +186,7 @@ const EventModal = ({ show, handleClose, reptileId }) => {
 
                 <hr className="my-4" />
 
-                {/* EVENTI */}
+                {/* EVENT */}
                 <div className="max-h-64 overflow-y-auto space-y-3">
                   {currentEvents.length > 0 ? (
                     currentEvents.map((e) => {
