@@ -7,12 +7,13 @@ import { loginLimiter, registerLimiter, refreshLimiter } from '../middlewares/Ra
 import * as validateAuth from "../validate/validateAuth.js";
 import validateBody from "../middlewares/validate.js";
 import User from "../models/User.js";
+import { maintenanceCheck } from '../middlewares/MaintenanceCheck.js';
 
 
 const authRouter = express.Router();
 
-authRouter.post('/login', loginLimiter, validateBody(validateAuth.signinSchema), authController.validateLogin, authController.login);
-authRouter.post('/register', registerLimiter, validateBody(validateAuth.signupSchema), authController.register);
+authRouter.post('/login', loginLimiter, maintenanceCheck, validateBody(validateAuth.signinSchema), authController.validateLogin, authController.login);
+authRouter.post('/register', registerLimiter, maintenanceCheck, validateBody(validateAuth.signupSchema), authController.register);
 authRouter.post('/logout', authController.logout);
 authRouter.post('/refresh-token', refreshLimiter, refreshToken);
 authRouter.get('/me', authenticateJWT, authController.getMe);
@@ -22,7 +23,7 @@ authRouter.post('/reset-password', validateBody(validateAuth.resetPasswordSchema
 authRouter.post('/resend-verification', authController.resendVerificationEmail);
 authRouter.post("/change-email", authenticateJWT, validateBody(validateAuth.changeEmailSchema), authController.changeEmailAndResendVerification);
 authRouter.post("/change-password", [authenticateJWT, validateBody(validateAuth.changePasswordSchema)], authController.changePassword);
-authRouter.get("/login-google", passport.authenticate("google", { scope: ["profile", "email"] }))
+authRouter.get("/login-google", maintenanceCheck, passport.authenticate("google", { scope: ["profile", "email"] }))
 authRouter.get("/callback-google", passport.authenticate("google", { session: false }), authController.callBackGoogle)
 authRouter.get('/login-history', authenticateJWT, async (req, res) => {
     try {

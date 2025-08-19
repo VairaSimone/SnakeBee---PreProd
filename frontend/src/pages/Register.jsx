@@ -27,7 +27,7 @@ const Register = () => {
     e.preventDefault();
 
       const browserLang = navigator.language.slice(0, 2); // es. 'it', 'en', 'fr'
-  const allowedLangs = ['it', 'en']; // quelle che supporti nel backend
+  const allowedLangs = ['it', 'en']; 
   const langToSend = allowedLangs.includes(browserLang) ? browserLang : 'it';
 
     setErrorMessage('');
@@ -35,26 +35,26 @@ const Register = () => {
     const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
     const nameRegex = /^[a-zA-Z0-9]{2,}$/;
     if (!nameRegex.test(name.trim())) {
-      setErrorMessage(t('register.invalidNameChars'));
+      setErrorMessage(t('register.errors.invalidNameChars'));
       return;
     }
     if (name.trim().length < 3) {
-      setErrorMessage(t('register.invalidNameLength'));
+      setErrorMessage(t('register.errors.invalidNameLength'));
       return;
     }
 
     if (!emailRegex.test(email)) {
-      setErrorMessage(t('register.invalidEmail'));
+      setErrorMessage(t('register.errors.invalidEmail'));
       return;
     }
 
     if (!passwordRegex.test(password)) {
-      setErrorMessage(t('register.invalidPassword'));
+      setErrorMessage(t('register.errors.invalidPassword'));
       return;
     }
 
     if (password !== confirmPassword) {
-      setErrorMessage(t('register.passwordMismatch'));
+      setErrorMessage(t('register.errors.passwordMismatch'));
       return;
     }
 
@@ -78,11 +78,11 @@ const Register = () => {
       const serverMessage = err.response?.data?.message || '';
 
       if (serverMessage.includes('alpha-numeric')) {
-        setErrorMessage(t('register.alphaNumericOnly'));
+        setErrorMessage(t('register.errors.alphaNumericOnly'));
       } else if (serverMessage) {
         setErrorMessage(serverMessage);
       } else {
-        setErrorMessage(t('register.unknown'));
+        setErrorMessage(t('register.errors.unknown'));
       }
     }
   };

@@ -180,6 +180,41 @@ const sendEventReminderEmail = async (to, lng = 'it', title, description, date) 
   }
 };
 
+const buildHtmlTemplate = (dynamicHtml, lng = 'it') => {
+  const t = i18next.getFixedT(lng);
 
+  return `
+    <div style="max-width:600px;margin:20px auto;padding:30px;background-color:#FAF3E0;border-radius:12px;font-family:'Poppins', sans-serif;color:#2B2B2B;">
+      <div style="text-align:center;margin-bottom:30px;">
+        <img src="${process.env.LOGO_URL}" alt="SnakeBee Logo" style="max-width:180px;height:auto;">
+      </div>
+      ${dynamicHtml}
+      <p style="font-size:12px;color:#777;text-align:center;margin-top:40px;">
+        ${t('emails.automaticNotificationNote', 'Questa è una mail automatica.')}
+      </p>
+    </div>
+  `;
+};
 
-export { sendVerificationEmail, sendEventReminderEmail, sendStripeNotificationEmail, sendPasswordResetEmail, transporter };
+/**
+ * Invia email broadcast a un singolo utente con template predefinito
+ */
+const sendBroadcastEmailToUser = async (user, subject, dynamicHtml, dynamicText = "") => {
+  const html = buildHtmlTemplate(dynamicHtml, user.language || "it");
+
+  try {
+    await transporter.sendMail({
+      from: `"SnakeBee" <noreply@snakebee.it>`,
+      to: user.email,
+      subject,
+      text: dynamicText,
+      html,
+    });
+    return true;
+  } catch (err) {
+    console.error(`Error sending broadcast email to ${user.email}:`, err);
+    return false;
+  }
+};
+
+export { sendVerificationEmail, sendBroadcastEmailToUser, sendEventReminderEmail, sendStripeNotificationEmail, sendPasswordResetEmail, transporter };

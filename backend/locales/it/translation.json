@@ -16,6 +16,7 @@
   "email_invalid": "L'email è richiesta per il reset password.",
   "email_changed": "Email aggiornata! Verifica la nuova casella.",
   "access_id": "Accesso negato. Nessun ID risorsa fornito.",
+  "maintenance": "La piattaforma è in manutenzione. Riprova più tardi.",
   "NoOwner": "Accesso negato. Non sei il proprietario o l'amministratore del dato.",
   "resource_error": "Risorsa non trovata",
   "blocked_access": "Accesso negato. Solo gli amministratori possono effettuare questa azione.",

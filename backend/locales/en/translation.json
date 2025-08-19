@@ -15,6 +15,7 @@
   "passwordOld": "The old password is incorrect.",
   "email_invalid": "Email is required for password reset.",
   "email_changed": "Email updated! Check your new inbox.",
+  "maintenance": "The platform is under maintenance. Please try again later.",
   "access_id": "Access denied. No resource ID provided.",
   "NoOwner": "Access denied. You are not the owner or administrator of the data.",
   "resource_error": "Resource not found",
