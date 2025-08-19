@@ -19,7 +19,7 @@ export const authenticateJWT = async (req, res, next) => {
             return res.status(403).json({ message: req.t('tokenRevoked') });
         }
 
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const decoded = jwt.verify(token, process.env.JWT_REFRESH_SECRET);
 
         const user = await User.findById(decoded.userid).select('role');
         if (!user) {

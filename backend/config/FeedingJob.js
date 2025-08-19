@@ -114,18 +114,7 @@ cron.schedule('0 0 * * *', async () => {
 
         let userLang = user.language || "it";
         try {
-          // Check if an identical notification already exists for today
-          const existingNotification = await Notification.findOne({
-            reptile: { $all: reptiles.map((r) => r.reptileId) },
-            user: userId,
-            type: 'feeding',
-            date: {
-              $gte: new Date().setHours(0, 0, 0, 0),
-              $lt: new Date().setHours(23, 59, 59, 999),
-            },
-          });
 
-          
           // Create the notification (initial status "pending")
           const notification = new Notification({
             user: user._id,
@@ -188,8 +177,6 @@ cron.schedule('0 0 * * *', async () => {
 
     } catch (err) {
       console.error('Error inside Feeding Job:', err);
-    } finally {
-      await lock.release();
     }
   } catch (err) {
     console.warn('Feeding Job skipped: lock not acquired');

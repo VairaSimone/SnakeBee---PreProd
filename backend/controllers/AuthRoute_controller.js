@@ -25,7 +25,7 @@ const isTempEmail = (email) => {
 };
 
 const generateAccessToken = (user) => {
-  return jwt.sign({ userid: user.id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '2h' });
+  return jwt.sign({ userid: user.id, role: user.role }, process.env.JWT_REFRESH_SECRET, { expiresIn: '2h' });
 };
 
 //generate the refresh token with a longer duration that will be used to request the access token

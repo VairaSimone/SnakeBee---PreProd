@@ -8,7 +8,7 @@ export const refreshToken = async (req, res) => {
 
 
     const generateAccessToken = (user) => {
-        return jwt.sign({ userid: user.id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '2h' });
+        return jwt.sign({ userid: user.id, role: user.role }, process.env.JWT_REFRESH_SECRET, { expiresIn: '2h' });
     };
 
     const generateRefreshToken = (user) => {

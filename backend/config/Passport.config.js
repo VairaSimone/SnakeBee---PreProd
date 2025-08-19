@@ -33,7 +33,7 @@ const googleStrategy = new GoogleStrategy({
         googleId,
         name: name || "SnakeBee",
         email,
-        avatar: picture || defaultAvatarURL,
+        avatar: picture,
         googleStoredRefreshToken
       });
     }
@@ -41,7 +41,7 @@ const googleStrategy = new GoogleStrategy({
     // Let's generate our JWT tokens
     const appAccessToken = jwt.sign(
       { userid: user._id, role: user.role },
-      process.env.JWT_SECRET,
+      process.env.JWT_REFRESH_SECRET,
       { expiresIn: "2h", algorithm: "HS256" }
     );
     const appRefreshToken = jwt.sign(
