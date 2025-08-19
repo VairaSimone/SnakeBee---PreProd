@@ -214,13 +214,21 @@
             "title": "Cosa puoi fare con SnakeBee",
             "list": {
                 "reptileManagement1": "Gestione rettili:",
-                "reptileManagement2": "peso, alimentazione, eventi sanitari e altro.",
+                "reptileManagement2": "peso, alimentazione, eventi sanitari e documentazione.",
                 "breeding1": "Riproduzione:",
-                "breeding2": "accoppiamenti, incubazione, baby tracking.",
+                "breeding2": "accoppiamenti, incubazione e statistiche.",
                 "notifications1": "Supporto notifiche:",
-                "notifications2": "email automatiche per i pasti.",
+                "notifications2": "email automatiche per pasti e promemoria eventi.",
                 "organizedData1": "Dati organizzati:",
-                "organizedData2": "filtra per specie, sesso, età o morph."
+                "organizedData2": "filtra per specie, sesso, età, morph e altro.",
+                "inventory1": "Inventario alimenti:",
+                "inventory2": "gestisci scorte di topi, ratti, pulcini con accesso premium.",
+                "calendar1": "Calendario intelligente:",
+                "calendar2": "unifica pasti, eventi sanitari, riproduzioni ed eventi personalizzati.",
+                "export1": "Esportazioni:",
+                "export2": "scarica Excel o PDF con tutti i dati del tuo allevamento.",
+                "stats1": "Statistiche avanzate:",
+                "stats2": "analizza tassi di successo, incubazione e andamento dei pasti."
             }
         },
         "servicesInDepth": {
@@ -228,15 +236,31 @@
             "details": {
                 "management": {
                     "title": "🦎 Gestione rettili",
-                    "desc": "Inserisci e gestisci ogni rettile nel tuo allevamento, con informazioni su specie, morph, sesso, peso, alimentazione, salute e moltissimo altro. Ogni rettile ha una scheda completa, sempre a portata di click."
+                    "desc": "Scheda completa per ogni animale con dati su peso, alimentazione, mute, visite veterinarie e documenti ufficiali (CITES, microchip)."
                 },
                 "breeding": {
                     "title": "🐍 Riproduzione",
-                    "desc": "Organizza le riproduzioni in modo strutturato: scegli i genitori, monitora le date di accoppiamento, uova, schiuse, e tieni traccia dello sviluppo dei cuccioli fino alla cessione."
+                    "desc": "Organizza coppie, aggiungi eventi (ovulazione, deposizione, schiusa), tieni traccia dei baby e ottieni statistiche su successo e incubazione."
                 },
                 "notifications": {
-                    "title": "📩 Notifiche email automatiche",
-                    "desc": "Ricevi notifiche via email per ricordarti i pasti programmati dei tuoi animali. Niente più dimenticanze o disorganizzazione! In futuro, potrai personalizzare questi promemoria e aggiungere altre notifiche utili."
+                    "title": "📩 Notifiche automatiche",
+                    "desc": "Ricevi promemoria via email su pasti programmati ed eventi importanti. In futuro: notifiche personalizzabili per ogni esigenza."
+                },
+                "inventory": {
+                    "title": "🥩 Inventario alimenti",
+                    "desc": "Gestisci le tue scorte: decremento automatico con i pasti, controlli quantità e gestione multipli tipi di alimento."
+                },
+                "calendar": {
+                    "title": "📅 Calendario",
+                    "desc": "Tutti i tuoi dati riuniti: pasti, eventi sanitari, riproduzioni ed eventi personalizzati in un’unica vista."
+                },
+                "export": {
+                    "title": "📊 Esportazioni",
+                    "desc": "Scarica file Excel e PDF dettagliati con schede animali, cronologia pasti, eventi, riproduzioni e baby."
+                },
+                "stats": {
+                    "title": "📈 Statistiche",
+                    "desc": "Scopri percentuale di rifiuti, intervallo medio tra mute, tasso di successo riproduttivo e altre metriche utili."
                 }
             }
         },
@@ -318,7 +342,7 @@
                     "5 immagini per rettile",
                     "Notifiche email",
                     "Automazioni cibo avanzate",
-                    "Calendario e promemoria disponibile",               
+                    "Calendario e promemoria disponibile",
                     "Supporto prioritario"
                 ],
                 "button": {

@@ -46,7 +46,7 @@ const translate = (key) => translationMap[key] || key;
 function hasPaidPlan(user) {
   if (!user?.subscription) return false;
   const { plan, status } = user.subscription;
-  return (plan === 'basic' || plan === 'premium') && status === 'active';
+  return (plan === 'basic' || plan === 'premium');
 }
 const formatDate = (date) => new Date(date).toLocaleDateString('it-IT', { year: 'numeric', month: 'short', day: 'numeric' });
 

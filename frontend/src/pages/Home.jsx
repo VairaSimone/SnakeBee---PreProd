@@ -72,29 +72,44 @@ const Home = () => {
                         <li><strong>{t('home.services.list.breeding1')}</strong> {t('home.services.list.breeding2')}</li>
                         <li><strong>{t('home.services.list.notifications1')}</strong> {t('home.services.list.notifications2')}</li>
                         <li><strong>{t('home.services.list.organizedData1')}</strong> {t('home.services.list.organizedData2')}</li>
+                        <li><strong>{t('home.services.list.inventory1')}</strong> {t('home.services.list.inventory2')}</li>
+                        <li><strong>{t('home.services.list.calendar1')}</strong> {t('home.services.list.calendar2')}</li>
+                        <li><strong>{t('home.services.list.export1')}</strong> {t('home.services.list.export2')}</li>
+                        <li><strong>{t('home.services.list.stats1')}</strong> {t('home.services.list.stats2')}</li>
                     </ul>
                 </section>
+
                 {/* In-depth Services */}
                 <section className="py-16 border-t border-gray-300">
                     <h2 className="text-3xl font-bold text-center mb-12">{t('home.servicesInDepth.title')}</h2>
                     <div className="space-y-8 text-gray-800 max-w-4xl mx-auto text-lg leading-relaxed">
                         <div>
                             <h4 className="text-xl font-semibold mb-2">{t('home.servicesInDepth.details.management.title')}</h4>
-                            <p>
-                                {t('home.servicesInDepth.details.management.desc')}
-                            </p>
+                            <p>{t('home.servicesInDepth.details.management.desc')}</p>
                         </div>
                         <div>
                             <h4 className="text-xl font-semibold mb-2">{t('home.servicesInDepth.details.breeding.title')}</h4>
-                            <p>
-                                {t('home.servicesInDepth.details.breeding.desc')}
-                            </p>
+                            <p>{t('home.servicesInDepth.details.breeding.desc')}</p>
                         </div>
                         <div>
                             <h4 className="text-xl font-semibold mb-2">{t('home.servicesInDepth.details.notifications.title')}</h4>
-                            <p>
-                                {t('home.servicesInDepth.details.notifications.desc')}
-                            </p>
+                            <p>{t('home.servicesInDepth.details.notifications.desc')}</p>
+                        </div>
+                        <div>
+                            <h4 className="text-xl font-semibold mb-2">{t('home.servicesInDepth.details.inventory.title')}</h4>
+                            <p>{t('home.servicesInDepth.details.inventory.desc')}</p>
+                        </div>
+                        <div>
+                            <h4 className="text-xl font-semibold mb-2">{t('home.servicesInDepth.details.calendar.title')}</h4>
+                            <p>{t('home.servicesInDepth.details.calendar.desc')}</p>
+                        </div>
+                        <div>
+                            <h4 className="text-xl font-semibold mb-2">{t('home.servicesInDepth.details.export.title')}</h4>
+                            <p>{t('home.servicesInDepth.details.export.desc')}</p>
+                        </div>
+                        <div>
+                            <h4 className="text-xl font-semibold mb-2">{t('home.servicesInDepth.details.stats.title')}</h4>
+                            <p>{t('home.servicesInDepth.details.stats.desc')}</p>
                         </div>
                     </div>
                 </section>

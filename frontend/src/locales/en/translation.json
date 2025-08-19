@@ -213,30 +213,54 @@
         "services": {
             "title": "What you can do with SnakeBee",
             "list": {
-                "reptileManagement1": "Reptile management:",
-                "reptileManagement2": "weight, feeding, health events, and more.",
-                "breeding1": "Breeding:",
-                "breeding2": "pairings, incubation, baby tracking.",
-                "notifications1": "Notification support:",
-                "notifications2": "automatic meal reminder emails.",
-                "organizedData1": "Organized data:",
-                "organizedData2": "filter by species, sex, age, or morph."
+                "reptileManagement1": "Reptile Management:",
+                "reptileManagement2": "Weight, feeding, health events, and documentation.",
+                "breeding1": "Reproduction:",
+                "breeding2": "Matings, incubation, and statistics.",
+                "notifications1": "Notification Support:",
+                "notifications2": "Automatic emails for feedings and event reminders.",
+                "organizedData1": "Organized Data:",
+                "organizedData2": "Filter by species, sex, age, morph, and more.",
+                "inventory1": "Food Inventory:",
+                "inventory2": "Manage stocks of mice, rats, and chicks with premium access.",
+                "calendar1": "Smart Calendar:",
+                "calendar2": "Unify feedings, health events, breeding, and custom events.",
+                "export1": "Exports:",
+                "export2": "Download all your breeding data in Excel or PDF format.",
+                "stats1": "Advanced Statistics:",
+                "stats2": "Analyze success rates, incubation, and feeding trends."
             }
         },
         "servicesInDepth": {
-            "title": "Services in Depth",
+            "title": "Service Details",
             "details": {
                 "management": {
-                    "title": "🦎 Reptile management",
-                    "desc": "Add and manage each reptile in your collection with details like species, morph, sex, weight, feeding, health, and much more. Each reptile has a complete profile, always at your fingertips."
+                    "title": "🦎 Reptile Management",
+                    "desc": "Complete records for each animal with data on weight, diet, moults, veterinary visits, and official documents (CITES, microchip)."
                 },
                 "breeding": {
-                    "title": "🐍 Breeding",
-                    "desc": "Organize breeding in a structured way: choose parents, track mating dates, eggs, hatchings, and follow the growth of the babies until they are sold or rehomed."
+                    "title": "🐍 Reproduction",
+                    "desc": "Organize pairs, add events (ovulation, laying, hatching), track babies, and get statistics on success and incubation."
                 },
                 "notifications": {
-                    "title": "📩 Automatic email notifications",
-                    "desc": "Receive email notifications to remind you of your animals’ scheduled meals. No more forgetting or disorganization! In the future, you’ll be able to customize these reminders and add other useful notifications."
+                    "title": "📩 Automatic Notifications",
+                    "desc": "Receive email reminders about scheduled meals and important events. In the future: customizable notifications for every need."
+                },
+                "inventory": {
+                    "title": "🥩 Food Inventory",
+                    "desc": "Manage your supplies: automatic decrement with meals, quantity controls, and management of multiple food types."
+                },
+                "calendar": {
+                    "title": "📅 Calendar",
+                    "desc": "All your data together: meals, health events, breedings, and custom events in a single view."
+                },
+                "export": {
+                    "title": "📊 Exports",
+                    "desc": "Download detailed Excel and PDF files with animal records, meal history, events, breedings, and babies."
+                },
+                "stats": {
+                    "title": "📈 Stats",
+                    "desc": "Discover rejection rates, average molt intervals, reproductive success rates, and other useful metrics."
                 }
             }
         },

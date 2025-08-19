@@ -3,6 +3,8 @@ import Event from "../models/Event.js";
 import Breeding from "../models/Breeding.js";
 import Reptile from "../models/Reptile.js";
 import CustomEvent from "../models/CustomEvent.js";
+import { getUserPlan } from "../utils/getUserPlans.js";
+import User from "../models/User.js";
 
 const toIso = (d) => {
   if (!d) return null;
@@ -15,7 +17,12 @@ export const getCalendarEvents = async (req, res) => {
   try {
     const userId = req.user.userid;
     const { reptileId } = req.query;
-  const { plan } = getUserPlan(req.user);
+    const user = await User.findById(req.user.userid).lean();
+    if (!user) {
+      return res.status(404).send({ message: req.t('user_notFound') });
+    }
+
+    const { plan } = getUserPlan(user);
 
     if (plan !== 'premium') {
       return res.status(403).json({ error: req.t("premium_only_feature") });
@@ -25,10 +32,15 @@ export const getCalendarEvents = async (req, res) => {
       ? [reptileId]
       : (await Reptile.find({ user: userId }).select("_id").lean()).map((r) => r._id);
 
-    if (!reptileIds.length) {
-      return res.json([]);
-    }
+ 
+const customEventFilter = { user: userId };
 
+if (reptileId) {
+  customEventFilter.$or = [
+    { reptiles: reptileId },      
+    { reptiles: { $eq: [] } },    
+  ];
+}
     const [feedings, reptileEvents, breedings, customEvents] = await Promise.all([
       Feeding.find({ reptile: { $in: reptileIds } }).populate("reptile", "name species morph").lean(),
       Event.find({ reptile: { $in: reptileIds } }).populate("reptile", "name species").lean(),
@@ -39,12 +51,9 @@ export const getCalendarEvents = async (req, res) => {
         .populate("male", "name species morph")
         .populate("female", "name species morph")
         .lean(),
-      CustomEvent.find({
-        user: userId,
-        ...(reptileId && { reptiles: reptileId }),
-      })
-        .populate("reptiles", "name species morph")
-        .lean(),
+  CustomEvent.find(customEventFilter)             // <-- qui passo il filtro corretto
+    .populate("reptiles", "name species morph")
+    .lean(),
     ]);
 
     const feedingEvents = feedings.flatMap((f) => {
@@ -140,7 +149,7 @@ export const getCalendarEvents = async (req, res) => {
       title: c.title,
       description: c.description,
       type: "custom",
-      reptile: c.reptiles,
+      reptile: c.reptiles.length ? c.reptiles : null,
       color: c.color,
       isCustom: true,
     }));
@@ -164,7 +173,11 @@ export const createCustomEvent = async (req, res) => {
   try {
     const userId = req.user.userid;
     const { reptiles, title, description, date, endDate, color, sendReminder } = req.body;
-  const { plan } = getUserPlan(req.user);
+    const user = await User.findById(req.user.userid).lean();
+    if (!user) {
+      return res.status(404).send({ message: req.t('user_notFound') });
+    }
+    const { plan } = getUserPlan(user);
 
     if (plan !== 'premium') {
       return res.status(403).json({ error: req.t("premium_only_feature") });

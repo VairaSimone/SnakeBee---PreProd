@@ -11,6 +11,12 @@ import ConfirmDeleteModal from '../components/ConfirmDeleteModal.jsx';
 import { FaMars, FaVenus, FaPlus, FaTag, FaPencilAlt, FaDrumstickBite, FaCalendarAlt, FaTrash, FaChartBar, FaPercentage, FaUtensils, FaEgg, FaSyncAlt } from 'react-icons/fa';
 import { useTranslation } from 'react-i18next';
 import CalendarModal from '../components/CalendarModal.jsx'
+
+function hasPaidPlan(user) {
+  if (!user?.subscription) return false;
+  const { plan, status } = user.subscription;
+  return (plan === 'basic' || plan === 'premium');
+}
 const Dashboard = () => {
   const user = useSelector(selectUser);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -195,7 +201,7 @@ const Dashboard = () => {
   return (
     <div className="bg-clay min-h-screen font-sans text-charcoal p-4 sm:p-6 lg:p-8 relative">
       <div className="max-w-screen-xl mx-auto">
-{user?.isPremium && (
+{hasPaidPlan(user) && (
   <button
     onClick={() => setCalendarOpen(true)}
     title={t('dashboard.calendar')}
@@ -390,9 +396,9 @@ const Dashboard = () => {
           </footer>
         )}
       </div>
-<CalendarModal 
-        isOpen={isCalendarOpen} 
-        onClose={() => setCalendarOpen(false)} 
+      <CalendarModal
+        isOpen={isCalendarOpen}
+        onClose={() => setCalendarOpen(false)}
       />
 
       <ReptileCreateModal show={showCreateModal} handleClose={() => setShowCreateModal(false)} onSuccess={fetchReptiles} setReptiles={setAllReptiles} />

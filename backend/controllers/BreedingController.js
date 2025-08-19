@@ -12,7 +12,7 @@ async function isDuplicatePair(maleId, femaleId, year, userId) {
 function hasBreedingAccess(subscription) {
   if (!subscription) return false;
   const { plan = 'free', status } = subscription;
-  const allowedStatus = ['active', 'pending_cancellation'];
+  const allowedStatus = ['active', 'pending_cancellation', 'processing'];
   return allowedStatus.includes(status) && plan !== 'free';
 }
 

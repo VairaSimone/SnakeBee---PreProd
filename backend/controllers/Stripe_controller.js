@@ -308,7 +308,11 @@ export const stripeWebhook = async (req, res) => {
         const periodEnd = new Date(periodEndTimestamp * 1000);
         const priceId = lineItem?.price?.id;
         const planName = getPlanNameByPriceId(priceId);
-
+console.log('Processing invoice.payment_succeeded', {
+  customer: dataObject.customer,
+  subscription: dataObject.subscription,
+  periodEnd: dataObject.lines?.data?.[0]?.period?.end
+});
         user.subscription.status = 'active';
         user.subscription.currentPeriodEnd = periodEnd;
         if (planName) {
@@ -318,7 +322,12 @@ export const stripeWebhook = async (req, res) => {
           user.subscription.stripeSubscriptionId = stripeSubscriptionId;
         }
 
-        await user.save();
+        try {
+  await user.save();
+  console.log('User updated to active');
+} catch(e) {
+  console.error('Failed to save user subscription:', e);
+}
 
         if (isSubscriptionCreation) {
           await logAction(user._id, 'stripe_invoice_paid', `Piano: ${user.subscription.plan}, Period end: ${periodEnd}`);
