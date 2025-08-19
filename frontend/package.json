@@ -16,13 +16,15 @@
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
+    "ajv": "^6.12.6",
+    "ajv-keywords": "^3.5.2",
     "axios": "^1.7.7",
     "bootstrap": "^5.3.3",
     "chart.js": "^4.4.4",
     "crypto-browserify": "^3.12.0",
     "dayjs": "^1.11.13",
     "dotenv": "^16.4.5",
-    "i18next": "^24.2.3",
+    "i18next": "^25.3.6",
     "i18next-http-backend": "^3.0.2",
     "jwt-decode": "^4.0.0",
     "lucide-react": "^0.525.0",
@@ -50,7 +52,7 @@
   },
   "scripts": {
     "start": "react-scripts start",
-"build": "npm install --legacy-peer-deps && react-scripts build",
+    "build": "npm install --legacy-peer-deps && react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
@@ -79,7 +81,7 @@
     "postcss": "^8.5.6",
     "sass": "^1.89.2",
     "tailwindcss": "^3.3.2",
-    "typescript": "^4.9.5",
+    "typescript": "^5.9.2",
     "webpack": "^5.94.0",
     "webpack-cli": "^5.1.4"
   }
