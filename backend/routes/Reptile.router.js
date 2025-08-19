@@ -2,7 +2,6 @@ import express from 'express';
 import * as reptileController from '../controllers/ReptileRoute_controller.js';
 import { authenticateJWT } from '../middlewares/Auth.js';
 import { isOwnerOrAdmin } from '../middlewares/Authorization.js';
-import { validateReptile } from '../validate/validateReptile.js';
 import  upload  from '../config/MulterConfig.js';
 import Reptile from '../models/Reptile.js';
 import { GetEvents, CreateEvent, DeleteEvent, averageShedInterval } from '../controllers/EventController.js';
@@ -14,7 +13,7 @@ reptileRouter.get('/', authenticateJWT, reptileController.GetAllReptile);
 reptileRouter.get('/:reptileId', authenticateJWT, isOwnerOrAdmin(Reptile, 'reptileId'), reptileController.GetIDReptile);
 reptileRouter.get('/:userId/AllReptile', authenticateJWT, reptileController.GetAllReptileByUser);
 reptileRouter.post('/', authenticateJWT, upload.array('image') , reptileController.PostReptile);
-reptileRouter.put('/:reptileId', authenticateJWT, upload.array('image') , validateReptile, isOwnerOrAdmin(Reptile, 'reptileId'), reptileController.PutReptile);
+reptileRouter.put('/:reptileId', authenticateJWT, upload.array('image'), isOwnerOrAdmin(Reptile, 'reptileId'), reptileController.PutReptile);
 reptileRouter.delete('/:reptileId', authenticateJWT, isOwnerOrAdmin(Reptile, 'reptileId'), reptileController.DeleteReptile);
 reptileRouter.get('/export/reptiles/:userId', authenticateJWT, exportReptileData);
 reptileRouter.get('/:id/pdf', authenticateJWT, async (req, res) => {

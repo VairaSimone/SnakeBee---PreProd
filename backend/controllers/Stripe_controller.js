@@ -46,16 +46,16 @@ export const createCheckoutSession = async (req, res) => {
 
   const userId = req.user.userid;
   if (!userId) {
-    return res.status(400).json({ error: 'ID utente non fornito.' });
+    return res.status(400).json({ error: req.t('user_notFound') });
   }
   if (!subscriptionPlans[plan]) {
-    return res.status(400).json({ error: 'Piano non valido.' });
+    return res.status(400).json({ error: req.t('invalid_subscription')});
   }
 
   try {
     const user = await User.findById(userId);
     if (!user) {
-      return res.status(404).json({ error: 'Utente non trovato.' });
+      return res.status(404).json({ error: req.t('user_notFound') });
     }
 
     // If the user already has an active subscription, redirect them to the customer portal.
@@ -91,7 +91,7 @@ export const createCheckoutSession = async (req, res) => {
     res.status(200).json({ url: session.url });
   } catch (error) {
     console.error("Error creating checkout session:", error);
-    res.status(500).json({ error: "Errore del server durante la creazione della sessione di pagamento. Contatta l'assistenza." });
+    res.status(500).json({ error: req.t('server_error') });
   }
 };
 
@@ -103,17 +103,17 @@ export const manageSubscription = async (req, res) => {
   const userId = req.user.userid;
 
   if (!userId || !newPlan) {
-    return res.status(400).json({ error: 'ID utente e nuovo piano sono richiesti.' });
+    return res.status(400).json({ error: req.t('invalid_value') });
   }
 
   if (!subscriptionPlans[newPlan]) {
-    return res.status(400).json({ error: 'Piano non valido.' });
+    return res.status(400).json({ error: req.t('invalid_subscription') });
   }
 
   try {
     const user = await User.findById(userId);
     if (!user || !user.subscription?.stripeSubscriptionId) {
-      return res.status(404).json({ error: 'Utente o abbonamento non trovato.' });
+      return res.status(404).json({ error:  req.t('invalid_subscription') });
     }
 
     const planWeights = { basic: 1, premium: 2 };
@@ -123,13 +123,12 @@ export const manageSubscription = async (req, res) => {
     }
     if (planWeights[newPlan] < planWeights[currentPlan]) {
       return res.status(400).json({
-        error: `Downgrade non supportato in automatico. ` +
-          `Cancella l'abbonamento corrente e sottoscrivi di nuovo il piano "${newPlan}".`
+        error: req.t('subscription_downgrade')
       });
     }
 
     if (newPlan === currentPlan) {
-      return res.status(400).json({ error: 'Selezionato lo stesso piano. Nessuna modifica effettuata.' });
+      return res.status(400).json({ error: req.t('subscription_errorModify') });
     }
 
     const subscriptionId = user.subscription.stripeSubscriptionId;
@@ -152,11 +151,11 @@ export const manageSubscription = async (req, res) => {
 
     await user.save();
 
-    res.status(200).json({ success: true, message: 'Abbonamento aggiornato con successo.', subscription: updatedSubscription });
+    res.status(200).json({ success: true, message: req.t('subscription_successfully'), subscription: updatedSubscription });
 
   } catch (error) {
     console.error("Error while changing subscription:", error);
-    res.status(500).json({ error: "Errore del server durante l'aggiornamento dell'abbonamento." });
+    res.status(500).json({ error: req.t('server_error') });
   }
 };
 
@@ -167,13 +166,13 @@ export const cancelSubscription = async (req, res) => {
   const userId = req.user.userid;
 
   if (!userId) {
-    return res.status(400).json({ error: 'ID utente non fornito.' });
+    return res.status(400).json({ error: req.t('user_notFound') });
   }
 
   try {
     const user = await User.findById(userId);
     if (!user || !user.subscription?.stripeSubscriptionId) {
-      return res.status(404).json({ error: 'Utente o abbonamento non trovato.' });
+      return res.status(404).json({ error: req.t('invalid_value') });
     }
 
     const subscriptionId = user.subscription.stripeSubscriptionId;
@@ -186,18 +185,18 @@ export const cancelSubscription = async (req, res) => {
 
     await user.save();
 
-    res.status(200).json({ success: true, message: 'La cancellazione dell\'abbonamento è stata programmata.', subscription: canceledSubscription });
+    res.status(200).json({ success: true, message: req.t('subscription_delete'), subscription: canceledSubscription });
 
   } catch (error) {
     console.error("Error while canceling subscription:", error);
-    res.status(500).json({ error: "Errore del server durante l'annullamento dell'abbonamento." });
+    res.status(500).json({ error: req.t('server_error') });
   }
 };
 
 export const getSessionDetails = async (req, res) => {
   const { sessionId } = req.params;
 
-  if (!sessionId) return res.status(400).json({ error: 'Session ID mancante' });
+  if (!sessionId) return res.status(400).json({ error: req.t('invalid_value') });
 
   try {
     // Retrieve the checkout session from Stripe
@@ -205,7 +204,7 @@ export const getSessionDetails = async (req, res) => {
       expand: ['subscription', 'line_items.data.price'],
     });
 
-    if (!session) return res.status(404).json({ error: 'Sessione non trovata' });
+    if (!session) return res.status(404).json({ error: req.t('session-invalid') });
 
     const planPriceId = session.line_items?.data[0]?.price?.id || null;
     const amount_total = session.amount_total || 0;
@@ -221,7 +220,7 @@ export const getSessionDetails = async (req, res) => {
     });
   } catch (error) {
     console.error('Stripe session recovery error:', error);
-    res.status(500).json({ error: 'Errore server recupero sessione' });
+    res.status(500).json({ error: req.t('server_error') });
   }
 };
 /**
@@ -233,7 +232,7 @@ export const createCustomerPortalSession = async (req, res) => {
   try {
     const user = await User.findById(userId);
     if (!user || !user.subscription?.stripeCustomerId) {
-      return res.status(404).json({ error: 'Cliente Stripe non trovato per questo utente.' });
+      return res.status(404).json({ error: req.t('user_notFound') });
     }
 
     const portalSession = await stripeClient.billingPortal.sessions.create({
@@ -246,7 +245,7 @@ export const createCustomerPortalSession = async (req, res) => {
 
   } catch (error) {
     console.error("Error creating customer portal session:", error);
-    res.status(500).json({ error: 'Errore del server durante la creazione della sessione del portale.' });
+    res.status(500).json({ error: req.t('server_error')  });
   }
 };
 
@@ -263,11 +262,10 @@ export const stripeWebhook = async (req, res) => {
     event = stripeClient.webhooks.constructEvent(req.body, sig, endpointSecret);
   } catch (err) {
     console.error(`Error verifying webhook signature: ${err.message}`);
-    return res.status(400).send(`Webhook Errore: ${err.message}`);
+    return res.status(400).send(req.t('webhook_error',{ message: err.message}));
   }
 
   const dataObject = event.data.object;
-  console.log(`🔔 Webhook ricevuto: ${event.type}`);
 
   try {
     switch (event.type) {
@@ -328,14 +326,15 @@ export const stripeWebhook = async (req, res) => {
           await Notification.create({
             user: user._id,
             type: 'billing',
-            message: `Il tuo abbonamento al piano ${user.subscription.plan} è stato attivato con successo.`,
+            message: req.t('notification.activeStripe_subscription',{ subscription: user.subscription.plan}),
             date: new Date(),
           });
 
           await sendStripeNotificationEmail(
             user.email,
-            'Il tuo abbonamento è attivo! 🎉',
-            `<h1>Ciao ${user.name},</h1><p>Il tuo pagamento è stato ricevuto e il tuo abbonamento al piano <strong>${user.subscription.plan}</strong> è ora attivo. Grazie per esserti unito a noi!</p>`
+            user.language,
+            req.t('emails.activeStripe_subscription.subject'),
+            req.t('emails.activeStripe_subscription.html',{ name: user.name, subscription: user.subscription.plan})
           );
         }
         break;
@@ -350,9 +349,9 @@ export const stripeWebhook = async (req, res) => {
 
           await sendStripeNotificationEmail(
             user.email,
-            '⚠️ Problema con il pagamento del tuo abbonamento',
-            `<h1>Ciao ${user.name},</h1><p>Non siamo riusciti ad elaborare il pagamento per il rinnovo del tuo abbonamento. Ti preghiamo di aggiornare le tue informazioni di pagamento nel tuo profilo.</p>`
-          );
+            user.language,
+             req.t('emails.errorStripe_subscription.subject'),
+            req.t('emails.errorStripe_subscription.html',{ name: user.name}))
         }
         break;
       }
@@ -381,9 +380,9 @@ export const stripeWebhook = async (req, res) => {
           await user.save();
           await logAction(user._id, 'subscription_updated_webhook', `Status: ${dataObject.status}, Nuovo piano: ${newPlanName}`);
 
-          const subject = 'Il tuo abbonamento è stato aggiornato';
-          const body = `<h1>Ciao ${user.name},</h1><p>Il tuo abbonamento è stato aggiornato con successo al piano <strong>${newPlanName}</strong>.</p>`;
-          await sendStripeNotificationEmail(user.email, subject, body);
+          const subject = req.t('emails.updateStripe_subscription.subject');
+          const body = req.t('emails.updateStripe_subscription.html',{ name: user.name, Plan: newPlanName});
+          await sendStripeNotificationEmail(user.email, user.language, subject, body);
         }
         break;
       }
@@ -399,9 +398,9 @@ export const stripeWebhook = async (req, res) => {
           await user.save();
           await logAction(user._id, 'subscription_cancelled', `Subscription ended`);
 
-          const subject = 'Il tuo abbonamento è stato cancellato';
-          const body = `<h1>Ciao ${user.name},</h1><p>Come da tua richiesta, il tuo abbonamento è stato cancellato. Ci dispiace vederti andare via!</p>`;
-          await sendStripeNotificationEmail(user.email, subject, body);
+          const subject = req.t('emails.cancelStripe_subscription.subject');;
+          const body = req.t('emails.cancelStripe_subscription.html',{ name: user.name, Plan: newPlanName});
+          await sendStripeNotificationEmail(user.email, user.language, subject, body);
         }
         break;
       }
@@ -416,6 +415,6 @@ export const stripeWebhook = async (req, res) => {
     await logAction(null, 'webhook_unhandled', `Event type: ${event.type}`);
 
     console.error("Error handling webhook:", error);
-    res.status(500).json({ error: 'Errore del server durante l\'elaborazione del webhook.' });
+    res.status(500).json({ error: req.t('server_error') });
   }
 };

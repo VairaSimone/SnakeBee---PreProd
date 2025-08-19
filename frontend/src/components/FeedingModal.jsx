@@ -1,449 +1,338 @@
 import React, { useState, useEffect, Fragment } from 'react';
-import { Dialog, Transition } from '@headlessui/react';
-import api from '../services/api';
-import { useForm } from 'react-hook-form';
+import { Dialog, Transition, RadioGroup } from '@headlessui/react';
+import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as Yup from 'yup';
+import api from '../services/api';
+import { useTranslation } from "react-i18next";
 
-const validationSchema = Yup.object().shape({
-  date: Yup
-    .date()
-    .max(new Date(), 'Non puoi selezionare una data futura')
-    .required('Data obbligatoria'),
+import {
+  XMarkIcon,
+  PlusCircleIcon,
+  ClockIcon,
+  TrashIcon,
+  CheckCircleIcon,
+  XCircleIcon,
+  ExclamationCircleIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon
+} from '@heroicons/react/24/outline';
 
-  foodType: Yup
-    .string()
-    .required('Seleziona un alimento'),
 
-  customFoodType: Yup.string().when('foodType', (foodType, schema) =>
-    foodType === 'Altro'
-      ? schema.required('Inserisci tipo di alimento')
-      : schema.notRequired()
-  ),
-
-  customWeight: Yup.number()
-    .transform((val, orig) => (orig === '' ? undefined : val))
-    .when('foodType', {
-      is: 'Altro',
-      then: (schema) =>
-        schema
-          .typeError('Inserisci un numero valido')
-          .required('Inserisci il peso per unità')
-          .positive('Deve essere positivo'),
-      otherwise: (schema) => schema.notRequired(),
-    }),
-
-  customWeightUnit: Yup.string().when('foodType', {
-    is: 'Altro',
-    then: (schema) =>
-      schema
-        .required('Seleziona unità di misura')
-        .oneOf(['g', 'kg'], 'Unità non valida'),
+const validationSchema = (t) => Yup.object().shape({
+  date: Yup.date()
+    .max(new Date(), t("feedingModal.errors.date.future"))
+    .required(t("feedingModal.errors.date.required"))
+    .typeError(t("feedingModal.errors.date.invalid")),
+  foodType: Yup.string().required(t("feedingModal.errors.foodType.required")),
+  customFoodType: Yup.string().when("foodType", {
+    is: "Altro",
+    then: (schema) => schema.required(t("feedingModal.errors.customFoodType.required")),
     otherwise: (schema) => schema.notRequired(),
   }),
+  customWeight: Yup.number()
+    .transform((value, originalValue) => originalValue === "" ? null : value)
+    .when("foodType", {
+      is: "Altro",
+      then: (schema) => schema
+        .positive(t("feedingModal.errors.customWeight.positive"))
+        .required(t("feedingModal.errors.customWeight.required"))
+        .typeError(t("feedingModal.errors.customWeight.number")),
+      otherwise: (schema) => schema.notRequired(),
+    }),
   quantity: Yup.number()
-    .transform((val, orig) => (orig === '' ? undefined : val))
-    .typeError('Inserisci un numero valido')
-    .positive('Deve essere positivo')
-    .required('Quantità obbligatoria'),
-  wasEaten: Yup
-    .boolean()
-    .transform((val, orig) => {
-      if (orig === 'true') return true;
-      if (orig === 'false') return false;
-      return val;
-    })
-    .required(),
-
-  retryAfterDays: Yup
-    .number()
-    .transform((val, orig) => orig === '' ? undefined : val)
-    .when('wasEaten', (wasEaten, schema) =>
-      wasEaten === false
-        ? schema
-          .typeError('Inserisci un numero valido')
-          .required('Giorni obbligatori')
-          .positive('Deve essere positivo')
-        : schema.notRequired()
-    ),
-
-  notes: Yup
-    .string()
-    .max(300, 'Massimo 300 caratteri'),
+    .positive(t("feedingModal.errors.quantity.positive"))
+    .integer(t("feedingModal.errors.quantity.integer"))
+    .required(t("feedingModal.errors.quantity.required"))
+    .typeError(t("feedingModal.errors.quantity.number")),
+  wasEaten: Yup.boolean().required(),
+  retryAfterDays: Yup.number()
+    .transform((value, originalValue) => originalValue === "" ? null : value)
+    .when("wasEaten", {
+      is: false,
+      then: (schema) => schema
+        .positive(t("feedingModal.errors.retry.positive"))
+        .integer(t("feedingModal.errors.retry.integer"))
+        .required(t("feedingModal.errors.retry.required"))
+        .typeError(t("feedingModal.errors.retry.number")),
+      otherwise: (schema) => schema.notRequired(),
+    }),
+  notes: Yup.string().max(300, t("feedingModal.errors.notes.max")),
 });
-const FeedingModal = ({ show, handleClose, reptileId, onFeedingAdded, onSuccess }) => {
+
+const FeedingModal = ({ show, handleClose, reptileId, onSuccess }) => {
+      const { t } = useTranslation();
+
   const [feedings, setFeedings] = useState([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [inventory, setInventory] = useState([]);
-
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submissionError, setSubmissionError] = useState('');
 
-  // React Hook Form
-  const {
-    register,
-    handleSubmit,
-    watch,
-    reset,
-    formState: { errors }
-  } = useForm({
+  const { register, handleSubmit, watch, reset, control, formState: { errors } } = useForm({
     defaultValues: {
-      date: '',
+      date: new Date().toISOString().split('T')[0],
       foodType: '',
       customFoodType: '',
       customWeight: '',
       customWeightUnit: 'g',
-      quantity: '',
+      quantity: 1,
       wasEaten: true,
       retryAfterDays: '',
       notes: '',
     },
-    resolver: yupResolver(validationSchema)
+    resolver: yupResolver(validationSchema),
   });
 
-  const notesValue = watch('notes') || '';
   const foodTypeValue = watch('foodType');
-  const customWeightUnit = watch('customWeightUnit');
-  const dateValue = watch('date');
+  const wasEatenValue = watch('wasEaten');
 
-  const todayString = new Date().toISOString().split('T')[0];
-  const handleDelete = async (feedingId) => {
-    setIsSubmitting(true);
-    try {
-      // endpoint DELETE: /feedings/:feedingId
-      await api.delete(`/feedings/${feedingId}`);
-      await fetchFeedings(page);
-      await fetchInventory();
-    } catch (err) {
-      console.error('Errore durante l\'eliminazione:', err);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+const fetchData = async () => {
+  if (!reptileId) return;
+  try {
+    const [inventoryRes, feedingsRes] = await Promise.allSettled([
+      api.get('/inventory'),
+      api.get(`/feedings/${reptileId}?page=${page}`),
+    ]);
 
-  const fetchInventory = async () => {
-    try {
-      const { data } = await api.get('/inventory');
-      setInventory(data);
-    } catch (err) {
-      console.error('Errore caricamento inventario:', err);
+    if (inventoryRes.status === "fulfilled") {
+      setInventory(inventoryRes.value.data);
+    } else {
+      setInventory([]); 
     }
-  };
 
-  const fetchFeedings = async (pageToFetch) => {
-    try {
-      const { data } = await api.get(`/feedings/${reptileId}?page=${pageToFetch}`);
-      setFeedings(data.dati);
-      setTotalPages(data.totalPages);
-    } catch (err) {
-      console.error('Errore nel caricare i pasti:', err);
+    if (feedingsRes.status === "fulfilled") {
+      setFeedings(feedingsRes.value.data.dati);
+      setTotalPages(feedingsRes.value.data.totalPages);
+    } else {
     }
-  };
+
+  } catch (err) {
+  }
+};
 
   useEffect(() => {
-    if (show && reptileId) {
-      fetchFeedings(page);
-      fetchInventory();
+    if (show) {
+      fetchData();
+    } else {
+      reset(); 
     }
   }, [show, reptileId, page]);
 
   const onSubmit = async (formData) => {
-    if (!formData.foodType) {
-      setSubmissionError("Seleziona un alimento prima di procedere");
-      return;
-    }
-
+    setIsSubmitting(true);
     const isCustom = formData.foodType === 'Altro';
-    let weightPerUnit;
-    let foodType;
-    if (isCustom) {
-      if (!formData.customFoodType) {
-        setSubmissionError("Inserisci tipo di alimento personalizzato");
-        return;
-      }
-      foodType = formData.customFoodType;
-      const w = parseFloat(formData.customWeight);
-      weightPerUnit = formData.customWeightUnit === 'kg' ? w * 1000 : w;
-    } else {
-      const item = inventory.find(i => i._id === formData.foodType);
-      if (!item) {
-        setSubmissionError("Alimento selezionato non valido");
-        return;
-      }
-      setIsSubmitting(true);
-      setSubmissionError('');
-
-      foodType = item.foodType;
-      weightPerUnit = item.weightPerUnit;
-    }
+    const item = isCustom ? null : inventory.find(i => i._id === formData.foodType);
 
     const payload = {
       date: formData.date,
-      foodType,
-      quantity: parseInt(formData.quantity, 10),
+      foodType: isCustom ? formData.customFoodType : item?.foodType,
+      quantity: formData.quantity,
       wasEaten: formData.wasEaten,
-      retryAfterDays: formData.wasEaten ? undefined : parseInt(formData.retryAfterDays, 10),
-      weightPerUnit,
+      retryAfterDays: formData.wasEaten ? undefined : formData.retryAfterDays,
+      weightPerUnit: isCustom ? formData.customWeight : item?.weightPerUnit,
       notes: formData.notes || undefined,
     };
 
     try {
       await api.post(`/feedings/${reptileId}`, payload);
-      await fetchFeedings(page);
-      await fetchInventory();
-      reset();
+      await fetchData(); 
+      reset(); 
       onSuccess?.();
-      onFeedingAdded?.();
     } catch (err) {
-      console.error("Errore nell'invio:", err);
-      setSubmissionError('Errore nell\'aggiungere il pasto.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  const handleDelete = async (feedingId) => {
+    setIsSubmitting(true);
+    try {
+      await api.delete(`/feedings/${feedingId}`);
+      await fetchData();
+      onSuccess?.();
+    } catch (err) {
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+ 
+  const inputClasses = "w-full px-3 py-2 text-sm text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition disabled:bg-gray-100";
+  const labelClasses = "block text-sm font-medium text-gray-600 mb-1";
+  const sectionTitleClasses = "text-lg font-semibold text-gray-800 flex items-center gap-2";
+  const sectionClasses = "bg-white p-6 rounded-lg shadow-sm border border-gray-200";
+  const errorTextClasses = "flex items-center gap-1 mt-1 text-sm text-red-600";
+
   return (
     <Transition show={show} as={Fragment}>
       <Dialog as="div" className="relative z-50" onClose={handleClose}>
-        {/* overlay */}
-        <Transition.Child>
-          <div className="fixed inset-0 bg-black bg-opacity-25" />
+        <Transition.Child as={Fragment} {...{ enter: "ease-out duration-300", enterFrom: "opacity-0", enterTo: "opacity-100", leave: "ease-in duration-200", leaveFrom: "opacity-100", leaveTo: "opacity-0" }}>
+          <div className="fixed inset-0 bg-black/30 backdrop-blur-sm" />
         </Transition.Child>
 
-        {/* panel */}
         <div className="fixed inset-0 overflow-y-auto">
           <div className="flex min-h-full items-center justify-center p-4">
-            <Transition.Child >
-              <Dialog.Panel className="w-full max-w-4xl bg-white p-6 rounded-2xl shadow-xl">
-                <Dialog.Title className="text-lg font-semibold">Gestione Pasti</Dialog.Title>
-                <button onClick={handleClose} className="absolute top-4 right-4 text-xl">&times;</button>
+            <Transition.Child as={Fragment} {...{ enter: "ease-out duration-300", enterFrom: "opacity-0 scale-95", enterTo: "opacity-100 scale-100", leave: "ease-in duration-200", leaveFrom: "opacity-100 scale-100", leaveTo: "opacity-0 scale-95" }}>
+              <Dialog.Panel className="w-full max-w-4xl transform overflow-hidden rounded-2xl bg-slate-50 p-6 shadow-xl transition-all">
 
-                <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 mt-4">
-                  <div className="grid md:grid-cols-2 gap-4">
-                    {/* Date */}
-                    <div>
-                      <input
-                        type="date"
-                        {...register('date')}
-                        max={todayString}
-                        disabled={isSubmitting}
-                        className={inputClasses}
-                      />
-                      {errors.date && <p className="text-red-500 text-sm">{errors.date.message}</p>}
-                    </div>
-
-                    {/* Food type */}
-                    <div>
-                      <select
-                        {...register('foodType')}
-                        disabled={isSubmitting}
-                        className={inputClasses}
-                      >
-                        <option value="">-- Seleziona alimento --</option>
-                        {inventory.map(item => (
-                          <option key={item._id} value={item._id}>
-                            {item.foodType} ({item.quantity}× – {item.weightPerUnit}g)
-                          </option>
-                        ))}
-                        <option value="Altro">Non scegliere inventario</option>
-                      </select>
-                      {errors.foodType && <p className="text-red-500 text-sm">{errors.foodType.message}</p>}
-                    </div>
-
-                    {/* Campo custom */}
-                    {foodTypeValue === 'Altro' && (
-                      <>
-                        <div>
-                          <input
-                            type="text"
-                            {...register('customFoodType')}
-                            disabled={isSubmitting}
-                            className={inputClasses}
-                            placeholder="Scrivi tipo di alimento"
-                          />
-                          {errors.customFoodType && <p className="text-red-500 text-sm">{errors.customFoodType.message}</p>}
-                        </div>
-                        <div className="flex space-x-2">
-                          <input
-                            type="number"
-                            {...register('customWeight')}
-                            disabled={isSubmitting}
-                            className={inputClasses}
-                            placeholder="Peso per unità"
-                          />
-                          <select
-                            {...register('customWeightUnit')}
-                            disabled={isSubmitting}
-                            className={inputClasses}
-                          >
-                            <option value="g">g</option>
-                            <option value="kg">kg</option>
-                          </select>
-                        </div>
-                        {errors.customWeight && <p className="text-red-500 text-sm">{errors.customWeight.message}</p>}
-                      </>
-                    )}
-
-                    {/* Quantity */}
-                    <div>
-                      <input
-                        type="number"
-                        {...register('quantity')}
-                        disabled={isSubmitting}
-                        className={inputClasses}
-                        placeholder="Quantità"
-                      />
-                      {errors.quantity && <p className="text-red-500 text-sm">{errors.quantity.message}</p>}
-                    </div>
-
-                    <div className="md:col-span-2">
-                      <label className="block mb-1">L'animale ha mangiato?</label>
-                      <div className="flex items-center space-x-4">
-                        <label className="flex items-center">
-                          <input
-                            type="radio"
-                            value="true"
-                            {...register('wasEaten')}
-                            disabled={isSubmitting}
-                          />
-                          <span className="ml-2">Sì</span>
-                        </label>
-                        <label className="flex items-center">
-                          <input
-                            type="radio"
-                            value="false"
-                            {...register('wasEaten')}
-                            disabled={isSubmitting}
-                          />
-                          <span className="ml-2">No</span>
-                        </label>
-                      </div>
-                    </div>
-
-                    {/* retryAfterDays */}
-                    {!watch('wasEaten') && (
-                      <div>
-                        <input
-                          type="number"
-                          {...register('retryAfterDays')}
-                          disabled={isSubmitting}
-                          className={inputClasses}
-                          placeholder="Riprova tra (giorni)"
-                        />
-                        {errors.retryAfterDays && <p className="text-red-500 text-sm">{errors.retryAfterDays.message}</p>}
-                      </div>
-                    )}
-
-                    {/* Note */}
-                    <div className="md:col-span-2">
-                      <textarea
-                        rows={3}
-                        {...register('notes')}
-                        disabled={isSubmitting}
-                        className={inputClasses}
-                        placeholder="Note (max 300 caratteri)"
-                      />
-                      <div className="text-right text-sm text-gray-500">
-                        {notesValue.length}/300
-                      </div>
-                      {errors.notes && <p className="text-red-500 text-sm">{errors.notes.message}</p>}
-                    </div>
-                  </div>
-
-                  <div className="text-right">
-                    <button
-                      type="submit"
-                      disabled={isSubmitting}
-                      className="bg-[#228B22] text-white px-4 py-2 rounded hover:bg-green-700 disabled:opacity-50"
-                    >
-                      {isSubmitting ? 'Caricamento...' : 'Aggiungi Pasto'}
-                    </button>
-                  </div>
-                  {submissionError && <p className="text-red-500 text-center mt-2">{submissionError}</p>}
-                </form>
-
-                {/* ——— MEAL HISTORY ——— */}
-                <h3 className="text-xl font-semibold mt-10 mb-4 text-gray-800">Cronologia Pasti</h3>
-                <div className="overflow-auto text-sm max-h-64 md:max-h-80 border rounded-md">
-                  <table className="w-full border text-gray-800">
-                    <thead className="bg-gray-100">
-                      <tr>
-                        <th className="p-2">Data</th>
-                        <th className="p-2">Cibo</th>
-                        <th className="p-2">Quantità</th>
-                        <th className="p-2">Prossimo Pasto</th>
-                        <th className="p-2">Note</th>
-                        <th className="p-2">Esito</th>
-                        <th className="p-2">Azioni</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {feedings.length === 0 ? (
-                        <tr>
-                          <td colSpan="7" className="p-4 text-center text-gray-500">
-                            Nessun pasto trovato
-                          </td>
-                        </tr>
-                      ) : (
-                        feedings.map(f => (
-                          <tr key={f._id} className="odd:bg-white even:bg-gray-50">
-                            <td className="p-2 whitespace-nowrap">
-                              {new Date(f.date).toLocaleDateString()}
-                            </td>
-                            <td className="p-2 whitespace-nowrap">{f.foodType}</td>
-                            <td className="p-2">
-                              {f.quantity
-                                ? `${f.quantity} × ${f.weightPerUnit >= 1000
-                                  ? `${(f.weightPerUnit / 1000).toFixed(2)} kg`
-                                  : `${f.weightPerUnit} g`
-                                }`
-                                : '—'}
-                            </td>
-                            <td className="p-2 whitespace-nowrap">
-                              {new Date(f.nextFeedingDate).toLocaleDateString()}
-                            </td>
-                            <td className="p-2 max-w-xs truncate" title={f.notes || ''}>
-                              {f.notes || '—'}
-                            </td>
-                            <td className="p-2">
-                              {f.wasEaten ? (
-                                <span className="text-green-600 font-semibold">✅ Mang.</span>
-                              ) : (
-                                <span className="text-red-500 font-semibold">❌ Fallito</span>
-                              )}
-                            </td>
-                            <td className="p-2">
-                              <button
-                                onClick={() => handleDelete(f._id)}
-                                className="text-red-500 hover:text-red-700 font-semibold"
-                                disabled={isSubmitting}
-                              >
-                                Elimina
-                              </button>
-                            </td>
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
+                <div className="flex items-start justify-between">
+                  <Dialog.Title className="text-xl font-bold text-gray-900">
+                    {t('feedingModal.title')}
+                  </Dialog.Title>
+                  <button onClick={handleClose} className="p-1 rounded-full text-gray-500 hover:bg-gray-200 hover:text-gray-800 transition">
+                    <XMarkIcon className="w-6 h-6" />
+                  </button>
                 </div>
 
-                {/* ——— PAGINATION ——— */}
-                <div className="flex justify-center mt-6 space-x-2 flex-wrap">
-                  {Array.from({ length: totalPages }, (_, i) => (
-                    <button
-                      key={i}
-                      onClick={() => setPage(i + 1)}
-                      className={`px-3 py-1 rounded ${page === i + 1
-                        ? 'bg-yellow-400 font-bold text-gray-800'
-                        : 'bg-gray-200 hover:bg-gray-300'
-                        }`}
-                      disabled={isSubmitting}
-                    >
-                      {i + 1}
-                    </button>
-                  ))}
+                <div className="mt-6 space-y-6">
+                  <div className={sectionClasses}>
+                    <h3 className={sectionTitleClasses}><PlusCircleIcon className="w-6 h-6 text-emerald-600" /> {t('feedingModal.actions.add')}</h3>
+                    <form onSubmit={handleSubmit(onSubmit)} className="mt-4 space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-4">
+                        <div>
+                          <label htmlFor="date" className={labelClasses}>{t('feedingModal.fields.date')}</label>
+                          <input id="date" type="date" {...register('date')} className={`${inputClasses} ${errors.date && 'border-red-500'}`} disabled={isSubmitting} />
+                          {errors.date && <p className={errorTextClasses}><ExclamationCircleIcon className='w-4 h-4' />{errors.date.message}</p>}
+                        </div>
+                        <div className="lg:col-span-2">
+                          <label htmlFor="foodType" className={labelClasses}>{t('feedingModal.fields.foodType')}</label>
+                          <select id="foodType" {...register('foodType')} className={`${inputClasses} ${errors.foodType && 'border-red-500'}`} disabled={isSubmitting}>
+                            <option value="">{t('feedingModal.placeholders.chooseFromInventory')}</option>
+                            {inventory.map(item => (<option key={item._id} value={item._id}>{item.foodType} ({item.quantity} pz. da {item.weightPerUnit}g)</option>))}
+                            <option value="Altro">{t('feedingModal.placeholders.other')}</option>
+                          </select>
+                          {errors.foodType && <p className={errorTextClasses}><ExclamationCircleIcon className='w-4 h-4' />{errors.foodType.message}</p>}
+                        </div>
+                        {foodTypeValue === 'Altro' && (
+                          <>
+                            <div>
+                              <label htmlFor="customFoodType" className={labelClasses}>{t('feedingModal.fields.customFoodType')}</label>
+                              <input id="customFoodType" type="text" {...register('customFoodType')} placeholder="Es. Topi" className={`${inputClasses} ${errors.customFoodType && 'border-red-500'}`} disabled={isSubmitting} />
+                              {errors.customFoodType && <p className={errorTextClasses}><ExclamationCircleIcon className='w-4 h-4' />{errors.customFoodType.message}</p>}
+                            </div>
+                            <div>
+                              <label htmlFor="customWeight" className={labelClasses}>{t('feedingModal.fields.customWeight')}</label>
+                              <input id="customWeight" type="number" step="0.1" {...register('customWeight')} placeholder="Es. 15" className={`${inputClasses} ${errors.customWeight && 'border-red-500'}`} disabled={isSubmitting} />
+                              {errors.customWeight && <p className={errorTextClasses}><ExclamationCircleIcon className='w-4 h-4' />{errors.customWeight.message}</p>}
+                            </div>
+                          </>
+                        )}
+                        <div>
+                          <label htmlFor="quantity" className={labelClasses}>{t('feedingModal.fields.quantity')}</label>
+                          <input id="quantity" type="number" {...register('quantity')} className={`${inputClasses} ${errors.quantity && 'border-red-500'}`} disabled={isSubmitting} />
+                          {errors.quantity && <p className={errorTextClasses}><ExclamationCircleIcon className='w-4 h-4' />{errors.quantity.message}</p>}
+                        </div>
+                        <div className="lg:col-span-3">
+                          <Controller
+                            name="wasEaten"
+                            control={control}
+                            render={({ field: { onChange, value } }) => (
+                              <RadioGroup value={value} onChange={onChange} disabled={isSubmitting}>
+                                <RadioGroup.Label className={labelClasses}>{t('feedingModal.fields.result')}</RadioGroup.Label>
+                                <div className="grid grid-cols-2 gap-3 mt-2">
+                                  <RadioGroup.Option value={true}>
+                                    {({ checked }) => (
+                                      <div className={`${checked ? 'bg-emerald-600 text-white' : 'bg-white'} relative flex cursor-pointer rounded-lg px-5 py-3 shadow-md focus:outline-none`}>
+                                        <div className="flex w-full items-center justify-between">
+                                          <div className="flex items-center">
+                                            <div className="text-sm">
+                                              <RadioGroup.Label as="p" className="font-medium">{t('feedingModal.result.eaten')}</RadioGroup.Label>
+                                            </div>
+                                          </div>
+                                          {checked && <CheckCircleIcon className="h-6 w-6 text-white" />}
+                                        </div>
+                                      </div>
+                                    )}
+                                  </RadioGroup.Option>
+
+                                  <RadioGroup.Option value={false}>
+                                    {({ checked }) => (
+                                      <div className={`${checked ? 'bg-red-600 text-white' : 'bg-white'} relative flex cursor-pointer rounded-lg px-5 py-3 shadow-md focus:outline-none`}>
+                                        <div className="flex w-full items-center justify-between">
+                                          <div className="flex items-center">
+                                            <div className="text-sm">
+                                              <RadioGroup.Label as="p" className="font-medium">{t('feedingModal.result.refused')}</RadioGroup.Label>
+                                            </div>
+                                          </div>
+                                          {checked && <XCircleIcon className="h-6 w-6 text-white" />}
+                                        </div>
+                                      </div>
+                                    )}
+                                  </RadioGroup.Option>
+
+
+                                </div>
+                              </RadioGroup>
+                            )}
+                          />
+                        </div>
+                        {wasEatenValue === false && (
+                          <div>
+                            <label htmlFor="retryAfterDays" className={labelClasses}>{t('feedingModal.fields.retryAfterDays')}</label>
+                            <input id="retryAfterDays" type="number" {...register('retryAfterDays')} className={`${inputClasses} ${errors.retryAfterDays && 'border-red-500'}`} disabled={isSubmitting} />
+                            {errors.retryAfterDays && <p className={errorTextClasses}><ExclamationCircleIcon className='w-4 h-4' />{errors.retryAfterDays.message}</p>}
+                          </div>
+                        )}
+                        <div className="lg:col-span-3">
+                          <label htmlFor="notes" className={labelClasses}>Note</label>
+                          <textarea id="notes" {...register('notes')} rows={2} placeholder={t('feedingModal.placeholders.notesExample')} className={inputClasses} disabled={isSubmitting} />
+                        </div>
+                      </div>
+                      <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+                        <button type="button" onClick={() => reset()} className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition" disabled={isSubmitting}>{t('feedingModal.actions.reset')}</button>
+                        <button type="submit" className="inline-flex justify-center px-4 py-2 text-sm font-medium text-white bg-emerald-600 border border-transparent rounded-md hover:bg-emerald-700 disabled:bg-emerald-300 transition" disabled={isSubmitting}>
+                          {isSubmitting ? t('feedingModal.actions.saving') : t('feedingModal.actions.delete') }
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+
+                  <div className={sectionClasses}>
+                    <h3 className={sectionTitleClasses}><ClockIcon className="w-6 h-6 text-emerald-600" /> {t('feedingModal.history.title')}</h3>
+                    <div className="mt-4 flow-root">
+                      <div className="-mx-6 -my-2 overflow-x-auto">
+                        <div className="inline-block min-w-full py-2 align-middle px-6">
+                          <table className="min-w-full divide-y divide-gray-300">
+                            <thead className="bg-slate-50">
+                              <tr>
+                                <th scope="col" className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900">{t('feedingModal.history.headers.date')}</th>
+                                <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">{t('feedingModal.history.headers.food')}</th>
+                                <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">{t('feedingModal.history.headers.result')}</th>
+                                <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">{t('feedingModal.history.headers.notes')}</th>
+                                <th scope="col" className="relative py-3.5 pl-3 pr-4"><span className="sr-only">{t('feedingModal.actions.delete')}</span></th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-200 bg-white">
+                              {feedings.length > 0 ? feedings.map(f => (
+                                <tr key={f._id}>
+                                  <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900">{new Date(f.date).toLocaleDateString('it-IT')}</td>
+                                  <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{f.quantity}x {f.foodType} ({f.weightPerUnit}g)</td>
+                                  <td className="whitespace-nowrap px-3 py-4 text-sm">
+                                    {f.wasEaten ? <span className="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">{t('feedingModal.result.eaten')}</span>
+                                      : <span className="inline-flex items-center rounded-md bg-red-50 px-2 py-1 text-xs font-medium text-red-700 ring-1 ring-inset ring-red-600/20">{t('feedingModal.result.refused')}</span>}
+                                  </td>
+                                  <td className="px-3 py-4 text-sm text-gray-500 max-w-xs truncate" title={f.notes}>{f.notes || '-'}</td>
+                                  <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium">
+                                    <button onClick={() => handleDelete(f._id)} className="p-1 text-red-600 hover:text-red-900" disabled={isSubmitting}><TrashIcon className="w-5 h-5" /></button>
+                                  </td>
+                                </tr>
+                              )) : (
+                                <tr><td colSpan="5" className="text-center py-8 text-gray-500">{t('feedingModal.history.empty')}</td></tr>
+                              )}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </div>
+                    {totalPages > 1 && (
+                      <nav className="flex items-center justify-between border-t border-gray-200 px-4 sm:px-0 mt-4 pt-4">
+                        <div className="flex w-0 flex-1"><button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="inline-flex items-center border-t-2 border-transparent pr-1 pt-4 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700 disabled:text-gray-300"><ChevronLeftIcon className="mr-3 h-5 w-5" />{t('feedingModal.pagination.prev')}</button></div>
+                        <div className="hidden md:flex">{Array.from({ length: totalPages }, (_, i) => (<button key={i} onClick={() => setPage(i + 1)} className={`inline-flex items-center border-t-2 px-4 pt-4 text-sm font-medium ${page === i + 1 ? 'border-emerald-500 text-emerald-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}>{i + 1}</button>))}</div>
+                        <div className="flex w-0 flex-1 justify-end"><button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="inline-flex items-center border-t-2 border-transparent pl-1 pt-4 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700 disabled:text-gray-300">{t('feedingModal.pagination.next')}<ChevronRightIcon className="ml-3 h-5 w-5" /></button></div>
+                      </nav>
+                    )}
+                  </div>
                 </div>
 
               </Dialog.Panel>
@@ -456,5 +345,3 @@ const FeedingModal = ({ show, handleClose, reptileId, onFeedingAdded, onSuccess 
 };
 
 export default FeedingModal;
-
-const inputClasses = "w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#228B22] focus:border-[#228B22] bg-white text-gray-800 text-sm";

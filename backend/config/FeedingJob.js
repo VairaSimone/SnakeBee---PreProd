@@ -4,6 +4,7 @@ import Notification from '../models/Notification.js';
 import FailedEmail from '../models/FailedEmail.js';
 import { transporter } from '../config/mailer.config.js';
 import { getUserPlan } from '../utils/getUserPlans.js';
+import i18next from 'i18next';
 
 // Function to normalize the date to midnight
 const normalizeDate = (date) => {
@@ -110,6 +111,8 @@ cron.schedule('0 0 * * *', async () => {
           continue;
         }
         let mailOptions;
+
+        let userLang = user.language || "it";
         try {
           // Check if an identical notification already exists for today
           const existingNotification = await Notification.findOne({
@@ -122,12 +125,16 @@ cron.schedule('0 0 * * *', async () => {
             },
           });
 
+          
           // Create the notification (initial status "pending")
           const notification = new Notification({
             user: user._id,
             reptile: reptiles.map((r) => r.reptileId),
             type: 'feeding',
-            message: `I tuoi rettili ${reptileList} devono essere alimentati oggi.`,
+            message: i18next.t('feeding_notification_message', {
+              lng: userLang,
+              reptiles: reptileList
+            }),
             date: todayStart,
             status: 'pending',
           });
@@ -138,79 +145,19 @@ cron.schedule('0 0 * * *', async () => {
           mailOptions = {
             from: `"SnakeBee" <noreply@snakebee.it>`,
             to: user.email,
-            subject: 'Notifica di alimentazione rettili',
-            text: `Ciao ${user.name},
-
-          Oggi è il giorno della pappa per i tuoi rettili: ${reptileList}.
-
-          Ricordati di alimentarli e aggiornare lo stato dalla tua dashboard!
-
-          Vai su: ${process.env.FRONTEND_URL}/dashboard
-
-          Ricevi questa email perché hai attivato le notifiche alimentazione su SnakeBee.
-          Puoi disattivarle dalle impostazioni del tuo account.`,
-            html: `
-          <div style="
-            font-family: 'Poppins', sans-serif;
-            max-width: 600px;
-            margin: 30px auto;
-            padding: 30px;
-            background-color: #FAF3E0; /* clay */
-            border-radius: 12px;
-            color: #2B2B2B; /* charcoal */
-          ">
-            <div style="text-align: center; margin-bottom: 20px;">
-              <img src="${process.env.LOGO_URL}" alt="SnakeBee Logo" style="max-width: 180px;" />
-            </div>
-
-            <h2 style="color: #228B22; text-align: center;">È ora di nutrire i tuoi rettili! 🐍🍽️</h2>
-
-            <p style="font-size: 16px; line-height: 1.6;">
-              Ciao <strong>${user.name}</strong>,
-            </p>
-
-            <p style="font-size: 16px; line-height: 1.6;">
-              Oggi è il giorno della pappa per i seguenti rettili:
-            </p>
-
-            <ul style="
-              background-color: #EDE7D6; /* sand */
-              padding: 15px;
-              border-radius: 8px;
-              margin: 20px 0;
-              font-size: 16px;
-            ">
-              ${reptiles.map(r => `<li style="margin-bottom: 6px;">🐢 ${r.name}</li>`).join('')}
-            </ul>
-
-            <p style="font-size: 16px; line-height: 1.6;">
-              Ricordati di aggiornare lo stato di alimentazione una volta completato!
-            </p>
-
-            <div style="text-align: center; margin: 30px 0;">
-              <a href="${process.env.FRONTEND_URL}/dashboard"
-                style="
-                  background-color: #228B22; /* forest */
-                  color: #FFD700; /* honey */
-                  padding: 14px 30px;
-                  border-radius: 25px;
-                  text-decoration: none;
-                  font-weight: 600;
-                  font-size: 16px;
-                  display: inline-block;
-                  box-shadow: 0 4px 8px rgba(34, 139, 34, 0.3);
-                  transition: background-color 0.3s ease;
-                "
-              >
-                Vai alla Dashboard
-              </a>
-            </div>
-
-            <p style="font-size: 13px; text-align: center; color: #777;">
-              Ricevi questa email perché hai attivato le notifiche alimentazione su SnakeBee.<br>
-              Puoi disattivarle in qualsiasi momento dalle impostazioni del tuo account.
-            </p>
-          </div>  `
+            subject: i18next.t('feeding_email_text', {
+              lng: userLang,
+              userName: user.name,
+              reptiles: reptileList,
+              frontendUrl: process.env.FRONTEND_URL
+            }),
+            text: i18next.t('feeding_email_html', {
+              lng: userLang,
+              userName: user.name,
+              reptiles: reptiles.map(r => r.name),
+              frontendUrl: process.env.FRONTEND_URL,
+              logoUrl: process.env.LOGO_URL
+            })
           };
 
 

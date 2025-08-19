@@ -17,8 +17,8 @@ export const exportReptileData = async (req, res) => {
     const reptiles = await Reptile.find({ user: userId }).lean();
     const reptileMap = reptiles.reduce((acc, r) => {
       acc[r._id] = {
-        morph: r.morph || 'No morph',
-        sex: r.sex || 'Unknown',
+        morph: r.morph || req.t('no_morph'),
+        sex: r.sex || req.t('unknown'),
       };
       return acc;
     }, {});
@@ -35,34 +35,32 @@ export const exportReptileData = async (req, res) => {
     const workbook = new ExcelJS.Workbook();
 
     // Reptiles Sheet
-    const reptileSheet = workbook.addWorksheet('Rettili');
+    const reptileSheet = workbook.addWorksheet(req.t('reptiles'));
     reptileSheet.columns = [
-      { header: 'Nome', key: 'name' },
-      { header: 'Specie', key: 'species' },
-      { header: 'Morph', key: 'morph' },
-      { header: 'Sesso', key: 'sex' },
-      { header: 'Data di nascita', key: 'birthDate' },
-      { header: 'Riproduttore', key: 'isBreeder' },
-      { header: 'Note', key: 'notes' },
-      { header: 'Padre', key: 'father' },
-      { header: 'Madre', key: 'mother' },
-      { header: 'Numero CITES', key: 'citesNumber' },
-      { header: 'Data rilascio CITES', key: 'citesIssueDate' },
-      { header: 'Ente rilasciante CITES', key: 'citesIssuer' },
-      { header: 'Codice Microchip', key: 'microchipCode' },
-      { header: 'Data impianto Microchip', key: 'microchipImplantDate' },
-      { header: 'Etichetta', key: 'labelText' },
+      { header: req.t('name'), key: 'name' },
+      { header: req.t('species'), key: 'species' },
+      { header: req.t('morph'), key: 'morph' },
+      { header: req.t('sex'), key: 'sex' },
+      { header: req.t('birth_date'), key: 'birthDate' },
+      { header: req.t('breeder'), key: 'isBreeder' },
+      { header: req.t('notes'), key: 'notes' },
+      { header: req.t('father'), key: 'father' },
+      { header: req.t('mother'), key: 'mother' },
+      { header: req.t('cites_number'), key: 'citesNumber' },
+      { header: req.t('cites_issue_date'), key: 'citesIssueDate' },
+      { header: req.t('cites_issuer'), key: 'citesIssuer' },
+      { header: req.t('microchip_code'), key: 'microchipCode' },
+      { header: req.t('microchip_implant_date'), key: 'microchipImplantDate' },
+      { header: req.t('label'), key: 'labelText' },
     ];
 
-
-
     reptileSheet.addRows(reptiles.map(r => ({
-      name: r.name || 'N/A',
+      name: r.name || req.t('n_a'),
       species: r.species,
-      morph: r.morph || 'No morph',
-      sex: r.sex || 'Unknown',
-      birthDate: r.birthDate ? new Date(r.birthDate).toLocaleDateString() : 'N/A',
-      isBreeder: r.isBreeder ? 'Yes' : 'No',
+      morph: r.morph || req.t('no_morph'),
+      sex: r.sex || req.t('unknown'),
+      birthDate: r.birthDate ? new Date(r.birthDate).toLocaleDateString() : req.t('n_a'),
+      isBreeder: r.isBreeder ? req.t('yes') : req.t('no'),
       notes: r.notes || '',
       father: r.parents?.father || '',
       mother: r.parents?.mother || '',
@@ -72,8 +70,8 @@ export const exportReptileData = async (req, res) => {
       microchipCode: r.documents?.microchip?.code || '',
       microchipImplantDate: r.documents?.microchip?.implantDate ? new Date(r.documents.microchip.implantDate).toLocaleDateString() : '',
       labelText: r.label?.text || '',
-
     })));
+
     reptileSheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
     reptileSheet.getRow(1).fill = {
       type: 'pattern',
@@ -90,18 +88,18 @@ export const exportReptileData = async (req, res) => {
       col.width = maxLength + 2;
     });
 
-    //  Feedings
-    const feedingSheet = workbook.addWorksheet('Alimentazione');
+    // Feedings
+    const feedingSheet = workbook.addWorksheet(req.t('feedings'));
     feedingSheet.columns = [
-      { header: 'Rettile (Morph - Sesso)', key: 'reptile' },
-      { header: 'Data', key: 'date' },
-      { header: 'Tipo di cibo', key: 'foodType' },
-      { header: 'Quantità', key: 'quantity' },
-      { header: 'Peso per unità (g)', key: 'weightPerUnit' }, // nuovo
-      { header: 'Prossimo pasto', key: 'nextFeedingDate' },
-      { header: 'Mangiato', key: 'wasEaten' },
-      { header: 'Riprovare dopo (giorni)', key: 'retryAfterDays' },
-      { header: 'Note', key: 'notes' },
+      { header: req.t('reptile_morph_sex'), key: 'reptile' },
+      { header: req.t('date'), key: 'date' },
+      { header: req.t('food_type'), key: 'foodType' },
+      { header: req.t('quantity'), key: 'quantity' },
+      { header: req.t('weight_per_unit_g'), key: 'weightPerUnit' },
+      { header: req.t('next_feeding'), key: 'nextFeedingDate' },
+      { header: req.t('eaten'), key: 'wasEaten' },
+      { header: req.t('retry_after_days'), key: 'retryAfterDays' },
+      { header: req.t('notes'), key: 'notes' },
     ];
     feedingSheet.addRows(feedings.map(f => ({
       reptile: `${reptileMap[f.reptile]?.morph} - ${reptileMap[f.reptile]?.sex}`,
@@ -110,7 +108,7 @@ export const exportReptileData = async (req, res) => {
       quantity: f.quantity,
       weightPerUnit: f.weightPerUnit ?? '',
       nextFeedingDate: f.nextFeedingDate ? new Date(f.nextFeedingDate).toLocaleDateString() : '',
-      wasEaten: f.wasEaten ? 'Yes' : 'No',
+      wasEaten: f.wasEaten ? req.t('yes') : req.t('no'),
       retryAfterDays: f.retryAfterDays ?? '',
       notes: f.notes || ''
     })));
@@ -129,21 +127,23 @@ export const exportReptileData = async (req, res) => {
       });
       col.width = maxLength + 2;
     });
-    //  Events
-    const eventSheet = workbook.addWorksheet('Eventi');
+
+    // Events
+    const eventSheet = workbook.addWorksheet(req.t('events'));
     eventSheet.columns = [
-      { header: 'Rettile (Morph - Sesso)', key: 'reptile' },
-      { header: 'Tipo', key: 'type' },
-      { header: 'Data', key: 'date' },
-      { header: 'Note', key: 'notes' },
-      { header: 'Peso (g)', key: 'weight' },
+      { header: req.t('reptile_morph_sex'), key: 'reptile' },
+      { header: req.t('type'), key: 'type' },
+      { header: req.t('date'), key: 'date' },
+      { header: req.t('notes'), key: 'notes' },
+      { header: req.t('weight_g'), key: 'weight' },
     ];
+
     const translateEventType = (type) => {
       const map = {
-        shed: 'Muta',
-        feces: 'Feci',
-        vet: 'Visita veterinaria',
-        weight: 'Peso',
+        shed: req.t('shed'),
+        feces: req.t('feces'),
+        vet: req.t('vet_visit'),
+        weight: req.t('weight'),
       };
       return map[type] || type;
     };
@@ -154,7 +154,6 @@ export const exportReptileData = async (req, res) => {
       date: e.date ? new Date(e.date).toLocaleDateString() : '',
       notes: e.notes || '',
       weight: e.type === 'weight' ? e.weight : '',
-
     })));
     eventSheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
     eventSheet.getRow(1).fill = {
@@ -174,37 +173,37 @@ export const exportReptileData = async (req, res) => {
 
     // Breedings
     const breedingEventMap = {
-      Mating: 'Accoppiamento',
-      Ovulation: 'Ovulazione',
-      'Prelay Shed': 'Muta pre-deposizione',
-      'Egg Laid': 'Deposte uova',
-      Birth: 'Parto',
-      Hatching: 'Schiusa',
-      Failed: 'Fallito'
+      Mating: req.t('mating'),
+      Ovulation: req.t('ovulation'),
+      'Prelay Shed': req.t('prelay_shed'),
+      'Egg Laid': req.t('egg_laid'),
+      Birth: req.t('birth'),
+      Hatching: req.t('hatching'),
+      Failed: req.t('failed')
     };
 
-    const breedingSheet = workbook.addWorksheet('Riproduzione');
+    const breedingSheet = workbook.addWorksheet(req.t('breeding'));
     breedingSheet.columns = [
-      { header: 'Anno', key: 'year' },
-      { header: 'Specie', key: 'species' },
-      { header: 'Combinazione morph', key: 'morphCombo' },
-      { header: 'Maschio (Morph)', key: 'male' },
-      { header: 'Femmina (Morph)', key: 'female' },
-      { header: 'Parto vivo', key: 'isLiveBirth' },
-      { header: 'Uova/Cuccioli totali', key: 'clutchTotal' },
-      { header: 'Uova fertili', key: 'clutchFertile' },
-      { header: 'Nati/schiusi', key: 'clutchHatchedOrBorn' },
-      { header: 'Esito', key: 'outcome' },
-      { header: 'Eventi', key: 'events' },
-      { header: 'Note', key: 'notes' }
+      { header: req.t('year'), key: 'year' },
+      { header: req.t('species'), key: 'species' },
+      { header: req.t('morph_combo'), key: 'morphCombo' },
+      { header: req.t('male_morph'), key: 'male' },
+      { header: req.t('female_morph'), key: 'female' },
+      { header: req.t('live_birth'), key: 'isLiveBirth' },
+      { header: req.t('total_eggs_babies'), key: 'clutchTotal' },
+      { header: req.t('fertile_eggs'), key: 'clutchFertile' },
+      { header: req.t('hatched_or_born'), key: 'clutchHatchedOrBorn' },
+      { header: req.t('outcome'), key: 'outcome' },
+      { header: req.t('events'), key: 'events' },
+      { header: req.t('notes'), key: 'notes' }
     ];
     breedingSheet.addRows(breedings.map(b => ({
       year: b.year,
       species: b.species,
       morphCombo: b.morphCombo || '',
-      male: `${b.male?.morph || 'No morph'}`,
-      female: `${b.female?.morph || 'No morph'}`,
-      isLiveBirth: b.isLiveBirth ? 'Yes' : 'No',
+      male: `${b.male?.morph || req.t('no_morph')}`,
+      female: `${b.female?.morph || req.t('no_morph')}`,
+      isLiveBirth: b.isLiveBirth ? req.t('yes') : req.t('no'),
       clutchTotal: b.clutchSize?.total ?? '',
       clutchFertile: b.clutchSize?.fertile ?? '',
       clutchHatchedOrBorn: b.clutchSize?.hatchedOrBorn ?? '',
@@ -231,19 +230,20 @@ export const exportReptileData = async (req, res) => {
     });
     breedingSheet.views = [{ state: 'frozen', ySplit: 1 }];
 
-    const hatchlingSheet = workbook.addWorksheet('Cuccioli');
+    // Hatchlings
+    const hatchlingSheet = workbook.addWorksheet(req.t('hatchlings'));
     hatchlingSheet.columns = [
-      { header: 'Anno di stagione', key: 'seasonYear' },
-      { header: 'Morph', key: 'morph' },
-      { header: 'Sesso', key: 'sex' },
-      { header: 'Peso (g)', key: 'weight' },
+      { header: req.t('season_year'), key: 'seasonYear' },
+      { header: req.t('morph'), key: 'morph' },
+      { header: req.t('sex'), key: 'sex' },
+      { header: req.t('weight_g'), key: 'weight' },
     ];
 
     breedings.forEach(b => {
       const entries = b.hatchlings?.map(h => ({
         seasonYear: b.year,
         morph: h.morph || '',
-        sex: h.sex || 'U',
+        sex: h.sex || req.t('unknown_short'),
         weight: h.weight || '',
       })) || [];
       hatchlingSheet.addRows(entries);
@@ -266,11 +266,11 @@ export const exportReptileData = async (req, res) => {
 
     hatchlingSheet.views = [{ state: 'frozen', ySplit: 1 }];
 
-    //  Sending the Excel file as a response
+    // Sending the Excel file
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     res.setHeader('Content-Disposition', 'attachment; filename=reptile_data.xlsx');
     workbook.worksheets.sort((a, b) => {
-      const order = ['Rettili', 'Alimentazione', 'Eventi', 'Riproduzione', 'Cuccioli'];
+      const order = [req.t('reptiles'), req.t('feedings'), req.t('events'), req.t('breeding'), req.t('hatchlings')];
       return order.indexOf(a.name) - order.indexOf(b.name);
     });
 
@@ -278,25 +278,23 @@ export const exportReptileData = async (req, res) => {
     res.end();
   } catch (err) {
     console.error('Excel export error:', err);
-    res.status(500).send({ message: 'Errore durante esportazione' });
+    res.status(500).send({ message: req.t('export_error') });
   }
 };
 
+
 export async function generateReptilePDF(req, res) {
-
-
   const doc = new PDFDocument({ margin: 40, size: 'A4' });
   const reptileId = req.params.id;
 
   try {
-
     const userId = req.user.userid;
     const user = await User.findById(userId);
     const { plan } = getUserPlan(user);
 
     if (plan === 'free') {
       return res.status(403).json({
-        message: 'Il download del PDF è disponibile solo per utenti con piano Basic o Premium attivo.'
+        message: req.t('basic_plan')
       });
     }
 
@@ -309,7 +307,10 @@ export async function generateReptilePDF(req, res) {
     }).populate('male female').lean();
 
     res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename=${(reptile.morph || 'reptile').replace(/\s+/g, '_')}.pdf`);
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename=${(reptile.morph || req.t('reptiles')).replace(/\s+/g, '_')}.pdf`
+    );
     doc.pipe(res);
 
     // --- Header ---
@@ -317,122 +318,128 @@ export async function generateReptilePDF(req, res) {
       .font('Helvetica-Bold')
       .fontSize(26)
       .fillColor('#2E8B57')
-      .text(`Informazioni del rettile ${reptile.name || ''}`, { underline: true, align: 'center' })
+      .text(`${req.t('reptiles')} ${reptile.name || ''}`, { underline: true, align: 'center' })
       .moveDown(1.5);
 
     // --- Basic Information ---
     doc.fontSize(14).fillColor('black').font('Helvetica');
-    doc.text('Informazioni Base', { underline: true });
+    doc.text(req.t('Informazioni Base'), { underline: true });
     doc.moveDown(0.5);
 
     const baseInfo = [
-      `Specie: ${reptile.species || '-'}`,
-      `Sesso: ${reptile.sex === 'M' ? 'Maschio' : reptile.sex === 'F' ? 'Femmina' : 'Sconosciuto'}`,
-      `Morph: ${reptile.morph || '-'}`,
-      `Data di nascita: ${reptile.birthDate ? reptile.birthDate.toLocaleDateString() : '-'}`,
-      `Note: ${reptile.notes || '-'}`,
-      `Madre: ${reptile.parents?.mother || '-'}`,
-      `Padre: ${reptile.parents?.father || '-'}`
+      `${req.t('species')}: ${reptile.species || req.t('n_a')}`,
+      `${req.t('sex')}: ${reptile.sex === 'M' ? req.t('male_morph') : reptile.sex === 'F' ? req.t('female_morph') : req.t('unknown')}`,
+      `${req.t('morph')}: ${reptile.morph || req.t('n_a')}`,
+      `${req.t('birth_date')}: ${reptile.birthDate ? reptile.birthDate.toLocaleDateString() : req.t('n_a')}`,
+      `${req.t('notes')}: ${reptile.notes || req.t('n_a')}`,
+      `${req.t('mother')}: ${reptile.parents?.mother || req.t('n_a')}`,
+      `${req.t('father')}: ${reptile.parents?.father || req.t('n_a')}`
     ];
     baseInfo.forEach(line => doc.text(line));
     doc.moveDown();
 
-
     // --- Documentation ---
-    doc.fontSize(16).fillColor('#2E8B57').font('Helvetica-Bold').text('Documentazione', { underline: true });
+    doc.fontSize(16).fillColor('#2E8B57').font('Helvetica-Bold').text(req.t('Documentazione'), { underline: true });
     doc.moveDown(0.3);
     doc.fontSize(12).fillColor('black').font('Helvetica');
+
     if (reptile.documents?.cites?.number) {
       doc.list([
-        `CITES: ${reptile.documents.cites.number} (${reptile.documents.cites.issueDate?.toLocaleDateString() || 'data sconosciuta'})`
+        `${req.t('cites_number')}: ${reptile.documents.cites.number} (${reptile.documents.cites.issueDate?.toLocaleDateString() || req.t('unknown')})`
       ]);
     }
     if (reptile.documents?.microchip?.code) {
       doc.list([
-        `Microchip: ${reptile.documents.microchip.code} (${reptile.documents.microchip.implantDate?.toLocaleDateString() || 'data sconosciuta'})`
+        `${req.t('microchip_code')}: ${reptile.documents.microchip.code} (${reptile.documents.microchip.implantDate?.toLocaleDateString() || req.t('unknown')})`
       ]);
     }
     if (!reptile.documents?.cites?.number && !reptile.documents?.microchip?.code) {
-      doc.text('Nessuna documentazione disponibile.');
+      doc.text(req.t('No_documentation_available'));
     }
     doc.moveDown();
 
     // --- Recorded events ---
-    doc.fontSize(16).fillColor('#2E8B57').font('Helvetica-Bold').text('Eventi registrati', { underline: true });
+    doc.fontSize(16).fillColor('#2E8B57').font('Helvetica-Bold').text(req.t('events'), { underline: true });
     doc.moveDown(0.3);
     doc.fontSize(12).fillColor('black').font('Helvetica');
+
     if (events.length === 0) {
-      doc.text('Nessun evento registrato.');
+      doc.text(req.t('Nessun evento registrato.'));
     } else {
       const eventi = events.map(event => {
         const labelMap = {
-          shed: 'Muta',
-          feces: 'Feci',
-          vet: 'Visita Veterinaria',
-          weight: 'Peso'
+          shed: req.t('shed'),
+          feces: req.t('feces'),
+          vet: req.t('vet_visit'),
+          weight: req.t('weight')
         };
         const label = labelMap[event.type] || event.type;
         const pesoInfo = event.type === 'weight' && event.weight ? ` (${event.weight}g)` : '';
-        return `- ${label}: ${new Date(event.date).toLocaleDateString()}${pesoInfo} | Note: ${event.notes || '-'}`;
+        return `- ${label}: ${new Date(event.date).toLocaleDateString()}${pesoInfo} | ${req.t('notes')}: ${event.notes || req.t('n_a')}`;
       });
       doc.list(eventi);
     }
     doc.moveDown();
 
     // --- Diet ---
-    doc.fontSize(16).fillColor('#2E8B57').font('Helvetica-Bold').text('Alimentazione', { underline: true });
+    doc.fontSize(16).fillColor('#2E8B57').font('Helvetica-Bold').text(req.t('feedings'), { underline: true });
     doc.moveDown(0.3);
     doc.fontSize(12).fillColor('black').font('Helvetica');
+
     if (feedings.length === 0) {
-      doc.text('Nessun pasto registrato.');
+      doc.text(req.t('No_meals_recorded'));
     } else {
-      const pasti = feedings.map(feed => `- ${new Date(feed.date).toLocaleDateString()} | ${feed.foodType} x${feed.quantity || 1} (${feed.weightPerUnit}g ciascuno) | Esito: ${feed.wasEaten ? 'riuscito' : 'fallito'}${feed.retryAfterDays ? ` | Ritenta tra ${feed.retryAfterDays}g` : ''} | Note: ${feed.notes || '-'}`);
+      const pasti = feedings.map(feed =>
+        `- ${new Date(feed.date).toLocaleDateString()} | ${feed.foodType} x${feed.quantity || 1} (${feed.weightPerUnit}g ${req.t('ciascuno')}) | ${req.t('eaten')}: ${feed.wasEaten ? req.t('yes') : req.t('no')}${feed.retryAfterDays ? ` | ${req.t('retry_after_days')}: ${feed.retryAfterDays}` : ''} | ${req.t('notes')}: ${feed.notes || req.t('n_a')}`
+      );
       doc.list(pasti);
     }
     doc.moveDown();
 
     // --- Pairings ---
-    doc.fontSize(16).fillColor('#2E8B57').font('Helvetica-Bold').text('Accoppiamenti', { underline: true });
+    doc.fontSize(16).fillColor('#2E8B57').font('Helvetica-Bold').text(req.t('breeding'), { underline: true });
     doc.moveDown(0.3);
     doc.fontSize(12).fillColor('black').font('Helvetica');
+
     if (breedings.length === 0) {
-      doc.text('Nessun accoppiamento registrato.');
+      doc.text(req.t('No_pairings_recorded'));
     } else {
       breedings.forEach(b => {
-        const maschio = b.male?.morph || 'Maschio sconosciuto';
-        const femmina = b.female?.morph || 'Femmina sconosciuta';
-        doc.text(`- Anno: ${b.year} | Maschio: ${maschio} | Femmina: ${femmina}`);
-        const outcomes = {
-          Success: 'Successo',
-          Partial: 'Parziale',
-          Failed: 'Fallito',
-          Unknown: 'Non terminato'
-        };
-        doc.text(`  Esito: ${outcomes[b.outcome] || b.outcome}`);
-        if (b.notes) doc.text(`  Note: ${b.notes}`);
+        const maschio = b.male?.morph || req.t('male_morph');
+        const femmina = b.female?.morph || req.t('female_morph');
 
-        // Reproductive events
+        doc.text(`- ${req.t('year')}: ${b.year} | ${req.t('male_morph')}: ${maschio} | ${req.t('female_morph')}: ${femmina}`);
+
+        const outcomes = {
+          Success: req.t('Success'),
+          Partial: req.t('Partial'),
+          Failed: req.t('failed'),
+          Unknown: req.t('Unfinished')
+        };
+        doc.text(`  ${req.t('outcome')}: ${outcomes[b.outcome] || b.outcome}`);
+
+        if (b.notes) doc.text(`  ${req.t('notes')}: ${b.notes}`);
+
         const eventiTradotti = {
-          Mating: 'Accoppiamento',
-          Ovulation: 'Ovulazione',
-          'Prelay Shed': 'Muta pre-deposizione',
-          'Egg Laid': 'Deposizione delle uova',
-          Birth: 'Nascita',
-          Hatching: 'Schiusa',
-          Failed: 'Fallito'
+          Mating: req.t('mating'),
+          Ovulation: req.t('ovulation'),
+          'Prelay Shed': req.t('prelay_shed'),
+          'Egg Laid': req.t('egg_laid'),
+          Birth: req.t('birth'),
+          Hatching: req.t('hatching'),
+          Failed: req.t('failed')
         };
         if (b.events?.length) {
           b.events.forEach(evt => {
             const nomeEvento = eventiTradotti[evt.type] || evt.type;
-            doc.text(`    • ${nomeEvento}: ${new Date(evt.date).toLocaleDateString()} | Note: ${evt.notes || '-'}`);
+            doc.text(`    • ${nomeEvento}: ${new Date(evt.date).toLocaleDateString()} | ${req.t('notes')}: ${evt.notes || req.t('n_a')}`);
           });
         }
 
-        // Hatchlings
         if (b.hatchlings?.length) {
-          doc.text('   Schiuse:');
+          doc.text(`   ${req.t('hatchlings')}:`);
           b.hatchlings.forEach(h => {
-            doc.text(`      - Morph: ${h.morph || '-'} | Peso: ${h.weight || '-'}g | Sesso: ${h.sex || '-'}`);
+            doc.text(`      - ${req.t('morph')}: ${h.morph || req.t('n_a')} | ${req.t('weight')}: ${h.weight || req.t('n_a')}g | ${req.t('sex')}: ${h.sex || req.t('n_a')}`);
           });
         }
 
@@ -444,6 +451,6 @@ export async function generateReptilePDF(req, res) {
 
   } catch (error) {
     console.error('Error generating PDF:', error);
-    res.status(500).send('Errore nella generazione del PDF');
+    res.status(500).send(req.t('export_error'));
   }
 }

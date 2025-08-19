@@ -42,7 +42,7 @@ export const GetIDReptile = async (req, res) => {
         else res.send(reptile);
     } catch (err) {
         console.log(err);
-        res.status(500).send({ message: 'Rettile non trovato' });
+        res.status(500).send({ message: req.t('reptile_notFound') });
     }
 };
 
@@ -62,7 +62,7 @@ export const GetAllReptileByUser = async (req, res) => {
         const totalPages = Math.ceil(totalResults / perPage);
 
         if (!reptile || reptile.length === 0) {
-            return res.status(404).send({ message: `Nessun rettile trovato per questa persona ${userId}` });
+            return res.status(404).send({ message: req.t('reptile_notFoundID') });
         }
 
         res.send({
@@ -73,7 +73,7 @@ export const GetAllReptileByUser = async (req, res) => {
         });
     } catch (err) {
         console.log(err);
-        res.status(500).send({ message: 'Errore del server' });
+        res.status(500).send({ message: req.t('server_error') });
     }
 };
 
@@ -93,7 +93,7 @@ export const PostReptile = async (req, res) => {
 
         if (reptileCount >= limits.reptiles) {
             return res.status(400).json({
-                message: `Hai raggiunto il limite massimo (${limits.reptiles}) di rettili per il piano "${userPlan}".`
+                message: req.t('reptile_limit',{ reptiles: limits.reptiles, plan: userPlan})
             });
 
         }
@@ -103,7 +103,7 @@ export const PostReptile = async (req, res) => {
         if (req.files && req.files.length > 0) {
             if (req.files?.length > limits.imagesPerReptile) {
                 return res.status(400).json({
-                    message: `Il tuo piano (${userPlan}) permette al massimo ${limits.imagesPerReptile} immagini per rettile.`
+                    message: req.t('reptile_limit_image',{ imagesPerReptile: limits.imagesPerReptile, plan: userPlan})
                 });
             }
 
@@ -132,7 +132,7 @@ export const PostReptile = async (req, res) => {
         res.status(201).send(createdReptile);
     } catch (error) {
         console.error(error);
-        res.status(400).send({ message: 'Errore durante la creazione del rettile' });
+        res.status(400).send({ message: req.t('reptileCreation_error') });
     }
 };
 
@@ -160,7 +160,7 @@ export const PutReptile = async (req, res) => {
         let reptile = await Reptile.findById(id);
 
         if (!reptile) {
-            return res.status(404).send({ message: 'Rettile non trovato' });
+            return res.status(404).send({ message: req.t('reptile_notFound') });
         }
 
         let imageUrls = reptile.image || [];
@@ -172,7 +172,7 @@ export const PutReptile = async (req, res) => {
 
             if (totalImages > limits.imagesPerReptile) {
                 return res.status(400).json({
-                    message: `Hai già ${currentImageCount} immagini. Il tuo piano (${userPlan}) consente al massimo ${limits.imagesPerReptile} immagini per rettile.`
+                    message: req.t('reptile_limit_image',{ imagesPerReptile: limits.imagesPerReptile, plan: userPlan})
                 });
             }
 
@@ -208,7 +208,7 @@ export const PutReptile = async (req, res) => {
         res.send(updatedReptile);
     } catch (err) {
         console.error(err);
-        res.status(500).send({ message: "Errore durante l'aggiornamento del rettile" });
+        res.status(500).send({ message: req.t('reptileUpdate_error') });
     }
 };
 
@@ -217,11 +217,11 @@ export const DeleteReptileImage = async (req, res) => {
         const { reptileId, imageIndex } = req.params;
 
         const reptile = await Reptile.findById(reptileId);
-        if (!reptile) return res.status(404).json({ message: 'Rettile non trovato' });
+        if (!reptile) return res.status(404).json({ message: req.t('reptile_notFound') });
 
         const index = parseInt(imageIndex);
         if (isNaN(index) || index < 0 || index >= reptile.image.length) {
-            return res.status(400).json({ message: 'Indice immagine non valido' });
+            return res.status(400).json({ message: req.t('invalid_value') });
         }
 
         const imageToRemove = reptile.image[index];
@@ -235,14 +235,14 @@ export const DeleteReptileImage = async (req, res) => {
         await logAction(req.user.userid, `Delete reptile image at index ${index}`);
 
         res.status(200).json({
-            message: `Immagine rimossa con successo`,
+            message: req.t('imageDelete'),
             remainingImages: reptile.image
         });
 
     } catch (err) {
         console.error(err);
-        res.status(500).json({ message: 'Errore nella rimozione dell\'immagine' });
-    } a
+        res.status(500).json({ message: req.t('imageDelete_error') });
+    } 
 };
 
 
@@ -250,7 +250,7 @@ export const DeleteReptile = async (req, res) => {
     try {
         const reptileId = req.params.reptileId;
         const reptile = await Reptile.findById(reptileId);
-        if (!reptile) return res.status(404).send({ message: 'Rettile non trovato' });
+        if (!reptile) return res.status(404).send({ message: req.t('reptile_notFound') });
         if (reptile.image) {
             await deleteFileIfExists(reptile.image);
         }
@@ -261,9 +261,9 @@ export const DeleteReptile = async (req, res) => {
         await Reptile.findByIdAndDelete(reptileId);
         await logAction(req.user.userid, "Delete reptile");
 
-        res.send({ message: 'Rettile e dati associati eliminati con successo' });
+        res.send({ message: req.t('reptile_delete') });
     } catch (err) {
         console.log(err);
-        res.status(500).send({ message: 'Server error' });
+        res.status(500).send({ message: req.t('server_error')  });
     }
 };

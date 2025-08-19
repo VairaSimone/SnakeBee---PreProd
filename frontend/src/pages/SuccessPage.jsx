@@ -1,24 +1,29 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import api from '../services/api.js';
+import { useTranslation } from "react-i18next";
 
 function useQuery() {
   return new URLSearchParams(useLocation().search);
 }
 
-const paymentStatusMap = {
-  paid: 'Pagato',
-  unpaid: 'Non pagato',
-  no_payment_required: 'Nessun pagamento richiesto',
-  pending: 'In attesa',
-  failed: 'Fallito',
-  canceled: 'Annullato',
-  incomplete: 'Incompleto',
-  past_due: 'Scaduto',
-  succeeded: 'Riuscito',
-};
+
 
 const SuccessPage = () => {
+    const { t} = useTranslation();
+
+  const paymentStatusMap = {
+  paid: t('successPage.paid'),
+  unpaid: t('successPage.unpaid'),
+  no_payment_required: t('successPage.no_payment_required'),
+  pending: t('successPage.pending'),
+  failed: t('successPage.failed'),
+  canceled: t('successPage.canceled'),
+  incomplete: t('successPage.incomplete'),
+  past_due: t('successPage.past_due'),
+  succeeded: t('successPage.succeeded'),
+};
+
   const query = useQuery();
   const sessionId = query.get('session_id');
   const [sessionDetails, setSessionDetails] = useState(null);
@@ -27,15 +32,14 @@ const SuccessPage = () => {
 
   useEffect(() => {
     if (!sessionId) {
-      setError('Sessione di pagamento mancante.');
+      setError(t('successPage.paidError'));
       return;
     }
 
     api.get(`/stripe/session/${sessionId}`)
       .then(res => setSessionDetails(res.data))
       .catch(err => {
-        setError('Impossibile recuperare i dettagli della sessione.');
-        console.error(err);
+        setError(t('successPage.sessionError'));
       });
   }, [sessionId]);
 
@@ -46,10 +50,10 @@ const SuccessPage = () => {
   if (error) return (
     <div style={styles.outerContainer}>
       <div style={styles.container}>
-        <h2 style={{ color: 'black' }}>Errore</h2>
+        <h2 style={{ color: 'black' }}>{t('successPage.error')}</h2>
         <p style={{ color: 'black' }}>{error}</p>
         <button onClick={handleDashboardClick} style={styles.button}>
-          Torna alla Dashboard
+          {t('successPage.dashboard')}
         </button>
       </div>
     </div>
@@ -58,25 +62,25 @@ const SuccessPage = () => {
   if (!sessionDetails) return (
     <div style={styles.outerContainer}>
       <div style={styles.container}>
-        <p style={{ color: 'black' }}>Caricamento in corso...</p>
+        <p style={{ color: 'black' }}>{t('successPage.loading')}</p>
       </div>
     </div>
   );
 
-  const paymentStatusTranslated = paymentStatusMap[sessionDetails.payment_status] || 'Sconosciuto';
+  const paymentStatusTranslated = paymentStatusMap[sessionDetails.payment_status] || t('successPage.unknown');
 
   return (
     <div style={styles.outerContainer}>
       <div style={styles.container}>
-        <h1 style={styles.title}>Pagamento Completato! <span style={{ color: 'green' }}>✅</span></h1>
+        <h1 style={styles.title}>{t('successPage.paymentCompleted')} <span style={{ color: 'green' }}>✅</span></h1>
         <div style={styles.card}>
-          <p><strong>Piano attivato:</strong> {sessionDetails.planName || 'N/A'}</p>
-          <p><strong>Importo pagato:</strong> €{(sessionDetails.amount_total / 100).toFixed(2)}</p>
-          <p><strong>Stato pagamento:</strong> {paymentStatusTranslated}</p>
+          <p><strong>{t('successPage.subscription')}</strong> {sessionDetails.planName || 'N/A'}</p>
+          <p><strong>{t('successPage.total')}</strong> €{(sessionDetails.amount_total / 100).toFixed(2)}</p>
+          <p><strong>{t('successPage.status')}</strong> {paymentStatusTranslated}</p>
         </div>
-        <p style={{ color: 'black' }}>Grazie per il supporto! 🎉</p>
+        <p style={{ color: 'black' }}>{t('successPage.thanks')}</p>
         <button onClick={handleDashboardClick} style={styles.button}>
-          Vai alla Dashboard
+          {t('successPage.dashboard')}
         </button>
       </div>
     </div>

@@ -27,13 +27,13 @@ authRouter.get("/callback-google", passport.authenticate("google", { session: fa
 authRouter.get('/login-history', authenticateJWT, async (req, res) => {
     try {
         const user = await User.findById(req.user.userid).select('loginHistory');
-        if (!user) return res.status(404).json({ message: 'User not found' });
+        if (!user) return res.status(404).json({ message: req.t('user_notFound') });
 
         const history = [...(user.loginHistory || [])].reverse();
         res.json(history);
     } catch (e) {
         console.error('Errore login-history:', e);
-        res.status(500).json({ message: 'Errore server' });
+        res.status(500).json({ message: req.t('server_error')  });
     }
 });
 

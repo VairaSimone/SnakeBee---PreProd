@@ -9,7 +9,7 @@ import jwt from "jsonwebtoken";
 import { deleteFileIfExists } from "../utils/deleteFileIfExists.js";
 import { logAction } from "../utils/logAction.js";
 import Stripe from "stripe";
-import { sendStripeNotificationEmail } from '../config/mailer.config.js'; 
+import { sendStripeNotificationEmail } from '../config/mailer.config.js';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 export const GetAllUser = async (req, res) => {
@@ -21,7 +21,7 @@ export const GetAllUser = async (req, res) => {
     const user = await User.find({})
       .sort({ name: 1 })
       .skip((page - 1) * perPage)
-      .limit(perPage).select('-password -verificationCode -resetPasswordCode -refreshTokens -lastPasswordResetEmailSentAt -resetPasswordExpires -accountLockedUntil -loginAttempts'); if (!user) return res.status(404).json({ message: 'Utente non trovato' });
+      .limit(perPage).select('-password -verificationCode -resetPasswordCode -refreshTokens -lastPasswordResetEmailSentAt -resetPasswordExpires -accountLockedUntil -loginAttempts'); if (!user) return res.status(404).json({ message: req.t('user_notFound') });
     ;
 
     const totalResults = await User.countDocuments();
@@ -43,13 +43,13 @@ export const GetIDUser = async (req, res) => {
   try {
     const id = req.params.userId;
 
-    const user = await User.findById(id).select('-password -verificationCode -resetPasswordCode -refreshTokens -lastPasswordResetEmailSentAt -resetPasswordExpires -accountLockedUntil -loginAttempts'); if (!user) return res.status(404).json({ message: 'Utente non trovato' });
+    const user = await User.findById(id).select('-password -verificationCode -resetPasswordCode -refreshTokens -lastPasswordResetEmailSentAt -resetPasswordExpires -accountLockedUntil -loginAttempts'); if (!user) return res.status(404).json({ message: req.t('user_notFound') });
     ;
     if (!user) res.status(404).send();
     else res.send(user);
   } catch (err) {
     console.log(err);
-    res.status(500).send({ message: 'Utente non trovato' });
+    res.status(500).send({ message: req.t('user_notFound') });
   }
 };
 
@@ -58,10 +58,10 @@ export const PutUser = async (req, res) => {
     const id = req.user.userid;
     const userData = req.body;
     const user = await User.findById(id);
-    if (!user) return res.status(404).json({ message: "Utente non trovato" });
+    if (!user) return res.status(404).json({ message: req.t('user_notFound') });
 
     if (userData.role && req.user.role !== 'admin') {
-      return res.status(403).json({ message: 'Non puoi cambiare il tuo ruolo.' });
+      return res.status(403).json({ message: req.t('user_NotModifyRole') });
     }
 
     if (req.file) {
@@ -73,7 +73,11 @@ export const PutUser = async (req, res) => {
     }
     await logAction(req.user.userid, "Moodify User");
 
-    const fieldsAllowed = ['name', 'avatar'];
+    const fieldsAllowed = ['name', 'avatar', 'language'];
+    if (userData.language && !['en', 'it'].includes(userData.language)) {
+  return res.status(400).json({ message: req.t('invalid_language') });
+}
+
     const updates = {};
     fieldsAllowed.forEach(field => {
       if (userData[field] !== undefined) {
@@ -94,7 +98,7 @@ export const updateEmailPreferences = async (req, res) => {
   try {
     const { receiveFeedingEmails } = req.body;
     if (typeof receiveFeedingEmails !== 'boolean') {
-      return res.status(400).json({ message: 'Valore non valido' });
+      return res.status(400).json({ message: req.t('invalid_value') });
     }
     const id = req.params.userId;
 
@@ -105,12 +109,12 @@ export const updateEmailPreferences = async (req, res) => {
     );
 
     res.json({
-      message: 'Preferenze aggiornate con successo',
+      message: req.t('preferences_updated'),
       receiveFeedingEmails: user.receiveFeedingEmails
     });
   } catch (err) {
     console.error('Error updating email preferences:', err);
-    res.status(500).json({ message: 'Errore del server' });
+    res.status(500).json({ message: req.t('server_error') });
   }
 };
 
@@ -125,7 +129,7 @@ async function cancelStripeSubscription(user) {
       return true;
     } catch (err) {
       console.error('Stripe cancellation error:', err);
-      throw new Error('Errore nella cancellazione dell’abbonamento Stripe');
+      throw new Error(req.t('delete_Stripe'));
     }
   }
   return false;
@@ -163,7 +167,7 @@ export const DeleteUser = async (req, res) => {
   try {
     const userId = req.params.userId;
     const user = await User.findById(userId);
-    if (!user) return res.status(404).json({ message: 'Utente non trovato' });
+    if (!user) return res.status(404).json({ message: req.t('user_notFound') });
 
     try {
       await cancelStripeSubscription(user);
@@ -184,15 +188,17 @@ export const DeleteUser = async (req, res) => {
 
     sendStripeNotificationEmail(
       user.email,
-      'Conferma cancellazione account SnakeBee',
-      `<p>Ciao ${user.name},<br>ti confermiamo che il tuo account è stato eliminato correttamente, inclusi i dati e l’abbonamento associato.</p>`,
-      `Ciao ${user.name}, ti confermiamo che il tuo account è stato eliminato correttamente, inclusi i dati e l’abbonamento associato.`
-    ).catch(e => console.error('Errore invio email conferma cancellazione:', e));
+      user.language,
+      req.t('emails.delete_user.subject'),
+      req.t('emails.delete_user.html', { name: user.name }),
+      req.t('emails.delete_user.text', { name: user.name })
+    ).catch(e => console.error('Error sending cancellation confirmation email:', e));
 
-    return res.status(200).json({ message: 'Utente e dati collegati eliminati con successo' });
+
+    return res.status(200).json({ message: req.t('delete_successfully') });
   } catch (error) {
     console.error('Error deleting user:', error);
-    return res.status(500).json({ message: 'Errore del server' });
+    return res.status(500).json({ message: req.t('server_error')});
   }
 };
 
@@ -202,11 +208,11 @@ export const UpdateUserRole = async (req, res) => {
     const { role } = req.body;
 
     if (!['user', 'banned'].includes(role)) {
-      return res.status(400).json({ message: 'Ruolo non valido' });
+      return res.status(400).json({ message: req.t('role_invalid') });
     }
 
     const user = await User.findById(userId);
-    if (!user) return res.status(404).json({ message: 'Utente non trovato' });
+    if (!user) return res.status(404).json({ message: req.t('user_notFound') });
 
     user.role = role;
 
@@ -215,9 +221,9 @@ export const UpdateUserRole = async (req, res) => {
     }
 
     await user.save();
-    return res.json({ message: `Ruolo aggiornato in "${role}"`, user });
+    return res.json({ message: req.t('role_add', { rol: role }), user });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Errore aggiornamento ruolo utente' });
+    res.status(500).json({ message: req.t('role_add_error') });
   }
 };

@@ -9,9 +9,9 @@ export const GetReptileFeeding = async (req, res) => {
   try {
     const { reptileId } = req.params;
     const reptile = await Reptile.findById(reptileId);
-    if (!reptile) return res.status(404).json({ message: 'Reptile not found' });
+    if (!reptile) return res.status(404).json({ message: req.t('reptile_notFound') });
     if (reptile.user.toString() !== req.user.userid)
-      return res.status(403).json({ message: 'Accesso negato' });
+      return res.status(403).json({ message: req.t('user_notFound')  });
 
     const page = parseInt(req.query.page) || 1;
     const perPage = 5;
@@ -30,7 +30,7 @@ export const GetReptileFeeding = async (req, res) => {
     });
   } catch (err) {
     console.error(err);
-    res.status(500).send({ message: 'Server error' });
+    res.status(500).send({ message: req.t('server_error') });
   }
 };
 
@@ -54,9 +54,9 @@ export const PostFeeding = async (req, res) => {
     nextFeedingDate.setDate(nextFeedingDate.getDate() + delta);
 
     const reptile = await Reptile.findById(reptileId);
-    if (!reptile) return res.status(404).json({ message: 'Reptile not found' });
+    if (!reptile) return res.status(404).json({ message: req.t('reptile_notFound') });
     if (reptile.user.toString() !== req.user.userid)
-      return res.status(403).json({ message: 'Accesso negato' });
+      return res.status(403).json({ message: req.t('user_notFound') });
 
     // Inventario: decremento solo lato server
     const meatTypes = ['Topo', 'Ratto', 'Coniglio', 'Pulcino'];
@@ -67,7 +67,7 @@ export const PostFeeding = async (req, res) => {
         weightPerUnit
       });
       if (!inv || inv.quantity < quantity)
-        return res.status(400).json({ message: `Non hai abbastanza ${foodType}` });
+        return res.status(400).json({ message: req.t('foodTypeQuantity') });
       inv.quantity -= quantity;
       await inv.save();
     }
@@ -89,7 +89,7 @@ export const PostFeeding = async (req, res) => {
     res.status(201).json(saved);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: 'Error creating feeding record' });
+    res.status(500).json({ message: req.t('errorCreate_feeding') });
   }
 };
 
@@ -104,10 +104,10 @@ export const PutFeeding = async (req, res) => {
       notes,
       date,
     }, { new: true });
-    if (!updatedFeeding) return res.status(404).json({ message: 'Feeding record not found' });
+    if (!updatedFeeding) return res.status(404).json({ message: req.t('Feeding_notfound') });
     res.json(updatedFeeding);
   } catch (error) {
-    res.status(500).json({ message: 'Error updating power record' });
+    res.status(500).json({ message:  req.t('errorUpdate_feeding') });
   }
 };
 
@@ -117,10 +117,10 @@ export const DeleteFeeding = async (req, res) => {
 
   try {
     const feeding = await Feeding.findByIdAndDelete(feedingId);
-    if (!feeding) return res.status(404).json({ message: 'Feeding record not found' });
-    res.json({ message: 'Power record deleted' });
+    if (!feeding) return res.status(404).json({ message: req.t('Feeding_notfound') });
+    res.json({ message:  req.t('feeding_delete')});
   } catch (error) {
-    res.status(500).json({ message: 'Error deleting power record' });
+    res.status(500).json({ message: req.t('errorDelete_feeding') });
   }
 };
 

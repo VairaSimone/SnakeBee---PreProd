@@ -1,7 +1,9 @@
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from "react-i18next";
 
 const CancelPage = () => {
   const navigate = useNavigate();
+    const { t} = useTranslation();
 
   const goToSubscribe = () => navigate('/subscribe');
   const goToPlans = () => navigate('/pricing');
@@ -25,10 +27,9 @@ const CancelPage = () => {
         width: '100%'
       }}>
         <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>❌</div>
-        <h1 style={{ color: '#dc3545', marginBottom: '0.5rem' }}>Pagamento annullato</h1>
+        <h1 style={{ color: '#dc3545', marginBottom: '0.5rem' }}>{t('cancelPage.paymentStop')}</h1>
         <p style={{ color: '#6c757d', marginBottom: '2rem' }}>
-          Nessun addebito è stato effettuato.
-          Puoi riprovare o tornare alla pagina degli abbonamenti.
+          {t('cancelPage.paymentStopDesc')}
         </p>
 
         <button
@@ -45,7 +46,7 @@ const CancelPage = () => {
             fontSize: '1rem'
           }}
         >
-          Riprova abbonamento
+          {t('cancelPage.tryAgain')}
         </button>
 
         <button
@@ -61,7 +62,7 @@ const CancelPage = () => {
             fontSize: '1rem'
           }}
         >
-          Torna agli abbonamenti
+          {t('cancelPage.backwards')}
         </button>
       </div>
     </div>

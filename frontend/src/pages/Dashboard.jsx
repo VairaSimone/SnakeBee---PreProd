@@ -9,7 +9,8 @@ import FeedingModal from '../components/FeedingModal.jsx';
 import EventModal from '../components/EventModal.jsx';
 import ConfirmDeleteModal from '../components/ConfirmDeleteModal.jsx';
 import { FaMars, FaVenus, FaPlus, FaTag, FaPencilAlt, FaDrumstickBite, FaCalendarAlt, FaTrash, FaChartBar, FaPercentage, FaUtensils, FaEgg, FaSyncAlt } from 'react-icons/fa';
-
+import { useTranslation } from 'react-i18next';
+import CalendarModal from '../components/CalendarModal.jsx'
 const Dashboard = () => {
   const user = useSelector(selectUser);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -29,18 +30,20 @@ const Dashboard = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showFeedingModal, setShowFeedingModal] = useState(false);
+  const { t } = useTranslation();
   const [stats, setStats] = useState({
     successRate: null,
     feedingRefusalRate: null,
     averageShedInterval: null,
     incubationBySpecies: []
   });
+  const [isCalendarOpen, setCalendarOpen] = useState(false);
 
   const carouselRefs = useRef({});
   const scrollCarousel = (e, direction, reptileId) => {
     e.preventDefault();
     e.stopPropagation();
-    const scrollAmount = 250; 
+    const scrollAmount = 250;
     const node = carouselRefs.current[reptileId];
     if (node) {
       node.scrollBy({ left: scrollAmount * direction, behavior: 'smooth' });
@@ -61,10 +64,8 @@ const Dashboard = () => {
         averageShedInterval: Number(shed.data.averageIntervalDays),
         incubationBySpecies: incubation.data
       });
-      console.log(stats.incubationBySpecies);
 
     } catch (err) {
-      console.error('Errore nel recupero delle statistiche:', err);
     }
 
   };
@@ -87,7 +88,7 @@ const Dashboard = () => {
       setTotalPages(data.totalPages || 1);
       setError(null);
     } catch (err) {
-      setError('Impossibile caricare i rettili');
+      setError(t('dashboard.errorReptile'));
     } finally {
       setLoading(false);
     }
@@ -96,9 +97,8 @@ const Dashboard = () => {
   const handleDelete = async (id) => {
     try {
       await api.delete(`/reptile/${id}`);
-      fetchReptiles(); 
+      fetchReptiles();
     } catch (err) {
-      console.error('Errore eliminazione rettile', err);
     }
   };
 
@@ -136,7 +136,7 @@ const Dashboard = () => {
       if (document.visibilityState === 'visible' && user?._id) {
         fetchReptiles();
       }
-    }, 1000 * 60 * 2); 
+    }, 1000 * 60 * 2);
     return () => clearInterval(interval);
   }, [user]);
 
@@ -155,24 +155,63 @@ const Dashboard = () => {
       </div>
     </div>
   );
+  // === Funzione helper per il paginatore ===
+  const getPageNumbers = (currentPage, totalPages, delta = 2) => {
+    const range = [];
+    const rangeWithDots = [];
+    let lastPage = 0;
+
+    // range contiene: [1 ... totalPages], con "delta" pagine intorno all'attuale
+    for (let i = 1; i <= totalPages; i++) {
+      if (i === 1 || i === totalPages || (i >= currentPage - delta && i <= currentPage + delta)) {
+        range.push(i);
+      }
+    }
+
+    // aggiunge "..." quando ci sono salti
+    for (let i of range) {
+      if (lastPage) {
+        if (i - lastPage === 2) {
+          rangeWithDots.push(lastPage + 1);
+        } else if (i - lastPage > 2) {
+          rangeWithDots.push("...");
+        }
+      }
+      rangeWithDots.push(i);
+      lastPage = i;
+    }
+
+    return rangeWithDots;
+  };
+
   const top3Incubations = React.useMemo(() => {
     if (!stats.incubationBySpecies || stats.incubationBySpecies.length === 0) return [];
 
     return [...stats.incubationBySpecies]
-      .sort((a, b) => b.count - a.count) 
-      .slice(0, 3); 
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 3);
   }, [stats.incubationBySpecies]);
 
   return (
-    <div className="bg-clay min-h-screen font-sans text-charcoal p-4 sm:p-6 lg:p-8">
+    <div className="bg-clay min-h-screen font-sans text-charcoal p-4 sm:p-6 lg:p-8 relative">
       <div className="max-w-screen-xl mx-auto">
+{user?.isPremium && (
+  <button
+    onClick={() => setCalendarOpen(true)}
+    title={t('dashboard.calendar')}
+    className="fixed bottom-6 right-6 z-30 bg-purple-600 text-white p-4 rounded-full shadow-lg hover:bg-purple-700 transition-all duration-300 transform hover:scale-110"
+  >
+    <FaCalendarAlt size={24} />
+  </button>
+)}
+
 
         {/* === HEADER === */}
         <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
           <div>
-            <h1 className="text-4xl font-bold text-olive">La Tua Dashboard</h1>
+            <h1 className="text-4xl font-bold text-olive">{t('dashboard.title')}</h1>
             <p className="text-charcoal/70 mt-1">
-              Gestisci i tuoi {allReptiles.length} rettil{allReptiles.length !== 1 ? 'i' : 'e'}.
+              {t('dashboard.manageReptiles', { count: allReptiles.length })}
             </p>
           </div>
           <button
@@ -180,25 +219,27 @@ const Dashboard = () => {
             className="flex items-center gap-2 bg-forest text-white px-5 py-3 rounded-lg font-semibold hover:bg-olive transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
           >
             <FaPlus />
-            Aggiungi Rettile
+            {t('dashboard.addReptile')}
           </button>
         </header>
 
         {/* === STATISTICS SECTION === */}
         <section className="mb-8">
-          <h2 className="text-2xl font-bold text-charcoal mb-4 flex items-center gap-2"><FaChartBar />Statistiche Veloci</h2>
+          <h2 className="text-2xl font-bold text-charcoal mb-4 flex items-center gap-2">
+            <FaChartBar />{t('dashboard.quickStats')}
+          </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <StatCard icon={<FaPercentage />} title="Successo Riproduttivo" value={stats.successRate} unit="%" bgColor="bg-forest" />
-            <StatCard icon={<FaUtensils />} title="Rifiuto Cibo" value={stats.feedingRefusalRate} bgColor="bg-amber" />
-            <StatCard icon={<FaSyncAlt />} title="Intervallo Muta Medio" value={typeof stats.averageShedInterval === 'number' ? stats.averageShedInterval.toFixed(1) : 'N/A'} unit="giorni" bgColor="bg-blue-500" />
-            <StatCard icon={<FaEgg />} title="Incubazione per Specie" bgColor="bg-purple-500">
+            <StatCard icon={<FaPercentage />} title={t('dashboard.stats.successRate')} value={stats.successRate} unit="%" bgColor="bg-forest" />
+            <StatCard icon={<FaUtensils />} title={t('dashboard.stats.feedingRefusal')} value={stats.feedingRefusalRate} bgColor="bg-amber" />
+            <StatCard icon={<FaSyncAlt />} title={t('dashboard.stats.avgShedInterval')} value={typeof stats.averageShedInterval === 'number' ? stats.averageShedInterval.toFixed(1) : 'N/A'} unit={t('dashboard.units.days')} bgColor="bg-blue-500" />
+            <StatCard icon={<FaEgg />} title={t('dashboard.stats.incubationBySpecies')} bgColor="bg-purple-500">
               <div className="text-sm space-y-1 mt-1">
                 {top3Incubations.length > 0 ? top3Incubations.map(s => (
                   <div key={s.species}>
                     <span className="font-semibold">{s.species}:</span>
-                    {!isNaN(Number(s.averageIncubationDays)) ? Number(s.averageIncubationDays).toFixed(0) : 'N/A'} giorni
+                    {!isNaN(Number(s.averageIncubationDays)) ? Number(s.averageIncubationDays).toFixed(0) : 'N/A'} {t('units.days')}
                   </div>
-                )) : <p className="text-base">Nessun dato</p>}
+                )) : <p className="text-base">{t('dashboard.common.noData')}</p>}
               </div>
             </StatCard>
           </div>
@@ -207,51 +248,50 @@ const Dashboard = () => {
         {/* === CONTROLS AND FILTERS === */}
         <div className="bg-sand p-4 rounded-xl flex flex-col sm:flex-row flex-wrap items-center gap-4 mb-8 shadow-sm">
           <div className="flex-1 min-w-[200px]">
-            <label className="block text-sm font-bold text-charcoal/80 mb-1">Ordina per</label>
+            <label className="block text-sm font-bold text-charcoal/80 mb-1">{t('dashboard.filters.sortBy')}</label>
             <select value={sortKey} onChange={(e) => setSortKey(e.target.value)} className="w-full p-2 rounded-md border-transparent focus:ring-2 focus:ring-forest bg-white text-charcoal shadow">
-              <option value="name">Nome</option>
-              <option value="species">Specie</option>
-              <option value="nextFeedingDate">Prossimo Pasto</option>
+              <option value="name">{t('dashboard.filters.name')}</option>
+              <option value="species">{t('dashboard.filters.species')}</option>
+              <option value="nextFeedingDate">{t('dashboard.filters.nextMeal')}</option>
             </select>
           </div>
           <div className="flex-1 min-w-[200px]">
-            <label className="block text-sm font-bold text-charcoal/80 mb-1">Cerca Morph</label>
-            <input type="text" value={filterMorph} onChange={(e) => setFilterMorph(e.target.value)} placeholder="Es: 'Pastel'" className="w-full p-2 rounded-md border-transparent focus:ring-2 focus:ring-forest bg-white text-charcoal shadow" />
+            <label className="block text-sm font-bold text-charcoal/80 mb-1">{t('dashboard.filters.searchMorph')}</label>
+            <input type="text" value={filterMorph} onChange={(e) => setFilterMorph(e.target.value)} placeholder={t('dashboard.filters.morphPlaceholder')} className="w-full p-2 rounded-md border-transparent focus:ring-2 focus:ring-forest bg-white text-charcoal shadow" />
           </div>
           <div className="flex-1 min-w-[150px]">
-            <label className="block text-sm font-bold text-charcoal/80 mb-1">Sesso</label>
+            <label className="block text-sm font-bold text-charcoal/80 mb-1">{t('dashboard.filters.sex')}</label>
             <select value={filterSex} onChange={(e) => setFilterSex(e.target.value)} className="w-full p-2 rounded-md border-transparent focus:ring-2 focus:ring-forest bg-white text-charcoal shadow">
-              <option value="">Tutti</option>
-              <option value="M">Maschio</option>
-              <option value="F">Femmina</option>
-              <option value="Unknown">Sconosciuto</option>
+              <option value="">{t('dashboard.filters.all')}</option>
+              <option value="M">{t('dashboard.filters.male')}</option>
+              <option value="F">{t('dashboard.filters.female')}</option>
+              <option value="Unknown">{t('dashboard.filters.unknown')}</option>
             </select>
           </div>
           <div className="flex-1 min-w-[150px]">
-            <label className="block text-sm font-bold text-charcoal/80 mb-1">Riproducibili</label>
+            <label className="block text-sm font-bold text-charcoal/80 mb-1">{t('dashboard.filters.breeder')}</label>
             <select value={filterBreeder} onChange={(e) => setFilterBreeder(e.target.value)} className="w-full p-2 rounded-md border-transparent focus:ring-2 focus:ring-forest bg-white text-charcoal shadow">
-              <option value="">Tutti</option>
-              <option value="true">Sì</option>
-              <option value="false">No</option>
+              <option value="">{t('dashboard.filters.all')}</option>
+              <option value="true">{t('dashboard.common.yes')}</option>
+              <option value="false">{t('dashboard.common.no')}</option>
             </select>
           </div>
         </div>
-
         {/* === REPTILES GRID === */}
         <main>
           {loading ? (
             <div className="text-center py-20">
               <div className="animate-spin h-12 w-12 border-4 border-forest border-t-transparent rounded-full mx-auto" />
-              <p className="mt-4 text-charcoal/80 text-lg">Caricamento dei tuoi rettili...</p>
+              <p className="mt-4 text-charcoal/80 text-lg">{t('dashboard.common.loadingReptiles')}</p>
             </div>
           ) : sortedReptiles.length === 0 ? (
             <div className="text-center py-20 bg-sand rounded-xl">
-              <h3 className="text-2xl font-bold text-olive">Nessun rettile trovato!</h3>
+              <h3 className="text-2xl font-bold text-olive">{t('dashboard.common.noReptilesFound')}</h3>
               <p className="mt-2 text-charcoal/70">
-                {allReptiles.length > 0 ? "Nessun rettile corrisponde ai filtri." : "Non hai ancora registrato nessun rettile."}
+                {allReptiles.length > 0 ? t('dashboard.common.noReptilesFiltered') : t('dashboard.common.noReptilesRegistered')}
               </p>
               <button onClick={() => setShowCreateModal(true)} className="mt-6 flex items-center gap-2 bg-forest text-white px-5 py-3 rounded-lg font-semibold hover:bg-olive transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
-                <FaPlus /> Aggiungi il primo rettile
+                <FaPlus /> {t('dashboard.common.addFirstReptile')}
               </button>
             </div>
           ) : (
@@ -294,20 +334,19 @@ const Dashboard = () => {
                     <p className="text-sm text-charcoal/60 italic truncate">{reptile.species}</p>
                     <p className="text-sm text-charcoal/80 mt-1 font-medium truncate">Morph: {reptile.morph || 'N/A'}</p>
                     <p className="text-sm text-charcoal/80">
-                      Prossimo pasto: <span className="font-semibold">{reptile.nextFeedingDate ? new Date(reptile.nextFeedingDate).toLocaleDateString() : 'N/A'}</span>
+                      {t('feedingCard.nextFeeding')} <span className="font-semibold">{reptile.nextFeedingDate ? new Date(reptile.nextFeedingDate).toLocaleDateString() : 'N/A'}</span>
                     </p>
 
                     <div className="mt-4 pt-4 border-t border-sand grid grid-cols-4 gap-2 text-center">
                       {[
-                        { icon: <FaPencilAlt />, label: "Modifica", color: "blue", action: () => { setSelectedReptile(reptile); setShowEditModal(true); } },
-                        { icon: <FaDrumstickBite />, label: "Pasto", color: "amber", action: () => { setSelectedReptile(reptile); setShowFeedingModal(true); } },
-                        { icon: <FaCalendarAlt />, label: "Eventi", color: "purple", action: () => { setSelectedReptile(reptile); setShowEventModal(true); } },
-                        { icon: <FaTrash />, label: "Elimina", color: "brick", action: () => { setPendingDelete(reptile); setShowDeleteModal(true); } }
-                      ].map(btn => (
-                        <button key={btn.label} onClick={(e) => { e.preventDefault(); e.stopPropagation(); btn.action(); }} title={btn.label} className={`text-${btn.color} p-2 rounded-lg hover:bg-${btn.color}/10 transition-colors duration-200`}>
-                          {btn.icon}
-                        </button>
-                      ))}
+                        { icon: <FaPencilAlt />, label: t("dashboard.buttons.edit"), color: "blue", action: () => { setSelectedReptile(reptile); setShowEditModal(true); } },
+                        { icon: <FaDrumstickBite />, label: t("dashboard.buttons.feeding"), color: "amber", action: () => { setSelectedReptile(reptile); setShowFeedingModal(true); } },
+                        { icon: <FaCalendarAlt />, label: t("dashboard.buttons.events"), color: "purple", action: () => { setSelectedReptile(reptile); setShowEventModal(true); } },
+                        { icon: <FaTrash />, label: t("dashboard.buttons.delete"), color: "brick", action: () => { setPendingDelete(reptile); setShowDeleteModal(true); } }].map(btn => (
+                          <button key={btn.label} onClick={(e) => { e.preventDefault(); e.stopPropagation(); btn.action(); }} title={btn.label} className={`text-${btn.color} p-2 rounded-lg hover:bg-${btn.color}/10 transition-colors duration-200`}>
+                            {btn.icon}
+                          </button>
+                        ))}
                     </div>
                   </div>
                 </Link>
@@ -319,18 +358,42 @@ const Dashboard = () => {
         {/* === PAGINATION === */}
         {totalPages > 1 && (
           <footer className="flex justify-center mt-8 gap-2">
-            {Array.from({ length: totalPages }, (_, i) => (
-              <button
-                key={i + 1}
-                onClick={() => setPage(i + 1)}
-                className={`px-4 py-2 rounded-md font-semibold transition-colors ${i + 1 === page ? 'bg-forest text-white shadow' : 'bg-sand text-charcoal/80 hover:bg-olive/20'}`}
-              >
-                {i + 1}
-              </button>
-            ))}
+            <button
+              disabled={page === 1}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              className={`px-3 py-2 rounded-md font-semibold transition-colors ${page === 1 ? 'bg-sand text-gray-400 cursor-not-allowed' : 'bg-sand text-charcoal/80 hover:bg-olive/20'}`}
+            >
+              ‹
+            </button>
+
+            {getPageNumbers(page, totalPages).map((p, idx) =>
+              p === "..." ? (
+                <span key={idx} className="px-3 py-2 text-charcoal/50">...</span>
+              ) : (
+                <button
+                  key={p}
+                  onClick={() => setPage(p)}
+                  className={`px-3 py-2 rounded-md font-semibold transition-colors ${p === page ? 'bg-forest text-white shadow' : 'bg-sand text-charcoal/80 hover:bg-olive/20'}`}
+                >
+                  {p}
+                </button>
+              )
+            )}
+
+            <button
+              disabled={page === totalPages}
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              className={`px-3 py-2 rounded-md font-semibold transition-colors ${page === totalPages ? 'bg-sand text-gray-400 cursor-not-allowed' : 'bg-sand text-charcoal/80 hover:bg-olive/20'}`}
+            >
+              ›
+            </button>
           </footer>
         )}
       </div>
+<CalendarModal 
+        isOpen={isCalendarOpen} 
+        onClose={() => setCalendarOpen(false)} 
+      />
 
       <ReptileCreateModal show={showCreateModal} handleClose={() => setShowCreateModal(false)} onSuccess={fetchReptiles} setReptiles={setAllReptiles} />
       <ReptileEditModal show={showEditModal} handleClose={() => setShowEditModal(false)} reptile={selectedReptile} onSuccess={fetchReptiles} setReptiles={setAllReptiles} />

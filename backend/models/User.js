@@ -67,10 +67,14 @@ const userSchema = new Schema(
         }, verificationCode: {
             type: String,
         },
-
+        language: {
+            type: String,
+            default: 'it',
+            enum: ['en', 'it']
+        },
         isBanned: {
             type: Boolean,
-            default: false 
+            default: false
         }, loginAttempts: {
             type: Number,
         },

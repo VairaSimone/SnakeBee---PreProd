@@ -30,11 +30,11 @@ const breedingSchema = new Schema({
     required: true
   },
   morphCombo: {
-    type: String // es: "Pastel x Banana"
+    type: String 
   },
   isLiveBirth: {
     type: Boolean,
-    default: false // true se vivipari (es. boa), false se ovipari
+    default: false
   },
   clutchSize: {
     total: { type: Number },

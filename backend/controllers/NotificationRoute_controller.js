@@ -17,7 +17,7 @@ export const getUserNotifications = async (req, res) => {
       readNotifications
     });
   } catch (error) {
-    res.status(500).json({ message: 'Errore durante il recupero delle notifiche' });
+    res.status(500).json({ message: req.t('notification_error') });
   }
 };
 
@@ -38,7 +38,7 @@ export const createNotification = async (req, res) => {
     const savedNotification = await newNotification.save();
     res.status(201).json(savedNotification);
   } catch (error) {
-    res.status(500).json({ message: 'Errore durante la creazione della notifica' });
+    res.status(500).json({ message: req.t('notification_error') });
   }
 };
 
@@ -54,12 +54,12 @@ export const updateNotification = async (req, res) => {
     );
 
     if (!updatedNotification) {
-      return res.status(404).json({ message: 'Notifica non trovata' });
+      return res.status(404).json({ message: req.t('notification_notFound') });
     }
 
     res.json(updatedNotification);
   } catch (error) {
-    res.status(500).json({ message: "Errore durante l'aggiornamento della notifica" });
+    res.status(500).json({ message: req.t('notification_error') });
   }
 };
 
@@ -69,11 +69,11 @@ export const deleteNotification = async (req, res) => {
   try {
     const notification = await Notification.findByIdAndDelete(notificationId);
     if (!notification) {
-      return res.status(404).json({ message: 'Notification not found' });
+      return res.status(404).json({ message: req.t('notification_notFound') });
     }
-    res.json({ message: 'Notifica eliminata' });
+    res.json({ message:  req.t('notification_delete')  });
   } catch (error) {
-    res.status(500).json({ message: "Errore durante l'eliminazione della notifica" });
+    res.status(500).json({ message: req.t('notification_error') });
   }
 };
 
@@ -84,6 +84,6 @@ export const getUnreadNotificationCount = async (req, res) => {
     const unreadCount = await Notification.countDocuments({ user: userId, read: false });
     res.json({ unreadCount });
   } catch (error) {
-    res.status(500).json({ message: 'Errore durante il recupero delle notifiche non lette' });
+    res.status(500).json({ message: req.t('notification_error') });
   }
 };

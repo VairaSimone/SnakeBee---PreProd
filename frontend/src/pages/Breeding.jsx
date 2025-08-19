@@ -5,6 +5,7 @@ import { PlusIcon, CalendarIcon, PencilIcon, TrashIcon, ChevronDownIcon, XMarkIc
 import api from '../services/api';
 import Modal from '../components/BreedingModal.jsx';
 import { selectUser } from '../features/userSlice.jsx';
+import { useTranslation } from 'react-i18next';
 
 function Toast({ message, type = 'error', onClose }) {
   useEffect(() => {
@@ -27,19 +28,18 @@ function Toast({ message, type = 'error', onClose }) {
     </div>
   );
 }
-
-const translationMap = {
-  Mating: 'Accoppiamento',
-  Ovulation: 'Ovulazione',
-  'Prelay Shed': 'Muta pre-deposizione',
-  'Egg Laid': 'Deposizione uova',
-  Birth: 'Parto',
-  Hatching: 'Schiusa',
-  Failed: 'Fallito',
-  Success: 'Successo',
-  Partial: 'Parziale',
-  Unknown: 'Sconosciuto',
-};
+const translationMap = (t) => ({
+  Mating: t('breedingDashboard.breedingOutcomes.Mating'),
+  Ovulation: t('breedingDashboard.breedingOutcomes.Ovulation'),
+  'Prelay Shed': t('breedingDashboard.breedingOutcomes.PrelayShed'),
+  'Egg Laid': t('breedingDashboard.breedingOutcomes.EggLaid'),
+  Birth: t('breedingDashboard.breedingOutcomes.Birth'),
+  Hatching: t('breedingDashboard.breedingOutcomes.Hatching'),
+  Failed: t('breedingDashboard.breedingOutcomes.Failed'),
+  Success: t('breedingDashboard.breedingOutcomes.Success'),
+  Partial: t('breedingDashboard.breedingOutcomes.Partial'),
+  Unknown: t('breedingDashboard.breedingOutcomes.Unknown'),
+});
 
 const translate = (key) => translationMap[key] || key;
 
@@ -62,6 +62,8 @@ const StatCard = ({ title, children }) => (
 );
 
 const BreedingCard = ({ breeding, onAddEvent, onUpdateOutcome, onEditEvent, onDeleteEventRequest }) => {
+      const { t} = useTranslation();
+  
   const outcomeColors = {
     Success: 'bg-green-100 text-green-800',
     Partial: 'bg-amber/20 text-amber',
@@ -87,28 +89,28 @@ const BreedingCard = ({ breeding, onAddEvent, onUpdateOutcome, onEditEvent, onDe
       {/*  Card */}
       <div className="p-4 grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="md:col-span-1 space-y-3">
-          <h4 className="font-semibold text-slate-700">Dettagli Covata</h4>
+          <h4 className="font-semibold text-slate-700">{t('breedingDashboard.detailsClutch')}</h4>
           <div className="text-sm space-y-2">
-            <p><span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${breeding.isLiveBirth ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'}`}>{breeding.isLiveBirth ? 'Viviparo' : 'Oviparo'}</span></p>
+            <p><span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${breeding.isLiveBirth ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'}`}>{breeding.isLiveBirth ? t('breedingDashboard.liveBirth') : t('breedingDashboard.oviparous')}</span></p>
             <div className="flex gap-2 pt-2">
-              <span className="bg-blue-100 text-blue-800 px-2.5 py-1 text-xs font-bold rounded-full">Tot: {breeding.clutchSize?.total || 0}</span>
-              <span className="bg-green-100 text-green-800 px-2.5 py-1 text-xs font-bold rounded-full">Fertili: {breeding.clutchSize?.fertile || 0}</span>
-              <span className="bg-yellow-100 text-yellow-800 px-2.5 py-1 text-xs font-bold rounded-full">Nati: {breeding.clutchSize?.hatchedOrBorn || 0}</span>
+              <span className="bg-blue-100 text-blue-800 px-2.5 py-1 text-xs font-bold rounded-full">{t('breedingDashboard.total')} {breeding.clutchSize?.total || 0}</span>
+              <span className="bg-green-100 text-green-800 px-2.5 py-1 text-xs font-bold rounded-full">{t('breedingDashboard.fertile')} {breeding.clutchSize?.fertile || 0}</span>
+              <span className="bg-yellow-100 text-yellow-800 px-2.5 py-1 text-xs font-bold rounded-full">{t('breedingDashboard.hatchedOrBorn')} {breeding.clutchSize?.hatchedOrBorn || 0}</span>
             </div>
           </div>
           <div className="pt-2 flex flex-wrap gap-2">
             <button onClick={() => onAddEvent(breeding._id)} className="btn btn-sm btn-primary-outline">
-              <PlusIcon className="w-4 h-4 mr-1.5" /> Evento
+              <PlusIcon className="w-4 h-4 mr-1.5" /> {t('breedingDashboard.buttons.addEvent')}
             </button>
             <button onClick={() => onUpdateOutcome(breeding._id)} className="btn btn-sm btn-secondary-outline">
-              Risultato
+              {t('breedingDashboard.buttons.updateOutcome')}
             </button>
           </div>
         </div>
 
         {/* Event */}
         <div className="md:col-span-2">
-          <h4 className="font-semibold text-slate-700 mb-2">Eventi Registrati</h4>
+          <h4 className="font-semibold text-slate-700 mb-2">{t('breedingDashboard.eventsRegistered')}</h4>
           {breeding.events?.length > 0 ? (
             <ul className="space-y-2 text-sm">
               {breeding.events.map(event => (
@@ -129,7 +131,7 @@ const BreedingCard = ({ breeding, onAddEvent, onUpdateOutcome, onEditEvent, onDe
             </ul>
           ) : (
             <div className="text-center py-4 px-2 rounded-lg">
-              <p className="text-sm text-slate-500">Nessun evento registrato.</p>
+              <p className="text-sm text-slate-500">{t('breedingDashboard.noEvents')}</p>
             </div>
           )}
         </div>
@@ -152,6 +154,7 @@ export default function BreedingPage() {
   const [eventData, setEventData] = useState({ type: '', date: '', notes: '' });
   const [yearFilter, setYearFilter] = useState(new Date().getFullYear());
   const [showModal, setShowModal] = useState(false);
+    const { t} = useTranslation();
   const [formData, setFormData] = useState({ male: '', female: '', species: '', morphCombo: '', isLiveBirth: false });
   const [outcomeData, setOutcomeData] = useState({ outcome: '', clutchSize: { total: '', fertile: '', hatchedOrBorn: '' } });
   const [toast, setToast] = useState({ show: false, message: '', type: 'error' });
@@ -184,8 +187,7 @@ export default function BreedingPage() {
         )
       );
     } catch (error) {
-      console.error("Errore eliminazione evento", error);
-      showToast("Impossibile eliminare l'evento.", 'error');
+      showToast(t('breedingDashboard.errors.deleteEvent'), 'error');
     } finally {
       setShowConfirmModal(false);
       setEventToDelete(null);
@@ -195,7 +197,7 @@ export default function BreedingPage() {
   const handleUpdateOutcome = (breedingId) => {
     const breeding = breedings.find(b => b._id === breedingId);
     setOutcomeData({
-      outcome: breeding?.outcome || 'Unknown',
+      outcome: breeding?.outcome || t('breedingDashboard.outcomes.Unknown'),
       clutchSize: {
         total: breeding?.clutchSize?.total || '',
         fertile: breeding?.clutchSize?.fertile || '',
@@ -226,13 +228,13 @@ export default function BreedingPage() {
       );
       setShowOutcomeModal(false);
     } catch (err) {
-      showToast(err.response?.data?.error || 'Errore aggiornamento outcome', 'error');
+      showToast(err.response?.data?.error || t('breedingDashboard.errors.updateOutcome'), 'error');
     }
   };
 
   const submitEvent = async () => {
     if (!eventData.type || !eventData.date) {
-      showToast('Tipo e data sono obbligatori', 'warning');
+      showToast(t('breedingDashboard.errors.missingEventFields'), 'warning');
       return;
     }
     try {
@@ -241,7 +243,7 @@ export default function BreedingPage() {
       setBreedings(prev => prev.map(b => b._id === selectedBreedingId ? updatedBreeding : b));
       setShowEventModal(false);
     } catch (err) {
-      showToast(err.response?.data?.error || 'Errore creazione coppia', 'error');
+      showToast(err.response?.data?.error || t('breedingDashboard.errors.createPair'), 'error');
     }
   };
 
@@ -260,14 +262,14 @@ export default function BreedingPage() {
       setShowEventModal(false);
       setEditingEventId(null);
     } catch (err) {
-      showToast(err.response?.data?.error || 'Errore modifica evento', 'error');
+      showToast(err.response?.data?.error || t('breedingDashboard.errors.updateEvent'), 'error');
     }
   };
 
   const handleSubmit = async () => {
     try {
       if (!formData.male || !formData.female || !formData.species) {
-        showToast("Completa i campi obbligatori.", 'warning');
+        showToast(t('breedingDashboard.errors.mandatoryFields'), 'warning');
         return;
       }
       const payload = { ...formData, year: yearFilter };
@@ -276,7 +278,7 @@ export default function BreedingPage() {
       setShowModal(false);
       setFormData({ male: '', female: '', species: '', morphCombo: '', isLiveBirth: false });
     } catch (err) {
-      showToast(err.response?.data?.error || 'Errore creazione coppia', 'error');
+      showToast(err.response?.data?.error || t('breedingDashboard.errors.missingEventFields'), 'error');
     }
   };
 
@@ -287,7 +289,7 @@ export default function BreedingPage() {
         const breeders = res.data.dati.filter(r => r.isBreeder);
         setReptiles(breeders);
       })
-      .catch(err => console.error('Errore fetch rettili:', err));
+      .catch(err => console.error('Error', err));
   }, [user._id]);
 
   useEffect(() => {
@@ -301,7 +303,7 @@ export default function BreedingPage() {
         }));
         setBreedings(sortedBreedings);
       })
-      .catch(err => console.error('Errore fetch breeding:', err));
+      .catch(err => console.error('Error:', err));
   }, [yearFilter, user._id]);
 
   const monthlyEventsData = useMemo(() => {
@@ -343,9 +345,9 @@ export default function BreedingPage() {
   if (!hasPaidPlan(user)) {
     return (
       <div className="p-6 text-center text-brick bg-sand h-screen flex flex-col justify-center items-center">
-        <h1 className="text-4xl font-bold mb-4">Accesso Riservato</h1>
-        <p className="text-charcoal max-w-md">La sezione Riproduzione è una funzionalità avanzata, disponibile solo per gli utenti con un abbonamento attivo.</p>
-        <p className="text-charcoal max-w-md mt-2">Passa a un piano Basic o Premium per sbloccare i grafici, il tracciamento delle covate e molto altro.</p>
+        <h1 className="text-4xl font-bold mb-4">{t('breedingDashboard.restrictedAccessTitle')}</h1>
+        <p className="text-charcoal max-w-md">{t('breedingDashboard.restrictedAccessDescription')}</p>
+        <p className="text-charcoal max-w-md mt-2">{t('breedingDashboard.restrictedAccessUpgrade')}</p>
       </div>
     );
   }
@@ -355,9 +357,9 @@ export default function BreedingPage() {
       <main className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
 
         <section className="mb-8">
-          <h2 className="text-2xl font-bold text-charcoal mb-4">Dashboard Statistiche</h2>
+          <h2 className="text-2xl font-bold text-charcoal mb-4">{t('breedingDashboard.dashboardTitle')}</h2>
           <div className="grid md:grid-cols-2 gap-6">
-            <StatCard title={`Eventi per Mese (${yearFilter})`}>
+            <StatCard title={t('breedingDashboard.eventsPerMonth', {year: yearFilter})}>
               <BarChart data={monthlyEventsData}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                 <XAxis dataKey="name" tick={{ fill: '#64748b' }} fontSize={12} />
@@ -368,7 +370,7 @@ export default function BreedingPage() {
                 <Bar dataKey="Schiuse" fill="#22c55e" radius={[4, 4, 0, 0]} />
               </BarChart>
             </StatCard>
-            <StatCard title="Tasso di Successo Annuale (%)">
+            <StatCard title={t('breedingDashboard.yearlySuccessRate')}>
               <LineChart data={yearlySuccessData}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                 <XAxis dataKey="year" tick={{ fill: '#64748b' }} fontSize={12} />
@@ -382,7 +384,7 @@ export default function BreedingPage() {
 
         <section>
           <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
-            <h2 className="text-2xl font-bold text-charcoal">Accoppiamenti del {yearFilter}</h2>
+            <h2 className="text-2xl font-bold text-charcoal">{t('breedingDashboard.breedingOfYear',{year: yearFilter})}</h2>
             <div className="flex items-center gap-4">
               <div className="relative">
                 <select
@@ -399,7 +401,7 @@ export default function BreedingPage() {
               </div>
               <button className="btn btn-primary" onClick={() => setShowModal(true)}>
                 <PlusIcon className="w-5 h-5 mr-2" />
-                Nuova Coppia
+                {t('breedingDashboard.newPair')}
               </button>
             </div>
           </div>
@@ -419,11 +421,11 @@ export default function BreedingPage() {
             ) : (
               <div className="xl:col-span-2 text-center py-16 px-6 bg-white rounded-2xl shadow-sm border border-slate-200/80">
 
-                <h3 className="text-xl font-semibold text-charcoal">Nessuna coppia trovata per il {yearFilter}</h3>
-                <p className="text-slate-500 mt-2">Sembra che tu non abbia ancora registrato accoppiamenti per quest'anno. <br /> Inizia subito cliccando su "Nuova Coppia"!</p>
+                <h3 className="text-xl font-semibold text-charcoal">{t('breedingDashboard.noPairsTitle',{year: yearFilter})}</h3>
+                <p className="text-slate-500 mt-2">{t('breedingDashboard.noPairsDescription')}</p>
                 <button className="btn btn-primary mt-6" onClick={() => setShowModal(true)}>
                   <PlusIcon className="w-5 h-5 mr-2" />
-                  Aggiungi la prima coppia
+                 {t('breedingDashboard.addFirstPair')}
                 </button>
               </div>
             )}
@@ -433,22 +435,22 @@ export default function BreedingPage() {
 
       {showModal && (
         <Modal onClose={() => setShowModal(false)}>
-          <h2 className="text-2xl font-bold text-charcoal mb-6">Crea Nuova Coppia</h2>
+          <h2 className="text-2xl font-bold text-charcoal mb-6">{t('breedingDashboard.createNewPair')}</h2>
           <div className="space-y-4">
             <select className="input-field" value={formData.species} onChange={e => setFormData({ ...formData, species: e.target.value, male: '', female: '' })}>
-              <option value="">-- Seleziona Specie --</option>
+              <option value="">{t('breedingDashboard.selectSpecies')}</option>
               {[...new Set(reptiles.map(r => r.species?.trim()))].map(species => (
                 <option key={species} value={species}>{species}</option>
               ))}
             </select>
             <select className="input-field" value={formData.male} onChange={e => setFormData({ ...formData, male: e.target.value })} disabled={!formData.species}>
-              <option value="">-- Seleziona Maschio --</option>
+              <option value="">{t('breedingDashboard.selectMale')}</option>
               {reptiles.filter(r => r.sex === 'M' && r.species === formData.species).map(r => (
                 <option key={r._id} value={r._id}>{r.name || 'Senza nome'} ({r.morph || 'Classic'})</option>
               ))}
             </select>
             <select className="input-field" value={formData.female} onChange={e => setFormData({ ...formData, female: e.target.value })} disabled={!formData.species}>
-              <option value="">-- Seleziona Femmina --</option>
+              <option value="">{t('breedingDashboard.selectFemale')}</option>
               {reptiles.filter(r => r.sex === 'F' && r.species === formData.species).map(r => (
                 <option key={r._id} value={r._id}>{r.name || 'Senza nome'} ({r.morph || 'Classic'})</option>
               ))}
@@ -456,27 +458,27 @@ export default function BreedingPage() {
             <input className="input-field" type="text" placeholder="Morph Combo (es. Pastel x Banana)" value={formData.morphCombo} onChange={e => setFormData({ ...formData, morphCombo: e.target.value })} />
             <label className="flex items-center space-x-3 cursor-pointer">
               <input type="checkbox" className="h-4 w-4 rounded border-slate-300 text-forest focus:ring-forest/50" checked={formData.isLiveBirth} onChange={e => setFormData({ ...formData, isLiveBirth: e.target.checked })} />
-              <span className="text-slate-700">Questo accoppiamento è di tipo viviparo?</span>
+              <span className="text-slate-700">{t('breedingDashboard.isLiveBirth')}</span>
             </label>
-            <button className="btn btn-primary w-full" onClick={handleSubmit}>Salva Coppia</button>
+            <button className="btn btn-primary w-full" onClick={handleSubmit}>{t('breedingDashboard.savePair')}</button>
           </div>
         </Modal>
       )}
 
       {showEventModal && (
         <Modal onClose={() => { setShowEventModal(false); setEditingEventId(null); }}>
-          <h2 className="text-2xl font-bold text-charcoal mb-6">{editingEventId ? 'Modifica Evento' : 'Aggiungi Evento'}</h2>
+          <h2 className="text-2xl font-bold text-charcoal mb-6">{editingEventId ?  t('breedingDashboard.editEvent') : t('breedingDashboard.addEvent')}</h2>
           <div className="space-y-4">
             <select className="input-field" value={eventData.type} onChange={e => setEventData({ ...eventData, type: e.target.value })}>
-              <option value="">-- Tipo Evento --</option>
+              <option value="">{t('breedingDashboard.eventType')}</option>
               {['Mating', 'Ovulation', 'Prelay Shed', 'Egg Laid', 'Birth', 'Hatching', 'Failed'].map(type => (
                 <option key={type} value={type}>{translate(type)}</option>
               ))}
             </select>
             <input type="date" className="input-field" value={eventData.date} onChange={e => setEventData({ ...eventData, date: e.target.value })} />
-            <input type="text" placeholder="Note (opzionale)" className="input-field" value={eventData.notes} onChange={e => setEventData({ ...eventData, notes: e.target.value })} />
+            <input type="text" placeholder={t('breedingDashboard.eventNotes')} className="input-field" value={eventData.notes} onChange={e => setEventData({ ...eventData, notes: e.target.value })} />
             <button className="btn btn-primary w-full" onClick={editingEventId ? submitEditEvent : submitEvent}>
-              {editingEventId ? 'Modifica Evento' : 'Salva Evento'}
+              {editingEventId ? t('breedingDashboard.editEvent') : t('breedingDashboard.saveEvent')}
             </button>
           </div>
         </Modal>
@@ -484,29 +486,29 @@ export default function BreedingPage() {
 
       {showOutcomeModal && (
         <Modal onClose={() => setShowOutcomeModal(false)}>
-          <h2 className="text-2xl font-bold text-charcoal mb-6">Aggiorna risultato</h2>
+          <h2 className="text-2xl font-bold text-charcoal mb-6">{t('breedingDashboard.updateOutcome')}</h2>
           <div className="space-y-4">
             <select className="input-field" value={outcomeData.outcome} onChange={e => setOutcomeData({ ...outcomeData, outcome: e.target.value })}>
-              <option value="">-- Seleziona risultato --</option>
+              <option value="">{t('breedingDashboard.selectOutcome')}</option>
               {['Success', 'Partial', 'Failed', 'Unknown'].map(val => (
                 <option key={val} value={val}>{translate(val)}</option>
               ))}
             </select>
-            <input className="input-field" type="number" placeholder="Uova/Cuccioli Totali" value={outcomeData.clutchSize.total} onChange={e => setOutcomeData(d => ({ ...d, clutchSize: { ...d.clutchSize, total: e.target.value } }))} />
-            <input className="input-field" type="number" placeholder="Fertili" value={outcomeData.clutchSize.fertile} onChange={e => setOutcomeData(d => ({ ...d, clutchSize: { ...d.clutchSize, fertile: e.target.value } }))} />
-            <input className="input-field" type="number" placeholder="Nati / Schiusi" value={outcomeData.clutchSize.hatchedOrBorn} onChange={e => setOutcomeData(d => ({ ...d, clutchSize: { ...d.clutchSize, hatchedOrBorn: e.target.value } }))} />
-            <button className="btn btn-secondary w-full" onClick={submitOutcome}>Salva risultato</button>
+            <input className="input-field" type="number" placeholder={t('breedingDashboard.totalClutch')} value={outcomeData.clutchSize.total} onChange={e => setOutcomeData(d => ({ ...d, clutchSize: { ...d.clutchSize, total: e.target.value } }))} />
+            <input className="input-field" type="number" placeholder={t('breedingDashboard.fertileClutch')} value={outcomeData.clutchSize.fertile} onChange={e => setOutcomeData(d => ({ ...d, clutchSize: { ...d.clutchSize, fertile: e.target.value } }))} />
+            <input className="input-field" type="number" placeholder={t('breedingDashboard.hatchedOrBorn')} value={outcomeData.clutchSize.hatchedOrBorn} onChange={e => setOutcomeData(d => ({ ...d, clutchSize: { ...d.clutchSize, hatchedOrBorn: e.target.value } }))} />
+            <button className="btn btn-secondary w-full" onClick={submitOutcome}>{t('breedingDashboard.saveOutcome')}</button>
           </div>
         </Modal>
       )}
 
       {showConfirmModal && (
         <Modal onClose={() => setShowConfirmModal(false)}>
-          <h2 className="text-2xl font-bold text-charcoal mb-4">Conferma Eliminazione</h2>
-          <p className="text-slate-600 mb-6">Sei assolutamente sicuro di voler eliminare questo evento? L'azione è irreversibile.</p>
+          <h2 className="text-2xl font-bold text-charcoal mb-4">{t('breedingDashboard.confirmDeleteTitle')}</h2>
+          <p className="text-slate-600 mb-6">{t('breedingDashboard.confirmDeleteMessage')}</p>
           <div className="flex justify-end gap-3">
-            <button onClick={() => setShowConfirmModal(false)} className="btn btn-secondary-outline">Annulla</button>
-            <button onClick={confirmDeleteEvent} className="btn btn-danger">Conferma ed Elimina</button>
+            <button onClick={() => setShowConfirmModal(false)} className="btn btn-secondary-outline">{t('breedingDashboard.cancel')}</button>
+            <button onClick={confirmDeleteEvent} className="btn btn-danger">{t('breedingDashboard.confirmDelete')}</button>
           </div>
         </Modal>
 

@@ -4,27 +4,35 @@ import { useSelector } from 'react-redux';
 import { selectUser } from '../features/userSlice';
 import { FaTimes, FaCheckCircle, FaRegCircle } from 'react-icons/fa';
 import { VscEmptyWindow } from 'react-icons/vsc';
+import { useTranslation } from 'react-i18next';
 
-const formatDistanceToNow = (dateString) => {
+const formatDistanceToNow = (dateString, t) => {
   const date = new Date(dateString);
   const now = new Date();
   const seconds = Math.floor((now - date) / 1000);
+
   let interval = seconds / 31536000;
-  if (interval > 1) return `${Math.floor(interval)} anni fa`;
+  if (interval > 1) return t("notifications.time.yearsAgo", { count: Math.floor(interval) });
+
   interval = seconds / 2592000;
-  if (interval > 1) return `${Math.floor(interval)} mesi fa`;
+  if (interval > 1) return t("notifications.time.monthsAgo", { count: Math.floor(interval) });
+
   interval = seconds / 86400;
-  if (interval > 1) return `${Math.floor(interval)} giorni fa`;
+  if (interval > 1) return t("notifications.time.daysAgo", { count: Math.floor(interval) });
+
   interval = seconds / 3600;
-  if (interval > 1) return `${Math.floor(interval)} ore fa`;
+  if (interval > 1) return t("notifications.time.hoursAgo", { count: Math.floor(interval) });
+
   interval = seconds / 60;
-  if (interval > 1) return `${Math.floor(interval)} min fa`;
-  return 'Poco fa';
+  if (interval > 1) return t("notifications.time.minutesAgo", { count: Math.floor(interval) });
+
+  return t("notifications.time.justNow");
 };
 
 const Notifications = ({ onNotificationRead, closeDropdown }) => {
   const [notifications, setNotifications] = useState([]);
   const user = useSelector(selectUser);
+  const { t } = useTranslation();
 
   const fetchNotifications = async () => {
     try {
@@ -34,7 +42,7 @@ const Notifications = ({ onNotificationRead, closeDropdown }) => {
 
       setNotifications(all);
     } catch (err) {
-      console.error('Errore nel recupero delle notifiche:', err);
+      console.error(t("notifications.errors.fetchNotifications"), err);
     }
   };
 
@@ -49,11 +57,11 @@ const Notifications = ({ onNotificationRead, closeDropdown }) => {
       setNotifications(prev =>
         prev.map(n => n._id === notificationId ? { ...n, read: true } : n)
       );
-      onNotificationRead(); 
+      onNotificationRead();
 
       await api.put(`/notifications/${notificationId}`, { read: true });
     } catch (err) {
-      console.error('Errore nel segnare la notifica come letta:', err);
+      console.error(t("notifications.errors.markAsRead"), err);
       setNotifications(prev =>
         prev.map(n => n._id === notificationId ? { ...n, read: false } : n)
       );
@@ -80,13 +88,13 @@ const Notifications = ({ onNotificationRead, closeDropdown }) => {
         </div>
         <div className="flex-1">
           <p className="text-sm text-gray-800">{notification.message}</p>
-          <p className="text-xs text-gray-500 mt-1">{formatDistanceToNow(notification.date)}</p>
+          <p className="text-xs text-gray-500 mt-1">{formatDistanceToNow(notification.date, t)}</p>
         </div>
         {!notification.read && (
           <button
             onClick={() => markAsRead(notification._id)}
             className="ml-2 text-gray-400 hover:text-green-600 transition-colors"
-            title="Segna come letto"
+            title={t("notifications.actions.markAsRead")}
           >
             {isHovered ? <FaCheckCircle /> : <FaRegCircle />}
           </button>
@@ -99,7 +107,7 @@ const Notifications = ({ onNotificationRead, closeDropdown }) => {
     <div className="flex flex-col h-full">
       {/* Header */}
       <div className="flex justify-between items-center p-3 border-b border-gray-200">
-        <h3 className="font-semibold text-md text-[#2B2B2B]">Notifiche</h3>
+        <h3 className="font-semibold text-md text-[#2B2B2B]">{t("notifications.title")}</h3>
         <button onClick={closeDropdown} className="text-gray-500 hover:text-red-600">
           <FaTimes />
         </button>
@@ -109,20 +117,20 @@ const Notifications = ({ onNotificationRead, closeDropdown }) => {
         {notifications.length === 0 ? (
           <div className="flex flex-col items-center justify-center text-center p-8 text-gray-500">
             <VscEmptyWindow className="text-4xl mb-2" />
-            <p className="font-semibold">Nessuna notifica</p>
-            <p className="text-sm">Sei completamente aggiornato!</p>
+            <p className="font-semibold">{t("notifications.empty.title")}</p>
+            <p className="text-sm">{t("notifications.empty.subtitle")}</p>
           </div>
         ) : (
           <ul>
             {unreadNotifications.length > 0 && (
-              <li className="px-3 py-1 text-xs font-bold text-gray-500 uppercase bg-gray-50">Non lette</li>
+              <li className="px-3 py-1 text-xs font-bold text-gray-500 uppercase bg-gray-50">{t("notifications.unread")}</li>
             )}
             {unreadNotifications.map(n => <NotificationCard key={n._id} notification={n} />)}
 
             {readNotifications.length > 0 && unreadNotifications.length > 0 && <hr className="my-1" />}
 
             {readNotifications.length > 0 && (
-              <li className="px-3 py-1 text-xs font-bold text-gray-500 uppercase bg-gray-50">Lette</li>
+              <li className="px-3 py-1 text-xs font-bold text-gray-500 uppercase bg-gray-50">{t("notifications.read")}</li>
             )}
             {readNotifications.map(n => <NotificationCard key={n._id} notification={n} />)}
           </ul>
@@ -135,7 +143,7 @@ const Notifications = ({ onNotificationRead, closeDropdown }) => {
           onClick={() => { closeDropdown(); }}
           className="text-sm font-semibold text-green-700 hover:underline"
         >
-          Vedi tutte le notifiche
+          {t("notifications.seeAll")}
         </button>
       </div>
     </div>

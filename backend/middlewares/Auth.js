@@ -7,7 +7,7 @@ export const authenticateJWT = async (req, res, next) => {
     const authHeader = req.header('Authorization');
 
     if (!authHeader) {
-        return res.status(401).json({ message: 'Token di accesso mancante' });
+        return res.status(401).json({ message: req.t('refresh_token')  });
     }
 
     const token = authHeader.split(' ')[1];
@@ -16,18 +16,18 @@ export const authenticateJWT = async (req, res, next) => {
         // Check if the token has been revoked
         const isRevoked = await RevokedToken.findOne({ token });
         if (isRevoked) {
-            return res.status(403).json({ message: 'Token revocato' });
+            return res.status(403).json({ message: req.t('tokenRevoked') });
         }
 
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
         const user = await User.findById(decoded.userid).select('role');
         if (!user) {
-            return res.status(401).json({ message: 'Utente non trovato' });
+            return res.status(401).json({ message: req.t('user_notFound')  });
         }
 
         if (user.role === 'banned') {
-            return res.status(403).json({ message: 'Account bannato. Contatta il supporto.' });
+            return res.status(403).json({ message:  req.t('account_ban')  });
         }
 
         req.user = decoded;

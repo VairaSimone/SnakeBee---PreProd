@@ -10,7 +10,7 @@ export const GetEvents = async (req, res) => {
     const events = await Event.find({ reptile: req.params.reptileId }).sort({ date: -1 });
     res.send(events);
   } catch (err) {
-    res.status(500).send({ message: 'Error retrieving events' });
+    res.status(500).send({ message: req.t('server_error')});
   }
 };
 
@@ -21,7 +21,7 @@ export const CreateEvent = async (req, res) => {
 
     const user = await User.findById(req.user.userid).lean();
     if (!user) {
-      return res.status(404).send({ message: 'Utente non trovato.' });
+      return res.status(404).send({ message: req.t('user_notFound')});
     }
 
     const { plan, limits } = getUserPlan(user);
@@ -31,7 +31,7 @@ export const CreateEvent = async (req, res) => {
       const existingCount = await Event.countDocuments({ reptile: reptileId, type });
       if (existingCount >= limits.eventsPerTypePerReptile) {
         return res.status(403).send({
-          message: `Limite massimo di ${limits.eventsPerTypePerReptile} eventi di tipo "${type}" raggiunto per questo rettile. Passa al piano Basic per eventi illimitati.`
+          message: req.t('eventLimit',{ eventsPerTypePerReptile: limits.eventsPerTypePerReptile, typ: type}) 
         });
       }
     }
@@ -45,7 +45,7 @@ export const CreateEvent = async (req, res) => {
 
     if (type === 'weight') {
       if (!weight || isNaN(weight)) {
-        return res.status(400).send({ message: 'Peso non valido per evento di tipo "Peso".' });
+        return res.status(400).send({ message: req.t('invalid_value') });
       }
       newEventData.weight = weight;
     }
@@ -55,7 +55,7 @@ export const CreateEvent = async (req, res) => {
     const saved = await newEvent.save();
     res.status(201).send(saved);
   } catch (err) {
-    res.status(400).send({ message: 'Errore nella creazione dell\'evento', err });
+    res.status(400).send({ message: req.t('element_error'), err });
   }
 };
 
@@ -63,9 +63,9 @@ export const CreateEvent = async (req, res) => {
 export const DeleteEvent = async (req, res) => {
   try {
     await Event.findByIdAndDelete(req.params.eventId);
-    res.send({ message: 'Evento eliminato' });
+    res.send({ message: req.t('event_delete') });
   } catch (err) {
-    res.status(500).send({ message: "Errore durante l'eliminazione dell'evento" });
+    res.status(500).send({ message: req.t('element_error') });
   }
 };
 

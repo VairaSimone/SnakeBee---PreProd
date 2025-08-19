@@ -11,18 +11,18 @@ async function isInventoryAccessAllowed(userId) {
 export const getInventory = async (req, res) => {
   try {
     if (!req.user || !req.user.userid) {
-      return res.status(401).json({ message: 'Utente non autenticato' });
+      return res.status(401).json({ message:  req.t('user_notFound') });
     }
 
     if (!await isInventoryAccessAllowed(req.user.userid)) {
-      return res.status(403).json({ message: 'la funzione può essere utilizzata soltanto da utenti Premium' });
+      return res.status(403).json({ message: req.t('premium_plan') });
     }
 
     const inventory = await FoodInventory.find({ user: req.user.userid });
     res.json(inventory);
   } catch (err) {
     console.error('Error retrieving inventory:', err);
-    res.status(500).json({ message: 'Errore nel recupero dell\'inventario' });
+    res.status(500).json({ message: req.t('error_inventory') });
   }
 };
 
@@ -31,7 +31,7 @@ export const updateInventoryItem = async (req, res) => {
   const { quantity, weightPerUnit } = req.body;
 
   if (!isInventoryAccessAllowed(req.user.userid)) {
-    return res.status(403).json({ message: 'Solo gli utenti Premium possono aggiornare l\'inventario.' });
+    return res.status(403).json({ message: req.t('premium_plan')  });
   }
 
   try {
@@ -41,11 +41,11 @@ export const updateInventoryItem = async (req, res) => {
       { new: true }
     );
 
-    if (!item) return res.status(404).json({ message: 'Elemento non trovato' });
+    if (!item) return res.status(404).json({ message: req.t('invalid_value') });
 
     res.json(item);
   } catch (err) {
-    res.status(500).json({ message: 'Errore nell\'aggiornamento dell\'elemento' });
+    res.status(500).json({ message: req.t('error_inventory') });
   }
 };
 
@@ -54,7 +54,7 @@ export const addInventoryItem = async (req, res) => {
   const userId = req.user.userid;
 
   if (!isInventoryAccessAllowed(req.user.userid)) {
-    return res.status(403).json({ message: 'Funzionalità riservata agli utenti Premium.' });
+    return res.status(403).json({ message: req.t('premium_plan')  });
   }
 
   try {
@@ -85,7 +85,7 @@ export const addInventoryItem = async (req, res) => {
     res.status(201).json(newItem);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Errore nella creazione dell\'elemento' });
+    res.status(500).json({ message: req.t('error_inventory') });
   }
 };
 
@@ -93,7 +93,7 @@ export const deleteFeeding = async (req, res) => {
   const { id } = req.params;
 
   if (!isInventoryAccessAllowed(req.user.userid)) {
-    return res.status(403).json({ message: 'Solo gli utenti Premium possono eliminare elementi dall\'inventario.' });
+    return res.status(403).json({ message: req.t('premium_plan')  });
   }
 
   try {
@@ -103,12 +103,12 @@ export const deleteFeeding = async (req, res) => {
     });
 
     if (!deleted) {
-      return res.status(404).json({ message: 'Elemento non trovato o già eliminato' });
+      return res.status(404).json({ message: req.t('invalid_value')});
     }
 
-    res.json({ message: 'Elemento eliminato con successo' });
+    res.json({ message: req.t('element_delete') });
   } catch (err) {
     console.error('Error while deleting:', err);
-    res.status(500).json({ message: 'Errore durante l\'eliminazione dell\'elemento' });
+    res.status(500).json({ message: req.t('error_inventory') });
   }
 };
