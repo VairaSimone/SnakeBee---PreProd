@@ -67,7 +67,7 @@
   "basic_plan": "Funzionalità riservata agli utenti Basic.",
   "error_inventory": "errore nella gestione dell'inventario",
   "element_delete": "Elemento eliminato con successo",
-  "foodTypeQuantity": "Non hai abbastanza {{food}}",
+  "foodTypeQuantity": "Non hai abbastanza cibo",
   "errorCreate_feeding": "Errore durante la creazione del record di alimentazione",
   "errorUpdate_feeding": "Errore durante la modifica del record di alimentazione",
   "errorDelete_feeding": "Errore durante l'eliminazione del record di alimentazione",
@@ -152,7 +152,7 @@
   "breeding_invalid_sex": "Controlla il sesso dei rettili (M/F)",
   "breeding_duplicate_year": "Questa coppia esiste già per quest'anno",
   "breeding_notFound": "Riproduzione non trovata",
-  "breeding_event_same_week": "Evento \"{{type}}\" già presente in questa settimana",
+  "breeding_event_same_week": "Evento già presente in questa settimana",
   "rateLimit": {
     "refresh": "Troppi tentativi di aggiornamento. Riprova più tardi.",
     "login": "Troppi tentativi di login. Riprova più tardi.",

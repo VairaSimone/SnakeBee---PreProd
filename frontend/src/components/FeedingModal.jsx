@@ -68,6 +68,7 @@ const FeedingModal = ({ show, handleClose, reptileId, onSuccess }) => {
   const [totalPages, setTotalPages] = useState(1);
   const [inventory, setInventory] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+const [serverError, setServerError] = useState(null);
 
   const { register, handleSubmit, watch, reset, control, formState: { errors } } = useForm({
     defaultValues: {
@@ -135,11 +136,14 @@ const fetchData = async () => {
     };
 
     try {
+      setServerError(null);
       await api.post(`/feedings/${reptileId}`, payload);
       await fetchData(); 
       reset(); 
       onSuccess?.();
     } catch (err) {
+        const message = err?.response?.data?.message || t('feedingModal.errors.generic');
+  setServerError(message);
     } finally {
       setIsSubmitting(false);
     }
@@ -189,6 +193,7 @@ const fetchData = async () => {
                   <div className={sectionClasses}>
                     <h3 className={sectionTitleClasses}><PlusCircleIcon className="w-6 h-6 text-emerald-600" /> {t('feedingModal.actions.add')}</h3>
                     <form onSubmit={handleSubmit(onSubmit)} className="mt-4 space-y-4">
+
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-4">
                         <div>
                           <label htmlFor="date" className={labelClasses}>{t('feedingModal.fields.date')}</label>
@@ -279,11 +284,18 @@ const fetchData = async () => {
                           <textarea id="notes" {...register('notes')} rows={2} placeholder={t('feedingModal.placeholders.notesExample')} className={inputClasses} disabled={isSubmitting} />
                         </div>
                       </div>
+                                            {serverError && (
+  <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
+    <ExclamationCircleIcon className="w-4 h-4" />
+    {serverError}
+  </p>
+)}
                       <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
                         <button type="button" onClick={() => reset()} className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition" disabled={isSubmitting}>{t('feedingModal.actions.reset')}</button>
                         <button type="submit" className="inline-flex justify-center px-4 py-2 text-sm font-medium text-white bg-emerald-600 border border-transparent rounded-md hover:bg-emerald-700 disabled:bg-emerald-300 transition" disabled={isSubmitting}>
                           {isSubmitting ? t('feedingModal.actions.saving') : t('feedingModal.actions.add') }
                         </button>
+                        
                       </div>
                     </form>
                   </div>

@@ -25,7 +25,8 @@ const ReptileDetails = () => {
     const [loading, setLoading] = useState(true);
     const [pdfError, setPdfError] = useState('');
     const carouselRef = useRef(null);
-  const { t } = useTranslation();
+    const defaultImage = "https://res.cloudinary.com/dg2wcqflh/image/upload/v1753088270/sq1upmjw7xgrvpkghotk.png"
+    const { t } = useTranslation();
 
     const [visibleCounts, setVisibleCounts] = useState({
         feedings: 5,
@@ -63,57 +64,57 @@ const ReptileDetails = () => {
         }));
     };
 
-const downloadPDF = async () => {
-  try {
-    setPdfError('');
-    const response = await api.get(`/reptile/${reptileId}/pdf`, { responseType: 'blob' });
-
-    const reader = new FileReader();
-    reader.onload = () => {
-      try {
-        const text = reader.result;
-        const json = JSON.parse(text);
-
-        if (json.message) {
-          setPdfError(`⚠️ ${json.message}`);
-          return;
-        }
-      } catch {
-        const url = window.URL.createObjectURL(response.data);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `${reptile.name || 'reptile'}.pdf`;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        window.URL.revokeObjectURL(url);
-      }
-    };
-    reader.onerror = () => {
-      setPdfError(t('ReptileDetails.errorPDF'));
-    };
-    reader.readAsText(response.data);
-
-  } catch (error) {
-    if (error.response?.data) {
-      const reader = new FileReader();
-      reader.onload = () => {
+    const downloadPDF = async () => {
         try {
-          const json = JSON.parse(reader.result);
-          if (json.message) {
-            setPdfError(`⚠️ ${json.message}`);
-            return;
-          }
-        } catch {
-          setPdfError(t('ReptileDetails.serverError'));
+            setPdfError('');
+            const response = await api.get(`/reptile/${reptileId}/pdf`, { responseType: 'blob' });
+
+            const reader = new FileReader();
+            reader.onload = () => {
+                try {
+                    const text = reader.result;
+                    const json = JSON.parse(text);
+
+                    if (json.message) {
+                        setPdfError(`⚠️ ${json.message}`);
+                        return;
+                    }
+                } catch {
+                    const url = window.URL.createObjectURL(response.data);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `${reptile.name || 'reptile'}.pdf`;
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                    window.URL.revokeObjectURL(url);
+                }
+            };
+            reader.onerror = () => {
+                setPdfError(t('ReptileDetails.errorPDF'));
+            };
+            reader.readAsText(response.data);
+
+        } catch (error) {
+            if (error.response?.data) {
+                const reader = new FileReader();
+                reader.onload = () => {
+                    try {
+                        const json = JSON.parse(reader.result);
+                        if (json.message) {
+                            setPdfError(`⚠️ ${json.message}`);
+                            return;
+                        }
+                    } catch {
+                        setPdfError(t('ReptileDetails.serverError'));
+                    }
+                };
+                reader.readAsText(error.response.data);
+            } else {
+                setPdfError(t('ReptileDetails.downloadError'));
+            }
         }
-      };
-      reader.readAsText(error.response.data);
-    } else {
-      setPdfError(t('ReptileDetails.downloadError'));
-    }
-  }
-};
+    };
 
     const scrollCarousel = (direction) => {
         if (carouselRef.current) {
@@ -132,7 +133,7 @@ const downloadPDF = async () => {
         { type: 'weight', title: t('ReptileDetails.weight'), icon: '⚖️' },
         { type: 'vet', title: t('ReptileDetails.vet'), icon: '🩺' },
     ];
-    
+
     return (
         <div className=" green:bg-slate-900 min-h-screen p-4 sm:p-6 lg:p-8">
             <div className="max-w-7xl mx-auto">
@@ -143,23 +144,32 @@ const downloadPDF = async () => {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     <div className="lg:col-span-1 space-y-6">
                         <InfoCard>
-                             <div className="relative h-64 w-full overflow-hidden rounded-lg group">
-                                <div className="flex h-full overflow-x-auto scroll-smooth snap-x snap-mandatory no-scrollbar" ref={carouselRef}>
-                                    {reptile.image && reptile.image.length > 0 ? (
-                                        reptile.image.map((img, idx) => (
-                                            <img
-                                                key={idx}
-                                                src={`${baseUrl}${img}`}
-                                                alt={`${reptile.name} - ${idx + 1}`}
-                                                className="object-cover w-full h-full flex-shrink-0 snap-center"
-                                            />
-                                        ))
-                                    ) : (
-                                        <div className="w-full h-full flex items-center justify-center bg-gray-200 dark:bg-gray-700">
-                                            <span className="text-gray-500">{t('ReptileDetails.noImage')}</span>
-                                        </div>
-                                    )}
-                                </div>
+                            <div className="relative h-64 w-full overflow-hidden rounded-lg group">
+    <div className="relative h-64 w-full overflow-hidden rounded-lg group">
+  <div className="flex h-full overflow-x-auto scroll-smooth snap-x snap-mandatory no-scrollbar" ref={carouselRef}>
+    {(reptile.image?.filter(Boolean).length ? reptile.image.filter(Boolean) : [defaultImage]).map((img, idx) => {
+      const imageUrl = img === defaultImage ? img : `${baseUrl}${img}`; // Applica BaseURL solo alle immagini dell'utente
+      return (
+        <img
+          key={idx}
+          src={imageUrl}
+          alt={`${reptile.name || 'reptile'} - ${idx + 1}`}
+          className="object-cover w-full h-full flex-shrink-0 snap-center"
+        />
+      );
+    })}
+  </div>
+
+  {(reptile.image?.filter(Boolean)?.length || 0) > 1 && (
+    <>
+      <CarouselArrow direction="left" onClick={() => scrollCarousel(-1)} />
+      <CarouselArrow direction="right" onClick={() => scrollCarousel(1)} />
+    </>
+  )}
+</div>
+
+
+                                   
                                 {reptile.image?.length > 1 && (
                                     <>
                                         <CarouselArrow direction="left" onClick={() => scrollCarousel(-1)} />
@@ -189,11 +199,11 @@ const downloadPDF = async () => {
                         </InfoCard>
 
                         {reptile.notes && (
-                           <InfoCard title={t('ReptileDetails.notes')}>
+                            <InfoCard title={t('ReptileDetails.notes')}>
                                 <p className="text-black dark:text-black whitespace-pre-wrap">{reptile.notes}</p>
-                           </InfoCard> 
+                            </InfoCard>
                         )}
-                        
+
                         <InfoCard title={t('ReptileDetails.parents')}>
                             <InfoItem label={t('ReptileDetails.father')} value={reptile.parents?.father || t('ReptileDetails.notSpecified')} />
                             <InfoItem label={t('ReptileDetails.mother')} value={reptile.parents?.mother || t('ReptileDetails.notSpecified')} />
@@ -203,14 +213,14 @@ const downloadPDF = async () => {
                             <h4 className="font-semibold text-black dark:text-black mb-2">CITES</h4>
                             <InfoItem label={t('ReptileDetails.number')} value={reptile.documents?.cites?.number || 'N/D'} />
                             <InfoItem label={t('ReptileDetails.issueDate')} value={reptile.documents?.cites?.issueDate?.split('T')[0] || 'N/D'} />
-                            <hr className="my-3 border-slate-200 dark:border-slate-700"/>
+                            <hr className="my-3 border-slate-200 dark:border-slate-700" />
                             <h4 className="font-semibold text-black dark:text-black mb-2">{t('ReptileDetails.microchip')}</h4>
                             <InfoItem label={t('ReptileDetails.code')} value={reptile.documents?.microchip?.code || 'N/D'} />
                             <InfoItem label={t('ReptileDetails.implantDate')} value={reptile.documents?.microchip?.implantDate?.split('T')[0] || 'N/D'} />
                         </InfoCard>
-                         
+
                         <div>
-                             <button onClick={downloadPDF} className="w-full bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 transition-colors duration-200">
+                            <button onClick={downloadPDF} className="w-full bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 transition-colors duration-200">
                                 {t('ReptileDetails.downloadPdf')}
                             </button>
                             {pdfError && <p className="mt-2 text-sm text-red-500">{pdfError}</p>}
@@ -231,8 +241,8 @@ const downloadPDF = async () => {
                         />
 
                         {eventSectionsConfig.map(section => {
-                             const filteredEvents = events.filter(e => e.type === section.type);
-                             return (
+                            const filteredEvents = events.filter(e => e.type === section.type);
+                            return (
                                 <EventSection
                                     key={section.type}
                                     title={section.title}
@@ -240,9 +250,9 @@ const downloadPDF = async () => {
                                     items={filteredEvents}
                                     visibleCount={visibleCounts[section.type]}
                                     onToggleVisibility={(showMore) => handleToggleVisibility(section.type, showMore)}
-                                    emptyMessage={t('ReptileDetails.noEvent', {event: section.title})}
+                                    emptyMessage={t('ReptileDetails.noEvent', { event: section.title })}
                                 />
-                             );
+                            );
                         })}
                     </div>
                 </div>

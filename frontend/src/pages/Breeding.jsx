@@ -1,11 +1,66 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { BarChart, LineChart, XAxis, YAxis, Tooltip, Legend, Bar, Line, ResponsiveContainer, CartesianGrid } from 'recharts';
-import { PlusIcon, CalendarIcon, PencilIcon, TrashIcon, ChevronDownIcon, XMarkIcon } from '@heroicons/react/24/solid';
+import { PlusIcon, CalendarIcon, PencilIcon, TrashIcon, ChevronDownIcon, XMarkIcon, MagnifyingGlassIcon } from '@heroicons/react/24/solid';
 import api from '../services/api';
 import Modal from '../components/BreedingModal.jsx';
 import { selectUser } from '../features/userSlice.jsx';
 import { useTranslation } from 'react-i18next';
+
+const FilterBar = ({ yearFilter, setYearFilter, onFiltersChange }) => {
+  const [speciesFilter, setSpeciesFilter] = useState("");
+  const [morphFilter, setMorphFilter] = useState("");
+  const { t } = useTranslation();
+
+
+  const handleChange = (field, value) => {
+    if (field === "species") setSpeciesFilter(value);
+    if (field === "morph") setMorphFilter(value);
+    onFiltersChange({ species: field === "species" ? value : speciesFilter, morph: field === "morph" ? value : morphFilter });
+  };
+
+  return (
+    <div className="flex flex-col md:flex-row items-center gap-4 bg-white p-4 rounded-xl shadow-sm border border-slate-200/80">
+      <div className="relative">
+        <select
+          className="input-field appearance-none pr-10 text-black"
+          value={yearFilter}
+          onChange={e => setYearFilter(Number(e.target.value))}
+        >
+          {[...Array(10)].map((_, i) => {
+            const year = new Date().getFullYear() - i;
+            return <option key={year} value={year}>{year}</option>;
+          })}
+        </select>
+        <ChevronDownIcon className="w-5 h-5 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+      </div>
+
+      {/* Filtro Nome */}
+      <div className="relative flex-1">
+        <MagnifyingGlassIcon className="w-5 h-5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+        <input
+          type="text"
+          placeholder={t('breedingDashboard.speciesFilter')}
+          value={speciesFilter}
+          onChange={e => handleChange("species", e.target.value)}
+          className="input-field pl-10"
+        />
+      </div>
+
+      {/* Filtro Morph */}
+      <div className="relative flex-1">
+        <MagnifyingGlassIcon className="w-5 h-5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+        <input
+          type="text"
+          placeholder={t('breedingDashboard.comboFilter')}
+          value={morphFilter}
+          onChange={e => handleChange("morph", e.target.value)}
+          className="input-field pl-10"
+        />
+      </div>
+    </div>
+  );
+}
 
 function Toast({ message, type = 'error', onClose }) {
   useEffect(() => {
@@ -28,20 +83,23 @@ function Toast({ message, type = 'error', onClose }) {
     </div>
   );
 }
-const translationMap = (t) => ({
-  Mating: t('breedingDashboard.breedingOutcomes.Mating'),
-  Ovulation: t('breedingDashboard.breedingOutcomes.Ovulation'),
-  'Prelay Shed': t('breedingDashboard.breedingOutcomes.PrelayShed'),
-  'Egg Laid': t('breedingDashboard.breedingOutcomes.EggLaid'),
-  Birth: t('breedingDashboard.breedingOutcomes.Birth'),
-  Hatching: t('breedingDashboard.breedingOutcomes.Hatching'),
-  Failed: t('breedingDashboard.breedingOutcomes.Failed'),
-  Success: t('breedingDashboard.breedingOutcomes.Success'),
-  Partial: t('breedingDashboard.breedingOutcomes.Partial'),
-  Unknown: t('breedingDashboard.breedingOutcomes.Unknown'),
-});
-
-const translate = (key) => translationMap[key] || key;
+const OUTCOME_ENUM = ['Success', 'Partial', 'Failed', 'Unknown'];
+const useBreedingTranslator = () => {
+  const { t } = useTranslation();
+  const map = {
+    Mating: t('breedingDashboard.breedingOutcomes.Mating'),
+    Ovulation: t('breedingDashboard.breedingOutcomes.Ovulation'),
+    'Prelay Shed': t('breedingDashboard.breedingOutcomes.PrelayShed'),
+    'Egg Laid': t('breedingDashboard.breedingOutcomes.EggLaid'),
+    Birth: t('breedingDashboard.breedingOutcomes.Birth'),
+    Hatching: t('breedingDashboard.breedingOutcomes.Hatching'),
+    Failed: t('breedingDashboard.breedingOutcomes.Failed'),
+    Success: t('breedingDashboard.breedingOutcomes.Success'),
+    Partial: t('breedingDashboard.breedingOutcomes.Partial'),
+    Unknown: t('breedingDashboard.breedingOutcomes.Unknown'),
+  };
+  return (key) => map[key] || key;
+};
 
 function hasPaidPlan(user) {
   if (!user?.subscription) return false;
@@ -62,14 +120,16 @@ const StatCard = ({ title, children }) => (
 );
 
 const BreedingCard = ({ breeding, onAddEvent, onUpdateOutcome, onEditEvent, onDeleteEventRequest }) => {
-      const { t} = useTranslation();
-  
+  const { t } = useTranslation();
+  const translate = useBreedingTranslator();
+  const [showAllEvents, setShowAllEvents] = useState(false);
   const outcomeColors = {
     Success: 'bg-green-100 text-green-800',
     Partial: 'bg-amber/20 text-amber',
     Failed: 'bg-red-100 text-red-700',
     Unknown: 'bg-slate-100 text-slate-600',
   };
+  const eventsToShow = showAllEvents ? breeding.events : breeding.events?.slice(-5);
 
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden transition-shadow duration-300 hover:shadow-lg">
@@ -92,10 +152,19 @@ const BreedingCard = ({ breeding, onAddEvent, onUpdateOutcome, onEditEvent, onDe
           <h4 className="font-semibold text-slate-700">{t('breedingDashboard.detailsClutch')}</h4>
           <div className="text-sm space-y-2">
             <p><span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${breeding.isLiveBirth ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'}`}>{breeding.isLiveBirth ? t('breedingDashboard.liveBirth') : t('breedingDashboard.oviparous')}</span></p>
-            <div className="flex gap-2 pt-2">
-              <span className="bg-blue-100 text-blue-800 px-2.5 py-1 text-xs font-bold rounded-full">{t('breedingDashboard.total')} {breeding.clutchSize?.total || 0}</span>
-              <span className="bg-green-100 text-green-800 px-2.5 py-1 text-xs font-bold rounded-full">{t('breedingDashboard.fertile')} {breeding.clutchSize?.fertile || 0}</span>
-              <span className="bg-yellow-100 text-yellow-800 px-2.5 py-1 text-xs font-bold rounded-full">{t('breedingDashboard.hatchedOrBorn')} {breeding.clutchSize?.hatchedOrBorn || 0}</span>
+            <div className="grid grid-cols-3 gap-3 pt-2">
+              <div className="bg-slate-50 rounded-lg p-2 text-center">
+                <p className="text-xs text-slate-500">{t('breedingDashboard.total')}</p>
+                <p className="text-lg font-bold text-green-800">{breeding.clutchSize?.total || 0}</p>
+              </div>
+              <div className="bg-slate-50 rounded-lg p-2 text-center">
+                <p className="text-xs text-slate-500">{t('breedingDashboard.fertile')}</p>
+                <p className="text-lg font-bold text-green-700">{breeding.clutchSize?.fertile || 0}</p>
+              </div>
+              <div className="bg-slate-50 rounded-lg p-2 text-center">
+                <p className="text-xs text-slate-500">{t('breedingDashboard.hatchedOrBorn')}</p>
+                <p className="text-lg font-bold text-green-600">{breeding.clutchSize?.hatchedOrBorn || 0}</p>
+              </div>
             </div>
           </div>
           <div className="pt-2 flex flex-wrap gap-2">
@@ -111,20 +180,25 @@ const BreedingCard = ({ breeding, onAddEvent, onUpdateOutcome, onEditEvent, onDe
         {/* Event */}
         <div className="md:col-span-2">
           <h4 className="font-semibold text-slate-700 mb-2">{t('breedingDashboard.eventsRegistered')}</h4>
-          {breeding.events?.length > 0 ? (
+          {eventsToShow?.length > 0 ? (
             <ul className="space-y-2 text-sm">
-              {breeding.events.map(event => (
+              {eventsToShow.map(event => (
                 <li key={event._id} className="flex justify-between items-center p-2 rounded-lg">
                   <div className="flex items-center">
                     <CalendarIcon className="w-4 h-4 mr-2 text-slate-400" />
                     <div>
                       <span className="font-semibold text-slate-700">{translate(event.type)}</span>
+                      <p className="text-xs text-slate-500">{formatDate(event.date)}</p>
                       {event.notes && <p className="text-xs text-slate-400 italic">"{event.notes}"</p>}
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <button onClick={() => onEditEvent(breeding._id, event)} className="text-slate-400 hover:text-blue-500 transition-colors"><PencilIcon className="w-4 h-4" /></button>
-                    <button onClick={() => onDeleteEventRequest(breeding._id, event._id)} className="text-slate-400 hover:text-red-500 transition-colors"><TrashIcon className="w-4 h-4" /></button>
+                    <button onClick={() => onEditEvent(breeding._id, event)} className="text-slate-400 hover:text-blue-500 transition-colors">
+                      <PencilIcon className="w-4 h-4" />
+                    </button>
+                    <button onClick={() => onDeleteEventRequest(breeding._id, event._id)} className="text-slate-400 hover:text-red-500 transition-colors">
+                      <TrashIcon className="w-4 h-4" />
+                    </button>
                   </div>
                 </li>
               ))}
@@ -133,6 +207,16 @@ const BreedingCard = ({ breeding, onAddEvent, onUpdateOutcome, onEditEvent, onDe
             <div className="text-center py-4 px-2 rounded-lg">
               <p className="text-sm text-slate-500">{t('breedingDashboard.noEvents')}</p>
             </div>
+          )}
+
+          {/* Pulsante mostra tutti / mostra meno */}
+          {breeding.events?.length > 5 && (
+            <button
+              className="mt-2 text-sm text-blue-500 hover:underline"
+              onClick={() => setShowAllEvents(!showAllEvents)}
+            >
+              {showAllEvents ? t('breedingDashboard.showLess') : t('breedingDashboard.showAll')}
+            </button>
           )}
         </div>
       </div>
@@ -154,10 +238,26 @@ export default function BreedingPage() {
   const [eventData, setEventData] = useState({ type: '', date: '', notes: '' });
   const [yearFilter, setYearFilter] = useState(new Date().getFullYear());
   const [showModal, setShowModal] = useState(false);
-    const { t} = useTranslation();
+  const { t } = useTranslation();
   const [formData, setFormData] = useState({ male: '', female: '', species: '', morphCombo: '', isLiveBirth: false });
   const [outcomeData, setOutcomeData] = useState({ outcome: '', clutchSize: { total: '', fertile: '', hatchedOrBorn: '' } });
   const [toast, setToast] = useState({ show: false, message: '', type: 'error' });
+  const translate = useBreedingTranslator();
+  const [filters, setFilters] = useState({ species: "", morph: "" });
+  const [eventError, setEventError] = useState("");
+
+  const filteredBreedings = useMemo(() => {
+    return breedings.filter(b => {
+      const matchSpecies = filters.species ?
+        (b.species?.toLowerCase().includes(filters.species.toLowerCase()))
+        : true;
+      const matchMorph = filters.morph ?
+        (b.morphCombo?.toLowerCase().includes(filters.morph.toLowerCase()))
+        : true;
+      return matchSpecies && matchMorph;
+    });
+  }, [breedings, filters]);
+
   const showToast = (message, type = 'error') => {
     setToast({ show: true, message, type });
   };
@@ -197,7 +297,7 @@ export default function BreedingPage() {
   const handleUpdateOutcome = (breedingId) => {
     const breeding = breedings.find(b => b._id === breedingId);
     setOutcomeData({
-      outcome: breeding?.outcome || t('breedingDashboard.outcomes.Unknown'),
+      outcome: 'Unknown',
       clutchSize: {
         total: breeding?.clutchSize?.total || '',
         fertile: breeding?.clutchSize?.fertile || '',
@@ -231,21 +331,28 @@ export default function BreedingPage() {
       showToast(err.response?.data?.error || t('breedingDashboard.errors.updateOutcome'), 'error');
     }
   };
-
-  const submitEvent = async () => {
-    if (!eventData.type || !eventData.date) {
-      showToast(t('breedingDashboard.errors.missingEventFields'), 'warning');
-      return;
-    }
-    try {
-      const res = await api.post(`/breeding/${selectedBreedingId}/event`, eventData);
-      const updatedBreeding = res.data;
-      setBreedings(prev => prev.map(b => b._id === selectedBreedingId ? updatedBreeding : b));
-      setShowEventModal(false);
-    } catch (err) {
-      showToast(err.response?.data?.error || t('breedingDashboard.errors.createPair'), 'error');
-    }
+  const extractErrorMessage = (err) => {
+    if (!err) return "Unknown error";
+    if (err.response?.data?.error) return err.response.data.error;
+    if (err.response?.data?.errors && Array.isArray(err.response.data.errors)) return err.response.data.errors.join(', ');
+    return err.message || "Unknown error";
   };
+const submitEvent = async () => {
+  if (!eventData.type || !eventData.date) {
+    setEventError(t('breedingDashboard.errors.missingEventFields'));
+    return;
+  }
+  try {
+    const res = await api.post(`/breeding/${selectedBreedingId}/event`, eventData);
+    const updatedBreeding = res.data;
+    setBreedings(prev => prev.map(b => b._id === selectedBreedingId ? updatedBreeding : b));
+    setShowEventModal(false);
+    setEventError(""); // reset errore
+  } catch (err) {
+    const msg = err.response?.data?.error || t('breedingDashboard.errors.createPair');
+    setEventError(msg); // mostra l'errore dentro il modale
+  }
+};
 
   const openEditEventModal = (bid, ev) => {
     setSelectedBreedingId(bid);
@@ -254,17 +361,19 @@ export default function BreedingPage() {
     setShowEventModal(true);
   };
 
-  const submitEditEvent = async () => {
-    try {
-      const res = await api.patch(`/breeding/${selectedBreedingId}/event/${editingEventId}`, eventData);
-      const updatedBreeding = res.data;
-      setBreedings(prev => prev.map(b => b._id === selectedBreedingId ? updatedBreeding : b));
-      setShowEventModal(false);
-      setEditingEventId(null);
-    } catch (err) {
-      showToast(err.response?.data?.error || t('breedingDashboard.errors.updateEvent'), 'error');
-    }
-  };
+const submitEditEvent = async () => {
+  try {
+    const res = await api.patch(`/breeding/${selectedBreedingId}/event/${editingEventId}`, eventData);
+    const updatedBreeding = res.data;
+    setBreedings(prev => prev.map(b => b._id === selectedBreedingId ? updatedBreeding : b));
+    setShowEventModal(false);
+    setEditingEventId(null);
+    setEventError(""); // reset errore
+  } catch (err) {
+    const msg = err.response?.data?.error || t('breedingDashboard.errors.updateEvent');
+    setEventError(msg); // mostra l'errore dentro il modale
+  }
+};
 
   const handleSubmit = async () => {
     try {
@@ -308,7 +417,7 @@ export default function BreedingPage() {
 
   const monthlyEventsData = useMemo(() => {
     const months = Array(12).fill(0).map((_, i) => ({
-      name: new Date(0, i).toLocaleString('it-IT', { month: 'short' }),
+      name: new Date(0, i).toLocaleString(user.language, { month: 'short' }),
       Deposizioni: 0,
       Schiuse: 0,
     }));
@@ -342,95 +451,107 @@ export default function BreedingPage() {
   }, [breedings]);
 
 
-  if (!hasPaidPlan(user)) {
-    return (
-      <div className="p-6 text-center text-brick bg-sand h-screen flex flex-col justify-center items-center">
-        <h1 className="text-4xl font-bold mb-4">{t('breedingDashboard.restrictedAccessTitle')}</h1>
-        <p className="text-charcoal max-w-md">{t('breedingDashboard.restrictedAccessDescription')}</p>
-        <p className="text-charcoal max-w-md mt-2">{t('breedingDashboard.restrictedAccessUpgrade')}</p>
+  {
+    !hasPaidPlan(user) && (
+      <div className="absolute inset-0 bg-white/70 backdrop-blur-sm flex flex-col items-center justify-center z-50">
+        <h2 className="text-2xl font-bold text-brick">{t('breedingDashboard.restrictedAccessTitle')}</h2>
+        <p className="text-charcoal mt-2">{t('breedingDashboard.restrictedAccessUpgrade')}</p>
       </div>
-    );
+    )
   }
-
   return (
+
+
     <div className="">
       <main className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-
-        <section className="mb-8">
-          <h2 className="text-2xl font-bold text-charcoal mb-4">{t('breedingDashboard.dashboardTitle')}</h2>
-          <div className="grid md:grid-cols-2 gap-6">
-            <StatCard title={t('breedingDashboard.eventsPerMonth', {year: yearFilter})}>
-              <BarChart data={monthlyEventsData}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                <XAxis dataKey="name" tick={{ fill: '#64748b' }} fontSize={12} />
-                <YAxis tick={{ fill: '#64748b' }} fontSize={12} />
-                <Tooltip contentStyle={{ backgroundColor: 'white', border: '1px solid #e2e8f0', borderRadius: '0.5rem' }} />
-                <Legend wrapperStyle={{ fontSize: '0.875rem' }} />
-                <Bar dataKey="Deposizioni" fill="#3b82f6" name="Deposizioni/Parti" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="Schiuse" fill="#22c55e" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </StatCard>
-            <StatCard title={t('breedingDashboard.yearlySuccessRate')}>
-              <LineChart data={yearlySuccessData}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                <XAxis dataKey="year" tick={{ fill: '#64748b' }} fontSize={12} />
-                <YAxis domain={[0, 100]} tick={{ fill: '#64748b' }} fontSize={12} />
-                <Tooltip contentStyle={{ backgroundColor: 'white', border: '1px solid #e2e8f0', borderRadius: '0.5rem' }} />
-                <Line type="monotone" dataKey="Tasso di Successo" stroke="#228B22" strokeWidth={3} dot={{ r: 5, fill: '#228B22' }} activeDot={{ r: 8 }} />
-              </LineChart>
-            </StatCard>
-          </div>
-        </section>
-
-        <section>
-          <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
-            <h2 className="text-2xl font-bold text-charcoal">{t('breedingDashboard.breedingOfYear',{year: yearFilter})}</h2>
-            <div className="flex items-center gap-4">
+        <div className="relative">
+          {/* Banner fisso */}
+          <div className="">
+            <main className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
               <div className="relative">
-                <select
-                  className="input-field appearance-none"
-                  value={yearFilter}
-                  onChange={e => setYearFilter(Number(e.target.value))}
-                >
-                  {[...Array(10)].map((_, i) => {
-                    const year = new Date().getFullYear() - i;
-                    return <option key={year} value={year}>{year}</option>;
-                  })}
-                </select>
-                <ChevronDownIcon className="w-5 h-5 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                {/* Banner fisso */}
+                {!hasPaidPlan(user) && (
+                  <div className="sticky top-0 z-50 bg-yellow-100 border-b border-yellow-300 text-yellow-800 px-4 py-3 text-center font-medium mb-6">
+                    🔒 {t('breedingDashboard.restrictedAccessBanner')}
+                  </div>
+                )}
               </div>
-              <button className="btn btn-primary" onClick={() => setShowModal(true)}>
-                <PlusIcon className="w-5 h-5 mr-2" />
-                {t('breedingDashboard.newPair')}
-              </button>
-            </div>
+            </main>
           </div>
 
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-            {breedings.length > 0 ? (
-              breedings.map(b => (
-                <BreedingCard
-                  key={b._id}
-                  breeding={b}
-                  onAddEvent={handleAddEvent}
-                  onUpdateOutcome={handleUpdateOutcome}
-                  onEditEvent={openEditEventModal}
-                  onDeleteEventRequest={requestDeleteEvent}
-                />
-              ))
-            ) : (
-              <div className="xl:col-span-2 text-center py-16 px-6 bg-white rounded-2xl shadow-sm border border-slate-200/80">
+          <section className="mb-8">
+            <h2 className="text-2xl font-bold text-charcoal mb-4">{t('breedingDashboard.dashboardTitle')}</h2>
+            <div className="grid md:grid-cols-2 gap-6">
+              <StatCard title={t('breedingDashboard.eventsPerMonth', { year: yearFilter })}>
+                <BarChart data={monthlyEventsData}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                  <XAxis dataKey="name" tick={{ fill: '#64748b' }} fontSize={12} />
+                  <YAxis tick={{ fill: '#64748b' }} fontSize={12} />
+                  <Tooltip contentStyle={{ backgroundColor: 'white', border: '1px solid #e2e8f0', borderRadius: '0.5rem' }} />
+                  <Legend wrapperStyle={{ fontSize: '0.875rem' }} />
+                  <Bar dataKey="Deposizioni" fill="#3b82f6" name="Deposizioni/Parti" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="Schiuse" fill="#22c55e" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </StatCard>
+              <StatCard title={t('breedingDashboard.yearlySuccessRate')}>
+                <LineChart data={yearlySuccessData}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                  <XAxis dataKey="year" tick={{ fill: '#64748b' }} fontSize={12} />
+                  <YAxis domain={[0, 100]} tick={{ fill: '#64748b' }} fontSize={12} />
+                  <Tooltip contentStyle={{ backgroundColor: 'white', border: '1px solid #e2e8f0', borderRadius: '0.5rem' }} />
+                  <Line type="monotone" dataKey="Tasso di Successo" stroke="#228B22" strokeWidth={3} dot={{ r: 5, fill: '#228B22' }} activeDot={{ r: 8 }} />
+                </LineChart>
+              </StatCard>
+            </div>
+          </section>
 
-                <h3 className="text-xl font-semibold text-charcoal">{t('breedingDashboard.noPairsTitle',{year: yearFilter})}</h3>
-                <p className="text-slate-500 mt-2">{t('breedingDashboard.noPairsDescription')}</p>
-                <button className="btn btn-primary mt-6" onClick={() => setShowModal(true)}>
+          <section>
+            <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
+              <h2 className="text-2xl font-bold text-charcoal">{t('breedingDashboard.breedingOfYear', { year: yearFilter })}</h2>
+              <div className="flex items-center gap-4">
+                <div className="relative">
+                  <FilterBar
+                    yearFilter={yearFilter}
+                    setYearFilter={setYearFilter}
+                    onFiltersChange={setFilters}
+                  />
+
+
+                </div>
+                <button className="btn btn-primary" disabled={!hasPaidPlan(user)} onClick={() => setShowModal(true)}>
                   <PlusIcon className="w-5 h-5 mr-2" />
-                 {t('breedingDashboard.addFirstPair')}
+                  {t('breedingDashboard.newPair')}
                 </button>
               </div>
-            )}
-          </div>
-        </section>
+            </div>
+
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+              {filteredBreedings.length > 0 ? (
+                filteredBreedings.map(b => (
+                  <BreedingCard
+                    key={b._id}
+                    breeding={b}
+                    onAddEvent={handleAddEvent}
+                    onUpdateOutcome={handleUpdateOutcome}
+                    onEditEvent={openEditEventModal}
+                    onDeleteEventRequest={requestDeleteEvent}
+                  />
+                ))
+              ) : (
+                <div className="xl:col-span-2 text-center py-16 px-6 bg-white rounded-2xl shadow-sm border border-slate-200/80">
+
+                  <h3 className="text-xl font-semibold text-charcoal">{t('breedingDashboard.noPairsTitle', { year: yearFilter })}</h3>
+                  <p className="text-slate-500 mt-2">{t('breedingDashboard.noPairsDescription')}</p>
+                  <button className="btn btn-primary mt-6" disabled={!hasPaidPlan(user)} onClick={() => setShowModal(true)}>
+                    <PlusIcon className="w-5 h-5 mr-2" />
+                    {t('breedingDashboard.addFirstPair')}
+                  </button>
+                </div>
+              )}
+            </div>
+          </section>
+        </div>
+
       </main>
 
       {showModal && (
@@ -467,16 +588,22 @@ export default function BreedingPage() {
 
       {showEventModal && (
         <Modal onClose={() => { setShowEventModal(false); setEditingEventId(null); }}>
-          <h2 className="text-2xl font-bold text-charcoal mb-6">{editingEventId ?  t('breedingDashboard.editEvent') : t('breedingDashboard.addEvent')}</h2>
+          <h2 className="text-2xl font-bold text-charcoal mb-6">{editingEventId ? t('breedingDashboard.editEvent') : t('breedingDashboard.addEvent')}</h2>
           <div className="space-y-4">
-            <select className="input-field" value={eventData.type} onChange={e => setEventData({ ...eventData, type: e.target.value })}>
+            <select
+              value={eventData.type}
+              onChange={e => setEventData({ ...eventData, type: e.target.value, typeError: false })}
+              className={`${eventData.typeError ? 'border-red-500' : ''} input-field`}
+            >
               <option value="">{t('breedingDashboard.eventType')}</option>
-              {['Mating', 'Ovulation', 'Prelay Shed', 'Egg Laid', 'Birth', 'Hatching', 'Failed'].map(type => (
-                <option key={type} value={type}>{translate(type)}</option>
+              {['Mating', 'Ovulation', 'Prelay Shed', 'Egg Laid', 'Birth', 'Hatching', 'Failed'].map(key => (
+                <option key={key} value={key}>{t(`breedingDashboard.breedingOutcomes.${key.replace(/\s+/g, '')}`)}</option>
               ))}
             </select>
             <input type="date" className="input-field" value={eventData.date} onChange={e => setEventData({ ...eventData, date: e.target.value })} />
             <input type="text" placeholder={t('breedingDashboard.eventNotes')} className="input-field" value={eventData.notes} onChange={e => setEventData({ ...eventData, notes: e.target.value })} />
+           {eventError && <p className="text-red-600 text-sm">{eventError}</p>}
+
             <button className="btn btn-primary w-full" onClick={editingEventId ? submitEditEvent : submitEvent}>
               {editingEventId ? t('breedingDashboard.editEvent') : t('breedingDashboard.saveEvent')}
             </button>
@@ -488,16 +615,25 @@ export default function BreedingPage() {
         <Modal onClose={() => setShowOutcomeModal(false)}>
           <h2 className="text-2xl font-bold text-charcoal mb-6">{t('breedingDashboard.updateOutcome')}</h2>
           <div className="space-y-4">
-            <select className="input-field" value={outcomeData.outcome} onChange={e => setOutcomeData({ ...outcomeData, outcome: e.target.value })}>
+            <select
+              className="input-field"
+              value={outcomeData.outcome}
+              onChange={e => setOutcomeData(d => ({ ...d, outcome: e.target.value }))}
+            >
               <option value="">{t('breedingDashboard.selectOutcome')}</option>
-              {['Success', 'Partial', 'Failed', 'Unknown'].map(val => (
-                <option key={val} value={val}>{translate(val)}</option>
+              {OUTCOME_ENUM.map(key => (
+                <option key={key} value={key}>
+                  {translate(key)}
+                </option>
               ))}
             </select>
             <input className="input-field" type="number" placeholder={t('breedingDashboard.totalClutch')} value={outcomeData.clutchSize.total} onChange={e => setOutcomeData(d => ({ ...d, clutchSize: { ...d.clutchSize, total: e.target.value } }))} />
             <input className="input-field" type="number" placeholder={t('breedingDashboard.fertileClutch')} value={outcomeData.clutchSize.fertile} onChange={e => setOutcomeData(d => ({ ...d, clutchSize: { ...d.clutchSize, fertile: e.target.value } }))} />
             <input className="input-field" type="number" placeholder={t('breedingDashboard.hatchedOrBorn')} value={outcomeData.clutchSize.hatchedOrBorn} onChange={e => setOutcomeData(d => ({ ...d, clutchSize: { ...d.clutchSize, hatchedOrBorn: e.target.value } }))} />
+                              {eventError && <p className="text-red-600 text-sm">{eventError}</p>}
+
             <button className="btn btn-secondary w-full" onClick={submitOutcome}>{t('breedingDashboard.saveOutcome')}</button>
+
           </div>
         </Modal>
       )}
@@ -523,5 +659,6 @@ export default function BreedingPage() {
       )}
 
     </div>
+
   );
 }

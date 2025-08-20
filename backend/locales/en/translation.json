@@ -73,7 +73,7 @@
   "basic_plan": "Feature reserved for Basic users.",
   "error_inventory": "Error managing inventory",
   "element_delete": "Element successfully deleted",
-  "foodTypeQuantity": "You don't have enough {{food}}",
+  "foodTypeQuantity": "You don't have enough food",
   "errorCreate_feeding": "Error creating feeding record",
   "errorUpdate_feeding": "Error updating feeding record",
   "errorDelete_feeding": "Error deleting feeding record",
@@ -152,7 +152,7 @@
   "breeding_invalid_sex": "Check reptile sex (M/F)",
   "breeding_duplicate_year": "This pair already exists for this year",
   "breeding_notFound": "Breeding not found",
-  "breeding_event_same_week": "Event \"{{type}}\" already exists in this week",
+  "breeding_event_same_week": "Event already exists in this week",
   "rateLimit": {
     "refresh": "Too many refresh attempts. Please try again later.",
     "login": "Too many login attempts. Please try again later.",

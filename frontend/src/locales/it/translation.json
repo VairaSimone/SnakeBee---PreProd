@@ -133,11 +133,14 @@
             "unknown": "Errore sconosciuto. Riprova più tardi."
         }
     },
-    "notFound": {
-        "404": "404 - Pagina non trovata",
-        "link": "Il link che hai seguito non porta a nulla.",
-        "home": "← Torna alla Home"
-    },
+    
+  "notFound": {
+    "title": "404",
+    "message": "Ops! La pagina che cerchi non esiste.",
+    "backHome": "Torna alla Home"
+  },
+
+
     "login": {
         "verifyEmail": "Devi prima verificare la tua email prima di accedere.",
         "verify": "Email non verificata. Controlla la tua casella di posta per il codice di verifica.",
@@ -390,6 +393,10 @@
         "liveBirth": "Viviparo",
         "oviparous": "Oviparo",
         "total": "Tot",
+        "showAll": "Mostra altro",
+        "showLess": "Mostra meno",
+        "comboFilter": "Filtra per morph",
+        "speciesFilter": "Filtra per specie",
         "fertile": "Fertili",
         "eventsRegistered": "Eventi Registrati",
         "noEvents": "Nessun evento registrato.",
@@ -421,7 +428,7 @@
         "breedingOfYear": "Accoppiamenti del {{year}}",
         "newPair": "Nuova Coppia",
         "noPairsTitle": "Nessuna coppia trovata per il {{year}}",
-        "noPairsDescription": "Sembra che tu non abbia ancora registrato accoppiamenti per quest'anno. <br />  Inizia subito cliccando su \"Nuova Coppia\"!",
+        "noPairsDescription": "Sembra che tu non abbia ancora registrato accoppiamenti per quest'anno. Inizia subito cliccando su \"Nuova Coppia\"!",
         "addFirstPair": "Aggiungi la prima coppia",
         "createNewPair": "Crea Nuova Coppia",
         "selectSpecies": "-- Seleziona Specie --",
@@ -439,7 +446,7 @@
         "selectOutcome": "-- Seleziona risultato --",
         "totalClutch": "Uova/Cuccioli Totali",
         "fertileClutch": "Fertili",
-        "hatchedOrBorn": "Nati / Schiusi",
+        "hatchedOrBorn": "Nati",
         "saveOutcome": "Salva risultato",
         "confirmDeleteTitle": "Conferma Eliminazione",
         "confirmDeleteMessage": "Sei assolutamente sicuro di voler eliminare questo evento? L'azione è irreversibile.",
@@ -458,7 +465,17 @@
             "Partial": "Parziale",
             "Failed": "Fallito",
             "Unknown": "Sconosciuto"
-        }
+        },
+        "demoMale": "Maschio",
+        "demoFemale": "Femmina",
+        "demoMorphCombo": "Banana pastel x Pastel",
+        "demoEventNote1": "Accoppiamento di prova registrato",
+        "demoEventNote2": "Deposizione di prova registrata",
+        "restrictedAccessBanner": "ANTEPRIMA: Accesso limitato - esegui l'upgrade per sbloccare tutte le funzioni",
+        "species": "Pitone reale",
+        "EggLaid": "Deposizione",
+        "mating": "Accoppiamento",
+        "outcome": "Successo"
     },
     "UserProfile": {
         "cancel": "Annulla",
@@ -534,6 +551,7 @@
             "morph": "Morph",
             "birthDate": "Data di nascita",
             "sex": "Sesso *",
+            "selectSex": "Seleziona sesso",
             "unknownSex": "Non specificato",
             "male": "Maschio",
             "female": "Femmina",
@@ -1206,4 +1224,5 @@
             }
         ]
     }
+
 }

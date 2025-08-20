@@ -14,7 +14,7 @@ import {
 import { useTranslation } from 'react-i18next';
 
 const ConfirmationModal = ({ isOpen, onClose, onConfirm, title, children }) => {
-    const { t } = useTranslation();
+  const { t } = useTranslation();
 
   if (!isOpen) return null;
 
@@ -66,13 +66,14 @@ const ReptileEditModal = ({ show, handleClose, reptile, setReptiles, onSuccess }
   const [formData, setFormData] = useState(initialFormData);
   const [loading, setLoading] = useState(false);
   const [toastMsg, setToastMsg] = useState(null);
-  const [newImages, setNewImages] = useState([]); 
-  const [newImagePreviews, setNewImagePreviews] = useState([]); 
-  const [existingImages, setExistingImages] = useState([]); 
+  const [newImages, setNewImages] = useState([]);
+  const [newImagePreviews, setNewImagePreviews] = useState([]);
+  const [existingImages, setExistingImages] = useState([]);
   const [label, setLabel] = useState({ text: '', color: '#228B22' });
   const [isConfirmModalOpen, setConfirmModalOpen] = useState(false);
-  const [imageToDelete, setImageToDelete] = useState(null); 
+  const [imageToDelete, setImageToDelete] = useState(null);
   const { t } = useTranslation();
+  const [errors, setErrors] = useState({});
 
   useEffect(() => {
 
@@ -105,7 +106,7 @@ const ReptileEditModal = ({ show, handleClose, reptile, setReptiles, onSuccess }
       setLabel(reptileLabel || { text: '', color: '#228B22' });
       setExistingImages(reptile.image.map(name => `${process.env.REACT_APP_BACKEND_URL_IMAGE}${name}`));
     }
-    
+
     return () => {
       setNewImages([]);
       setNewImagePreviews(prev => {
@@ -113,9 +114,9 @@ const ReptileEditModal = ({ show, handleClose, reptile, setReptiles, onSuccess }
         return [];
       });
       if (!show) {
-          setFormData(initialFormData);
-          setExistingImages([]);
-          setToastMsg(null);
+        setFormData(initialFormData);
+        setExistingImages([]);
+        setToastMsg(null);
       }
     };
 
@@ -229,7 +230,7 @@ const ReptileEditModal = ({ show, handleClose, reptile, setReptiles, onSuccess }
   };
 
   const removeNewImage = (index) => {
-    URL.revokeObjectURL(newImagePreviews[index]); 
+    URL.revokeObjectURL(newImagePreviews[index]);
     setNewImages(prev => prev.filter((_, i) => i !== index));
     setNewImagePreviews(prev => prev.filter((_, i) => i !== index));
   };
@@ -269,6 +270,14 @@ const ReptileEditModal = ({ show, handleClose, reptile, setReptiles, onSuccess }
     e.preventDefault();
     setLoading(true);
     setToastMsg(null);
+    const validationErrors = validateForm();
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      setLoading(false);
+      setToastMsg({ type: 'danger', text: t('reptileEditModal.validation.fixErrors') });
+      return;
+    }
+    setErrors({});
     const errors = validateForm();
     if (Object.keys(errors).length > 0) {
       setLoading(false);
@@ -276,7 +285,7 @@ const ReptileEditModal = ({ show, handleClose, reptile, setReptiles, onSuccess }
       console.error("Validation errors:", errors);
       return;
     }
-    
+
     const formDataToSubmit = new FormData();
     Object.entries(formData).forEach(([key, val]) => {
       if (key === 'parents' || key === 'documents') {
@@ -322,7 +331,7 @@ const ReptileEditModal = ({ show, handleClose, reptile, setReptiles, onSuccess }
         onConfirm={confirmDeleteImage}
         title={t('reptileEditModal.reptile.confirmDeleteTitle')}
       >
-       {t('reptileEditModal.reptile.confirmDeleteText')}
+        {t('reptileEditModal.reptile.confirmDeleteText')}
       </ConfirmationModal>
 
       <Transition show={show} as={Fragment}>
@@ -338,7 +347,7 @@ const ReptileEditModal = ({ show, handleClose, reptile, setReptiles, onSuccess }
 
                   <div className="flex items-start justify-between">
                     <Dialog.Title className="text-xl font-bold text-gray-900">
-                      {t('reptileEditModal.reptile.editTitle',{name: formData.name || t('reptileEditModal.reptile.defaultName')})}
+                      {t('reptileEditModal.reptile.editTitle', { name: formData.name || t('reptileEditModal.reptile.defaultName') })}
                     </Dialog.Title>
                     <button onClick={handleClose} className="p-1 rounded-full text-gray-500 hover:bg-gray-200 hover:text-gray-800 transition">
                       <XMarkIcon className="w-6 h-6" />
@@ -349,15 +358,75 @@ const ReptileEditModal = ({ show, handleClose, reptile, setReptiles, onSuccess }
                     <div className={sectionClasses}>
                       <h3 className={sectionTitleClasses}><IdentificationIcon className="w-6 h-6 text-emerald-600" /> {t('reptileEditModal.reptile.personalData')}</h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-4 mt-4">
-                        <div><label className={labelClasses}>{t('reptileEditModal.reptile.name')}</label><input type="text" name="name" value={formData.name} onChange={handleChange} className={inputClasses} /></div>
-                        <div><label className={labelClasses}>{t('reptileEditModal.reptile.species')}</label><input type="text" name="species" value={formData.species} onChange={handleChange} className={inputClasses} required /></div>
-                        <div><label className={labelClasses}>{t('reptileEditModal.reptile.morph')}</label><input type="text" name="morph" value={formData.morph} onChange={handleChange} className={inputClasses} /></div>
-                        <div><label className={labelClasses}>{t('reptileEditModal.reptile.birthDate')}</label><input type="date" name="birthDate" value={formData.birthDate} onChange={handleChange} className={inputClasses} /></div>
-                        <div><label className={labelClasses}>{t('reptileEditModal.reptile.sex')}</label><select name="sex" value={formData.sex} onChange={handleChange} className={inputClasses}><option value="M">{t('reptileEditModal.reptile.male')}</option><option value="F">{t('reptileEditModal.reptile.female')}</option></select></div>
+                        <div><label className={labelClasses}>{t('reptileEditModal.reptile.name')}</label>
+                          <input
+                            type="text"
+                            name="name"
+                            value={formData.name}
+                            onChange={handleChange}
+                            className={`${inputClasses} ${errors.name ? "border-red-500 focus:ring-red-500 focus:border-red-500" : ""}`}
+                          />
+                          {errors.name && <p className="mt-1 text-xs text-red-600">{errors.name}</p>}
+                        </div>
+
+                        <div><label className={labelClasses}>{t('reptileEditModal.reptile.species')}</label>
+                          <input
+                            type="text"
+                            name="species"
+                            value={formData.species}
+                            onChange={handleChange}
+                            className={`${inputClasses} ${errors.species ? "border-red-500 focus:ring-red-500 focus:border-red-500" : ""}`}
+                          />
+                          {errors.species && <p className="mt-1 text-xs text-red-600">{errors.species}</p>}
+                        </div>
+
+                        <div><label className={labelClasses}>{t('reptileEditModal.reptile.morph')}</label>
+                          <input
+                            type="text"
+                            name="morph"
+                            value={formData.morph}
+                            onChange={handleChange}
+                            className={`${inputClasses} ${errors.morph ? "border-red-500 focus:ring-red-500 focus:border-red-500" : ""}`}
+                          />
+                          {errors.morph && <p className="mt-1 text-xs text-red-600">{errors.morph}</p>}
+                        </div>
+
+                        <div><label className={labelClasses}>{t('reptileEditModal.reptile.birthDate')}</label>
+                          <input
+                            type="date"
+                            name="birthDate"
+                            value={formData.birthDate}
+                            onChange={handleChange}
+                            className={`${inputClasses} ${errors.birthDate ? "border-red-500 focus:ring-red-500 focus:border-red-500" : ""}`}
+                          />
+                          {errors.birthDate && <p className="mt-1 text-xs text-red-600">{errors.birthDate}</p>}
+                        </div>
+
+                        <div><label className={labelClasses}>{t('reptileEditModal.reptile.sex')}</label>
+                          <select
+                            name="sex"
+                            value={formData.sex}
+                            onChange={handleChange}
+                            className={`${inputClasses} ${errors.sex ? "border-red-500 focus:ring-red-500 focus:border-red-500" : ""}`}
+                          >
+                            <option value="">{t('reptileEditModal.reptile.selectSex')}</option>
+                            <option value="M">{t('reptileEditModal.reptile.male')}</option>
+                            <option value="F">{t('reptileEditModal.reptile.female')}</option>
+                          </select>
+                          {errors.sex && <p className="mt-1 text-xs text-red-600">{errors.sex}</p>}
+                        </div>
                         <div className="flex items-center justify-start mt-4 md:mt-6"><input id="isBreeder" type="checkbox" name="isBreeder" checked={formData.isBreeder} onChange={handleChange} className="w-4 h-4 accent-emerald-600 rounded focus:ring-emerald-500" /><label htmlFor="isBreeder" className="ml-2 text-sm text-gray-700">{t('reptileEditModal.reptile.isBreeder')}</label></div>
                       </div>
-                      <div className="mt-4"><label className={labelClasses}>{t('reptileEditModal.reptile.note')}</label><textarea name="notes" rows={3} value={formData.notes} onChange={handleChange} className={inputClasses} /></div>
-                    </div>
+                      <div className="mt-4"><label className={labelClasses}>{t('reptileEditModal.reptile.note')}</label>
+                        <textarea
+                          name="notes"
+                          rows={3}
+                          value={formData.notes}
+                          onChange={handleChange}
+                          className={`${inputClasses} ${errors.notes ? "border-red-500 focus:ring-red-500 focus:border-red-500" : ""}`}
+                        />
+                        {errors.notes && <p className="mt-1 text-xs text-red-600">{errors.notes}</p>}
+                      </div>                    </div>
 
                     <div className={sectionClasses}>
                       <h3 className={sectionTitleClasses}><PhotoIcon className="w-6 h-6 text-emerald-600" />{t('reptileEditModal.reptile.gallery')}</h3>
@@ -367,7 +436,7 @@ const ReptileEditModal = ({ show, handleClose, reptile, setReptiles, onSuccess }
                           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 mt-2">
                             {existingImages.map((imgPath, index) => (
                               <div key={index} className="relative group">
-                                <img src={imgPath.startsWith('http') ? imgPath : `https://placehold.co/112x112/22c55e/FFFFFF?text=IMG`} alt={`Immagine ${index + 1}`} className="h-28 w-28 rounded-md object-cover border border-gray-200" />
+                                <img src={imgPath.startsWith('http') ? imgPath : `https://res.cloudinary.com/dg2wcqflh/image/upload/v1753088270/sq1upmjw7xgrvpkghotk.png`} alt={`Immagine ${index + 1}`} className="h-28 w-28 rounded-md object-cover border border-gray-200" />
                                 <button type="button" onClick={() => openDeleteConfirmation(index)} className="absolute top-0 right-0 p-1.5 bg-red-600 text-white rounded-full transform -translate-y-1/2 translate-x-1/2 hover:bg-red-700 focus:outline-none">
                                   <TrashIcon className="w-4 h-4" />
                                 </button>
@@ -404,8 +473,27 @@ const ReptileEditModal = ({ show, handleClose, reptile, setReptiles, onSuccess }
                     <div className={sectionClasses}>
                       <h3 className={sectionTitleClasses}><UsersIcon className="w-6 h-6 text-emerald-600" /> {t('reptileEditModal.reptile.parent')}</h3>
                       <div className="grid md:grid-cols-2 gap-6 mt-4">
-                        <div><label className={labelClasses}>{t('reptileEditModal.reptile.father')}</label><input type="text" name="father" value={formData.parents.father} onChange={handleParentChange} className={inputClasses} /></div>
-                        <div><label className={labelClasses}>{t('reptileEditModal.reptile.mother')}</label><input type="text" name="mother" value={formData.parents.mother} onChange={handleParentChange} className={inputClasses} /></div>
+                        <div><label className={labelClasses}>{t('reptileEditModal.reptile.father')}</label>
+                          <input
+                            type="text"
+                            name="father"
+                            value={formData.parents.father}
+                            onChange={handleParentChange}
+                            className={`${inputClasses} ${errors.father ? "border-red-500 focus:ring-red-500 focus:border-red-500" : ""}`}
+                          />
+                          {errors.father && <p className="mt-1 text-xs text-red-600">{errors.father}</p>}
+                        </div>
+
+                        <div><label className={labelClasses}>{t('reptileEditModal.reptile.mother')}</label>
+                          <input
+                            type="text"
+                            name="mother"
+                            value={formData.parents.mother}
+                            onChange={handleParentChange}
+                            className={`${inputClasses} ${errors.mother ? "border-red-500 focus:ring-red-500 focus:border-red-500" : ""}`}
+                          />
+                          {errors.mother && <p className="mt-1 text-xs text-red-600">{errors.mother}</p>}
+                        </div>
                       </div>
                     </div>
 
@@ -413,11 +501,55 @@ const ReptileEditModal = ({ show, handleClose, reptile, setReptiles, onSuccess }
                     <div className={sectionClasses}>
                       <h3 className={sectionTitleClasses}><DocumentTextIcon className="w-6 h-6 text-emerald-600" /> {t('reptileEditModal.reptile.documents')}</h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-4 mt-4">
-                        <div><label className={labelClasses}>{t('reptileEditModal.reptile.numberCites')}</label><input type="text" onChange={(e) => handleNestedChange(e, 'documents', 'cites', 'number')} value={formData.documents.cites.number} className={inputClasses} /></div>
-                        <div><label className={labelClasses}>{t('reptileEditModal.reptile.dateCites')}</label><input type="date" onChange={(e) => handleNestedChange(e, 'documents', 'cites', 'issueDate')} value={formData.documents.cites.issueDate} className={inputClasses} /></div>
-                        <div><label className={labelClasses}>{t('reptileEditModal.reptile.issuing')}</label><input type="text" onChange={(e) => handleNestedChange(e, 'documents', 'cites', 'issuer')} value={formData.documents.cites.issuer} className={inputClasses} /></div>
-                        <div><label className={labelClasses}>{t('reptileEditModal.reptile.microchip')}</label><input type="text" onChange={(e) => handleNestedChange(e, 'documents', 'microchip', 'code')} value={formData.documents.microchip.code} className={inputClasses} /></div>
-                        <div><label className={labelClasses}>{t('reptileEditModal.reptile.dateMicrochip')}</label><input type="date" onChange={(e) => handleNestedChange(e, 'documents', 'microchip', 'implantDate')} value={formData.documents.microchip.implantDate} className={inputClasses} /></div>
+                        <div><label className={labelClasses}>{t('reptileEditModal.reptile.numberCites')}</label>
+                          <input
+                            type="text"
+                            onChange={(e) => handleNestedChange(e, 'documents', 'cites', 'number')}
+                            value={formData.documents.cites.number}
+                            className={`${inputClasses} ${errors.citesNumber ? "border-red-500 focus:ring-red-500 focus:border-red-500" : ""}`}
+                          />
+                          {errors.citesNumber && <p className="mt-1 text-xs text-red-600">{errors.citesNumber}</p>}
+                        </div>
+
+                        <div><label className={labelClasses}>{t('reptileEditModal.reptile.dateCites')}</label>
+                          <input
+                            type="date"
+                            onChange={(e) => handleNestedChange(e, 'documents', 'cites', 'issueDate')}
+                            value={formData.documents.cites.issueDate}
+                            className={`${inputClasses} ${errors.citesIssueDate ? "border-red-500 focus:ring-red-500 focus:border-red-500" : ""}`}
+                          />
+                          {errors.citesIssueDate && <p className="mt-1 text-xs text-red-600">{errors.citesIssueDate}</p>}
+                        </div>
+
+                        <div><label className={labelClasses}>{t('reptileEditModal.reptile.issuing')}</label>
+                          <input
+                            type="text"
+                            onChange={(e) => handleNestedChange(e, 'documents', 'cites', 'issuer')}
+                            value={formData.documents.cites.issuer}
+                            className={`${inputClasses} ${errors.citesIssuer ? "border-red-500 focus:ring-red-500 focus:border-red-500" : ""}`}
+                          />
+                          {errors.citesIssuer && <p className="mt-1 text-xs text-red-600">{errors.citesIssuer}</p>}
+                        </div>
+
+                        <div><label className={labelClasses}>{t('reptileEditModal.reptile.microchip')}</label>
+                          <input
+                            type="text"
+                            onChange={(e) => handleNestedChange(e, 'documents', 'microchip', 'code')}
+                            value={formData.documents.microchip.code}
+                            className={`${inputClasses} ${errors.microchipCode ? "border-red-500 focus:ring-red-500 focus:border-red-500" : ""}`}
+                          />
+                          {errors.microchipCode && <p className="mt-1 text-xs text-red-600">{errors.microchipCode}</p>}
+                        </div>
+
+                        <div><label className={labelClasses}>{t('reptileEditModal.reptile.dateMicrochip')}</label>
+                          <input
+                            type="date"
+                            onChange={(e) => handleNestedChange(e, 'documents', 'microchip', 'implantDate')}
+                            value={formData.documents.microchip.implantDate}
+                            className={`${inputClasses} ${errors.microchipDate ? "border-red-500 focus:ring-red-500 focus:border-red-500" : ""}`}
+                          />
+                          {errors.microchipDate && <p className="mt-1 text-xs text-red-600">{errors.microchipDate}</p>}
+                        </div>
                       </div>
                     </div>
 
@@ -447,8 +579,8 @@ const ReptileEditModal = ({ show, handleClose, reptile, setReptiles, onSuccess }
                   {toastMsg && (
                     <div
                       className={`mt-4 px-4 py-3 rounded-md text-sm font-medium ${toastMsg.type === 'danger'
-                          ? 'bg-red-100 text-red-700 border border-red-300'
-                          : 'bg-green-100 text-green-700 border border-green-300'
+                        ? 'bg-red-100 text-red-700 border border-red-300'
+                        : 'bg-green-100 text-green-700 border border-green-300'
                         }`}
                     >
                       {toastMsg.text}

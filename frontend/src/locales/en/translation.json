@@ -133,11 +133,11 @@
             "unknown": "Unknown error. Please try again later."
         }
     },
-    "notFound": {
-        "404": "404 - Page not found",
-        "link": "The link you followed leads nowhere.",
-        "home": "← Back to Home"
-    },
+     "notFound": {
+    "title": "404",
+    "message": "Oops! The page you are looking for doesn’t exist.",
+    "backHome": "Back to Home"
+  },
     "login": {
         "verifyEmail": "You must verify your email before logging in.",
         "verify": "Email not verified. Check your inbox for the verification code.",
@@ -422,6 +422,20 @@
         "oviparous": "Oviparous",
         "total": "Total",
         "fertile": "Fertile",
+        "showAll": "Show all",
+        "showLess": "Show Less",
+        "demoMale": "Male",
+        "demoFemale": "Female",
+        "comboFilter": "Filter by morph combo",
+"speciesFilter": "Filter by species",
+        "demoMorphCombo": "Banana Pastel x Pastel",
+        "demoEventNote1": "Test mating recorded",
+        "demoEventNote2": "Test spawn recorded",
+        "species": "Royal Python",
+        "EggLaid": "Egg Laying",
+        "mating": "Mating",
+        "outcome": "Success",
+        "restrictedAccessBanner": "PREVIEW: Restricted access - upgrade to unlock all features",
         "eventsRegistered": "Events Registered",
         "noEvents": "No events recorded.",
         "buttons": {
@@ -452,7 +466,7 @@
         "breedingOfYear": "Matings of {{year}}",
         "newPair": "New Pair",
         "noPairsTitle": "No pairs found for {{year}}",
-        "noPairsDescription": "It seems you haven’t recorded any pairings for this year yet. <br /> Start now by clicking on \"New Pair\"!",
+        "noPairsDescription": "It seems you haven’t recorded any pairings for this year yet. Start now by clicking on \"New Pair\"!",
         "addFirstPair": "Add the first pair",
         "createNewPair": "Create New Pair",
         "selectSpecies": "-- Select Species --",
@@ -470,7 +484,7 @@
         "selectOutcome": "-- Select Outcome --",
         "totalClutch": "Total Eggs/Babies",
         "fertileClutch": "Fertile",
-        "hatchedOrBorn": "Hatched / Born",
+        "hatchedOrBorn": "Hatched",
         "saveOutcome": "Save Outcome",
         "confirmDeleteTitle": "Confirm Deletion",
         "confirmDeleteMessage": "Are you absolutely sure you want to delete this event? This action is irreversible.",
@@ -570,6 +584,7 @@
             "female": "Female",
             "isBreeder": "Is a breeder?",
             "gallery": "Image Gallery",
+            "selectSex": "Select Sex",
             "note": "notes",
             "image": "Current Images",
             "addImage": "Add New Images",

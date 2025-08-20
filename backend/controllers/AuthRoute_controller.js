@@ -202,55 +202,95 @@ export const getMe = async (req, res, next) => {
   }
 };
 
-export const logout = async (req, res, next) => {
-  const token = req.cookies.refreshToken;
-  if (!token) return res.status(400).json({ message: req.t('server_error') });
-
-  try {
-    // Decode the token (does not verify, only userId is needed)
-    const decoded = jwt.decode(token);
-    if (!decoded) return res.status(400).json({ message: req.t('user_notFound') });
-
-    const user = await User.findById(decoded.userid);
-    if (!user) return res.status(400).json({ message: req.t('user_notFound') });
-
-    // Check if it exists and remove it
-    const filteredTokens = [];
-    let matched = false;
-    for (const rt of user.refreshTokens) {
-      const match = await bcrypt.compare(token, rt.token);
-      if (!match) {
-        filteredTokens.push(rt);
-      } else {
-        matched = true;
-      }
-    }
-
-    if (!matched) {
-      return res.status(400).json({ message: req.t('user_notFound') });
-    }
-
-    user.refreshTokens = filteredTokens;
-    await user.save();
-const hashedRevoked = await bcrypt.hash(token, 12);
-
-    const revokedToken = new RevokedToken({
-  token: hashedRevoked,
-      expiresAt: new Date(decoded.exp * 1000)
-    });
-    await revokedToken.save();
-
+export const logout = async (req, res) => {
+  const token = req.cookies?.refreshToken;
+  // Idempotente: se non c'è cookie, pulisco e fine
+  if (!token) {
     res.clearCookie('refreshToken', {
       httpOnly: true,
       sameSite: 'None',
-      path: "/api/v1",
-      secure: true
+      secure: true,
+      path: '/api/v1',
+    });
+    return res.status(204).end();
+  }
+
+  try {
+    // VERIFICA (non solo decode) per evitare CastError e token manipolati
+    const decoded = jwt.verify(token, process.env.JWT_REFRESH_SECRET);
+
+    // Se manca userid nel payload, consideralo invalido/idempotente
+    if (!decoded?.userid) {
+      res.clearCookie('refreshToken', {
+        httpOnly: true,
+        sameSite: 'None',
+        secure: true,
+        path: '/api/v1',
+      });
+      return res.status(204).end();
+    }
+
+    const user = await User.findById(decoded.userid).select('refreshTokens');
+    if (!user) {
+      res.clearCookie('refreshToken', {
+        httpOnly: true,
+        sameSite: 'None',
+        secure: true,
+        path: '/api/v1',
+      });
+      return res.status(204).end();
+    }
+
+    // Difesa: se non è un array, normalizza a []
+    const tokens = Array.isArray(user.refreshTokens) ? user.refreshTokens : [];
+
+    const keep = [];
+    let matched = false;
+
+    for (const rt of tokens) {
+      // salta record malformati
+      if (!rt?.token) continue;
+      const isSame = await bcrypt.compare(token, rt.token);
+      if (isSame) matched = true;
+      else keep.push(rt);
+    }
+
+    // Aggiorna lista token
+    user.refreshTokens = keep;
+    await user.save();
+
+    // Registra il revoke (hash salato, come già fai)
+    try {
+      const hashedRevoked = await bcrypt.hash(token, 12);
+      await RevokedToken.create({
+        token: hashedRevoked,
+        // se exp manca, revoca per 7 giorni da ora
+        expiresAt: decoded?.exp ? new Date(decoded.exp * 1000) : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      });
+    } catch (e) {
+      // Non bloccare il logout se il log di revoke fallisce
+      console.warn('RevokedToken save failed:', e);
+    }
+
+    // In ogni caso pulisco il cookie
+    res.clearCookie('refreshToken', {
+      httpOnly: true,
+      sameSite: 'None',
+      secure: true,
+      path: '/api/v1',
     });
 
+    // Se non c’era match, non leakare info: logout idempotente
     return res.status(200).json({ message: req.t('logout_successfully') });
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({ message: req.t('server_error') });
+  } catch (err) {
+    // Token scaduto/invalid: pulizia e 204 (niente drammi)
+    res.clearCookie('refreshToken', {
+      httpOnly: true,
+      sameSite: 'None',
+      secure: true,
+      path: '/api/v1',
+    });
+    return res.status(204).end();
   }
 };
 
