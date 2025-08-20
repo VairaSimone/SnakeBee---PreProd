@@ -25,7 +25,7 @@ const isTempEmail = (email) => {
 };
 
 const generateAccessToken = (user) => {
-  return jwt.sign({ userid: user.id, role: user.role }, process.env.JWT_REFRESH_SECRET, { expiresIn: '2h' });
+  return jwt.sign({ userid: user.id, role: user.role }, process.env.JWT_ACCESS_SECRET, { expiresIn: '30min' });
 };
 
 //generate the refresh token with a longer duration that will be used to request the access token
@@ -103,12 +103,12 @@ export const login = async (req, res, next) => {
     }
     user.refreshTokens.push({ token: hashedToken });
     await user.save();
+
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
       secure: true,
       sameSite: 'None',
-      path: '/',
-
+      path: '/api/v1',
       maxAge: 7 * 24 * 60 * 60 * 1000
     });
     user.loginHistory = user.loginHistory || [];
@@ -120,7 +120,7 @@ export const login = async (req, res, next) => {
       user.loginHistory = user.loginHistory.slice(-20);
     }
     await user.save();
-    return res.json({ accessToken, refreshToken });
+    return res.json({ accessToken });
   } catch (error) {
     console.log(error)
     return res.status(500).json({ message: req.t('server_error') });
@@ -232,9 +232,10 @@ export const logout = async (req, res, next) => {
 
     user.refreshTokens = filteredTokens;
     await user.save();
+const hashedRevoked = await bcrypt.hash(token, 12);
 
     const revokedToken = new RevokedToken({
-      token,
+  token: hashedRevoked,
       expiresAt: new Date(decoded.exp * 1000)
     });
     await revokedToken.save();
@@ -242,6 +243,7 @@ export const logout = async (req, res, next) => {
     res.clearCookie('refreshToken', {
       httpOnly: true,
       sameSite: 'None',
+      path: "/api/v1",
       secure: true
     });
 
@@ -263,7 +265,7 @@ export const callBackGoogle = async (req, res, next) => {
         googleId,
         name: name || "User",
         email,
-        avatar: profile._json.picture || defaultAvatarURL,
+        avatar: req.user.avatar,
         privacyConsent: {
           accepted: true,
           timestamp: new Date()
@@ -293,7 +295,7 @@ export const callBackGoogle = async (req, res, next) => {
       httpOnly: true,
       secure: true,
       sameSite: 'None',
-      path: '/',
+      path: '/api/v1',
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
@@ -483,6 +485,7 @@ export const changeEmailAndResendVerification = async (req, res, next) => {
     res.clearCookie('refreshToken', {
       httpOnly: true,
       sameSite: 'None',
+      path: "/api/v1",
       secure: true,
     });
 

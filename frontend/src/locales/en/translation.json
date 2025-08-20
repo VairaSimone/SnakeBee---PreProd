@@ -592,6 +592,25 @@
             "imageError": "Error deleting image",
             "reptileUpdate": "Reptile updated!",
             "reptileError": "Error updating reptile"
+        },
+        "validation": {
+            "speciesRequired": "Species are required.",
+            "morphRequired": "Morphology is required.",
+            "sexRequired": "Sex is required.",
+            "birthRequired": "Date of birth is required.",
+            "birthFuture": "Date of birth cannot be in the future.",
+            "birthTooOld": "Date of birth cannot be more than 100 years old.",
+            "notesTooLong": "Notes cannot exceed 500 characters.",
+            "fatherInvalid": "Father's name contains invalid characters.",
+            "motherInvalid": "Mother's name contains invalid characters.",
+            "imageType": "Image format not supported. Please use JPG, PNG, or WEBP.",
+            "imageSize": "Image cannot exceed 5MB.",
+            "citesNumberTooLong": "CITES number cannot exceed 50 characters.",
+            "citesIssueFuture": "The CITES issue date cannot be in the future.",
+            "citesIssuerTooLong": "The CITES issuing entity cannot exceed 100 characters.",
+            "microchipCodeTooLong": "The microchip code cannot exceed 50 characters.",
+            "microchipDateFuture": "The microchip implantation date cannot be in the future.",
+            "fixErrors": "Some fields are invalid. Please check and try again."
         }
     },
     "ReptileDetails": {
@@ -672,10 +691,24 @@
             "fileFormats": "PNG, JPG, GIF up to 10 MB"
         },
         "validation": {
+            "nameRequired": "Name is required",
             "speciesRequired": "Species is required",
+            "morphRequired": "Morph is required",
             "sexRequired": "Sex is required",
-            "birthFuture": "Date cannot be in the future",
-            "birthTooOld": "Date is too far in the past (max 100 years)"
+            "birthRequired": "Date of birth is required",
+            "birthFuture": "Date of birth cannot be in the future",
+            "birthTooOld": "Date of birth appears too old",
+            "notesTooLong": "Notes cannot exceed 500 characters",
+            "fatherInvalid": "Invalid father's name",
+            "motherInvalid": "Invalid mother's name",
+            "imageRequired": "At least one image is required",
+            "imageType": "File must be a JPEG, PNG, or WEBP image",
+            "imageSize": "Image cannot exceed 5MB",
+            "citesNumberTooLong": "CITES number is too long",
+            "citesIssueFuture": "The CITES issue date cannot be in the future.",
+            "citesIssuerTooLong": "The CITES issuing entity is too long.",
+            "microchipCodeTooLong": "The microchip code is too long.",
+            "microchipDateFuture": "The microchip implantation date cannot be in the future."
         },
         "messages": {
             "success": "Reptile created successfully!",
@@ -821,6 +854,7 @@
     },
     "eventModal": {
         "title": "Event Management",
+        "confirmDeleteMessage": "Are you sure you want to delete the event?",
         "tabs": {
             "add": "Add Event",
             "history": "History"

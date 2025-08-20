@@ -561,6 +561,25 @@
             "imageError": "Errore durante l'eliminazione",
             "reptileUpdate": "Rettile aggiornato!",
             "reptileError": "Errore durante l'aggiornamento"
+        },
+        "validation": {
+            "speciesRequired": "La specie è obbligatoria.",
+            "morphRequired": "La morfologia è obbligatoria.",
+            "sexRequired": "Il sesso è obbligatorio.",
+            "birthRequired": "La data di nascita è obbligatoria.",
+            "birthFuture": "La data di nascita non può essere nel futuro.",
+            "birthTooOld": "La data di nascita non può superare i 100 anni.",
+            "notesTooLong": "Le note non possono superare i 500 caratteri.",
+            "fatherInvalid": "Il nome del padre contiene caratteri non validi.",
+            "motherInvalid": "Il nome della madre contiene caratteri non validi.",
+            "imageType": "Formato immagine non supportato. Usa JPG, PNG o WEBP.",
+            "imageSize": "L'immagine non può superare i 5MB.",
+            "citesNumberTooLong": "Il numero CITES non può superare i 50 caratteri.",
+            "citesIssueFuture": "La data di rilascio CITES non può essere nel futuro.",
+            "citesIssuerTooLong": "L'ente di rilascio CITES non può superare i 100 caratteri.",
+            "microchipCodeTooLong": "Il codice microchip non può superare i 50 caratteri.",
+            "microchipDateFuture": "La data di impianto del microchip non può essere nel futuro.",
+            "fixErrors": "Alcuni campi non sono validi, controlla e riprova."
         }
     },
     "ReptileDetails": {
@@ -641,10 +660,24 @@
             "fileFormats": "PNG, JPG, GIF fino a 10 MB"
         },
         "validation": {
+            "nameRequired": "Il nome è obbligatorio",
             "speciesRequired": "La specie è obbligatoria",
+            "morphRequired": "Il morph è obbligatorio",
             "sexRequired": "Il sesso è obbligatorio",
-            "birthFuture": "La data non può essere nel futuro",
-            "birthTooOld": "La data è troppo lontana nel passato (max 100 anni)"
+            "birthRequired": "La data di nascita è obbligatoria",
+            "birthFuture": "La data di nascita non può essere nel futuro",
+            "birthTooOld": "La data di nascita sembra troppo vecchia",
+            "notesTooLong": "Le note non possono superare i 500 caratteri",
+            "fatherInvalid": "Nome del padre non valido",
+            "motherInvalid": "Nome della madre non valido",
+            "imageRequired": "Almeno un'immagine è obbligatoria",
+            "imageType": "Il file deve essere un'immagine JPEG, PNG o WEBP",
+            "imageSize": "L'immagine non può superare i 5MB",
+            "citesNumberTooLong": "Il numero CITES è troppo lungo",
+            "citesIssueFuture": "La data di emissione del CITES non può essere nel futuro",
+            "citesIssuerTooLong": "L'ente emittente del CITES è troppo lungo",
+            "microchipCodeTooLong": "Il codice del microchip è troppo lungo",
+            "microchipDateFuture": "La data di impianto del microchip non può essere nel futuro"
         },
         "messages": {
             "success": "Rettile creato con successo!",
@@ -790,6 +823,7 @@
     },
     "eventModal": {
         "title": "Gestione Eventi",
+        "confirmDeleteMessage": "Sei sicuro di voler eliminare l'evento?",
         "tabs": {
             "add": "Aggiungi Evento",
             "history": "Cronologia"

@@ -203,7 +203,7 @@ const UserProfile = () => {
         await api.post('/v1/logout', null, { withCredentials: true });
         dispatch(logoutUser());
         localStorage.removeItem('token');
-
+      localStorage.removeItem('refreshToken');
         navigate('/verify-email', { state: { email: newEmail } });
       }
     } catch (err) {
@@ -239,6 +239,8 @@ const UserProfile = () => {
       await api.delete(`/user/${user._id}`);
       dispatch(logoutUser());
       localStorage.removeItem('token');
+            localStorage.removeItem('refreshToken');
+
       navigate('/login');
     } catch {
       addToast(t('UserProfile.deleteUserError'), 'error');

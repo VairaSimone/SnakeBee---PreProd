@@ -1,33 +1,35 @@
 import jwt from 'jsonwebtoken';
 import RevokedToken from '../models/RevokedToken.js';
 import User from '../models/User.js';
+import bcrypt from "bcrypt";
 
 //Route Authentication
 export const authenticateJWT = async (req, res, next) => {
     const authHeader = req.header('Authorization');
 
     if (!authHeader) {
-        return res.status(401).json({ message: req.t('refresh_token')  });
+        return res.status(401).json({ message: req.t('refresh_token') });
     }
 
     const token = authHeader.split(' ')[1];
 
     try {
         // Check if the token has been revoked
-        const isRevoked = await RevokedToken.findOne({ token });
-        if (isRevoked) {
-            return res.status(403).json({ message: req.t('tokenRevoked') });
+        const revokedTokens = await RevokedToken.find();
+        for (const rt of revokedTokens) {
+            if (await bcrypt.compare(token, rt.token)) {
+                return res.status(403).json({ message: req.t('tokenRevoked') });
+            }
         }
-
-        const decoded = jwt.verify(token, process.env.JWT_REFRESH_SECRET);
+        const decoded = jwt.verify(token, process.env.JWT_ACCESS_SECRET);
 
         const user = await User.findById(decoded.userid).select('role');
         if (!user) {
-            return res.status(401).json({ message: req.t('user_notFound')  });
+            return res.status(401).json({ message: req.t('user_notFound') });
         }
 
         if (user.role === 'banned') {
-            return res.status(403).json({ message:  req.t('account_ban')  });
+            return res.status(403).json({ message: req.t('account_ban') });
         }
 
         req.user = decoded;

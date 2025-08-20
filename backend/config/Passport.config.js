@@ -25,9 +25,9 @@ const googleStrategy = new GoogleStrategy({
       if (!user.googleId) {
         user.googleId = googleId;
       }
-      if (googleRefreshToken) {
-        user.googleStoredRefreshToken = googleRefreshToken;
-      }
+if (googleRefreshToken && googleRefreshToken !== user.googleStoredRefreshToken) {
+  user.googleStoredRefreshToken = googleRefreshToken;
+}
     } else {
       user = new User({
         googleId,
@@ -41,8 +41,8 @@ const googleStrategy = new GoogleStrategy({
     // Let's generate our JWT tokens
     const appAccessToken = jwt.sign(
       { userid: user._id, role: user.role },
-      process.env.JWT_REFRESH_SECRET,
-      { expiresIn: "2h", algorithm: "HS256" }
+      process.env.JWT_ACCESS_SECRET,
+      { expiresIn: "30min", algorithm: "HS256" }
     );
     const appRefreshToken = jwt.sign(
       { userid: user._id },
@@ -65,7 +65,8 @@ const googleStrategy = new GoogleStrategy({
       refreshToken: appRefreshToken,
       googleId: user.googleId,
       name: user.name,
-      email: user.email
+      email: user.email,
+      avatar: user.avatar
     });
   } catch (err) {
     console.error("Google Authentication Error: ", err);

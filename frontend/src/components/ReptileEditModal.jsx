@@ -142,6 +142,71 @@ const ReptileEditModal = ({ show, handleClose, reptile, setReptiles, onSuccess }
       }
     }));
   };
+  const validateForm = () => {
+    const errors = {};
+    const today = new Date();
+    const minDate = new Date();
+    minDate.setFullYear(today.getFullYear() - 100);
+
+    // --- MAIN FIELDS ---
+    if (!formData.species.trim()) errors.species = t('reptileEditModal.validation.speciesRequired');
+    if (!formData.morph.trim()) errors.morph = t('reptileEditModal.validation.morphRequired');
+
+    if (!formData.sex) errors.sex = t('reptileEditModal.validation.sexRequired');
+
+    if (!formData.birthDate) {
+      errors.birthDate = t('reptileEditModal.validation.birthRequired');
+    } else {
+      const birth = new Date(formData.birthDate);
+      if (birth > today) errors.birthDate = t('reptileEditModal.validation.birthFuture');
+      else if (birth < minDate) errors.birthDate = t('reptileEditModal.validation.birthTooOld');
+    }
+
+    // Optional: notes max length
+    if (formData.notes.length > 500) errors.notes = t('reptileEditModal.validation.notesTooLong');
+
+    // --- PARENTS ---
+    const namePattern = /^[a-zA-Zàèéìòù' -]+$/;
+    if (formData.parents.father && !namePattern.test(formData.parents.father)) {
+      errors.father = t('reptileEditModal.validation.fatherInvalid');
+    }
+    if (formData.parents.mother && !namePattern.test(formData.parents.mother)) {
+      errors.mother = t('reptileEditModal.validation.motherInvalid');
+    }
+
+    // --- IMAGES (solo nuove immagini, quelle esistenti già validate lato server) ---
+    if (newImages.length > 0) {
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+      newImages.forEach((file, idx) => {
+        if (!allowedTypes.includes(file.type)) {
+          errors[`image_${idx}`] = t('reptileEditModal.validation.imageType');
+        }
+        if (file.size > 5 * 1024 * 1024) { // 5MB
+          errors[`image_${idx}`] = t('reptileEditModal.validation.imageSize');
+        }
+      });
+    }
+
+    // --- DOCUMENTS ---
+    const { cites, microchip } = formData.documents;
+
+    // CITES
+    if (cites.number && cites.number.length > 50) errors.citesNumber = t('reptileEditModal.validation.citesNumberTooLong');
+    if (cites.issueDate) {
+      const issueDate = new Date(cites.issueDate);
+      if (issueDate > today) errors.citesIssueDate = t('reptileEditModal.validation.citesIssueFuture');
+    }
+    if (cites.issuer && cites.issuer.length > 100) errors.citesIssuer = t('reptileEditModal.validation.citesIssuerTooLong');
+
+    // MICROCHIP
+    if (microchip.code && microchip.code.length > 50) errors.microchipCode = t('reptileEditModal.validation.microchipCodeTooLong');
+    if (microchip.implantDate) {
+      const implantDate = new Date(microchip.implantDate);
+      if (implantDate > today) errors.microchipDate = t('reptileEditModal.validation.microchipDateFuture');
+    }
+
+    return errors;
+  };
 
   const handleParentChange = (e) => {
     const { name, value } = e.target;
@@ -204,7 +269,14 @@ const ReptileEditModal = ({ show, handleClose, reptile, setReptiles, onSuccess }
     e.preventDefault();
     setLoading(true);
     setToastMsg(null);
-
+    const errors = validateForm();
+    if (Object.keys(errors).length > 0) {
+      setLoading(false);
+      setToastMsg({ type: 'danger', text: t('reptileEditModal.validation.fixErrors') });
+      console.error("Validation errors:", errors);
+      return;
+    }
+    
     const formDataToSubmit = new FormData();
     Object.entries(formData).forEach(([key, val]) => {
       if (key === 'parents' || key === 'documents') {

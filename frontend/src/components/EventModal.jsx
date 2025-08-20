@@ -18,7 +18,10 @@ const EventModal = ({ show, handleClose, reptileId }) => {
   const [loading, setLoading] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(null);
 
-
+const closeModal = () => {
+  setConfirmDelete(null); 
+  handleClose();          
+};
   const eventTypes = {
     shed: { label: t('eventModal.types.shed'), icon: '🐍' },
     feces: { label: t('eventModal.types.feces'), icon: '💩' },
@@ -102,7 +105,7 @@ const EventModal = ({ show, handleClose, reptileId }) => {
 
   return (
     <Transition show={show} as={Fragment}>
-      <Dialog as="div" className="relative z-50" onClose={handleClose}>
+      <Dialog as="div" className="relative z-50" onClose={closeModal}>
         <Transition.Child
           as={Fragment}
           enter="ease-out duration-300" enterFrom="opacity-0" enterTo="opacity-100"
@@ -122,7 +125,7 @@ const EventModal = ({ show, handleClose, reptileId }) => {
                 <Dialog.Title as="h3" className="text-xl font-bold leading-6 text-black dark:text-black">
                   {t('eventModal.title')}
                 </Dialog.Title>
-                <button onClick={handleClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                <button onClick={closeModal} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
                   <XMarkIcon className="h-6 w-6" />
                 </button>
 
@@ -232,6 +235,29 @@ const EventModal = ({ show, handleClose, reptileId }) => {
                       ))}
                     </div>
                   )}
+                  {confirmDelete && (
+  <div className="fixed inset-0 flex items-center justify-center bg-black/50"     onClick={() => setConfirmDelete(null)} // clic fuori chiude
+>
+    <div className="bg-white p-4 rounded shadow text-black"  onClick={(e) => e.stopPropagation()}>
+      <p>{t('eventModal.confirmDeleteMessage')}</p>
+      <div className="flex justify-end space-x-2 mt-2">
+        <button
+          onClick={() => setConfirmDelete(null)}
+          className="px-3 py-1 bg-gray-200 rounded text-black"
+        >
+          {t('Cancel')}
+        </button>
+        <button
+          onClick={() => handleDelete(confirmDelete)}
+          className="px-3 py-1 bg-red-500 text-white rounded"
+        >
+          {t('Delete')}
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
                 </div>
               </Dialog.Panel>
             </Transition.Child>

@@ -8,7 +8,7 @@ export const refreshToken = async (req, res) => {
 
 
     const generateAccessToken = (user) => {
-        return jwt.sign({ userid: user.id, role: user.role }, process.env.JWT_REFRESH_SECRET, { expiresIn: '2h' });
+        return jwt.sign({ userid: user.id, role: user.role }, process.env.JWT_ACCESS_SECRET, { expiresIn: '30min' });
     };
 
     const generateRefreshToken = (user) => {
@@ -20,12 +20,14 @@ export const refreshToken = async (req, res) => {
     try {
         const decoded = jwt.verify(token, process.env.JWT_REFRESH_SECRET);
         const user = await User.findById(decoded.userid);
-        if (!utente) return res.status(403).json({ messaggio: req.t('token_invalid') });
-
-        const isRevoked = await RevokedToken.findOne({ token });
-        // Check reuse attack
-
-        if (isRevoked) return res.status(403).json({ message: req.t('tokenRevoked')});
+        if (!user) return res.status(403).json({ messaggio: req.t('token_invalid') });
+        const revokedTokens = await RevokedToken.find();
+        for (const rt of revokedTokens) {
+            const match = await bcrypt.compare(token, rt.token);
+            if (match) {
+                return res.status(403).json({ message: req.t('tokenRevoked') });
+            }
+        }
 
         const maxTokenAgeMs = 7 * 24 * 60 * 60 * 1000;
         const issuedAtMs = decoded.iat * 1000;
@@ -69,20 +71,12 @@ export const refreshToken = async (req, res) => {
 
         await user.save();
 
-        // Add the old refresh token to the list of revoked tokens
-        if (!isRevoked && decoded.exp * 1000 > Date.now()) {
-            const revokedToken = new RevokedToken({
-                token,
-                expiresAt: new Date(decoded.exp * 1000)
-            });
-            await revokedToken.save();
-
-        }
-        // Send the new refresh token and access token
+                // Send the new refresh token and access token
         res.cookie('refreshToken', newRefreshToken, {
             httpOnly: true,
             secure: true,
             sameSite: 'None',
+            path: '/api/v1',
             maxAge: 7 * 24 * 60 * 60 * 1000 // 7 day
         });
 
