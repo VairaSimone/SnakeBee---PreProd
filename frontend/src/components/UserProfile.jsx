@@ -116,15 +116,20 @@ const UserProfile = () => {
   };
   const removeToast = (id) => setToasts((prev) => prev.filter((t) => t.id !== id));
 
-  useEffect(() => {
-    if (avatar instanceof File) {
-      const objectUrl = URL.createObjectURL(avatar);
-      setAvatarPreview(objectUrl);
-      return () => URL.revokeObjectURL(objectUrl);
-    } else if (typeof avatar === 'string') {
-      setAvatarPreview(avatar);
-    }
-  }, [avatar]);
+useEffect(() => {
+    console.log("Avatar dal backend:", avatar);
+
+  if (avatar instanceof File) {
+    const objectUrl = URL.createObjectURL(avatar);
+    setAvatarPreview(objectUrl);
+    return () => URL.revokeObjectURL(objectUrl);
+  } else if (typeof avatar === 'string' && avatar.trim() !== '') {
+    const isAbsolute = avatar.startsWith('http://') || avatar.startsWith('https://');
+    setAvatarPreview(isAbsolute ? avatar : process.env.REACT_APP_BACKEND_URL_IMAGE + avatar);
+  } else {
+    setAvatarPreview('');
+  }
+}, [avatar]);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -305,31 +310,30 @@ const UserProfile = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <aside className="lg:col-span-1 space-y-8">
-            <div className="bg-white rounded-lg shadow-md p-6 text-center">
-              <div className="relative w-32 h-32 mx-auto group">
-                <img
-                  src={process.env.REACT_APP_BACKEND_URL_IMAGE + avatarPreview || 'default_avatar_url'}
-                  alt="Avatar"
-                  className="w-full h-full rounded-full object-cover border-4 border-slate-200"
-                />
-                <div
-                  className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                  onClick={() => avatarInputRef.current?.click()}
-                >
-                  <FiUpload className="text-white h-8 w-8" />
-                </div>
-              </div>
-              <input
-                ref={avatarInputRef}
-                type="file"
-                accept="image/*"
-                onChange={(e) => setAvatar(e.target.files[0])}
-                className="hidden"
-              />
-              <h2 className="mt-4 text-2xl font-bold text-slate-800">{name}</h2>
-              <p className="text-sm text-slate-500">{email}</p>
-            </div>
-
+<div className="bg-white rounded-lg shadow-md p-6 text-center">
+    <div className="relative w-32 h-32 mx-auto group">
+<img
+  src={avatarPreview || '/images/default_avatar.png'}
+  alt="Avatar"
+  className="w-full h-full rounded-full object-cover border-4 border-slate-200"
+/>  
+    <div
+        className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+        onClick={() => avatarInputRef.current?.click()}
+      >
+        <FiUpload className="text-white h-8 w-8" />
+      </div>
+    </div>
+    <input
+      ref={avatarInputRef}
+      type="file"
+      accept="image/*"
+      onChange={(e) => setAvatar(e.target.files[0])}
+      className="hidden"
+    />
+    <h2 className="mt-4 text-2xl font-bold text-slate-800">{name}</h2>
+    <p className="text-sm text-slate-500">{email}</p>
+  </div>
             <SettingsCard title={t('UserProfile.exportData')} icon={<FiDownload className="text-indigo-500 w-6 h-6" />}>
               <p className="text-sm text-slate-600 mb-4">
                 {t('UserProfile.downloadExcelInfo')}

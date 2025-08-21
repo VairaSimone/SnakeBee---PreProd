@@ -145,31 +145,31 @@ const ReptileDetails = () => {
                     <div className="lg:col-span-1 space-y-6">
                         <InfoCard>
                             <div className="relative h-64 w-full overflow-hidden rounded-lg group">
-    <div className="relative h-64 w-full overflow-hidden rounded-lg group">
-  <div className="flex h-full overflow-x-auto scroll-smooth snap-x snap-mandatory no-scrollbar" ref={carouselRef}>
-    {(reptile.image?.filter(Boolean).length ? reptile.image.filter(Boolean) : [defaultImage]).map((img, idx) => {
-      const imageUrl = img === defaultImage ? img : `${baseUrl}${img}`; // Applica BaseURL solo alle immagini dell'utente
-      return (
-        <img
-          key={idx}
-          src={imageUrl}
-          alt={`${reptile.name || 'reptile'} - ${idx + 1}`}
-          className="object-cover w-full h-full flex-shrink-0 snap-center"
-        />
-      );
-    })}
-  </div>
+                                <div className="relative h-64 w-full overflow-hidden rounded-lg group">
+                                    <div className="flex h-full overflow-x-auto scroll-smooth snap-x snap-mandatory no-scrollbar" ref={carouselRef}>
+                                        {(reptile.image?.filter(Boolean).length ? reptile.image.filter(Boolean) : [defaultImage]).map((img, idx) => {
+                                            const imageUrl = img === defaultImage ? img : `${baseUrl}${img}`; // Applica BaseURL solo alle immagini dell'utente
+                                            return (
+                                                <img
+                                                    key={idx}
+                                                    src={imageUrl}
+                                                    alt={`${reptile.name || 'reptile'} - ${idx + 1}`}
+                                                    className="object-cover w-full h-full flex-shrink-0 snap-center"
+                                                />
+                                            );
+                                        })}
+                                    </div>
 
-  {(reptile.image?.filter(Boolean)?.length || 0) > 1 && (
-    <>
-      <CarouselArrow direction="left" onClick={() => scrollCarousel(-1)} />
-      <CarouselArrow direction="right" onClick={() => scrollCarousel(1)} />
-    </>
-  )}
-</div>
+                                    {(reptile.image?.filter(Boolean)?.length || 0) > 1 && (
+                                        <>
+                                            <CarouselArrow direction="left" onClick={() => scrollCarousel(-1)} />
+                                            <CarouselArrow direction="right" onClick={() => scrollCarousel(1)} />
+                                        </>
+                                    )}
+                                </div>
 
 
-                                   
+
                                 {reptile.image?.length > 1 && (
                                     <>
                                         <CarouselArrow direction="left" onClick={() => scrollCarousel(-1)} />

@@ -337,22 +337,22 @@ export default function BreedingPage() {
     if (err.response?.data?.errors && Array.isArray(err.response.data.errors)) return err.response.data.errors.join(', ');
     return err.message || "Unknown error";
   };
-const submitEvent = async () => {
-  if (!eventData.type || !eventData.date) {
-    setEventError(t('breedingDashboard.errors.missingEventFields'));
-    return;
-  }
-  try {
-    const res = await api.post(`/breeding/${selectedBreedingId}/event`, eventData);
-    const updatedBreeding = res.data;
-    setBreedings(prev => prev.map(b => b._id === selectedBreedingId ? updatedBreeding : b));
-    setShowEventModal(false);
-    setEventError(""); // reset errore
-  } catch (err) {
-    const msg = err.response?.data?.error || t('breedingDashboard.errors.createPair');
-    setEventError(msg); // mostra l'errore dentro il modale
-  }
-};
+  const submitEvent = async () => {
+    if (!eventData.type || !eventData.date) {
+      setEventError(t('breedingDashboard.errors.missingEventFields'));
+      return;
+    }
+    try {
+      const res = await api.post(`/breeding/${selectedBreedingId}/event`, eventData);
+      const updatedBreeding = res.data;
+      setBreedings(prev => prev.map(b => b._id === selectedBreedingId ? updatedBreeding : b));
+      setShowEventModal(false);
+      setEventError(""); // reset errore
+    } catch (err) {
+      const msg = err.response?.data?.error || t('breedingDashboard.errors.createPair');
+      setEventError(msg); // mostra l'errore dentro il modale
+    }
+  };
 
   const openEditEventModal = (bid, ev) => {
     setSelectedBreedingId(bid);
@@ -361,19 +361,19 @@ const submitEvent = async () => {
     setShowEventModal(true);
   };
 
-const submitEditEvent = async () => {
-  try {
-    const res = await api.patch(`/breeding/${selectedBreedingId}/event/${editingEventId}`, eventData);
-    const updatedBreeding = res.data;
-    setBreedings(prev => prev.map(b => b._id === selectedBreedingId ? updatedBreeding : b));
-    setShowEventModal(false);
-    setEditingEventId(null);
-    setEventError(""); // reset errore
-  } catch (err) {
-    const msg = err.response?.data?.error || t('breedingDashboard.errors.updateEvent');
-    setEventError(msg); // mostra l'errore dentro il modale
-  }
-};
+  const submitEditEvent = async () => {
+    try {
+      const res = await api.patch(`/breeding/${selectedBreedingId}/event/${editingEventId}`, eventData);
+      const updatedBreeding = res.data;
+      setBreedings(prev => prev.map(b => b._id === selectedBreedingId ? updatedBreeding : b));
+      setShowEventModal(false);
+      setEditingEventId(null);
+      setEventError(""); // reset errore
+    } catch (err) {
+      const msg = err.response?.data?.error || t('breedingDashboard.errors.updateEvent');
+      setEventError(msg); // mostra l'errore dentro il modale
+    }
+  };
 
   const handleSubmit = async () => {
     try {
@@ -450,7 +450,13 @@ const submitEditEvent = async () => {
       }));
   }, [breedings]);
 
-
+  const uniqueSpecies = [
+    ...new Map(
+      reptiles
+        .filter(r => r.species)
+        .map(r => [r.species.trim().toLowerCase(), r.species.trim()])
+    ).values()
+  ];
   {
     !hasPaidPlan(user) && (
       <div className="absolute inset-0 bg-white/70 backdrop-blur-sm flex flex-col items-center justify-center z-50">
@@ -558,21 +564,26 @@ const submitEditEvent = async () => {
         <Modal onClose={() => setShowModal(false)}>
           <h2 className="text-2xl font-bold text-charcoal mb-6">{t('breedingDashboard.createNewPair')}</h2>
           <div className="space-y-4">
-            <select className="input-field" value={formData.species} onChange={e => setFormData({ ...formData, species: e.target.value, male: '', female: '' })}>
+            <select
+              className="input-field"
+              value={formData.species}
+              onChange={e => setFormData({ ...formData, species: e.target.value, male: '', female: '' })}
+            >
               <option value="">{t('breedingDashboard.selectSpecies')}</option>
-              {[...new Set(reptiles.map(r => r.species?.trim()))].map(species => (
-                <option key={species} value={species}>{species}</option>
+              {uniqueSpecies.map(species => (
+                <option key={species.toLowerCase()} value={species}>
+                  {species}
+                </option>
               ))}
-            </select>
-            <select className="input-field" value={formData.male} onChange={e => setFormData({ ...formData, male: e.target.value })} disabled={!formData.species}>
+            </select>            <select className="input-field" value={formData.male} onChange={e => setFormData({ ...formData, male: e.target.value })} disabled={!formData.species}>
               <option value="">{t('breedingDashboard.selectMale')}</option>
-              {reptiles.filter(r => r.sex === 'M' && r.species === formData.species).map(r => (
+              {reptiles.filter(r => r.sex === 'M' &&  r.species?.trim().toLowerCase() === formData.species.trim().toLowerCase()).map(r => (
                 <option key={r._id} value={r._id}>{r.name || 'Senza nome'} ({r.morph || 'Classic'})</option>
               ))}
             </select>
             <select className="input-field" value={formData.female} onChange={e => setFormData({ ...formData, female: e.target.value })} disabled={!formData.species}>
               <option value="">{t('breedingDashboard.selectFemale')}</option>
-              {reptiles.filter(r => r.sex === 'F' && r.species === formData.species).map(r => (
+              {reptiles.filter(r => r.sex === 'F' &&  r.species?.trim().toLowerCase() === formData.species.trim().toLowerCase()).map(r => (
                 <option key={r._id} value={r._id}>{r.name || 'Senza nome'} ({r.morph || 'Classic'})</option>
               ))}
             </select>
@@ -602,7 +613,7 @@ const submitEditEvent = async () => {
             </select>
             <input type="date" className="input-field" value={eventData.date} onChange={e => setEventData({ ...eventData, date: e.target.value })} />
             <input type="text" placeholder={t('breedingDashboard.eventNotes')} className="input-field" value={eventData.notes} onChange={e => setEventData({ ...eventData, notes: e.target.value })} />
-           {eventError && <p className="text-red-600 text-sm">{eventError}</p>}
+            {eventError && <p className="text-red-600 text-sm">{eventError}</p>}
 
             <button className="btn btn-primary w-full" onClick={editingEventId ? submitEditEvent : submitEvent}>
               {editingEventId ? t('breedingDashboard.editEvent') : t('breedingDashboard.saveEvent')}
@@ -630,7 +641,7 @@ const submitEditEvent = async () => {
             <input className="input-field" type="number" placeholder={t('breedingDashboard.totalClutch')} value={outcomeData.clutchSize.total} onChange={e => setOutcomeData(d => ({ ...d, clutchSize: { ...d.clutchSize, total: e.target.value } }))} />
             <input className="input-field" type="number" placeholder={t('breedingDashboard.fertileClutch')} value={outcomeData.clutchSize.fertile} onChange={e => setOutcomeData(d => ({ ...d, clutchSize: { ...d.clutchSize, fertile: e.target.value } }))} />
             <input className="input-field" type="number" placeholder={t('breedingDashboard.hatchedOrBorn')} value={outcomeData.clutchSize.hatchedOrBorn} onChange={e => setOutcomeData(d => ({ ...d, clutchSize: { ...d.clutchSize, hatchedOrBorn: e.target.value } }))} />
-                              {eventError && <p className="text-red-600 text-sm">{eventError}</p>}
+            {eventError && <p className="text-red-600 text-sm">{eventError}</p>}
 
             <button className="btn btn-secondary w-full" onClick={submitOutcome}>{t('breedingDashboard.saveOutcome')}</button>
 

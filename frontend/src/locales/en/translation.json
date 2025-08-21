@@ -890,10 +890,14 @@
             "weight": "Weight"
         },
         "errors": {
-            "requiredDate": "Date is required.",
-            "invalidWeight": "Enter a valid weight in grams.",
-            "saveFailed": "Error while saving. Try again.",
-            "deleteFailed": "Unable to delete event. Try again."
+"invalidType": "Invalid event type",
+"requiredDate": "Date is required",
+"invalidDate": "The date entered is invalid",
+"requiredWeight": "Weight is required",
+"invalidWeight": "Weight must be a positive number",
+"weightTooHigh": "The weight entered is too high",
+"saveFailed": "Error saving event",
+"deleteFailed": "Error deleting event"
         },
         "history": {
             "filterLabel": "Filter by type",

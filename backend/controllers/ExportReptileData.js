@@ -230,42 +230,6 @@ export const exportReptileData = async (req, res) => {
     });
     breedingSheet.views = [{ state: 'frozen', ySplit: 1 }];
 
-    // Hatchlings
-    const hatchlingSheet = workbook.addWorksheet(req.t('hatchlings'));
-    hatchlingSheet.columns = [
-      { header: req.t('season_year'), key: 'seasonYear' },
-      { header: req.t('morph'), key: 'morph' },
-      { header: req.t('sex'), key: 'sex' },
-      { header: req.t('weight_g'), key: 'weight' },
-    ];
-
-    breedings.forEach(b => {
-      const entries = b.hatchlings?.map(h => ({
-        seasonYear: b.year,
-        morph: h.morph || '',
-        sex: h.sex || req.t('unknown_short'),
-        weight: h.weight || '',
-      })) || [];
-      hatchlingSheet.addRows(entries);
-    });
-
-    hatchlingSheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
-    hatchlingSheet.getRow(1).fill = {
-      type: 'pattern',
-      pattern: 'solid',
-      fgColor: { argb: 'FF4CAF50' },
-    };
-
-    hatchlingSheet.columns.forEach(col => {
-      let maxLength = col.header.length;
-      col.eachCell?.({ includeEmpty: true }, cell => {
-        maxLength = Math.max(maxLength, (cell.value || '').toString().length);
-      });
-      col.width = maxLength + 2;
-    });
-
-    hatchlingSheet.views = [{ state: 'frozen', ySplit: 1 }];
-
     // Sending the Excel file
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     res.setHeader('Content-Disposition', 'attachment; filename=reptile_data.xlsx');
@@ -323,7 +287,7 @@ export async function generateReptilePDF(req, res) {
 
     // --- Basic Information ---
     doc.fontSize(14).fillColor('black').font('Helvetica');
-    doc.text(req.t('Informazioni Base'), { underline: true });
+    doc.text(req.t('Information'), { underline: true });
     doc.moveDown(0.5);
 
     const baseInfo = [
@@ -390,7 +354,7 @@ export async function generateReptilePDF(req, res) {
       doc.text(req.t('No_meals_recorded'));
     } else {
       const pasti = feedings.map(feed =>
-        `- ${new Date(feed.date).toLocaleDateString()} | ${feed.foodType} x${feed.quantity || 1} (${feed.weightPerUnit}g ${req.t('ciascuno')}) | ${req.t('eaten')}: ${feed.wasEaten ? req.t('yes') : req.t('no')}${feed.retryAfterDays ? ` | ${req.t('retry_after_days')}: ${feed.retryAfterDays}` : ''} | ${req.t('notes')}: ${feed.notes || req.t('n_a')}`
+        `- ${new Date(feed.date).toLocaleDateString()} | ${feed.foodType} x${feed.quantity || 1} (${feed.weightPerUnit}g ${req.t('each')}) | ${req.t('eaten')}: ${feed.wasEaten ? req.t('yes') : req.t('no')}${feed.retryAfterDays ? ` | ${req.t('retry_after_days')}: ${feed.retryAfterDays}` : ''} | ${req.t('notes')}: ${feed.notes || req.t('n_a')}`
       );
       doc.list(pasti);
     }

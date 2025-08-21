@@ -862,11 +862,15 @@
             "weight": "Peso"
         },
         "errors": {
-            "requiredDate": "La data è obbligatoria.",
-            "invalidWeight": "Inserisci un peso valido in grammi.",
-            "saveFailed": "Errore durante il salvataggio. Riprova.",
-            "deleteFailed": "Impossibile eliminare l'evento. Riprova."
-        },
+      "invalidType": "Tipo evento non valido",
+      "requiredDate": "La data è obbligatoria",
+      "invalidDate": "La data inserita non è valida",
+      "requiredWeight": "Il peso è obbligatorio",
+      "invalidWeight": "Il peso deve essere un numero positivo",
+      "weightTooHigh": "Il peso inserito è troppo alto",
+      "saveFailed": "Errore nel salvataggio dell'evento",
+      "deleteFailed": "Errore nell'eliminazione dell'evento"
+            },
         "history": {
             "filterLabel": "Filtra per tipo",
             "filterAll": "Tutti",

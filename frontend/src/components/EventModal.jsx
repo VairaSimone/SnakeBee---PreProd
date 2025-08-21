@@ -61,17 +61,39 @@ const closeModal = () => {
       setError(t('eventModal.errors.requiredDate'));
       return;
     }
+ const trimmedNotes = notes.trim();
+  const trimmedType = type.trim();
+const parsedDate = new Date(date);
 
+// Verifica che sia un oggetto Date valido
+if (isNaN(parsedDate.getTime())) {
+  setError(t('eventModal.errors.invalidDate'));
+  return;
+}
 
-    const newEvent = { reptileId, type, date, notes };
+// Limita la data: ad esempio dal 1900 a oggi + 1 anno
+const minDate = new Date('1900-01-01');
+const maxDate = new Date();
+maxDate.setFullYear(maxDate.getFullYear() + 1);
 
-    if (type === 'weight') {
-      if (!weight || isNaN(weight) || parseFloat(weight) <= 0) {
-        setError(t('eventModal.errors.invalidWeight'));
-        return;
-      }
-      newEvent.weight = parseFloat(weight);
+if (parsedDate < minDate || parsedDate > maxDate) {
+  setError(t('eventModal.errors.invalidDate'));
+  return;
+}
+  const newEvent = { reptileId, type: trimmedType, date, notes: trimmedNotes };
+
+if (trimmedType === 'weight') {
+    if (!weight || weight.trim() === '') {
+      setError(t('eventModal.errors.requiredWeight'));
+      return;
     }
+    const parsedWeight = parseFloat(weight);
+    if (isNaN(parsedWeight) || parsedWeight <= 0) {
+      setError(t('eventModal.errors.invalidWeight'));
+      return;
+    }
+    newEvent.weight = parsedWeight;
+  }
 
     setLoading(true);
     setError('');
