@@ -80,6 +80,8 @@
   "Feeding_notfound": "Feeding record not found",
   "feeding_delete": "Feeding deleted",
   "each": "each",
+    "price": "Price",
+  "priceCurrency": "Currency",
   "eventLimit": "Maximum limit of {{eventsPerTypePerReptile}} events of type {{typ}} reached for this reptile. Upgrade to the Basic plan for unlimited events.",
   "element_error": "Error managing element",
   "event_delete": "Event deleted",

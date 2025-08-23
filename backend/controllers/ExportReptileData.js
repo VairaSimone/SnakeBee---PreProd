@@ -46,6 +46,8 @@ export const exportReptileData = async (req, res) => {
       { header: req.t('notes'), key: 'notes' },
       { header: req.t('father'), key: 'father' },
       { header: req.t('mother'), key: 'mother' },
+      { header: req.t('price'), key: 'price' },
+      { header: req.t('priceCurrency'), key: 'priceCurrency' },
       { header: req.t('cites_number'), key: 'citesNumber' },
       { header: req.t('cites_issue_date'), key: 'citesIssueDate' },
       { header: req.t('cites_issuer'), key: 'citesIssuer' },
@@ -64,6 +66,8 @@ export const exportReptileData = async (req, res) => {
       notes: r.notes || '',
       father: r.parents?.father || '',
       mother: r.parents?.mother || '',
+      price: r.price?.amount || '',
+      priceCurrency: r.price?.currency || '',
       citesNumber: r.documents?.cites?.number || '',
       citesIssueDate: r.documents?.cites?.issueDate ? new Date(r.documents.cites.issueDate).toLocaleDateString() : '',
       citesIssuer: r.documents?.cites?.issuer || '',
@@ -297,7 +301,11 @@ export async function generateReptilePDF(req, res) {
       `${req.t('birth_date')}: ${reptile.birthDate ? reptile.birthDate.toLocaleDateString() : req.t('n_a')}`,
       `${req.t('notes')}: ${reptile.notes || req.t('n_a')}`,
       `${req.t('mother')}: ${reptile.parents?.mother || req.t('n_a')}`,
-      `${req.t('father')}: ${reptile.parents?.father || req.t('n_a')}`
+      `${req.t('father')}: ${reptile.parents?.father || req.t('n_a')}`,
+      `${req.t('price')}: ${reptile.price?.amount || req.t('n_a')}`,
+      `${req.t('priceCurrency')}: ${reptile.price?.currency || req.t('n_a')}`,
+
+
     ];
     baseInfo.forEach(line => doc.text(line));
     doc.moveDown();
