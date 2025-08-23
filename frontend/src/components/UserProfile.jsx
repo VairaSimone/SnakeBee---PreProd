@@ -100,6 +100,8 @@ const UserProfile = () => {
   const [emailFeedingNotifications, setEmailFeedingNotifications] = useState(true);
   const [notificationMsg, setNotificationMsg] = useState('');
   const { t } = useTranslation();
+const [address, setAddress] = useState('');
+const [phoneNumber, setPhoneNumber] = useState('');
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -140,6 +142,9 @@ useEffect(() => {
         setLanguageLocal(data.language);
         setEmail(data.email);
         setAvatar(data.avatar);
+        setAddress(data.address || '');
+setPhoneNumber(data.phoneNumber || '');
+
         setEmailFeedingNotifications(data.emailFeedingNotifications ?? true);
       } catch {
         addToast(t('UserProfile.errorProfile'), 'error');
@@ -160,11 +165,20 @@ useEffect(() => {
       addToast(t('UserProfile.nameCharacter'), 'error');
       return;
     }
+const phoneRegex = /^\+?[0-9\s\-]{7,15}$/;
+
+if (phoneNumber && !phoneRegex.test(phoneNumber.trim())) {
+  addToast(t('UserProfile.invalidPhone'), 'error');
+  return;
+}
 
     try {
       const formData = new FormData();
       formData.append('name', trimmedName);
       formData.append('language', language);
+      formData.append('address', address.trim());
+formData.append('phoneNumber', phoneNumber.trim());
+
       if (avatar instanceof File) {
         formData.append('avatar', avatar);
       }
@@ -349,6 +363,23 @@ useEffect(() => {
             <SettingsCard title={t('UserProfile.profileInfo')} icon={<FiUser className="text-indigo-500 w-6 h-6" />}>
               <form onSubmit={handleUpdateProfile} className="space-y-4">
                 <InputField id="name" label={t('UserProfile.name')} value={name} onChange={(e) => setName(e.target.value)} required />
+                <InputField
+  id="address"
+  label={t('UserProfile.address')}
+  value={address}
+  onChange={(e) => setAddress(e.target.value)}
+  placeholder={t('UserProfile.addressPlaceholder')}
+/>
+
+<InputField
+  id="phoneNumber"
+  label={t('UserProfile.phoneNumber')}
+  type="tel"
+  value={phoneNumber}
+  onChange={(e) => setPhoneNumber(e.target.value)}
+  placeholder="+39 333 1234567"
+/>
+
                 <div>
                   <label htmlFor="language" className="block text-sm font-medium text-slate-600 mb-1">{t('UserProfile.language')}</label>
                   <select id="language" value={language} onChange={(e) => setLanguageLocal(e.target.value)} required className="w-full border-slate-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition-colors bg-white text-black">

@@ -60,7 +60,8 @@ const ReptileEditModal = ({ show, handleClose, reptile, setReptiles, onSuccess }
     documents: {
       cites: { number: '', issueDate: '', issuer: '' },
       microchip: { code: '', implantDate: '' }
-    }
+    },
+    price: { amount: '', currency: 'EUR' }
   };
 
   const [formData, setFormData] = useState(initialFormData);
@@ -102,6 +103,10 @@ const ReptileEditModal = ({ show, handleClose, reptile, setReptiles, onSuccess }
             implantDate: documents.microchip?.implantDate?.split('T')[0] || '',
           },
         },
+        price: {
+          amount: reptile.price?.amount || '',
+          currency: reptile.price?.currency || 'EUR'
+        },
       });
       setLabel(reptileLabel || { text: '', color: '#228B22' });
       setExistingImages(reptile.image.map(name => `${process.env.REACT_APP_BACKEND_URL_IMAGE}${name}`));
@@ -127,6 +132,17 @@ const ReptileEditModal = ({ show, handleClose, reptile, setReptiles, onSuccess }
     setFormData((prev) => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value
+    }));
+  };
+
+  const handlePriceChange = (e, field) => {
+    const { value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      price: {
+        ...prev.price,
+        [field]: field === 'amount' ? value.replace(/[^0-9.]/g, '') : value
+      }
     }));
   };
 
@@ -266,57 +282,72 @@ const ReptileEditModal = ({ show, handleClose, reptile, setReptiles, onSuccess }
 
 
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setToastMsg(null);
-    const validationErrors = validateForm();
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
-      setLoading(false);
-      setToastMsg({ type: 'danger', text: t('reptileEditModal.validation.fixErrors') });
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setLoading(true);
+  setToastMsg(null);
+
+  const validationErrors = validateForm();
+  if (Object.keys(validationErrors).length > 0) {
+    setErrors(validationErrors);
+    setLoading(false);
+    setToastMsg({ type: 'danger', text: t('reptileEditModal.validation.fixErrors') });
+    return;
+  }
+  setErrors({});
+
+  const formDataToSubmit = new FormData();
+
+  // append simple fields (skip nested objects we want stringified)
+  Object.entries(formData).forEach(([key, val]) => {
+    if (key === 'parents' || key === 'documents' || key === 'price') {
+      // skip: will append them in controlled way below
       return;
     }
-    setErrors({});
-    const errors = validateForm();
-    if (Object.keys(errors).length > 0) {
-      setLoading(false);
-      setToastMsg({ type: 'danger', text: t('reptileEditModal.validation.fixErrors') });
-      console.error("Validation errors:", errors);
-      return;
-    }
+    // convert booleans / numbers / undefined to strings safely
+    formDataToSubmit.append(key, val === undefined || val === null ? '' : String(val));
+  });
 
-    const formDataToSubmit = new FormData();
-    Object.entries(formData).forEach(([key, val]) => {
-      if (key === 'parents' || key === 'documents') {
-        formDataToSubmit.append(key, JSON.stringify(val));
-      } else {
-        formDataToSubmit.append(key, val);
-      }
-    });
-    formDataToSubmit.append('label', JSON.stringify(label));
-    newImages.forEach(img => {
-      formDataToSubmit.append('image', img);
-    });
+  // parents / documents as JSON
+  formDataToSubmit.append('parents', JSON.stringify(formData.parents || {}));
+  formDataToSubmit.append('documents', JSON.stringify(formData.documents || {}));
 
-    try {
-      const { data } = await api.put(`/reptile/${reptile._id}`, formDataToSubmit);
-      setToastMsg({ type: 'success', text: t('reptileEditModal.reptile.reptileUpdate') });
-      if (typeof setReptiles === 'function') {
-        setReptiles((prev) => prev.map((r) => (r._id === data._id ? data : r)));
-      }
-      onSuccess?.();
-      handleClose();
-    } catch (err) {
-      let msg = t('reptileEditModal.reptile.reptileError');
-      if (err.response?.data?.message) {
-        msg = err.response.data.message;
-      }
-      setToastMsg({ type: 'danger', text: msg });
-    } finally {
-      setLoading(false);
+  // price: if empty string -> send null (so backend can remove it), else send object with numeric amount
+  const rawAmount = formData.price?.amount;
+  const priceToSubmit = (rawAmount === '' || rawAmount === null || rawAmount === undefined)
+    ? null
+    : { amount: parseFloat(String(rawAmount)) || 0, currency: formData.price?.currency || 'EUR' };
+
+  formDataToSubmit.append('price', JSON.stringify(priceToSubmit));
+
+  // label
+  formDataToSubmit.append('label', JSON.stringify(label || {}));
+
+  // images
+  newImages.forEach(img => {
+    formDataToSubmit.append('image', img);
+  });
+
+  // debug: guarda cosa stai inviando
+  // for (const p of formDataToSubmit.entries()) console.log(p[0], p[1]);
+
+  try {
+    // NON impostare manualmente Content-Type: multipart boundary lo crea axios automaticamente
+    const { data } = await api.put(`/reptile/${reptile._id}`, formDataToSubmit);
+    setToastMsg({ type: 'success', text: t('reptileEditModal.reptile.reptileUpdate') });
+    if (typeof setReptiles === 'function') {
+      setReptiles((prev) => prev.map((r) => (r._id === data._id ? data : r)));
     }
-  };
+    onSuccess?.();
+    handleClose();
+  } catch (err) {
+    let msg = t('reptileEditModal.reptile.reptileError');
+    if (err.response?.data?.message) msg = err.response.data.message;
+    setToastMsg({ type: 'danger', text: msg });
+  } finally {
+    setLoading(false);
+  }
+};
 
   const inputClasses = "w-full px-3 py-2 text-sm text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition";
   const labelClasses = "block text-sm font-medium text-gray-600 mb-1";
@@ -426,7 +457,41 @@ const ReptileEditModal = ({ show, handleClose, reptile, setReptiles, onSuccess }
                           className={`${inputClasses} ${errors.notes ? "border-red-500 focus:ring-red-500 focus:border-red-500" : ""}`}
                         />
                         {errors.notes && <p className="mt-1 text-xs text-red-600">{errors.notes}</p>}
-                      </div>                    </div>
+                      </div>
+<div className={sectionClasses}>
+  <h3 className={sectionTitleClasses}>
+    <TagIcon className="w-6 h-6 text-emerald-600" /> {t('reptileEditModal.reptile.price')}
+  </h3>
+  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
+    <div>
+      <label className={labelClasses}>{t('reptileEditModal.reptile.priceAmount')}</label>
+      <input
+        type="number"
+        min="0"
+        step="0.01"
+        value={formData.price.amount}
+        onChange={(e) => handlePriceChange(e, 'amount')}
+        className={inputClasses}
+      />
+    </div>
+    <div>
+      <label className={labelClasses}>{t('reptileEditModal.reptile.priceCurrency')}</label>
+      <select
+        value={formData.price.currency}
+        onChange={(e) => handlePriceChange(e, 'currency')}
+        className={inputClasses}
+      >
+        <option value="EUR">EUR</option>
+        <option value="USD">USD</option>
+        <option value="GBP">GBP</option>
+        <option value="JPY">JPY</option>
+        <option value="CHF">CHF</option>
+      </select>
+    </div>
+  </div>
+</div>
+
+                    </div>
 
                     <div className={sectionClasses}>
                       <h3 className={sectionTitleClasses}><PhotoIcon className="w-6 h-6 text-emerald-600" />{t('reptileEditModal.reptile.gallery')}</h3>

@@ -1,12 +1,12 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import api, { getEvents } from '../services/api';
-
-// Importa i nuovi componenti che creeremo
 import { InfoCard, InfoItem } from './InfoCard';
 import { EventSection } from './EventSection';
 import { FeedingCard } from './FeedingCard';
 import { useTranslation } from 'react-i18next';
+import { useSelector } from 'react-redux';
+import { selectUser } from '../features/userSlice.jsx';
 
 const CarouselArrow = ({ direction, onClick }) => (
     <button
@@ -20,6 +20,8 @@ const CarouselArrow = ({ direction, onClick }) => (
 const ReptileDetails = () => {
     const { reptileId } = useParams();
     const [reptile, setReptile] = useState(null);
+    const [owner, setOwner] = useState(null);
+
     const [feedings, setFeedings] = useState([]);
     const [events, setEvents] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -27,6 +29,7 @@ const ReptileDetails = () => {
     const carouselRef = useRef(null);
     const defaultImage = "https://res.cloudinary.com/dg2wcqflh/image/upload/v1753088270/sq1upmjw7xgrvpkghotk.png"
     const { t } = useTranslation();
+    const user = useSelector(selectUser);
 
     const [visibleCounts, setVisibleCounts] = useState({
         feedings: 5,
@@ -37,19 +40,43 @@ const ReptileDetails = () => {
     });
 
     const baseUrl = process.env.REACT_APP_BACKEND_URL_IMAGE || '';
+    const isPublic = window.location.pathname.includes("/public/");
 
     useEffect(() => {
         const fetchAll = async () => {
             try {
-                const { data: reptileData } = await api.get(`/reptile/${reptileId}`);
-                setReptile(reptileData);
 
-                const { data: feedingData } = await api.get(`/feedings/${reptileId}?page=1`);
-                setFeedings(feedingData.dati || []);
+                if (isPublic) {
+                    const language = navigator.language.split('-')[0] || "it";
 
-                const { data: eventData } = await getEvents(reptileId);
-                setEvents(eventData || []);
+                    // --- caso pubblico: fetch nativo ---
+                    const reptileResponse = await fetch(
+                        `${process.env.REACT_APP_BACKEND_URL}/reptile/public/reptile/${reptileId}`,
+                        {
+                            method: 'GET',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept-Language': language
+                            }
+                        }
+                    ); if (!reptileResponse.ok) throw new Error("Errore caricamento rettile pubblico");
+                    const reptileData = await reptileResponse.json();
+                    setOwner(reptileData.owner);
+                    setReptile(reptileData.reptile);
+                    setFeedings(reptileData.feedings || []);
+                    setEvents(reptileData.events || []);
+                } else {
+                    const { data: reptileData } = await api.get(`/reptile/${reptileId}`);
+                    setReptile(reptileData);
+
+                    const { data: feedingData } = await api.get(`/feedings/${reptileId}?page=1`);
+                    setFeedings(feedingData.dati || []);
+
+                    const { data: eventData } = await getEvents(reptileId);
+                    setEvents(eventData || []);
+                }
             } catch (err) {
+                console.error("Errore fetch:", err);
             } finally {
                 setLoading(false);
             }
@@ -137,10 +164,11 @@ const ReptileDetails = () => {
     return (
         <div className=" green:bg-slate-900 min-h-screen p-4 sm:p-6 lg:p-8">
             <div className="max-w-7xl mx-auto">
-                <Link to="/dashboard" className="text-emerald-600 dark:text-emerald-400 hover:underline mb-6 inline-block">
-                    {t('ReptileDetails.backToDashboard')}
-                </Link>
-
+                {!isPublic && (
+                    <Link to="/dashboard" className="text-emerald-600 dark:text-emerald-400 hover:underline mb-6 inline-block">
+                        {t('ReptileDetails.backToDashboard')}
+                    </Link>
+                )}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     <div className="lg:col-span-1 space-y-6">
                         <InfoCard>
@@ -180,8 +208,22 @@ const ReptileDetails = () => {
                             <div className="p-4">
                                 <h1 className="text-3xl font-bold text-black dark:text-black">{reptile.name}</h1>
                                 <p className="text-lg text-black dark:text-black">{reptile.species}</p>
+                                {reptile.price?.amount && reptile.price?.currency && (
+                                    <p className="text-md text-gray-700 dark:text-gray-900 mt-1">
+                                        {t('ReptileDetails.price')}: {reptile.price.amount} {reptile.price.currency}
+                                    </p>
+                                )}
                             </div>
                         </InfoCard>
+                        {isPublic && (
+                            <InfoCard title={t('ReptileDetails.owner')}>
+                                <InfoItem label={t('ReptileDetails.ownerName')} value={owner.name || t('ReptileDetails.notSpecified')} />
+                                <InfoItem label={t('ReptileDetails.ownerEmail')} value={owner.email || t('ReptileDetails.notSpecified')} />
+                                <InfoItem label={t('ReptileDetails.ownerAddress')} value={owner.address || t('ReptileDetails.notSpecified')} />
+                                <InfoItem label={t('ReptileDetails.ownerPhone')} value={owner.phoneNumber || t('ReptileDetails.notSpecified')} />
+
+                            </InfoCard>
+                        )}
 
                         <InfoCard title={t('ReptileDetails.details')}>
                             <InfoItem label="Morph" value={reptile.morph || 'N/D'} />
@@ -208,7 +250,6 @@ const ReptileDetails = () => {
                             <InfoItem label={t('ReptileDetails.father')} value={reptile.parents?.father || t('ReptileDetails.notSpecified')} />
                             <InfoItem label={t('ReptileDetails.mother')} value={reptile.parents?.mother || t('ReptileDetails.notSpecified')} />
                         </InfoCard>
-
                         <InfoCard title={t('ReptileDetails.documents')}>
                             <h4 className="font-semibold text-black dark:text-black mb-2">CITES</h4>
                             <InfoItem label={t('ReptileDetails.number')} value={reptile.documents?.cites?.number || 'N/D'} />
@@ -218,13 +259,53 @@ const ReptileDetails = () => {
                             <InfoItem label={t('ReptileDetails.code')} value={reptile.documents?.microchip?.code || 'N/D'} />
                             <InfoItem label={t('ReptileDetails.implantDate')} value={reptile.documents?.microchip?.implantDate?.split('T')[0] || 'N/D'} />
                         </InfoCard>
+                        {!isPublic && (
 
-                        <div>
-                            <button onClick={downloadPDF} className="w-full bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 transition-colors duration-200">
-                                {t('ReptileDetails.downloadPdf')}
-                            </button>
-                            {pdfError && <p className="mt-2 text-sm text-red-500">{pdfError}</p>}
-                        </div>
+                            <div>
+                                <button onClick={downloadPDF} className="w-full bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 transition-colors duration-200">
+                                    {t('ReptileDetails.downloadPdf')}
+                                </button>
+                                {pdfError && <p className="mt-2 text-sm text-red-500">{pdfError}</p>}
+                            </div>)}
+
+
+                        {!isPublic && reptile.qrCodeUrl && user.subscription.plan == "premium" && (
+                            <InfoCard title={t('ReptileDetails.qrCode')}>
+                                <div className="flex flex-col items-center space-y-3">
+                                    {/* Mostra QR */}
+                                    <img
+                                        src={reptile.qrCodeUrl}
+                                        alt="QR Code"
+                                        className="w-48 h-48 object-contain border rounded-lg shadow"
+                                    />
+
+                                    {/* Pulsante scarica */}
+                                    <a
+                                        href={reptile.qrCodeUrl}
+                                        download={`${reptile.name || 'reptile'}-qrcode.png`}
+                                        className="bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 transition-colors duration-200 w-full text-center"
+                                    >
+                                        {t('ReptileDetails.downloadQr')}
+                                    </a>
+
+                                    {/* Pulsante condividi (solo se supportato) */}
+                                    {navigator.share && (
+                                        <button
+                                            onClick={() =>
+                                                navigator.share({
+                                                    title: reptile.name || 'Reptile',
+                                                    text: t('ReptileDetails.shareQrText'),
+                                                    url: `${window.location.origin}/public/reptile/${reptile._id}`,
+                                                })
+                                            }
+                                            className="bg-slate-200 text-black px-4 py-2 rounded-lg hover:bg-slate-300 transition-colors duration-200 w-full"
+                                        >
+                                            {t('ReptileDetails.shareQr')}
+                                        </button>
+                                    )}
+                                </div>
+                            </InfoCard>
+                        )}
 
                     </div>
 

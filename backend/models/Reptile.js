@@ -25,6 +25,22 @@ const reptileSchema = new Schema(
       successCount: { type: Number, default: 0 },
       offspringCount: { type: Number, default: 0 }
     },
+       isPublic: {
+      type: Boolean,
+      default: false
+    },
+    price: {
+  amount: {
+    type: Number,
+    min: 0,
+    required: false 
+  },
+  currency: {
+    type: String,
+    enum: ['EUR', 'USD', 'GBP', 'JPY', 'CHF'], 
+    default: 'EUR'
+  }
+},
     notes: {
       type: String,
     },
@@ -35,6 +51,10 @@ const reptileSchema = new Schema(
     birthDate: {
       type: Date
     },
+    qrCodeUrl: {
+  type: String,
+  default: null
+},
     parents: {
       father: {
         type: String

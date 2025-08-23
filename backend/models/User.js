@@ -80,11 +80,25 @@ const userSchema = new Schema(
         },
         accountLockedUntil: {
             type: Date,
+        }, address: {
+            type: String,
+            default: ''
         },
+        phoneNumber: {
+            type: String,
+            match: [/^\+?[0-9\s\-]{7,15}$/, 'Invalid phone number'],
+            default: ''
+        },
+
         receiveFeedingEmails: {
             type: Boolean,
             default: true
         },
+        isPublic: {
+            type: Boolean,
+            default: false
+        },
+
         privacyConsent: {
             accepted: {
                 type: Boolean,

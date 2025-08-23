@@ -25,5 +25,6 @@ reptileRouter.get('/events/:reptileId',authenticateJWT,  GetEvents);
 reptileRouter.post('/events', authenticateJWT,   CreateEvent);
 reptileRouter.delete('/events/:eventId',authenticateJWT,   DeleteEvent);
 reptileRouter.delete('/:reptileId/image/:imageIndex', authenticateJWT, isOwnerOrAdmin(Reptile, 'reptileId'), reptileController.DeleteReptileImage);
+reptileRouter.get('/public/reptile/:reptileId', reptileController.GetReptilePublic);
 
 export default reptileRouter;

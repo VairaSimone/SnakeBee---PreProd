@@ -73,10 +73,10 @@ export const PutUser = async (req, res) => {
     }
     await logAction(req.user.userid, "Moodify User");
 
-    const fieldsAllowed = ['name', 'avatar', 'language'];
+const fieldsAllowed = ['name', 'avatar', 'language', 'address', 'phoneNumber'];
     if (userData.language && !['en', 'it'].includes(userData.language)) {
-  return res.status(400).json({ message: req.t('invalid_language') });
-}
+      return res.status(400).json({ message: req.t('invalid_language') });
+    }
 
     const updates = {};
     fieldsAllowed.forEach(field => {
@@ -198,7 +198,7 @@ export const DeleteUser = async (req, res) => {
     return res.status(200).json({ message: req.t('delete_successfully') });
   } catch (error) {
     console.error('Error deleting user:', error);
-    return res.status(500).json({ message: req.t('server_error')});
+    return res.status(500).json({ message: req.t('server_error') });
   }
 };
 

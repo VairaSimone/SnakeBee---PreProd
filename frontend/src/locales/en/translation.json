@@ -133,11 +133,11 @@
             "unknown": "Unknown error. Please try again later."
         }
     },
-     "notFound": {
-    "title": "404",
-    "message": "Oops! The page you are looking for doesn’t exist.",
-    "backHome": "Back to Home"
-  },
+    "notFound": {
+        "title": "404",
+        "message": "Oops! The page you are looking for doesn’t exist.",
+        "backHome": "Back to Home"
+    },
     "login": {
         "verifyEmail": "You must verify your email before logging in.",
         "verify": "Email not verified. Check your inbox for the verification code.",
@@ -365,7 +365,7 @@
             },
             "premium": {
                 "title": "Premium",
-                "price": "€4.99/month",
+                "price": "€6.99/month",
                 "description": "For breeders and advanced users who want it all.",
                 "features": [
                     "All Basic plan options",
@@ -374,7 +374,7 @@
                     "Email notifications",
                     "Advanced feeding automations",
                     "Calendar and reminders available",
-                    "Priority support"
+                    "QR Code and public link for reptile"
                 ],
                 "button": {
                     "subscribeNow": "Subscribe Now",
@@ -427,7 +427,7 @@
         "demoMale": "Male",
         "demoFemale": "Female",
         "comboFilter": "Filter by morph combo",
-"speciesFilter": "Filter by species",
+        "speciesFilter": "Filter by species",
         "demoMorphCombo": "Banana Pastel x Pastel",
         "demoEventNote1": "Test mating recorded",
         "demoEventNote2": "Test spawn recorded",
@@ -510,6 +510,10 @@
         "confirm": "Confirm",
         "loadingProfile": "Loading profile...",
         "userProfile": "Your Profile",
+        "address": "City",
+        "addressPlaceholder": "Turin",
+        "phoneNumber": "Phone number",
+        "invalidPhone": "Invalid phone number",
         "backToDashboard": "← Back to Dashboard",
         "exportData": "Export Data",
         "downloadExcelInfo": "Download an Excel file with all your reptiles, feedings, and more.",
@@ -581,6 +585,9 @@
             "sex": "Sex *",
             "unknownSex": "Not specified",
             "male": "Male",
+            "price": "Price",
+            "priceAmount": "Amount",
+            "priceCurrency": "Currency",
             "female": "Female",
             "isBreeder": "Is a breeder?",
             "gallery": "Image Gallery",
@@ -638,11 +645,21 @@
         "female": "Female",
         "breeder": "Breeder",
         "yes": "Yes",
+                    "price": "Price",
+        "owner": "Reptile Owner",
+        "ownerName": "Name:",
+        "ownerEmail": "Contact Email:",
+                "ownerAddress": "City",
+        "ownerPhone": "Phone number",
         "no": "No",
         "notes": "📝 Notes",
         "parents": "👨‍👩‍👧 Parents",
         "father": "Father",
         "mother": "Mother",
+        "qrCode": "QR Code",
+        "downloadQr": "Download QR Code",
+        "shareQr": "Share",
+        "shareQrText": "View my reptile's profile!",
         "notSpecified": "Not specified",
         "documents": "📜 Documents",
         "number": "Number",
@@ -890,14 +907,14 @@
             "weight": "Weight"
         },
         "errors": {
-"invalidType": "Invalid event type",
-"requiredDate": "Date is required",
-"invalidDate": "The date entered is invalid",
-"requiredWeight": "Weight is required",
-"invalidWeight": "Weight must be a positive number",
-"weightTooHigh": "The weight entered is too high",
-"saveFailed": "Error saving event",
-"deleteFailed": "Error deleting event"
+            "invalidType": "Invalid event type",
+            "requiredDate": "Date is required",
+            "invalidDate": "The date entered is invalid",
+            "requiredWeight": "Weight is required",
+            "invalidWeight": "Weight must be a positive number",
+            "weightTooHigh": "The weight entered is too high",
+            "saveFailed": "Error saving event",
+            "deleteFailed": "Error deleting event"
         },
         "history": {
             "filterLabel": "Filter by type",

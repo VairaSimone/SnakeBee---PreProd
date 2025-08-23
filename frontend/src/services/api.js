@@ -33,6 +33,9 @@ const api = axios.create({
 function forceLogout() {
     reduxStore?.dispatch?.(logoutUser());
     localStorage.removeItem('token');
+    reduxStore?.dispatch?.({ type: 'persist/PURGE' });
+        localStorage.removeItem('persist:root');
+    localStorage.removeItem('persist:user');
     // niente più refreshToken in localStorage: vive nei cookie httpOnly
     const isOnLoginPage = window.location.pathname.startsWith('/login');
     if (!isOnLoginPage) {
@@ -76,7 +79,6 @@ api.interceptors.response.use(
                     const newAT = res.data?.accessToken;
                     if (!newAT) throw new Error("No accessToken in refresh response");
                     localStorage.setItem('token', newAT);
-                    reduxStore?.dispatch?.(loginUser(newAT));
                     return newAT;
                 }).finally(() => {
                     refreshPromise = null;

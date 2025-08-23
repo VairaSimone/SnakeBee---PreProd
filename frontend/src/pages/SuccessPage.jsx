@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import api from '../services/api.js';
 import { useTranslation } from "react-i18next";
+import { useDispatch } from 'react-redux';
+import { loginUser } from '../features/userSlice';
 
 function useQuery() {
   return new URLSearchParams(useLocation().search);
@@ -29,6 +31,7 @@ const SuccessPage = () => {
   const [sessionDetails, setSessionDetails] = useState(null);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   useEffect(() => {
     if (!sessionId) {
@@ -36,12 +39,24 @@ const SuccessPage = () => {
       return;
     }
 
-    api.get(`/stripe/session/${sessionId}`)
-      .then(res => setSessionDetails(res.data))
-      .catch(err => {
+ api.get(`/stripe/session/${sessionId}`)
+      .then(async (res) => {
+        setSessionDetails(res.data);
+
+        const token = localStorage.getItem('token');
+        if (token) {
+          try {
+            const meResponse = await api.get(`/v1/me`);
+            dispatch(loginUser(meResponse.data));
+          } catch (err) {
+            console.error("Errore nel refresh user:", err);
+          }
+        }
+      })
+      .catch(() => {
         setError(t('successPage.sessionError'));
       });
-  }, [sessionId]);
+  }, [sessionId, dispatch, t]);
 
   const handleDashboardClick = () => {
     navigate('/dashboard');

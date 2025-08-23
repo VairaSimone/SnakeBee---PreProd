@@ -133,14 +133,11 @@
             "unknown": "Errore sconosciuto. Riprova più tardi."
         }
     },
-    
-  "notFound": {
-    "title": "404",
-    "message": "Ops! La pagina che cerchi non esiste.",
-    "backHome": "Torna alla Home"
-  },
-
-
+    "notFound": {
+        "title": "404",
+        "message": "Ops! La pagina che cerchi non esiste.",
+        "backHome": "Torna alla Home"
+    },
     "login": {
         "verifyEmail": "Devi prima verificare la tua email prima di accedere.",
         "verify": "Email non verificata. Controlla la tua casella di posta per il codice di verifica.",
@@ -337,7 +334,7 @@
             },
             "premium": {
                 "title": "Premium",
-                "price": "€4.99/mese",
+                "price": "€6.99/mese",
                 "description": "Per allevatori e utenti avanzati che vogliono tutto.",
                 "features": [
                     "Tutte le opzioni del piano Basic",
@@ -346,7 +343,7 @@
                     "Notifiche email",
                     "Automazioni cibo avanzate",
                     "Calendario e promemoria disponibile",
-                    "Supporto prioritario"
+                    "QR Code e link pubblico per rettile"
                 ],
                 "button": {
                     "subscribeNow": "Abbonati Ora",
@@ -482,6 +479,10 @@
         "confirm": "Conferma",
         "loadingProfile": "Caricamento profilo...",
         "userProfile": "Il Tuo Profilo",
+        "address": "Città",
+        "addressPlaceholder": "Torino",
+        "phoneNumber": "Numero di telefono",
+        "invalidPhone": "Numero di telefono non valido",
         "backToDashboard": "← Torna alla Dashboard",
         "exportData": "Esporta Dati",
         "downloadExcelInfo": "Scarica un file Excel con tutti i dati dei tuoi rettili, alimentazioni, e altro.",
@@ -555,6 +556,9 @@
             "unknownSex": "Non specificato",
             "male": "Maschio",
             "female": "Femmina",
+            "price": "Prezzo",
+            "priceAmount": "Importo",
+            "priceCurrency": "Valuta",
             "isBreeder": "È un riproduttore?",
             "gallery": "Galleria Immagini",
             "note": "note",
@@ -608,9 +612,19 @@
         "sex": "Sesso",
         "male": "Maschio",
         "female": "Femmina",
+        "owner": "Proprietario del rettile",
+        "ownerAddress": "Città",
+        "ownerPhone": "Numero di telefono",
+        "ownerName": "Nome:",
+            "price": "Prezzo",
+        "ownerEmail": "Email di contatto:",
         "breeder": "Riproduttore",
         "yes": "Sì",
         "no": "No",
+        "qrCode": "QR Code",
+        "downloadQr": "Scarica QR Code",
+        "shareQr": "Condividi",
+        "shareQrText": "Guarda la scheda del mio rettile!",
         "notes": "📝 Note",
         "parents": "👨‍👩‍👧 Genitori",
         "father": "Padre",
@@ -862,15 +876,15 @@
             "weight": "Peso"
         },
         "errors": {
-      "invalidType": "Tipo evento non valido",
-      "requiredDate": "La data è obbligatoria",
-      "invalidDate": "La data inserita non è valida",
-      "requiredWeight": "Il peso è obbligatorio",
-      "invalidWeight": "Il peso deve essere un numero positivo",
-      "weightTooHigh": "Il peso inserito è troppo alto",
-      "saveFailed": "Errore nel salvataggio dell'evento",
-      "deleteFailed": "Errore nell'eliminazione dell'evento"
-            },
+            "invalidType": "Tipo evento non valido",
+            "requiredDate": "La data è obbligatoria",
+            "invalidDate": "La data inserita non è valida",
+            "requiredWeight": "Il peso è obbligatorio",
+            "invalidWeight": "Il peso deve essere un numero positivo",
+            "weightTooHigh": "Il peso inserito è troppo alto",
+            "saveFailed": "Errore nel salvataggio dell'evento",
+            "deleteFailed": "Errore nell'eliminazione dell'evento"
+        },
         "history": {
             "filterLabel": "Filtra per tipo",
             "filterAll": "Tutti",
@@ -1228,5 +1242,4 @@
             }
         ]
     }
-
 }
