@@ -269,7 +269,7 @@ const ReptileDetails = () => {
                             </div>)}
 
 
-                        {!isPublic && reptile.qrCodeUrl && user.subscription.plan == "premium" && (
+                        {!isPublic && reptile.qrCodeUrl && user.subscription.plan == "BREEDER" && (
                             <InfoCard title={t('ReptileDetails.qrCode')}>
                                 <div className="flex flex-col items-center space-y-3">
                                     {/* Mostra QR */}

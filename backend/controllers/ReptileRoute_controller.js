@@ -52,16 +52,16 @@ export const GetAllReptileByUser = async (req, res) => {
     try {
         const userId = req.user.userid;
 
-        const page = parseInt(req.query.page) || 1;
-        const perPage = parseInt(req.query.perPage) || 10;
+       // const page = parseInt(req.query.page) || 1;
+       // const perPage = parseInt(req.query.perPage) || 10;
 
-        const reptile = await Reptile.find({ user: userId })
-            .sort({ species: 1 })
-            .skip((page - 1) * perPage)
-            .limit(perPage);
+       const reptile = await Reptile.find({ user: userId })
+                   .sort({ species: 1 })
+   //         .skip((page - 1) * perPage)
+    //        .limit(perPage);
 
-        const totalResults = await Reptile.countDocuments({ user: userId });
-        const totalPages = Math.ceil(totalResults / perPage);
+    //    const totalResults = await Reptile.countDocuments({ user: userId });
+   //     const totalPages = Math.ceil(totalResults / perPage);
 
         if (!reptile || reptile.length === 0) {
             return res.status(404).send({ message: req.t('reptile_notFoundID') });
@@ -69,9 +69,9 @@ export const GetAllReptileByUser = async (req, res) => {
 
         res.send({
             dati: reptile,
-            totalPages,
-            totalResults,
-            page,
+        //    totalPages,
+         //   totalResults,
+      //      page,
         });
     } catch (err) {
         console.log(err);
@@ -323,7 +323,7 @@ export const GetReptilePublic = async (req, res) => {
         const { plan, status } = reptile.user.subscription;
 
         const isPremiumActive =
-            plan === "premium" &&
+            plan === "BREEDER" &&
             ["active", "processing", "incomplete"].includes(status);
 
         if (!isPremiumActive) {

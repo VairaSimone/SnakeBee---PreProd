@@ -29,6 +29,14 @@ const reptileSchema = new Schema(
       type: Boolean,
       default: false
     },
+        previousOwner: {
+      type: String,
+      default: null
+    },
+    isSold: {
+      type: Boolean,
+      default: false
+    },
     price: {
   amount: {
     type: Number,
@@ -67,6 +75,9 @@ const reptileSchema = new Schema(
         number: { type: String }, 
         issueDate: { type: Date },
         issuer: { type: String }, 
+        load: {type: String},
+        unload: {type: String},
+
       },
       microchip: {
         code: { type: String },

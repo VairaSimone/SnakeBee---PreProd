@@ -48,27 +48,22 @@ const validationSchema = (t) => Yup.object().shape({
   wasEaten: Yup.boolean().required(),
   retryAfterDays: Yup.number()
     .transform((value, originalValue) => originalValue === "" ? null : value)
-    .when("wasEaten", {
-      is: false,
-      then: (schema) => schema
-        .positive(t("feedingModal.errors.retry.positive"))
-        .integer(t("feedingModal.errors.retry.integer"))
-        .required(t("feedingModal.errors.retry.required"))
-        .typeError(t("feedingModal.errors.retry.number")),
-      otherwise: (schema) => schema.notRequired(),
-    }),
+    .positive(t("feedingModal.errors.retry.positive"))
+    .integer(t("feedingModal.errors.retry.integer"))
+    .required(t("feedingModal.errors.retry.required"))
+    .typeError(t("feedingModal.errors.retry.number")),
   notes: Yup.string().max(300, t("feedingModal.errors.notes.max")),
 });
 
 const FeedingModal = ({ show, handleClose, reptileId, onSuccess }) => {
-      const { t } = useTranslation();
+  const { t } = useTranslation();
 
   const [feedings, setFeedings] = useState([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [inventory, setInventory] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-const [serverError, setServerError] = useState(null);
+  const [serverError, setServerError] = useState(null);
 
   const { register, handleSubmit, watch, reset, control, formState: { errors } } = useForm({
     defaultValues: {
@@ -82,41 +77,41 @@ const [serverError, setServerError] = useState(null);
       retryAfterDays: '',
       notes: '',
     },
-resolver: yupResolver(validationSchema(t)),
+    resolver: yupResolver(validationSchema(t)),
   });
 
   const foodTypeValue = watch('foodType');
   const wasEatenValue = watch('wasEaten');
 
-const fetchData = async () => {
-  if (!reptileId) return;
-  try {
-    const [inventoryRes, feedingsRes] = await Promise.allSettled([
-      api.get('/inventory'),
-      api.get(`/feedings/${reptileId}?page=${page}`),
-    ]);
+  const fetchData = async () => {
+    if (!reptileId) return;
+    try {
+      const [inventoryRes, feedingsRes] = await Promise.allSettled([
+        api.get('/inventory'),
+        api.get(`/feedings/${reptileId}?page=${page}`),
+      ]);
 
-    if (inventoryRes.status === "fulfilled") {
-      setInventory(inventoryRes.value.data);
-    } else {
-      setInventory([]); 
+      if (inventoryRes.status === "fulfilled") {
+        setInventory(inventoryRes.value.data);
+      } else {
+        setInventory([]);
+      }
+
+      if (feedingsRes.status === "fulfilled") {
+        setFeedings(feedingsRes.value.data.dati);
+        setTotalPages(feedingsRes.value.data.totalPages);
+      } else {
+      }
+
+    } catch (err) {
     }
-
-    if (feedingsRes.status === "fulfilled") {
-      setFeedings(feedingsRes.value.data.dati);
-      setTotalPages(feedingsRes.value.data.totalPages);
-    } else {
-    }
-
-  } catch (err) {
-  }
-};
+  };
 
   useEffect(() => {
     if (show) {
       fetchData();
     } else {
-      reset(); 
+      reset();
     }
   }, [show, reptileId, page]);
 
@@ -130,7 +125,7 @@ const fetchData = async () => {
       foodType: isCustom ? formData.customFoodType : item?.foodType,
       quantity: formData.quantity,
       wasEaten: formData.wasEaten,
-      retryAfterDays: formData.wasEaten ? undefined : formData.retryAfterDays,
+      retryAfterDays: formData.retryAfterDays,
       weightPerUnit: isCustom ? formData.customWeight : item?.weightPerUnit,
       notes: formData.notes || undefined,
     };
@@ -138,12 +133,12 @@ const fetchData = async () => {
     try {
       setServerError(null);
       await api.post(`/feedings/${reptileId}`, payload);
-      await fetchData(); 
-      reset(); 
+      await fetchData();
+      reset();
       onSuccess?.();
     } catch (err) {
-        const message = err?.response?.data?.message || t('feedingModal.errors.generic');
-  setServerError(message);
+      const message = err?.response?.data?.message || t('feedingModal.errors.generic');
+      setServerError(message);
     } finally {
       setIsSubmitting(false);
     }
@@ -161,7 +156,7 @@ const fetchData = async () => {
     }
   };
 
- 
+
   const inputClasses = "w-full px-3 py-2 text-sm text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition disabled:bg-gray-100";
   const labelClasses = "block text-sm font-medium text-gray-600 mb-1";
   const sectionTitleClasses = "text-lg font-semibold text-gray-800 flex items-center gap-2";
@@ -272,30 +267,44 @@ const fetchData = async () => {
                             )}
                           />
                         </div>
-                        {wasEatenValue === false && (
-                          <div>
-                            <label htmlFor="retryAfterDays" className={labelClasses}>{t('feedingModal.fields.retryAfterDays')}</label>
-                            <input id="retryAfterDays" type="number" {...register('retryAfterDays')} className={`${inputClasses} ${errors.retryAfterDays && 'border-red-500'}`} disabled={isSubmitting} />
-                            {errors.retryAfterDays && <p className={errorTextClasses}><ExclamationCircleIcon className='w-4 h-4' />{errors.retryAfterDays.message}</p>}
-                          </div>
-                        )}
+                        <div>
+                          <label
+                            htmlFor="retryAfterDays"
+                            className="block text-sm font-medium text-gray-700"
+                          >
+                            {t("feedingModal.fields.retryAfterDays")}
+                          </label>
+                          <input
+                            id="retryAfterDays"
+                            type="number"
+                            {...register('retryAfterDays')}
+                            className={`text-black mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm ${errors.retryAfterDays ? "border-red-500" : ""
+                              }`}
+                          />
+                          {errors.retryAfterDays && (
+                            <p className="mt-1 text-sm text-red-600">
+                              {errors.retryAfterDays.message}
+                            </p>
+                          )}
+                        </div>
+
                         <div className="lg:col-span-3">
                           <label htmlFor="notes" className={labelClasses}>Note</label>
                           <textarea id="notes" {...register('notes')} rows={2} placeholder={t('feedingModal.placeholders.notesExample')} className={inputClasses} disabled={isSubmitting} />
                         </div>
                       </div>
-                                            {serverError && (
-  <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
-    <ExclamationCircleIcon className="w-4 h-4" />
-    {serverError}
-  </p>
-)}
+                      {serverError && (
+                        <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
+                          <ExclamationCircleIcon className="w-4 h-4" />
+                          {serverError}
+                        </p>
+                      )}
                       <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
                         <button type="button" onClick={() => reset()} className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition" disabled={isSubmitting}>{t('feedingModal.actions.reset')}</button>
                         <button type="submit" className="inline-flex justify-center px-4 py-2 text-sm font-medium text-white bg-emerald-600 border border-transparent rounded-md hover:bg-emerald-700 disabled:bg-emerald-300 transition" disabled={isSubmitting}>
-                          {isSubmitting ? t('feedingModal.actions.saving') : t('feedingModal.actions.add') }
+                          {isSubmitting ? t('feedingModal.actions.saving') : t('feedingModal.actions.add')}
                         </button>
-                        
+
                       </div>
                     </form>
                   </div>
