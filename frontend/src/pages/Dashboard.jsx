@@ -200,31 +200,54 @@ const currentPageItems = filteredAndSorted.slice((page - 1) * ITEMS_PER_PAGE, pa
 
 
   // === Funzione helper per il paginatore ===
-const getPageNumbers = (current, total, delta = 2) => {
+  const getPageNumbers = (currentPage, totalPages, delta = 2) => {
+    const range = [];
+    const rangeWithDots = [];
+    let lastPage = 0;
+
+    // range contiene: [1 ... totalPages], con "delta" pagine intorno all'attuale
+    for (let i = 1; i <= totalPages; i++) {
+      if (i === 1 || i === totalPages || (i >= currentPage - delta && i <= currentPage + delta)) {
+        range.push(i);
+      }
+    }
+
+    // aggiunge "..." quando ci sono salti
+    for (let i of range) {
+      if (lastPage) {
+        if (i - lastPage === 2) {
+          rangeWithDots.push(lastPage + 1);
+        } else if (i - lastPage > 2) {
+          rangeWithDots.push("...");
+        }
+      }
+      rangeWithDots.push(i);
+      lastPage = i;
+    }
+
+    return rangeWithDots;
+  };
+
+const Pagination = ({ currentPage, totalPages, onPageChange }) => {
   const pages = [];
-  for (let i = 1; i <= total; i++) {
-    if (i === 1 || i === total || (i >= current - delta && i <= current + delta)) {
+  for (let i = 1; i <= totalPages; i++) {
+    if (i === 1 || i === totalPages || Math.abs(i - currentPage) <= 1) {
       pages.push(i);
-    } else if (pages[pages.length - 1] !== '...') {
-      pages.push('...');
+    } else if (pages[pages.length - 1] !== "...") {
+      pages.push("...");
     }
   }
-  return pages;
+  return (
+    <div className="flex justify-center mt-8 gap-2">
+      <button disabled={currentPage === 1} onClick={() => onPageChange(currentPage - 1)} className="px-3 py-2 rounded-md font-semibold bg-sand text-charcoal/80 hover:bg-olive/20 disabled:cursor-not-allowed disabled:text-gray-400">‹</button>
+      {pages.map((p, idx) => p === "..." ? <span key={idx} className="px-3 py-2 text-charcoal/50">...</span> : (
+        <button key={p} onClick={() => onPageChange(p)} className={`px-3 py-2 rounded-md font-semibold ${p === currentPage ? 'bg-forest text-white shadow' : 'bg-sand text-charcoal/80 hover:bg-olive/20'}`}>{p}</button>
+      ))}
+      <button disabled={currentPage === totalPages} onClick={() => onPageChange(currentPage + 1)} className="px-3 py-2 rounded-md font-semibold bg-sand text-charcoal/80 hover:bg-olive/20 disabled:cursor-not-allowed disabled:text-gray-400">›</button>
+    </div>
+  );
 };
 
-const Pagination = ({ currentPage, totalPages, onPageChange }) => (
-  <div className="flex justify-center mt-8 gap-2">
-    <button disabled={currentPage === 1} onClick={() => onPageChange(currentPage - 1)} className="px-3 py-2 rounded-md bg-sand text-charcoal/80 hover:bg-olive/20 disabled:cursor-not-allowed disabled:text-gray-400">‹</button>
-    {getPageNumbers(currentPage, totalPages).map((p, idx) =>
-      p === '...' ? (
-        <span key={idx} className="px-3 py-2 text-charcoal/50">...</span>
-      ) : (
-        <button key={p} onClick={() => onPageChange(p)} className={`px-3 py-2 rounded-md ${p === currentPage ? 'bg-forest text-white shadow' : 'bg-sand text-charcoal/80 hover:bg-olive/20'}`}>{p}</button>
-      )
-    )}
-    <button disabled={currentPage === totalPages} onClick={() => onPageChange(currentPage + 1)} className="px-3 py-2 rounded-md bg-sand text-charcoal/80 hover:bg-olive/20 disabled:cursor-not-allowed disabled:text-gray-400">›</button>
-  </div>
-);
   const top3Incubations = React.useMemo(() => {
     if (!stats.incubationBySpecies || stats.incubationBySpecies.length === 0) return [];
 
