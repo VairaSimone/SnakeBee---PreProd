@@ -71,7 +71,7 @@ export const GetReptileByUser = async (req, res) => {
     const userId = req.user.userid;
 
     const page = Math.max(parseInt(req.query.page) || 1, 1);
-    const perPage = Math.min(parseInt(req.query.perPage) || 10, 100);
+    const perPage = Math.min(parseInt(req.query.perPage) || 12, 100);
 
     const result = await Reptile.aggregate([
       { $match: { user: new mongoose.Types.ObjectId(userId) } },
