@@ -47,7 +47,7 @@ const Dashboard = () => {
   const [showFeedingModal, setShowFeedingModal] = useState(false);
   const [filterSpecies, setFilterSpecies] = useState('');
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const ITEMS_PER_PAGE = 12;
+
   const { t } = useTranslation();
   const [stats, setStats] = useState({
     successRate: null,
@@ -92,14 +92,20 @@ const Dashboard = () => {
     if (!user?._id) return;
     try {
       setLoading(true);
-
       const { data } = await api.get(`/reptile/${user._id}/AllReptileUser`, { params: { page } });
-
-      setAllReptiles(data.dati || []);
+      const enriched = await Promise.all(
+        data.dati.map(async (r) => {
+          const feedings = await api.get(`/feedings/${r._id}`).then(res => res.data.dati || []);
+          const nextDate = feedings.length
+            ? new Date(Math.max(...feedings.map(x => new Date(x.nextFeedingDate))))
+            : null;
+          return { ...r, nextFeedingDate: nextDate };
+        })
+      );
+      setAllReptiles(enriched);
       setTotalPages(data.totalPages || 1);
       setError(null);
     } catch (err) {
-      console.error(err);
       setError(t('dashboard.errorReptile'));
     } finally {
       setLoading(false);
@@ -160,28 +166,6 @@ const Dashboard = () => {
     return () => clearInterval(interval);
   }, [user]);
 
-  const filteredAndSorted = React.useMemo(() => {
-  let result = [...allReptiles];
-
-  if (filterMorph.trim()) result = result.filter(r => r.morph?.toLowerCase().includes(filterMorph.toLowerCase()));
-  if (filterSpecies.trim()) result = result.filter(r => r.species?.toLowerCase().includes(filterSpecies.toLowerCase()));
-  if (filterSex) result = result.filter(r => r.sex === filterSex);
-  if (filterBreeder !== '') result = result.filter(r => r.isBreeder === (filterBreeder === 'true'));
-
-  return result.sort((a, b) => {
-    if (sortKey === 'nextFeedingDate') {
-      const dateA = a.nextFeedingDate ? new Date(a.nextFeedingDate) : new Date(0);
-      const dateB = b.nextFeedingDate ? new Date(b.nextFeedingDate) : new Date(0);
-      return dateA - dateB;
-    }
-    return a[sortKey]?.localeCompare(b[sortKey] || '', undefined, { numeric: true });
-  });
-}, [allReptiles, filterMorph, filterSpecies, filterSex, filterBreeder, sortKey]);
-
-
-const totalFilteredPages = Math.ceil(filteredAndSorted.length / ITEMS_PER_PAGE);
-const currentPageItems = filteredAndSorted.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
-
   const StatCard = ({ icon, title, value, unit, bgColor, children }) => (
     <div className={`flex-1 p-4 rounded-xl shadow-md flex items-start gap-4 ${bgColor}`}>
       <div className="text-2xl text-white bg-white/20 p-3 rounded-lg">{icon}</div>
@@ -197,8 +181,6 @@ const currentPageItems = filteredAndSorted.slice((page - 1) * ITEMS_PER_PAGE, pa
       </div>
     </div>
   );
-
-
   // === Funzione helper per il paginatore ===
   const getPageNumbers = (currentPage, totalPages, delta = 2) => {
     const range = [];
@@ -227,26 +209,6 @@ const currentPageItems = filteredAndSorted.slice((page - 1) * ITEMS_PER_PAGE, pa
 
     return rangeWithDots;
   };
-
-const Pagination = ({ currentPage, totalPages, onPageChange }) => {
-  const pages = [];
-  for (let i = 1; i <= totalPages; i++) {
-    if (i === 1 || i === totalPages || Math.abs(i - currentPage) <= 1) {
-      pages.push(i);
-    } else if (pages[pages.length - 1] !== "...") {
-      pages.push("...");
-    }
-  }
-  return (
-    <div className="flex justify-center mt-8 gap-2">
-      <button disabled={currentPage === 1} onClick={() => onPageChange(currentPage - 1)} className="px-3 py-2 rounded-md font-semibold bg-sand text-charcoal/80 hover:bg-olive/20 disabled:cursor-not-allowed disabled:text-gray-400">‹</button>
-      {pages.map((p, idx) => p === "..." ? <span key={idx} className="px-3 py-2 text-charcoal/50">...</span> : (
-        <button key={p} onClick={() => onPageChange(p)} className={`px-3 py-2 rounded-md font-semibold ${p === currentPage ? 'bg-forest text-white shadow' : 'bg-sand text-charcoal/80 hover:bg-olive/20'}`}>{p}</button>
-      ))}
-      <button disabled={currentPage === totalPages} onClick={() => onPageChange(currentPage + 1)} className="px-3 py-2 rounded-md font-semibold bg-sand text-charcoal/80 hover:bg-olive/20 disabled:cursor-not-allowed disabled:text-gray-400">›</button>
-    </div>
-  );
-};
 
   const top3Incubations = React.useMemo(() => {
     if (!stats.incubationBySpecies || stats.incubationBySpecies.length === 0) return [];
@@ -401,25 +363,25 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
           </div>
         </div>
         {/* === REPTILES GRID === */}
-<main>
-  {loading ? (
-    <div className="text-center py-20">
-      <div className="animate-spin h-12 w-12 border-4 border-forest border-t-transparent rounded-full mx-auto" />
-      <p className="mt-4 text-charcoal/80 text-lg">{t('dashboard.common.loadingReptiles')}</p>
-    </div>
-  ) : currentPageItems.length === 0 ? (
-    <div className="text-center py-20 bg-sand rounded-xl">
-      <h3 className="text-2xl font-bold text-olive">{t('dashboard.common.noReptilesFound')}</h3>
-      <p className="mt-2 text-charcoal/70">
-        {allReptiles.length > 0 ? t('dashboard.common.noReptilesFiltered') : t('dashboard.common.noReptilesRegistered')}
-      </p>
-      <button onClick={() => setShowCreateModal(true)} className="mt-6 flex items-center gap-2 bg-forest text-white px-5 py-3 rounded-lg font-semibold hover:bg-olive transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
-        <FaPlus /> {t('dashboard.common.addFirstReptile')}
-      </button>
-    </div>
-  ) : (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-      {currentPageItems.map(reptile => (
+        <main>
+          {loading ? (
+            <div className="text-center py-20">
+              <div className="animate-spin h-12 w-12 border-4 border-forest border-t-transparent rounded-full mx-auto" />
+              <p className="mt-4 text-charcoal/80 text-lg">{t('dashboard.common.loadingReptiles')}</p>
+            </div>
+          ) : sortedReptiles.length === 0 ? (
+            <div className="text-center py-20 bg-sand rounded-xl">
+              <h3 className="text-2xl font-bold text-olive">{t('dashboard.common.noReptilesFound')}</h3>
+              <p className="mt-2 text-charcoal/70">
+                {allReptiles.length > 0 ? t('dashboard.common.noReptilesFiltered') : t('dashboard.common.noReptilesRegistered')}
+              </p>
+              <button onClick={() => setShowCreateModal(true)} className="mt-6 flex items-center gap-2 bg-forest text-white px-5 py-3 rounded-lg font-semibold  no-underline hover:no-underline hover:bg-olive transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                <FaPlus /> {t('dashboard.common.addFirstReptile')}
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {sortedReptiles.map(reptile => (
                 <Link to={`/reptiles/${reptile._id}`} key={reptile._id} className="bg-white rounded-2xl shadow-lg overflow-hidden group transition-all duration-300  no-underline hover:no-underline hover:shadow-2xl hover:-translate-y-1.5 flex flex-col min-h-[460px] max-h-[460px]">
                   <div className="relative h-[160px] w-full overflow-hidden">
                     {reptile.label?.text && (
@@ -458,8 +420,8 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
                     <p className="text-sm text-charcoal/80 mt-1  no-underline hover:no-underline font-medium truncate">Morph: {reptile.morph || 'N/A'}</p>
                     <p className="text-sm text-charcoal/80  no-underline hover:no-underline">
                       {t('feedingCard.nextFeeding')} <span className={`font-semibold  no-underline hover:no-underline ${isDueOrOverdue(reptile.nextFeedingDate)
-                        ? 'text-red-600'
-                        : 'text-charcoal'
+                          ? 'text-red-600'
+                          : 'text-charcoal'
                         }`}>{reptile.nextFeedingDate ? new Date(reptile.nextFeedingDate).toLocaleDateString() : 'N/A'}</span>
                     </p>
 
