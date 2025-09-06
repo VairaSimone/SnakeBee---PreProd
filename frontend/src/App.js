@@ -5,7 +5,6 @@ import axios from 'axios';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import NavBar from './components/Navbar';
 import Footer from './components/Footer';
-import CookieConsent from 'react-cookie-consent';
 import ReptileTipBanner from './components/ReptileTipBanner';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -30,6 +29,11 @@ import { ToastContainer } from 'react-toastify';
 import i18n from './i18n';
 import { useTranslation } from 'react-i18next';
 import CalendarPage from './components/CalendarModal';
+import PrivacyPolicyIT from './pages/PrivacyPolicyIT';
+import PrivacyPolicyEN from './pages/PrivacyPolicyEN';
+import TermsAndConditionsEN from './pages/TermsAndConditionsEN';
+import TermsAndConditionsIT from './pages/TermsAndConditionsIT';
+import api from './services/api';
 
 function AppContent() {
   const dispatch = useDispatch();
@@ -48,11 +52,7 @@ function AppContent() {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
-      axios.get(`${process.env.REACT_APP_BACKEND_URL}/v1/me`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
+      api.get(`/v1/me`)
         .then((res) => {
           dispatch(loginUser(res.data));
         })
@@ -70,6 +70,12 @@ function AppContent() {
         <Route path="/" element={<Navigate to="/home" />} />
         <Route path="/home" element={<Home />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/it/privacyPolicy" element={<PrivacyPolicyIT />} />
+        <Route path="/en/privacyPolicy" element={<PrivacyPolicyEN />} />
+        <Route path="/en/terms" element={<TermsAndConditionsEN />} />
+        <Route path="/it/terms" element={<TermsAndConditionsIT />} />
+
+
         <Route path="/public/reptile/:reptileId" element={<ReptileDetails />} />
         <Route path="/register" element={<Register />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
@@ -94,16 +100,6 @@ function AppContent() {
       <ToastContainer position="top-right" autoClose={3000} />
 
       <Footer />
-      <CookieConsent
-        location="bottom"
-        buttonText="Accetto"
-        cookieName="cookieConsent"
-        style={{ background: "#2B373B", zIndex: 9999 }}
-        buttonStyle={{ color: "#fff", background: "#4CAF50", fontSize: "14px", padding: '8px 16px', borderRadius: '4px' }}
-        expires={365}
-      >
-        {t('app.cookie-policy')} <a href="https://www.iubenda.com/privacy-policy/71616687/cookie-policy" class="iubenda-white iubenda-noiframe iubenda-embed iubenda-noiframe " title="Cookie Policy ">Cookie Policy</a>.
-      </CookieConsent>
       <ReptileTipBanner />
     </>
   );

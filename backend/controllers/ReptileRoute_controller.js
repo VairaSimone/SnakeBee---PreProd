@@ -51,33 +51,73 @@ export const GetIDReptile = async (req, res) => {
 export const GetAllReptileByUser = async (req, res) => {
     try {
         const userId = req.user.userid;
-
-       // const page = parseInt(req.query.page) || 1;
-       // const perPage = parseInt(req.query.perPage) || 10;
-
-       const reptile = await Reptile.find({ user: userId })
-                   .sort({ species: 1 })
-   //         .skip((page - 1) * perPage)
-    //        .limit(perPage);
-
-    //    const totalResults = await Reptile.countDocuments({ user: userId });
-   //     const totalPages = Math.ceil(totalResults / perPage);
-
+        const reptile = await Reptile.find({ user: userId })
+            .sort({ species: 1 })
         if (!reptile || reptile.length === 0) {
             return res.status(404).send({ message: req.t('reptile_notFoundID') });
         }
 
         res.send({
             dati: reptile,
-        //    totalPages,
-         //   totalResults,
-      //      page,
         });
     } catch (err) {
         console.log(err);
         res.status(500).send({ message: req.t('server_error') });
     }
 };
+
+export const GetReptileByUser = async (req, res) => {
+  try {
+    const userId = req.user.userid;
+
+    const page = Math.max(parseInt(req.query.page) || 1, 1);
+    const perPage = Math.min(parseInt(req.query.perPage) || 10, 100);
+
+    const result = await Reptile.aggregate([
+      { $match: { user: new mongoose.Types.ObjectId(userId) } },
+      { $sort: { species: 1 } },
+
+      {
+        $lookup: {
+          from: "Feeding", 
+          localField: "_id",
+          foreignField: "reptile",
+          as: "feedings"
+        }
+      },
+
+      {
+        $addFields: {
+          nextFeedingDate: {
+            $min: "$feedings.nextFeedingDate"
+          }
+        }
+      },
+
+      {
+        $project: {
+          feedings: 0
+        }
+      },
+
+      { $skip: (page - 1) * perPage },
+      { $limit: perPage }
+    ]);
+
+    const totalResults = await Reptile.countDocuments({ user: userId });
+    const totalPages = Math.ceil(totalResults / perPage);
+
+    res.send({
+      dati: result,
+      totalPages,
+      totalResults,
+      page,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send({ message: req.t('server_error') });
+  }
+}; 
 
 
 export const PostReptile = async (req, res) => {
@@ -132,8 +172,8 @@ export const PostReptile = async (req, res) => {
         const publicUrl = `${process.env.FRONTEND_URL}/public/reptile/${createdReptile._id}`;
 
         const qrCodeDataUrl = await QRCode.toDataURL(publicUrl);
-createdReptile.qrCodeUrl = qrCodeDataUrl;
-await createdReptile.save();
+        createdReptile.qrCodeUrl = qrCodeDataUrl;
+        await createdReptile.save();
         await logAction(req.user.userid, "Create reptile");
 
         res.status(201).send(createdReptile);

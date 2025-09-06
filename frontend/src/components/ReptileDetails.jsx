@@ -17,6 +17,7 @@ const CarouselArrow = ({ direction, onClick }) => (
     </button>
 );
 
+
 const ReptileDetails = () => {
     const { reptileId } = useParams();
     const [reptile, setReptile] = useState(null);
@@ -41,6 +42,13 @@ const ReptileDetails = () => {
 
     const baseUrl = process.env.REACT_APP_BACKEND_URL_IMAGE || '';
     const isPublic = window.location.pathname.includes("/public/");
+    const formatWeight = (weightInGrams) => {
+        if (!weightInGrams && weightInGrams !== 0) return '';
+        const kg = weightInGrams / 1000;
+        if (kg < 1) return t(`${weightInGrams}g`); // es. "500 g"
+        return t(`${kg.toFixed(2)}kg`); // es. "1.25 kg"
+    };
+
 
     useEffect(() => {
         const fetchAll = async () => {
@@ -230,7 +238,11 @@ const ReptileDetails = () => {
                             <InfoItem label={t('ReptileDetails.birthDate')} value={new Date(reptile.birthDate).toLocaleDateString()} />
                             <InfoItem label={t('ReptileDetails.sex')}>
                                 <span className={`px-3 py-1 text-xs font-semibold rounded-full ${reptile.sex === 'M' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' : 'bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-200'}`}>
-                                    {reptile.sex === 'M' ? t('ReptileDetails.male') : t('ReptileDetails.female')}
+                                    {reptile.sex === 'M'
+                                        ? t('ReptileDetails.male')
+                                        : reptile.sex === 'F'
+                                            ? t('ReptileDetails.female')
+                                            : t('ReptileDetails.unknown')}
                                 </span>
                             </InfoItem>
                             <InfoItem label={t('ReptileDetails.breeder')}>
@@ -332,9 +344,40 @@ const ReptileDetails = () => {
                                     visibleCount={visibleCounts[section.type]}
                                     onToggleVisibility={(showMore) => handleToggleVisibility(section.type, showMore)}
                                     emptyMessage={t('ReptileDetails.noEvent', { event: section.title })}
+                                    renderItem={(item) => {
+                                        switch (section.type) {
+                                            case 'weight':
+                                                return (
+                                                    <div key={item._id} className="p-2 border-b text-black">
+                                                        <span>{new Date(item.date).toLocaleDateString()}</span> - <strong>{formatWeight(item.weight)}</strong>
+                                                    </div>
+                                                );
+                                            case 'vet':
+                                                return (
+                                                    <div key={item._id} className="p-2 border-b text-black">
+                                                        <span>{new Date(item.date).toLocaleDateString()}</span> - 🩺 {item.notes || t('ReptileDetails.noNotes')}
+                                                    </div>
+                                                );
+                                            case 'feces':
+                                                return (
+                                                    <div key={item._id} className="p-2 border-b text-black">
+                                                        <span>{new Date(item.date).toLocaleDateString()}</span> - 💩 {item.notes || t('ReptileDetails.noNotes')}
+                                                    </div>
+                                                );
+                                            case 'shed':
+                                                return (
+                                                    <div key={item._id} className="p-2 border-b text-black">
+                                                        <span>{new Date(item.date).toLocaleDateString()}</span> - 🐍 {item.notes || t('ReptileDetails.noNotes')}
+                                                    </div>
+                                                );
+                                            default:
+                                                return null;
+                                        }
+                                    }}
                                 />
                             );
                         })}
+
                     </div>
                 </div>
             </div>

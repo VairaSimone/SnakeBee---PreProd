@@ -1,4 +1,8 @@
 {
+    "ToEnglish": "Passa alla versione in inglese",
+    "ToItalian": "Passa alla versione in italiano",
+    "terms": "Termini e condizioni generali",
+    "privacypolicy": "politica sulla riservatezza",
     "app": {
         "cookie-policy": "Questo sito utilizza cookie tecnici per migliorare l'esperienza dell'utente."
     },
@@ -7,8 +11,8 @@
         "calendar": "Apri calendario",
         "manageReptiles": "Gestisci i tuoi {{count}} rettili.",
         "addReptile": "Aggiungi rettile",
-        "quickStats": "Statistiche rapide",
-        "errorReptile": "Impossibile caricare i rettili",
+        "quickStats": "Statistiche rapide", 
+        "errorReptile": "Impossibile caricare i rettili, contatta il supporto se la problematica persiste",
         "stats": {
             "successRate": "Successo riproduttivo",
             "feedingRefusal": "Rifiuto del cibo",
@@ -32,7 +36,8 @@
             "male": "Maschio",
             "female": "Femmina",
             "unknown": "Sconosciuto",
-            "breeder": "Riproducibile"
+            "breeder": "Riproducibile",
+            "toggleFilters": "Mostra filtri"
         },
         "common": {
             "yes": "Sì",
@@ -52,9 +57,9 @@
         }
     },
     "verifyEmail": {
-        "errorVerifiy": "Errore nella verifica",
+        "errorVerifiy": "Errore nella verifica, contatta il supporto",
         "emailFirst": "Inserisci prima la tua email",
-        "limits": "Hai raggiunto il limite massimo di tentativi.",
+        "limits": "Hai raggiunto il limite massimo di tentativi, riprova più tardi.",
         "verifyEmail": "Verifica la tua email",
         "email": "Indirizzo email",
         "code": "Codice di verifica ricevuto tramite email",
@@ -76,9 +81,9 @@
         "past_due": "Scaduto",
         "succeeded": "Riuscito",
         "unknown": "Sconosciuto",
-        "paidError": "Sessione di pagamento mancante.",
-        "sessionError": "Impossibile recuperare i dettagli della sessione.",
-        "error": "errore",
+        "paidError": "Sessione di pagamento mancante, contatta il supporto",
+        "sessionError": "Impossibile recuperare i dettagli della sessione, contatta il supporto",
+        "error": "errore generico, contatta il supporto",
         "dashboard": "Torna alla Dashboard",
         "loading": "Caricamento in corso...",
         "paymentCompleted": "Pagamento Completato!",
@@ -117,11 +122,11 @@
         "passwordPlaceholder": "Inserisci una password sicura",
         "confirmPasswordLabel": "Conferma Password",
         "confirmPasswordPlaceholder": "Ripeti la password",
-        "privacyConsent": "Accetto il trattamento dei dati personali secondo la",
+        "privacyConsent": "Accetto il trattamento dei dati personali e le direttive secondo i documenti ",
         "submit": "Registrati",
         "or": "oppure",
         "google": "Registrati con Google",
-        "privacyConsentGoogle": "Accetto il trattamento dei dati personali secondo la",
+        "privacyConsentGoogle": "Accetto il trattamento dei dati personali e le direttive secondi i documenti ",
         "googleError": "Devi accettare la Privacy Policy per registrarti con Google.",
         "alreadyAccount": "Hai già un account?",
         "loginHere": "Accedi qui",
@@ -153,7 +158,7 @@
         "forgotPassword": "Password dimenticata?",
         "access": "Accedi...",
         "or": "oppure",
-        "google": "Accedo con Google",
+        "google": "Accedi con Google",
         "account": "Non hai un account?",
         "registerHere": "Registrati qui"
     },
@@ -177,8 +182,8 @@
         "actions": "Azioni",
         "noItems": "Nessun elemento in inventario",
         "accessDenied": "Accesso inventario riservato utenti Allevatori.",
-        "fetchFailed": "Errore caricamento inventario",
-        "submitDenied": "Funzionalità riservata agli utenti Allevatori. Aggiorna il tuo account.",
+        "fetchFailed": "Errore caricamento inventario, contattare il supporto",
+        "submitDenied": "La funzionalità non è riservata al piano associato alla tua utenza",
         "submitFailed": "Errore invio: {{message}}",
         "edit": "Modifica",
         "delete": "Elimina"
@@ -277,7 +282,7 @@
         "contact": {
             "title": "Contattaci",
             "desc": "Domande? Suggerimenti? Scrivici a",
-            "email": "info@snakebee.it",
+            "email": "support@snakebee.it",
             "instagram": "o seguici su"
         }
     },
@@ -287,111 +292,115 @@
         "warning": "Access token mancante. Riprova ad accedere."
     },
     "forgotPassword": {
-        "error": "Errore nella richiesta",
+        "error": "Errore nella richiesta, richiedi al supporto",
         "forgotPassword": "Hai dimenticato la password?",
         "email": "Indirizzo email",
         "submit": "Invia richiesta"
     },
-"subscriptionPage": {
-  "title": "Scegli il tuo Piano",
-  "subtitle": "Dai primi passi fino alla gestione professionale: trova il piano perfetto per il tuo allevamento e semplifica il tuo lavoro 🐍🐢🐊",
-  "yourSubscription": "Il tuo abbonamento",
-  "pendingCancellation": "Il tuo piano <strong>{{plan}}</strong> terminerà il <strong>{{date}}</strong>.",
-  "currentPlan": "Stai usando il piano <strong>{{plan}}</strong>.",
-  "manageBilling": "Gestisci Pagamenti",
-  "cancelSubscription": "Annulla Abbonamento",
-  "loading": "Caricamento...",
-  "cancelling": "Annullamento...",
-  "plans": {
-    "neophyte": {
-      "title": "Neofita",
-      "price": "Gratis",
-      "description": "Inizia senza impegno: scopri le funzionalità base e prendi confidenza con la piattaforma.",
-      "features": [
-        "Fino a 5 rettili",
-        "1 immagine per rettile",
-        "Fino a 5 eventi base (muta, peso, feci, visite) per rettile"
-      ],
-      "button": {
-        "subscribeNow": "Prova Gratis",
-        "currentPlan": "Piano Attuale"
-      }
+    "subscriptionPage": {
+        "title": "Scegli il tuo Piano",
+        "subtitle": "Dai primi passi fino alla gestione professionale: trova il piano perfetto per il tuo allevamento e semplifica il tuo lavoro 🐍🐢🐊",
+        "yourSubscription": "Il tuo abbonamento",
+        "pendingCancellation": "Il tuo piano <strong>{{plan}}</strong> terminerà il <strong>{{date}}</strong>.",
+        "currentPlan": "Stai usando il piano <strong>{{plan}}</strong>.",
+        "manageBilling": "Gestisci Pagamenti",
+        "cancelSubscription": "Annulla Abbonamento",
+        "loading": "Caricamento...",
+        "cancelling": "Annullamento...",
+        "plans": {
+            "neophyte": {
+                "title": "Neofita",
+                "price": "Gratis",
+                "description": "Perfetto per iniziare senza impegno: scopri le funzionalità essenziali e familiarizza con la piattaforma.",
+                "features": [
+                    "Gestione fino a 5 rettili",
+                    "1 immagine per rettile",
+                    "Fino a 5 eventi base per rettile (muta, peso, feci, visite)"
+                ],
+                "button": {
+                    "subscribeNow": "Prova Gratis",
+                    "currentPlan": "Piano Attuale"
+                }
+            },
+            "apprentice": {
+                "title": "Apprendista",
+                "price": "€3.99/mese",
+                "description": "Ideale per chi espande la propria collezione e vuole rimanere organizzato senza stress.",
+                "features": [
+                    "Gestione fino a 15 rettili",
+                    "3 immagini per rettile",
+                    "Fino a 15 eventi base per rettile",
+                    "Promemoria automatici via email per alimentazioni e attività"
+                ],
+                "button": {
+                    "subscribeNow": "Sblocca il Piano",
+                    "currentPlan": "Piano Attuale",
+                    "changePlan": "Cambia Piano"
+                }
+            },
+            "practitioner": {
+                "title": "Praticante",
+                "price": "€8.99/mese",
+                "description": "La scelta migliore per allevatori seri: più strumenti, più controllo e maggiore efficienza nella gestione.",
+                "features": [
+                    "Gestione fino a 70 rettili",
+                    "5 immagini per rettile",
+                    "Eventi base illimitati",
+                    "Esportazione dati in Excel",
+                    "Sezione riproduzione con tracciamento accoppiamenti"
+                ],
+                "button": {
+                    "subscribeNow": "Abbonati Ora",
+                    "currentPlan": "Piano Attuale",
+                    "changePlan": "Cambia Piano"
+                }
+            },
+            "breeder": {
+                "title": "Allevatore",
+                "price": "€14.99/mese",
+                "description": "Il top per professionisti: gestione completa, strumenti esclusivi e controllo totale su ogni animale.",
+                "features": [
+                    "Rettile illimitati",
+                    "10 immagini per rettile",
+                    "Report PDF dettagliato per ogni animale",
+                    "Automazioni avanzate (alimentazione e calendario)",
+                    "QR Code e link pubblico per ogni animale"
+                ],
+                "button": {
+                    "subscribeNow": "Passa al Premium",
+                    "currentPlan": "Piano Attuale",
+                    "changePlan": "Cambia Piano"
+                }
+            },
+            "changePlan": "Cambia Piano",
+            "popular": "Il più scelto",
+            "subscribeNow": "Sblocca il piano",
+            "currentPlan": "Piano attuale",
+            "upgrade": "Avanza di piano",
+            "changeSuccess": "Cambiamento effettuato"
+        },
+        "modal": {
+            "successTitle": "Operazione completata ✅",
+            "errorTitle": "Errore nel titolo",
+            "errorMessage": "Si è verificato un errore. Riprova più tardi.",
+            "accessRequired": {
+                "title": "Accesso richiesto",
+                "message": "Per sottoscrivere un piano devi prima effettuare il login."
+            },
+            "cancelSubscription": {
+                "title": "Conferma Annullamento",
+                "message": "Vuoi davvero annullare il tuo abbonamento? Potrai continuare a usarlo fino alla fine del periodo di fatturazione.",
+                "successMessage": "Cancellazione programmata ✅"
+            },
+            "close": "Chiudi",
+            "confirm": "Conferma"
+        },
+        "cta": {
+            "questionTitle": "Non sai quale piano scegliere?",
+            "questionText": "Scrivici e troveremo insieme la soluzione perfetta per la tua esperienza di allevamento.",
+            "contactButton": "Contattaci a support@snakebee.it"
+        }
     },
-    "apprentice": {
-      "title": "Apprendista",
-      "price": "€3.99/mese",
-      "description": "Gestione avanzata per chi amplia la propria collezione e vuole rimanere sempre organizzato.",
-      "features": [
-        "Fino a 15 rettili",
-        "3 immagini per rettile",
-        "Fino a 15 eventi base per rettile",
-        "Promemoria email per alimentazioni e attività"
-      ],
-      "button": {
-        "subscribeNow": "Sblocca il Piano",
-        "currentPlan": "Piano Attuale",
-        "changePlan": "Cambia Piano"
-      }
-    },
-    "practitioner": {
-      "title": "Praticante",
-      "price": "€8.99/mese",
-      "description": "La scelta ideale per chi alleva con serietà: più strumenti, più controllo, più efficienza.",
-      "features": [
-        "Fino a 70 rettili",
-        "5 immagini per rettile",
-        "Eventi base illimitati",
-        "Esportazione dati in Excel",
-        "Sezione riproduzione con tracciamento accoppiamenti"
-      ],
-      "button": {
-        "subscribeNow": "Abbonati Ora",
-        "currentPlan": "Piano Attuale",
-        "changePlan": "Cambia Piano"
-      }
-    },
-    "breeder": {
-      "title": "Allevatore",
-      "price": "€14.99/mese",
-      "description": "Il massimo per gli allevatori professionali: gestione senza limiti e strumenti esclusivi.",
-      "features": [
-        "Rettili illimitati",
-        "10 immagini per rettile",
-        "Report PDF dettagliato per ogni animale",
-        "Automazioni avanzate (alimentazione e calendario)",
-        "QR Code e link pubblico per ogni animale"
-      ],
-      "button": {
-        "subscribeNow": "Passa al Premium",
-        "currentPlan": "Piano Attuale",
-        "changePlan": "Cambia Piano"
-      }
-    },
-    "changePlan": "Cambia Piano",
-    "popular": "Il più scelto"
-  },
-  "modal": {
-    "successTitle": "Operazione completata ✅",
-    "errorTitle": "Errore",
-    "errorMessage": "Si è verificato un errore. Riprova più tardi.",
-    "accessRequired": {
-      "title": "Accesso richiesto",
-      "message": "Per sottoscrivere un piano devi prima effettuare il login."
-    },
-    "cancelSubscription": {
-      "title": "Conferma Annullamento",
-      "message": "Vuoi davvero annullare il tuo abbonamento? Potrai continuare a usarlo fino alla fine del periodo di fatturazione.",
-      "successMessage": "Cancellazione programmata ✅"
-    },
-    "close": "Chiudi",
-    "confirm": "Conferma"
-  },
-  "cta": {
-    "questionTitle": "Non sai quale piano scegliere?",
-    "questionText": "Scrivici e troveremo insieme la soluzione perfetta per la tua esperienza di allevamento.",
-    "contactButton": "Contattaci a info@snakebee.it"
-  }
-},
     "cancelPage": {
         "paymentStop": "Pagamento annullato",
         "paymentStopDesc": "Nessun addebito è stato effettuato. Puoi riprovare o tornare alla pagina degli abbonamenti.",
@@ -437,7 +446,7 @@
         "notes": "Note",
         "restrictedAccessTitle": "Accesso Riservato",
         "restrictedAccessDescription": "La sezione Riproduzione è una funzionalità avanzata, disponibile solo per gli utenti con un abbonamento attivo.",
-        "restrictedAccessUpgrade": "Passa a un piano premium per sbloccare i grafici, il tracciamento delle covate e molto altro.",
+        "restrictedAccessUpgrade": "Passa a un piano per sbloccare i grafici, il tracciamento delle covate e molto altro.",
         "dashboardTitle": "Dashboard Statistiche",
         "eventsPerMonth": "Eventi per Mese ({{year}})",
         "yearlySuccessRate": "Tasso di Successo Annuale (%)",
@@ -464,8 +473,8 @@
         "fertileClutch": "Fertili",
         "hatchedOrBorn": "Nati",
         "saveOutcome": "Salva risultato",
-        "confirmDeleteTitle": "Conferma Eliminazione",
-        "confirmDeleteMessage": "Sei assolutamente sicuro di voler eliminare questo evento? L'azione è irreversibile.",
+        "confirmDeleteEventTitle": "Conferma Eliminazione",
+        "confirmDeleteEventMessage": "Sei assolutamente sicuro di voler eliminare questo evento? L'azione è irreversibile.",
         "cancel": "Annulla",
         "confirmDelete": "Conferma ed Elimina",
         "errors": {
@@ -522,8 +531,8 @@
         "confirmPassword": "Conferma Nuova Password",
         "notifications": "Notifiche",
         "feedingEmails": "Email per programma alimentazione",
-        "premiumFeature": "Funzione riservata agli utenti Premium. <0>Scopri di più</0>",
-        "premiumFeature2": "⚠️ Solo utenti Premium possono usare questa funzione.",
+        "premiumFeature": "Funzione riservata agli utenti con un piano superiore, <0>Scopri di più</0>",
+        "premiumFeature2": "⚠️ Solo utenti con un piano superiore al tuo possono usare questa funzione.",
         "savePreferences": "Salva Preferenze",
         "deleteAccount": "Elimina account",
         "deleteAccountInfo": "L'eliminazione del tuo account è un'azione permanente e non può essere annullata. Tutti i tuoi dati verranno rimossi definitivamente.",
@@ -602,7 +611,7 @@
             "imageDelete": "Immagine eliminata!",
             "imageError": "Errore durante l'eliminazione",
             "reptileUpdate": "Rettile aggiornato!",
-            "reptileError": "Errore durante l'aggiornamento"
+            "reptileError": "Errore durante l'aggiornamento, contatta l'assistenza"
         },
         "validation": {
             "speciesRequired": "La specie è obbligatoria.",
@@ -615,7 +624,7 @@
             "fatherInvalid": "Il nome del padre contiene caratteri non validi.",
             "motherInvalid": "Il nome della madre contiene caratteri non validi.",
             "imageType": "Formato immagine non supportato. Usa JPG, PNG o WEBP.",
-            "imageSize": "L'immagine non può superare i 5MB.",
+            "imageSize": "L'immagine è troppo pesante.",
             "citesNumberTooLong": "Il numero CITES non può superare i 50 caratteri.",
             "citesIssueFuture": "La data di rilascio CITES non può essere nel futuro.",
             "citesIssuerTooLong": "L'ente di rilascio CITES non può superare i 100 caratteri.",
@@ -625,6 +634,7 @@
         }
     },
     "ReptileDetails": {
+        "noNotes": "Non sono presenti delle note",
         "backToDashboard": "Torna alla dashboard",
         "noImage": "Nessuna immagine",
         "details": "📄 Dettagli",
@@ -632,6 +642,7 @@
         "sex": "Sesso",
         "male": "Maschio",
         "female": "Femmina",
+        "unknown": "Sconosciuto",
         "owner": "Proprietario del rettile",
         "ownerAddress": "Città",
         "ownerPhone": "Numero di telefono",
@@ -667,8 +678,8 @@
         "loading": "Caricamento in corso...",
         "notFound": "Rettile non trovato.",
         "notAvailable": "N/D",
-        "errorPDF": "⚠️ Errore durante la lettura del file",
-        "serverError": "⚠️ Errore sconosciuto dal server.",
+        "errorPDF": "⚠️ Errore durante la lettura del file, contatta l'assistenza",
+        "serverError": "⚠️ Errore sconosciuto dal server. Contatta l'assistenza",
         "downloadError": "⚠️ Errore durante il download. Riprova più tardi."
     },
     "ReptileCreateModal": {
@@ -687,9 +698,9 @@
         "fields": {
             "name": "Nome",
             "species": "Specie",
-            "speciesPlaceholder": "es. Correlophus ciliatus",
+            "speciesPlaceholder": "es. Python regius",
             "morph": "Morph",
-            "morphPlaceholder": "es. Lilly White",
+            "morphPlaceholder": "es. BumbleBee",
             "birthDate": "Data di nascita",
             "sex": "Sesso",
             "sexNotSpecified": "Non specificato",
@@ -724,7 +735,7 @@
             "motherInvalid": "Nome della madre non valido",
             "imageRequired": "Almeno un'immagine è obbligatoria",
             "imageType": "Il file deve essere un'immagine JPEG, PNG o WEBP",
-            "imageSize": "L'immagine non può superare i 5MB",
+            "imageSize": "L'immagine è troppo pesante",
             "citesNumberTooLong": "Il numero CITES è troppo lungo",
             "citesIssueFuture": "La data di emissione del CITES non può essere nel futuro",
             "citesIssuerTooLong": "L'ente emittente del CITES è troppo lungo",
@@ -787,12 +798,13 @@
         "copyright": "© 2025 SnakeBee. Tutti i diritti riservati."
     },
     "feedingModal": {
+        "pz": " pezzi da ",
         "title": "Gestione Pasti 🦗",
         "fields": {
             "date": "Data",
             "foodType": "Alimento",
             "customFoodType": "Tipo Alimento",
-            "customWeight": "Peso (grammi)",
+            "customWeight": "Peso",
             "quantity": "Quantità",
             "result": "Esito del pasto",
             "retryAfterDays": "Prossimo pasto tra (giorni)",
@@ -803,7 +815,8 @@
             "other": "Altro (non in inventario)",
             "customFoodExample": "Es. Topi",
             "customWeightExample": "Es. 15",
-            "notesExample": "Comportamento, voracità, problemi..."
+            "notesExample": "Comportamento, voracità, problemi...",
+            "useLastValues": "salva i valori inseriti per i prossimi inserimenti"
         },
         "result": {
             "eaten": "Mangiato",
@@ -883,8 +896,8 @@
         "form": {
             "type": "Tipo Evento",
             "date": "Data",
-            "weight": "Peso (grammi)",
-            "weightPlaceholder": "Es. 125.5",
+            "weight": "Peso",
+            "weightPlaceholder": "Es. 125,5",
             "notes": "Note (Opzionale)",
             "submit": "Aggiungi Evento",
             "saving": "Salvataggio..."

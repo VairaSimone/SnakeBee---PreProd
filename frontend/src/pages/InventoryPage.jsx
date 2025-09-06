@@ -8,7 +8,7 @@ const InventoryPage = () => {
   const { t } = useTranslation();
 
   const [inventory, setInventory] = useState([]);
-  const [formData, setFormData] = useState({ foodType: '', quantity: '', weightPerUnit: '' });
+  const [formData, setFormData] = useState({ foodType: '', quantity: '', weightPerUnit: '', weightUnit: 'g', });
   const [editingId, setEditingId] = useState(null);
   const user = useSelector(selectUser);
   const [errorMessage, setErrorMessage] = useState('');
@@ -41,14 +41,23 @@ const InventoryPage = () => {
     if (!user || !user._id) {
       return;
     }
+  const weightInGrams =
+    formData.weightUnit === 'kg'
+      ? formData.weightPerUnit * 1000
+      : formData.weightPerUnit;
+
+  const payload = {
+    ...formData,
+    weightPerUnit: weightInGrams,
+  };
 
     try {
       if (editingId) {
-        await api.put(`/inventory/${editingId}`, { ...formData });
+        await api.put(`/inventory/${editingId}`, payload);
       } else {
-        await api.post('/inventory', { ...formData });
+        await api.post('/inventory', payload);
       }
-      setFormData({ foodType: '', quantity: '', weightPerUnit: '' });
+      setFormData({ foodType: '', quantity: '', weightPerUnit: '',  weightUnit: 'g' });
       setEditingId(null);
       fetchInventory();
     } catch (err) {
@@ -60,15 +69,18 @@ const InventoryPage = () => {
     }
   };
 
-  const handleEdit = (item) => {
-    setEditingId(item._id);
-    setFormData({
-      foodType: item.foodType,
-      quantity: item.quantity,
-      weightPerUnit: item.weightPerUnit || '',
-    });
-  };
-
+const handleEdit = (item) => {
+  setEditingId(item._id);
+  const unit = item.weightPerUnit >= 1000 ? 'kg' : 'g';
+  setFormData({
+    foodType: item.foodType,
+    quantity: item.quantity,
+    weightPerUnit: unit === 'kg'
+      ? (item.weightPerUnit / 1000).toFixed(2)
+      : item.weightPerUnit,
+    weightUnit: unit,
+  });
+};
   const handleDelete = async (id) => {
     try {
       await api.delete(`/inventory/${id}`);
@@ -131,19 +143,31 @@ const InventoryPage = () => {
             className={`${inputClass} focus:border-green-500 focus:ring-2 focus:ring-green-300 bg-white text-black`}
           />
         </div>
-        <div className="flex flex-col">
-          <label htmlFor="weightPerUnit" className="mb-1 text-gray-700 font-semibold">{t('inventoryPage.weightPerUnit')}</label>
-          <input
-            id="weightPerUnit"
-            type="number"
-            name="weightPerUnit"
-            min="0"
-            value={formData.weightPerUnit}
-            onChange={(e) => setFormData({ ...formData, weightPerUnit: e.target.value })}
-            placeholder={t('inventoryPage.weightPlaceholder')}
-            className={`${inputClass} focus:border-green-500 focus:ring-2 focus:ring-green-300 bg-white text-black`}
-          />
-        </div>
+<div className="flex flex-col">
+  <label htmlFor="weightPerUnit" className="mb-1 text-gray-700 font-semibold">
+    {t('inventoryPage.weightPerUnit')}
+  </label>
+  <div className="flex">
+    <input
+      id="weightPerUnit"
+      type="number"
+      name="weightPerUnit"
+      min="0"
+      value={formData.weightPerUnit}
+      onChange={(e) => setFormData({ ...formData, weightPerUnit: e.target.value })}
+      placeholder={t('inventoryPage.weightPlaceholder')}
+      className={`${inputClass} focus:border-green-500 focus:ring-2 focus:ring-green-300 bg-white text-black`}
+    />
+    <select
+      value={formData.weightUnit}
+      onChange={(e) => setFormData({ ...formData, weightUnit: e.target.value })}
+      className="ml-2 border border-gray-300 rounded-md px-2 text-sm bg-white text-black appearance-none"
+    >
+      <option value="g">g</option>
+      <option value="kg">kg</option>
+    </select>
+  </div>
+</div>
         <div className="flex items-end">
           <button
             type="submit"
@@ -167,34 +191,36 @@ const InventoryPage = () => {
             </tr>
           </thead>
           <tbody>
-            {inventory.map(item => (
-              <tr
-                key={item._id}
-                className="odd:bg-white even:bg-green-50 hover:bg-green-100 transition-colors cursor-pointer text-black"
-              >
-                <td className="p-3 tx-black">{item.foodType}</td>
-                <td className="p-3 text-right font-mono text-black">{item.quantity}</td>
-                <td className="p-3 text-right font-mono text-black">{item.weightPerUnit ? `${item.weightPerUnit} g` : '—'}</td>
-                <td className="p-3 text-right font-mono text-black">
-                  {item.weightPerUnit ? formatWeight(item.weightPerUnit * item.quantity) : '—'}              </td>
-                <td className="p-3 text-center space-x-4">
-                  <button
-                    onClick={() => handleEdit(item)}
-                    className="text-green-700 hover:text-green-900 font-semibold"
-                    aria-label={`${t('inventoryPage.edit')} ${item.foodType}`}
-                  >
-                    ✏️
-                  </button>
-                  <button
-                    onClick={() => handleDelete(item._id)}
-                    className="text-red-600 hover:text-red-800 font-semibold"
-                    aria-label={`${t('inventoryPage.delete')} ${item.foodType}`}
-                  >
-                    🗑️
-                  </button>
-                </td>
-              </tr>
-            ))}
+            {[...inventory]
+              .sort((a, b) => (b.weightPerUnit || 0) - (a.weightPerUnit || 0))
+              .map(item => (
+                <tr
+                  key={item._id}
+                  className="odd:bg-white even:bg-green-50 hover:bg-green-100 transition-colors cursor-pointer text-black"
+                >
+                  <td className="p-3 tx-black">{item.foodType}</td>
+                  <td className="p-3 text-right font-mono text-black">{item.quantity}</td>
+                  <td className="p-3 text-right font-mono text-black">{item.weightPerUnit ? formatWeight(item.weightPerUnit) : '—'}</td>
+                  <td className="p-3 text-right font-mono text-black">
+                    {item.weightPerUnit ? formatWeight(item.weightPerUnit * item.quantity) : '—'}              </td>
+                  <td className="p-3 text-center space-x-4">
+                    <button
+                      onClick={() => handleEdit(item)}
+                      className="text-green-700 hover:text-green-900 font-semibold"
+                      aria-label={`${t('inventoryPage.edit')} ${item.foodType}`}
+                    >
+                      ✏️
+                    </button>
+                    <button
+                      onClick={() => handleDelete(item._id)}
+                      className="text-red-600 hover:text-red-800 font-semibold"
+                      aria-label={`${t('inventoryPage.delete')} ${item.foodType}`}
+                    >
+                      🗑️
+                    </button>
+                  </td>
+                </tr>
+              ))}
             {inventory.length === 0 && (
               <tr>
                 <td colSpan="5" className="text-center p-6 text-gray-500">

@@ -153,10 +153,14 @@ const ReptileCreateModal = ({ show, handleClose, setReptiles, onSuccess }) => {
     } else {
       const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
       formData.image.forEach((file, idx) => {
-        if (!allowedTypes.includes(file.type)) {
+        const allowedExt = ['.jpg', '.jpeg', '.png', '.webp'];
+        const hasValidType = !file.type || allowedTypes.includes(file.type)
+          || allowedExt.some(ext => file.name.toLowerCase().endsWith(ext));
+
+        if (!hasValidType) {
           errors[`image_${idx}`] = t('ReptileCreateModal.validation.imageType');
         }
-        if (file.size > 5 * 1024 * 1024) { // 5MB
+        if (file.size > 15  * 1024 * 1024) { 
           errors[`image_${idx}`] = t('ReptileCreateModal.validation.imageSize');
         }
       });
@@ -288,8 +292,9 @@ const ReptileCreateModal = ({ show, handleClose, setReptiles, onSuccess }) => {
                       <div>
                         <label htmlFor="sex" className={labelClasses}>{t('ReptileCreateModal.fields.sex')} <span className="text-red-500">*</span></label>
                         <select id="sex" name="sex" value={formData.sex} onChange={handleChange} className={`${inputClasses} ${formErrors.sex && 'border-red-500'}`}>
-                          <option value="M" default>{t('ReptileCreateModal.fields.sexMale')}</option>
+                          <option value="Unknown" default>{t('ReptileCreateModal.fields.sexNotSpecified')}</option>
                           <option value="F">{t('ReptileCreateModal.fields.sexFemale')}</option>
+                          <option value="M" default>{t('ReptileCreateModal.fields.sexMale')}</option>
                         </select>
                         {formErrors.sex && <p className={errorTextClasses}><ExclamationCircleIcon className='w-4 h-4' />{formErrors.sex}</p>}
                       </div>
