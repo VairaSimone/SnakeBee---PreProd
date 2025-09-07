@@ -72,7 +72,7 @@ export const GetReptileByUser = async (req, res) => {
 
     // 1. Estrarre e validare tutti i parametri dalla query
     const page = parseInt(req.query.page) || 1;
-    const perPage = parseInt(req.query.perPage) || 12;
+    const perPage = parseInt(req.query.perPage) || 24;
     
     // Parametri per filtro
     const { filterMorph, filterSpecies, filterSex, filterBreeder } = req.query;

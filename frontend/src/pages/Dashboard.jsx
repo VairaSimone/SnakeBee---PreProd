@@ -106,6 +106,7 @@ const Dashboard = () => {
 
       // Non c'è più bisogno di arricchire i dati, il backend fa tutto!
       setAllReptiles(data.dati || []);
+      console.log(data.dati)
       setTotalPages(data.totalPages || 1);
       setError(null);
     } catch (err) {
