@@ -70,45 +70,94 @@ export const GetReptileByUser = async (req, res) => {
   try {
     const userId = req.user.userid;
 
-    const page = Math.max(parseInt(req.query.page) || 1, 1);
-    const perPage = Math.min(parseInt(req.query.perPage) || 12, 100);
+    // 1. Estrarre e validare tutti i parametri dalla query
+    const page = parseInt(req.query.page) || 1;
+    const perPage = parseInt(req.query.perPage) || 12;
+    
+    // Parametri per filtro
+    const { filterMorph, filterSpecies, filterSex, filterBreeder } = req.query;
 
-    const result = await Reptile.aggregate([
-      { $match: { user: new mongoose.Types.ObjectId(userId) } },
-      { $sort: { species: 1 } },
+    // Parametri per ordinamento
+    const sortKey = req.query.sortKey || 'name'; // Default: ordina per nome
+    const sortOrder = req.query.sortOrder === 'desc' ? -1 : 1; // Default: ascendente
 
+    // 2. Costruire la query di match dinamicamente
+    const matchQuery = { user: new mongoose.Types.ObjectId(userId) };
+    if (filterMorph) {
+      matchQuery.morph = { $regex: filterMorph, $options: 'i' }; // Case-insensitive
+    }
+    if (filterSpecies) {
+      matchQuery.species = { $regex: filterSpecies, $options: 'i' };
+    }
+    if (filterSex) {
+      matchQuery.sex = filterSex;
+    }
+    if (filterBreeder) {
+      matchQuery.isBreeder = filterBreeder === 'true';
+    }
+
+    // 3. Costruire l'oggetto di ordinamento dinamicamente
+    let sortOptions = {};
+    if (sortKey === 'nextFeedingDate') {
+      sortOptions['nextFeedingDate'] = sortOrder;
+    } else {
+      // Per 'name' e 'species', usiamo la collation per un ordinamento case-insensitive corretto
+      sortOptions[sortKey] = sortOrder;
+    }
+
+    // 4. Aggregation Pipeline con $facet
+    const results = await Reptile.aggregate([
+      // Fase di match con i filtri
+      { $match: matchQuery },
+
+      // Lookup per i feedings
       {
         $lookup: {
-          from: "Feeding", 
+          from: "feedings", // Assicurati che il nome della collection sia 'feedings'
           localField: "_id",
           foreignField: "reptile",
           as: "feedings"
         }
       },
 
+      // Calcola la prossima data di pasto (usando $max)
       {
         $addFields: {
-          nextFeedingDate: {
-            $min: "$feedings.nextFeedingDate"
-          }
+          nextFeedingDate: { $max: "$feedings.nextFeedingDate" }
         }
       },
-
+      
+      // Proietta i campi necessari (rimuovendo l'array feedings)
       {
         $project: {
-          feedings: 0
+          feedings: 0 
         }
       },
 
-      { $skip: (page - 1) * perPage },
-      { $limit: perPage }
-    ]);
+      // Ordinamento dinamico
+      { $sort: sortOptions },
+      
+      // $facet per eseguire paginazione e conteggio in una sola volta
+      {
+        $facet: {
+          // Ramo per i metadati (conteggio totale)
+          metadata: [ { $count: 'totalResults' } ],
+          // Ramo per i dati della pagina corrente
+          dati: [
+            { $skip: (page - 1) * perPage },
+            { $limit: perPage }
+          ]
+        }
+      }
+    ]).collation({ locale: "en", strength: 2 }); // Collation per ordinamento non sensibile alle maiuscole
 
-    const totalResults = await Reptile.countDocuments({ user: userId });
+    // 5. Formattare la risposta
+    const dati = results[0].dati;
+    const totalResults = results[0].metadata[0]?.totalResults || 0;
     const totalPages = Math.ceil(totalResults / perPage);
 
     res.send({
-      dati: result,
+      dati,
       totalPages,
       totalResults,
       page,
@@ -117,8 +166,7 @@ export const GetReptileByUser = async (req, res) => {
     console.error(err);
     res.status(500).send({ message: req.t('server_error') });
   }
-}; 
-
+};
 
 export const PostReptile = async (req, res) => {
     try {

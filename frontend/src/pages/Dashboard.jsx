@@ -92,17 +92,20 @@ const Dashboard = () => {
     if (!user?._id) return;
     try {
       setLoading(true);
-      const { data } = await api.get(`/reptile/${user._id}/AllReptileUser`, { params: { page } });
-      const enriched = await Promise.all(
-        data.dati.map(async (r) => {
-          const feedings = await api.get(`/feedings/${r._id}`).then(res => res.data.dati || []);
-          const nextDate = feedings.length
-            ? new Date(Math.max(...feedings.map(x => new Date(x.nextFeedingDate))))
-            : null;
-          return { ...r, nextFeedingDate: nextDate };
-        })
-      );
-      setAllReptiles(enriched);
+      
+      const params = {
+        page,
+        sortKey,
+        filterMorph,
+        filterSpecies,
+        filterSex,
+        filterBreeder
+      };
+
+      const { data } = await api.get(`/reptile/${user._id}/AllReptileUser`, { params });
+
+      // Non c'è più bisogno di arricchire i dati, il backend fa tutto!
+      setAllReptiles(data.dati || []);
       setTotalPages(data.totalPages || 1);
       setError(null);
     } catch (err) {
@@ -116,6 +119,7 @@ const Dashboard = () => {
     try {
       await api.delete(`/reptile/${id}`);
       // Aggiorno subito lo stato locale
+            fetchReptiles(); 
       setAllReptiles(prev => prev.filter(r => r._id !== id));
       setSortedReptiles(prev => prev.filter(r => r._id !== id)); // opzionale, ma più sicuro
     } catch (err) {
@@ -123,33 +127,13 @@ const Dashboard = () => {
     }
   };
 
-  useEffect(() => {
-    let filtered = [...allReptiles];
-    if (filterMorph.trim() !== '') {
-      filtered = filtered.filter(r => r.morph?.toLowerCase().includes(filterMorph.toLowerCase()));
+useEffect(() => {
+    if (page !== 1) {
+        setPage(1);
+    } else {
+        fetchReptiles();
     }
-    if (filterSpecies.trim() !== '') {
-      filtered = filtered.filter(r =>
-        r.species?.toLowerCase().includes(filterSpecies.toLowerCase())
-      );
-    }
-    if (filterSex) {
-      filtered = filtered.filter(r => r.sex === filterSex);
-    }
-    if (filterBreeder !== '') {
-      filtered = filtered.filter(r => r.isBreeder === (filterBreeder === 'true'));
-    }
-    const sorted = [...filtered].sort((a, b) => {
-      if (sortKey === 'nextFeedingDate') {
-        const dateA = a.nextFeedingDate ? new Date(a.nextFeedingDate) : new Date(0);
-        const dateB = b.nextFeedingDate ? new Date(b.nextFeedingDate) : new Date(0);
-        return dateA - dateB;
-      }
-      return a[sortKey]?.localeCompare(b[sortKey] || '', undefined, { numeric: true });
-    });
-    setSortedReptiles(sorted);
-  }, [sortKey, allReptiles, filterMorph, filterSpecies, filterSex, filterBreeder]);
-
+  }, [sortKey, filterMorph, filterSpecies, filterSex, filterBreeder]);
   useEffect(() => {
     if (user?._id) {
       fetchReptiles();
@@ -157,14 +141,6 @@ const Dashboard = () => {
     }
   }, [user, page]);
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (document.visibilityState === 'visible' && user?._id) {
-        fetchReptiles();
-      }
-    }, 1000 * 60 * 2);
-    return () => clearInterval(interval);
-  }, [user]);
 
   const StatCard = ({ icon, title, value, unit, bgColor, children }) => (
     <div className={`flex-1 p-4 rounded-xl shadow-md flex items-start gap-4 ${bgColor}`}>
@@ -369,7 +345,7 @@ const Dashboard = () => {
               <div className="animate-spin h-12 w-12 border-4 border-forest border-t-transparent rounded-full mx-auto" />
               <p className="mt-4 text-charcoal/80 text-lg">{t('dashboard.common.loadingReptiles')}</p>
             </div>
-          ) : sortedReptiles.length === 0 ? (
+          ) : allReptiles.length === 0 ? (
             <div className="text-center py-20 bg-sand rounded-xl">
               <h3 className="text-2xl font-bold text-olive">{t('dashboard.common.noReptilesFound')}</h3>
               <p className="mt-2 text-charcoal/70">
@@ -381,7 +357,7 @@ const Dashboard = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {sortedReptiles.map(reptile => (
+              {allReptiles.map(reptile => (
                 <Link to={`/reptiles/${reptile._id}`} key={reptile._id} className="bg-white rounded-2xl shadow-lg overflow-hidden group transition-all duration-300  no-underline hover:no-underline hover:shadow-2xl hover:-translate-y-1.5 flex flex-col min-h-[460px] max-h-[460px]">
                   <div className="relative h-[160px] w-full overflow-hidden">
                     {reptile.label?.text && (
