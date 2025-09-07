@@ -113,7 +113,7 @@ export const GetReptileByUser = async (req, res) => {
       // Lookup per i feedings
       {
         $lookup: {
-          from: "feedings", // Assicurati che il nome della collection sia 'feedings'
+          from: "Feeding", // Assicurati che il nome della collection sia 'feedings'
           localField: "_id",
           foreignField: "reptile",
           as: "feedings"
