@@ -3,6 +3,10 @@ import api from '../services/api';
 import { useSelector } from 'react-redux';
 import { selectUser } from '../features/userSlice';
 import { useTranslation } from "react-i18next";
+const translateFoodType = (foodType, t) => {
+  // fallback se non hai chiave
+  return t(`inventoryPage.${foodType}`, { defaultValue: foodType });
+};
 
 const InventoryPage = () => {
   const { t } = useTranslation();
@@ -198,7 +202,7 @@ const handleEdit = (item) => {
                   key={item._id}
                   className="odd:bg-white even:bg-green-50 hover:bg-green-100 transition-colors cursor-pointer text-black"
                 >
-                  <td className="p-3 tx-black">{item.foodType}</td>
+                  <td className="p-3 tx-black">{translateFoodType(item.foodType, t)}</td>
                   <td className="p-3 text-right font-mono text-black">{item.quantity}</td>
                   <td className="p-3 text-right font-mono text-black">{item.weightPerUnit ? formatWeight(item.weightPerUnit) : '—'}</td>
                   <td className="p-3 text-right font-mono text-black">

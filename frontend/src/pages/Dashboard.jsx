@@ -214,7 +214,7 @@ useEffect(() => {
           <div>
             <h1 className="text-4xl font-bold text-olive">{t('dashboard.title')}</h1>
             <p className="text-charcoal/70 mt-1">
-              {t('dashboard.manageReptiles', { count: allReptiles.length })}
+              {t('dashboard.manageReptiles', { count: totalResults })}
             </p>
           </div>
           <button
