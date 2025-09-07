@@ -89,6 +89,13 @@ const reptileSchema = new Schema(
       text: { type: String, maxlength: 30 },
       color: { type: String, default: '#228B22' }, 
     },
+ foodType: {
+      type: String,
+      enum: ['Topo', 'Ratto', 'Coniglio', 'Pulcino', 'Altro'],
+      required: true,
+    },
+    weightPerUnit: { type: Number },
+    nextMealDay: { type: Number },
     user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
   },
   {

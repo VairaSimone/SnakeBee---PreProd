@@ -171,7 +171,7 @@
         "weightPerUnit": "Weight per unit (g)",
         "weightPlaceholder": "e.g. 50",
         "add": "Add",
-        "update": "Update",
+        "update": "Update", 
         "Topo": "Mouse",
         "Ratto": "Rat",
         "Coniglio": "Rabbit",
@@ -186,7 +186,13 @@
         "submitDenied": "The feature is not reserved for the plan associated with your account",
         "submitFailed": "Submit error: {{message}}",
         "edit": "Edit",
-        "delete": "Delete"
+        "delete": "Delete",
+        "todaySuggestions": "Today's Food Suggestions:",
+"toDefrost": "To Defrost:",
+"available": "Available",
+"warning": "Warning:",
+"not_enough_stock": "Food not in your inventory",
+"food_not_found": "Food not found"
     },
     "home": {
         "hero": {
