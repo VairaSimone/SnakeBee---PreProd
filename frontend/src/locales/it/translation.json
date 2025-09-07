@@ -617,7 +617,12 @@
             "imageDelete": "Immagine eliminata!",
             "imageError": "Errore durante l'eliminazione",
             "reptileUpdate": "Rettile aggiornato!",
-            "reptileError": "Errore durante l'aggiornamento, contatta l'assistenza"
+            "reptileError": "Errore durante l'aggiornamento, contatta l'assistenza",
+           "feeding": "Dati Alimentazione",
+    "foodType": "Tipo di cibo",
+    "selectFood": "Seleziona tipo di cibo",
+    "weightPerUnit": "Peso per unità (g)",
+    "nextMealDay": "Giorno successivo pasto"
         },
         "validation": {
             "speciesRequired": "La specie è obbligatoria.",
@@ -636,7 +641,10 @@
             "citesIssuerTooLong": "L'ente di rilascio CITES non può superare i 100 caratteri.",
             "microchipCodeTooLong": "Il codice microchip non può superare i 50 caratteri.",
             "microchipDateFuture": "La data di impianto del microchip non può essere nel futuro.",
-            "fixErrors": "Alcuni campi non sono validi, controlla e riprova."
+            "fixErrors": "Alcuni campi non sono validi, controlla e riprova.",
+                "foodTypeRequired": "Il tipo di cibo è obbligatorio.",
+    "weightInvalid": "Il peso deve essere maggiore di 0.",
+    "nextMealInvalid": "Il giorno del prossimo pasto deve essere tra 0 e 31."
         }
     },
     "ReptileDetails": {

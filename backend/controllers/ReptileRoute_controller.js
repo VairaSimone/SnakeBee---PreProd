@@ -170,11 +170,11 @@ export const GetReptileByUser = async (req, res) => {
 
 export const PostReptile = async (req, res) => {
     try {
-        const { name, species, morph, birthDate, sex, isBreeder, notes, parents, documents } = req.body;
+        const { name, species, morph, birthDate, sex, isBreeder, notes, parents, documents, foodType, weightPerUnit, nextMealDay } = req.body;
         const userId = req.user.userid;
         const parsedParents = typeof parents === 'string' ? JSON.parse(parents) : parents;
         const parsedDocuments = typeof documents === 'string' ? JSON.parse(documents) : documents;
-
+ 
         // Maximum limit check
         const user = await User.findById(userId);
         const { plan: userPlan, limits } = getUserPlan(user);
@@ -212,6 +212,9 @@ export const PostReptile = async (req, res) => {
             sex,
             isBreeder,
             notes,
+            weightPerUnit,
+            foodType,
+            nextMealDay, 
             parents: parsedParents,
             documents: parsedDocuments,
         });
@@ -237,7 +240,7 @@ export const PutReptile = async (req, res) => {
         const id = req.params.reptileId;
         const user = await User.findById(req.user.userid);
         const { plan: userPlan, limits } = getUserPlan(user);
-        const { name, species, morph, sex, notes, birthDate, isBreeder, price, label, parents, documents } = req.body;
+        const { name, species, morph, sex, notes, birthDate, isBreeder, price, label, parents, documents, foodType, weightPerUnit, nextMealDay } = req.body;
         let parsedParents, parsedDocuments;
         if ('parents' in req.body) {
             parsedParents = typeof req.body.parents === 'string'
@@ -309,6 +312,9 @@ export const PutReptile = async (req, res) => {
         reptile.birthDate = birthDateObject;
         reptile.image = imageUrls;
         reptile.sex = sex || reptile.sex;
+        reptile.foodType = foodType;
+        reptile.weightPerUnit = weightPerUnit;
+        reptile.nextMealDay = nextMealDay;
 
         if ('label' in req.body) {
             try {

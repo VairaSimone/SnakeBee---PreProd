@@ -88,7 +88,7 @@ const reptileSchema = new Schema(
     label: {
       text: { type: String, maxlength: 30 },
       color: { type: String, default: '#228B22' }, 
-    },
+    }, 
  foodType: {
       type: String,
       enum: ['Topo', 'Ratto', 'Coniglio', 'Pulcino', 'Altro'],

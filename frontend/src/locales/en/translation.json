@@ -609,6 +609,11 @@
         },
         "reptile": {
             "confirmDeleteTitle": "Confirm Deletion",
+            "feeding": "Feeding Data",
+"foodType": "Food Type",
+"selectFood": "Select Food Type",
+"weightPerUnit": "Weight per Unit (g)",
+"nextMealDay": "Next Meal Day",
             "confirmDeleteText": "Are you sure you want to permanently delete this image? This action is irreversible.",
             "editTitle": "Edit {{name}}",
             "defaultName": "Reptile",
@@ -667,7 +672,10 @@
             "citesIssuerTooLong": "The CITES issuing entity cannot exceed 100 characters.",
             "microchipCodeTooLong": "The microchip code cannot exceed 50 characters.",
             "microchipDateFuture": "The microchip implantation date cannot be in the future.",
-            "fixErrors": "Some fields are invalid. Please check and try again."
+            "fixErrors": "Some fields are invalid. Please check and try again.",
+            "foodTypeRequired": "Food type is required.",
+"weightInvalid": "Weight must be greater than 0.",
+"nextMealInvalid": "Next meal day must be between 0 and 31."
         }
     },
     "ReptileDetails": {
