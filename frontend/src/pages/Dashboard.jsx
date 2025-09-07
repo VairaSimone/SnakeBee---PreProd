@@ -47,6 +47,7 @@ const Dashboard = () => {
   const [showFeedingModal, setShowFeedingModal] = useState(false);
   const [filterSpecies, setFilterSpecies] = useState('');
   const [filtersOpen, setFiltersOpen] = useState(false);
+const [totalResults, setTotalResults] = useState(0);
 
   const { t } = useTranslation();
   const [stats, setStats] = useState({
@@ -106,8 +107,9 @@ const Dashboard = () => {
 
       // Non c'è più bisogno di arricchire i dati, il backend fa tutto!
       setAllReptiles(data.dati || []);
-      console.log(data.dati)
       setTotalPages(data.totalPages || 1);
+      setTotalResults(data.totalResults || 0);
+
       setError(null);
     } catch (err) {
       setError(t('dashboard.errorReptile'));
