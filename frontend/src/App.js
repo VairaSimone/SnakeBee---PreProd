@@ -9,6 +9,7 @@ import ReptileTipBanner from './components/ReptileTipBanner';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Home from './pages/Home';
+import { selectUser } from "../features/userSlice";
 import GoogleCallback from './pages/GoogleCallback';
 import ProtectedRoute from './components/ProtectedRoute';
 import UserProfile from './components/UserProfile';
@@ -34,11 +35,13 @@ import PrivacyPolicyEN from './pages/PrivacyPolicyEN';
 import TermsAndConditionsEN from './pages/TermsAndConditionsEN';
 import TermsAndConditionsIT from './pages/TermsAndConditionsIT';
 import api from './services/api';
+import NewsletterBanner from './components/NewsletterBanner';
 
 function AppContent() {
   const dispatch = useDispatch();
  const language = useSelector(selectLanguage);
   const { t } = useTranslation();
+  const user = useSelector(selectUser);
 
    useEffect(() => {
     dispatch(setLanguage(navigator.language.split('-')[0] || 'it'));
@@ -101,6 +104,8 @@ function AppContent() {
 
       <Footer />
       <ReptileTipBanner />
+      <NewsletterBanner />
+
     </>
   );
 }

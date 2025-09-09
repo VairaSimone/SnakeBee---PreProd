@@ -15,6 +15,8 @@
   "passwordOld": "La vecchia password non è corretta.",
   "not_enough_stock": "Non è presente nell'inventario",
   "food_not_found": "Cibo non trovato",
+    "next_meal_day": "Prossimo pasto (giorni)",
+  "not_specified": "N/D",
   "no_feeding_today": "Non ci sono rettili che devono mangiare",
   "email_invalid": "L'email è richiesta per il reset password.",
   "email_changed": "Email aggiornata! Verifica la nuova casella.",
