@@ -26,7 +26,7 @@ const NewsletterBanner = () => {
 
   const handleSubscribe = async () => {
     try {
-      const res = await api.post("/v1/newsletter/subscribe", { email, language });
+      const res = await api.post("/newsletter/subscribe", { email, language });
       setMessage(res.data.message);
       localStorage.setItem("newsletterDismissed", "true");
       setVisible(false);

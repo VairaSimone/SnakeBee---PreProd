@@ -84,7 +84,7 @@ app.use('/api/inventory', foodInventoryRoute);
 app.use("/api/v1/", authRouter)
 app.use('/api/user', userRouter);
 app.use('/api/calendar', calendar);
-app.use("/v1/newsletter", newsletterRoute);
+app.use("/api/newsletter", newsletterRoute);
 app.use('/api/reptile', reptileRouter);
 app.use('/api/feedings', feedingRouter);
 app.use('/api/breeding', breedingRouter);
