@@ -77,6 +77,13 @@ const ReptileEditModal = ({ show, handleClose, reptile, setReptiles, onSuccess }
   const [imageToDelete, setImageToDelete] = useState(null);
   const { t } = useTranslation();
   const [errors, setErrors] = useState({});
+const FOOD_TYPES = [
+  { value: 'Topo', labelKey: 'reptileEditModal.reptile.food.topo' },
+  { value: 'Ratto', labelKey: 'reptileEditModal.reptile.food.ratto' },
+  { value: 'Coniglio', labelKey: 'reptileEditModal.reptile.food.coniglio' },
+  { value: 'Pulcino', labelKey: 'reptileEditModal.reptile.food.pulcino' },
+  { value: 'Altro', labelKey: 'reptileEditModal.reptile.food.altro' },
+];
 
   useEffect(() => {
 
@@ -195,7 +202,6 @@ const ReptileEditModal = ({ show, handleClose, reptile, setReptiles, onSuccess }
     if (formData.parents.mother && !namePattern.test(formData.parents.mother)) {
       errors.mother = t('reptileEditModal.validation.motherInvalid');
     }
-if (!formData.foodType) errors.foodType = t('reptileEditModal.validation.foodTypeRequired');
 if (formData.weightPerUnit && formData.weightPerUnit <= 0) {
   errors.weightPerUnit = t('reptileEditModal.validation.weightInvalid');
 }
@@ -559,23 +565,23 @@ if (formData.nextMealDay && (formData.nextMealDay < 0 || formData.nextMealDay > 
   <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
     
     {/* Food Type */}
-    <div>
-      <label className={labelClasses}>{t('reptileEditModal.reptile.foodType')}</label>
-      <select
-        name="foodType"
-        value={formData.foodType}
-        onChange={handleChange}
-        className={`${inputClasses} ${errors.foodType ? "border-red-500 focus:ring-red-500 focus:border-red-500" : ""}`}
-      >
-        <option value="">{t('reptileEditModal.reptile.selectFood')}</option>
-        <option value="Topo">Topo</option>
-        <option value="Ratto">Ratto</option>
-        <option value="Coniglio">Coniglio</option>
-        <option value="Pulcino">Pulcino</option>
-        <option value="Altro">Altro</option>
-      </select>
-      {errors.foodType && <p className="mt-1 text-xs text-red-600">{errors.foodType}</p>}
-    </div>
+<div>
+  <label className={labelClasses}>{t('reptileEditModal.reptile.foodType')}</label>
+  <select
+    name="foodType"
+    value={formData.foodType}
+    onChange={handleChange}
+    className={`${inputClasses} ${errors.foodType ? "border-red-500 focus:ring-red-500 focus:border-red-500" : ""}`}
+  >
+    <option value="">{t('reptileEditModal.reptile.selectFood')}</option>
+    {FOOD_TYPES.map(ft => (
+      <option key={ft.value} value={ft.value}>
+        {t(ft.labelKey)}
+      </option>
+    ))}
+  </select>
+  {errors.foodType && <p className="mt-1 text-xs text-red-600">{errors.foodType}</p>}
+</div>
 
     {/* Peso unitario */}
     <div>

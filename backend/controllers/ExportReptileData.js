@@ -9,6 +9,8 @@ import { logAction } from '../utils/logAction.js';
 import User from '../models/User.js';
 import { getUserPlan } from '../utils/getUserPlans.js'
 
+
+
 export const exportReptileData = async (req, res) => {
   try {
     const userId = req.params.userId;
@@ -22,6 +24,20 @@ export const exportReptileData = async (req, res) => {
       };
       return acc;
     }, {});
+const foodTypeMap = {
+  Topo: 'mouse',
+  Ratto: 'rat',
+  Coniglio: 'rabbit',
+  Pulcino: 'chick',
+  Altro: 'other'
+};
+
+// Funzione di traduzione per export
+const translateFoodType = (foodType, t) => {
+  if (!foodType) return t('not_specified');
+  const key = foodTypeMap[foodType] || 'other';
+  return t(key);
+};
 
     const reptileIds = Object.keys(reptileMap);
 
@@ -76,7 +92,7 @@ export const exportReptileData = async (req, res) => {
       citesIssuer: r.documents?.cites?.issuer || '',
       microchipCode: r.documents?.microchip?.code || '',
       microchipImplantDate: r.documents?.microchip?.implantDate ? new Date(r.documents.microchip.implantDate).toLocaleDateString() : '',
-        foodType: r.foodType || req.t('not_specified'),        // NUOVO
+        foodType: translateFoodType(r.foodType, req.t),       // NUOVO
   weightPerUnit: r.weightPerUnit ?? '',                 // NUOVO
   nextMealDay: r.nextMealDay ?? '',                     // NUOVO
       labelText: r.label?.text || '',
@@ -271,6 +287,20 @@ export async function generateReptilePDF(req, res) {
         message: req.t('basic_plan')
       });
     }
+const foodTypeMap = {
+  Topo: 'mouse',
+  Ratto: 'rat',
+  Coniglio: 'rabbit',
+  Pulcino: 'chick',
+  Altro: 'other'
+};
+
+// Funzione di traduzione per export
+const translateFoodType = (foodType, t) => {
+  if (!foodType) return t('not_specified');
+  const key = foodTypeMap[foodType] || 'other';
+  return t(key);
+};
 
     const reptile = await Reptile.findById(reptileId).lean();
 
@@ -305,7 +335,7 @@ export async function generateReptilePDF(req, res) {
       `${req.t('sex')}: ${reptile.sex === 'M' ? req.t('male_morph') : reptile.sex === 'F' ? req.t('female_morph') : req.t('unknown')}`,
       `${req.t('morph')}: ${reptile.morph || req.t('n_a')}`,
       `${req.t('birth_date')}: ${reptile.birthDate ? reptile.birthDate.toLocaleDateString() : req.t('n_a')}`,
-        `${req.t('food_type')}: ${reptile.foodType || req.t('not_specified')}`,           // NUOVO
+`${req.t('food_type')}: ${translateFoodType(reptile.foodType, req.t)}`,
   `${req.t('weight_per_unit_g')}: ${reptile.weightPerUnit ?? 'N/D'}g`,             // NUOVO
   `${req.t('next_meal_day')}: ${reptile.nextMealDay ?? 'N/D'}`
       `${req.t('notes')}: ${reptile.notes || req.t('n_a')}`,

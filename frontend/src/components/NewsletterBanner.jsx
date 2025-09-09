@@ -8,20 +8,33 @@ const NewsletterBanner = () => {
   const user = useSelector(selectUser);
   const language = useSelector(selectLanguage);
   const { t } = useTranslation();
+
   const [visible, setVisible] = useState(false);
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(user?.email || "");
   const [message, setMessage] = useState("");
 
   useEffect(() => {
-    if (user) return; // se loggato, non mostrare
+    const checkNewsletter = async () => {
+      const alreadyDismissed = localStorage.getItem("newsletterDismissed");
+      if (alreadyDismissed) return;
 
-    const alreadyDismissed = localStorage.getItem("newsletterDismissed");
-    if (alreadyDismissed) return;
+      if (user?.email) {
+        // utente loggato: verifica iscrizione
+        try {
+          const res = await api.get("/newsletter/check", { params: { email: user.email } });
+          if (!res.data.subscribed) setVisible(true);
+        } catch (err) {
+          console.error("Errore controllo newsletter:", err);
+          // fallback: mostra comunque banner
+          setVisible(true);
+        }
+      } else {
+        // utente non loggato: probabilità casuale
+        if (Math.random() < 0.6) setVisible(true);
+      }
+    };
 
-    // probabilità del 30%
-    if (Math.random() < 0.3) {
-      setVisible(true);
-    }
+    checkNewsletter();
   }, [user]);
 
   const handleSubscribe = async () => {
@@ -31,41 +44,45 @@ const NewsletterBanner = () => {
       localStorage.setItem("newsletterDismissed", "true");
       setVisible(false);
     } catch (err) {
-      setMessage(err.response?.data?.message || "Error");
+      setMessage(err.response?.data?.message || "Errore");
     }
   };
 
   if (!visible) return null;
 
   return (
-    <div className="fixed bottom-4 right-4 bg-white shadow-lg p-4 rounded-xl w-80 border border-gray-300 z-50">
-      <h3 className="text-lg font-semibold mb-2">{t("newsletter.title", "Unisciti alla newsletter!")}</h3>
-      <p className="text-sm mb-3">
+    <div className="fixed bottom-4 right-4 bg-white shadow-xl p-5 rounded-2xl w-80 border border-gray-200 z-50 relative">
+      <button
+        onClick={() => {
+          localStorage.setItem("newsletterDismissed", "true");
+          setVisible(false);
+        }}
+        className="absolute top-3 right-3 text-gray-400 hover:text-gray-900 transition"
+        aria-label="Chiudi"
+      >
+        ✕
+      </button>
+
+      <h3 className="text-lg font-bold mb-2 text-gray-900">
+        {t("newsletter.title", "Unisciti alla newsletter!")}
+      </h3>
+      <p className="text-sm mb-3 text-gray-800">
         {t("newsletter.desc", "Ricevi aggiornamenti e novità su SnakeBee.")}
       </p>
       <input
         type="email"
-        className="w-full p-2 border rounded mb-2"
+        className="w-full p-2 border border-gray-300 rounded mb-3 focus:outline-none focus:ring-2 focus:ring-green-500"
         placeholder={t("newsletter.placeholder", "La tua email")}
         value={email}
         onChange={(e) => setEmail(e.target.value)}
       />
       <button
         onClick={handleSubscribe}
-        className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 transition"
+        className="w-full bg-gradient-to-r from-green-500 to-green-600 text-white py-2 rounded-lg hover:from-green-600 hover:to-green-700 transition"
       >
         {t("newsletter.subscribe", "Iscriviti")}
       </button>
-      {message && <p className="text-xs mt-2">{message}</p>}
-      <button
-        onClick={() => {
-          localStorage.setItem("newsletterDismissed", "true");
-          setVisible(false);
-        }}
-        className="absolute top-2 right-3 text-gray-500 hover:text-black"
-      >
-        ✕
-      </button>
+      {message && <p className="text-xs mt-2 text-gray-700">{message}</p>}
     </div>
   );
 };

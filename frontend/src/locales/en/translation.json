@@ -187,7 +187,7 @@
         "submitFailed": "Submit error: {{message}}",
         "edit": "Edit",
         "delete": "Delete",
-        "todaySuggestions": "Today's Food Suggestions:",
+"todaySuggestions": "Suggerimenti del cibo da scongelare per oggi:",
 "toDefrost": "To Defrost:",
 "available": "Available",
 "warning": "Warning:",
@@ -653,7 +653,14 @@
             "imageDelete": "Image deleted!",
             "imageError": "Error deleting image",
             "reptileUpdate": "Reptile updated!",
-"reptileError": "Error during update, please contact support"
+"reptileError": "Error during update, please contact support",
+      "food": {
+        "topo": "Mouse",
+        "ratto": "Rat",
+        "coniglio": "Rabbit",
+        "pulcino": "Chick",
+        "altro": "Other"
+      }
         },
         "validation": {
             "speciesRequired": "Species are required.",
@@ -678,6 +685,12 @@
 "nextMealInvalid": "Next meal day must be between 0 and 31."
         }
     },
+    "newsletter": {
+"title": "Subscribe to the newsletter!",
+"desc": "Receive updates, news, or promotions about SnakeBee.",
+"placeholder": "Your email",
+"subscribe": "Sign up for free!"
+},
     "ReptileDetails": {
         "noNotes": "There are no notes",
         "backToDashboard": "Back to dashboard",
@@ -686,6 +699,13 @@
         "birthDate": "Date of Birth",
         "sex": "Sex",
         "male": "Male",
+          "foodTypeList": {
+    "Topo": "Mouse",
+    "Ratto": "Rat",
+    "Coniglio": "Rabbit",
+    "Pulcino": "Chick",
+    "Altro": "Other"
+  },
           "foodType": "Food Type",
   "weightPerUnit": "Weight per unit",
   "nextMealDay": "Next meal day",
@@ -752,10 +772,13 @@
             "birthDate": "Date of Birth",
             "sex": "Sex",
             "sexNotSpecified": "Not specified",
-            "sexMale": "Male",
+            "sexMale": "Male", 
             "sexFemale": "Female",
             "isBreeder": "Is a breeder?",
             "notes": "Notes",
+            "foodType": "Food Type",
+"weightPerUnit": "Weight per Unit",
+"nextMealDay": "Days to Wait Since Meal",
             "notesPlaceholder": "Temperament, feeding habits, health info...",
             "father": "Father (Morph)",
             "fatherPlaceholder": "Father’s morph",
@@ -768,7 +791,15 @@
             "microchipDate": "Microchip Implant Date",
             "fileUpload": "Upload a file",
             "fileOrDrag": "or drag it here",
-            "fileFormats": "PNG, JPG, GIF up to 10 MB"
+            "fileFormats": "PNG, JPG, GIF up to 10 MB",
+            "foodTypeOptions": {
+        "mouse": "Mouse",
+        "rat": "Rat",
+        "rabbit": "Rabbit",
+        "chick": "Chick",
+        "other": "Other"
+      },
+      "selectOption": "-- Select --"
         },
         "validation": {
             "nameRequired": "Name is required",

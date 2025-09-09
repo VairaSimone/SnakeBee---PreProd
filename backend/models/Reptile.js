@@ -92,7 +92,6 @@ const reptileSchema = new Schema(
  foodType: {
       type: String,
       enum: ['Topo', 'Ratto', 'Coniglio', 'Pulcino', 'Altro'],
-      required: true,
     },
     weightPerUnit: { type: Number },
     nextMealDay: { type: Number },

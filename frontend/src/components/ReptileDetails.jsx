@@ -150,6 +150,10 @@ const ReptileDetails = () => {
             }
         }
     };
+const translateFoodType = (foodType) => {
+    if (!foodType) return t('ReptileDetails.notSpecified');
+    return t(`foodTypeList.${foodType}`);
+};
 
     const scrollCarousel = (direction) => {
         if (carouselRef.current) {
@@ -251,7 +255,7 @@ const ReptileDetails = () => {
                                 </span>
                             </InfoItem>
                         </InfoCard>
- <InfoItem label={t('ReptileDetails.foodType')} value={reptile.foodType || t('ReptileDetails.notSpecified')} />
+<InfoItem label={t('ReptileDetails.foodType')} value={translateFoodType(reptile.foodType)} />
     <InfoItem
         label={t('ReptileDetails.weightPerUnit')}
         value={reptile.weightPerUnit ? `${reptile.weightPerUnit} g` : t('ReptileDetails.notSpecified')}
