@@ -215,12 +215,12 @@ if (formData.nextMealDay && formData.nextMealDay <= 0) errors.nextMealDay = t('R
         val.forEach(file => formDataToSend.append('image', file));
       } else if (key === 'parents' || key === 'documents') {
         formDataToSend.append(key, JSON.stringify(val));
-      } else {
-        formDataToSend.append(key, val);
-      }
+      } else if (key === 'weightPerUnit' || key === 'nextMealDay') {
+    formDataToSend.append(key, Number(val)); // cast qui
+  } else {
+    formDataToSend.append(key, val);
+  }
     });
-formDataToSend.append('weightPerUnit', Number(formData.weightPerUnit));
-formDataToSend.append('nextMealDay', Number(formData.nextMealDay));
 
     formDataToSend.append('user', user._id);
 
