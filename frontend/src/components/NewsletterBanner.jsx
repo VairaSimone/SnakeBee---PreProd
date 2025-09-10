@@ -51,7 +51,7 @@ const NewsletterBanner = () => {
   if (!visible) return null;
 
   return (
-    <div className="fixed bottom-4 right-4 bg-white shadow-xl p-5 rounded-2xl w-80 border border-gray-200 z-50 relative">
+    <div className="fixed bottom-4 right-4 bg-white shadow-xl p-5 rounded-2xl w-80 border border-gray-200 z-50">
       <button
         onClick={() => {
           localStorage.setItem("newsletterDismissed", "true");
@@ -71,7 +71,7 @@ const NewsletterBanner = () => {
       </p>
       <input
         type="email"
-        className="w-full p-2 border border-gray-300 rounded mb-3 focus:outline-none focus:ring-2 focus:ring-green-500"
+        className="w-full black-text p-2 border border-gray-300 rounded mb-3 focus:outline-none focus:ring-2 focus:ring-green-500"
         placeholder={t("newsletter.placeholder", "La tua email")}
         value={email}
         onChange={(e) => setEmail(e.target.value)}

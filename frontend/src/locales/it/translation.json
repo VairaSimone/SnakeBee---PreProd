@@ -168,7 +168,7 @@
         "selectType": "Seleziona tipo",
         "quantity": "Quantità",
         "quantityPlaceholder": "Inserisci quantità",
-        "weightPerUnit": "Peso per unità (g)",
+        "weightPerUnit": "Peso per unità",
         "weightPlaceholder": "es. 50",
         "add": "Aggiungi",
         "update": "Aggiorna",
