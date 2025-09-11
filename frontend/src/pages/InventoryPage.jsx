@@ -203,18 +203,18 @@ const InventoryPage = () => {
       </form>
 
       {/* INVENTORY LIST */}
-      <div className="overflow-x-auto rounded-lg shadow-sm border border-gray-200 max-h-[400px] overflow-y-auto">
+      <div className="overflow-x-auto max-h-[60vh] overflow-y-auto rounded-lg shadow-sm border border-gray-200">
         <table className="w-full text-sm border-collapse">
           <thead className="bg-green-100 text-green-800 font-semibold tx-black">
             <tr>
               <th className="p-3 text-left">{t('inventoryPage.type')}</th>
-              <th className="p-3 text-right">{t('inventoryPage.totalWeight')}</th>
+              <th className="p-3 text-right">{t('inventoryPage.quantity')}</th>
               <th className="p-3 text-right">{t('inventoryPage.weightPerUnit')}</th>
               <th className="p-3 text-right">{t('inventoryPage.totalWeight')}</th>
               <th className="p-3 text-center">{t('inventoryPage.actions')}</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody> 
             {[...inventory]
               .sort((a, b) => (b.weightPerUnit || 0) - (a.weightPerUnit || 0))
               .map(item => (

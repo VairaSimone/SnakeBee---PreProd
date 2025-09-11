@@ -71,7 +71,7 @@ const NewsletterBanner = () => {
       </p>
       <input
         type="email"
-        className="w-full black-text p-2 border border-gray-300 rounded mb-3 focus:outline-none focus:ring-2 focus:ring-green-500"
+        className="w-full text-black p-2 border border-gray-300 rounded mb-3 focus:outline-none focus:ring-2 focus:ring-green-500"
         placeholder={t("newsletter.placeholder", "La tua email")}
         value={email}
         onChange={(e) => setEmail(e.target.value)}
