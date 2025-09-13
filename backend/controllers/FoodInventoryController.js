@@ -2,7 +2,8 @@ import FoodInventory from '../models/FoodInventory.js';
 import User from '../models/User.js';
 import { logAction } from '../utils/logAction.js';
 import Reptile from '../models/Reptile.js';
-
+import Feeding from '../models/Feeding.js';
+import mongoose from 'mongoose';
 async function isInventoryAccessAllowed(userId) {
   const user = await User.findById(userId);
   return user?.subscription?.plan === 'BREEDER';
@@ -122,28 +123,71 @@ export const getFeedingSuggestions = async (req, res) => {
       return res.status(403).json({ message: req.t('premium_only_feature') });
     }
 
-    const today = new Date().getDay(); // 0-6 (domenica-sabato)
-    const reptiles = await Reptile.find({ user: userId, nextMealDay: today });
+    const todayUTC = new Date();
+    todayUTC.setUTCHours(0, 0, 0, 0);
 
-    if (reptiles.length === 0) {
+    // Aggregation Pipeline per ottenere SOLO l'ultimo pasto per ogni rettile
+    const validFeedings = await Feeding.aggregate([
+      // Fase 1: Ordina tutti i pasti dal più recente al più vecchio
+      { $sort: { date: -1 } },
+      
+      // Fase 2: Raggruppa per rettile e prendi solo il primo documento (il più recente)
+      {
+        $group: {
+          _id: "$reptile", // Raggruppa per ID del rettile
+          latestFeeding: { $first: "$$ROOT" } // Prendi l'intero documento del pasto più recente
+        }
+      },
+
+      // Fase 3: Sostituisci la struttura del documento con quella del pasto più recente
+      { $replaceRoot: { newRoot: "$latestFeeding" } },
+
+      // Fase 4: Ora che abbiamo solo i pasti più recenti, filtriamo quelli la cui prossima data di pasto è passata
+      { $match: { nextFeedingDate: { $lte: todayUTC } } },
+
+      // Fase 5: "Popola" manualmente i dati del rettile per verificare l'utente proprietario
+      {
+        $lookup: {
+          from: "Reptile", // Nome della collezione dei rettili
+          localField: "reptile",
+          foreignField: "_id",
+          as: "reptileInfo"
+        }
+      },
+      
+      // Fase 6: Decomprimi l'array 'reptileInfo' creato da $lookup
+      { $unwind: "$reptileInfo" },
+
+      // Fase 7: Filtra per i rettili che appartengono all'utente corrente
+      { $match: { "reptileInfo.user": new mongoose.Types.ObjectId(userId) } },
+      
+      // Fase 8: Rinomina 'reptileInfo' in 'reptile' per coerenza con il codice originale
+      { $addFields: { reptile: "$reptileInfo" } },
+      { $project: { reptileInfo: 0 } }
+    ]);
+    
+    if (validFeedings.length === 0) {
       return res.json({ message: req.t('no_feeding_today'), suggestions: [] });
     }
 
-    // Raggruppa cosa serve
+    // Il resto della logica per raggruppare il cibo necessario rimane invariato
     const needed = {};
-    reptiles.forEach(r => {
-      const key = `${r.foodType}_${r.weightPerUnit}`;
+    validFeedings.forEach(f => {
+      const foodType = f.foodType.trim(); // Aggiunto .trim() per rimuovere spazi come in " topi"
+      const weightPerUnit = f.weightPerUnit;
+      const key = `${foodType}_${weightPerUnit}`;
+
       if (!needed[key]) {
         needed[key] = {
-          foodType: r.foodType,
-          weightPerUnit: r.weightPerUnit,
+          foodType: foodType,
+          weightPerUnit: weightPerUnit,
           quantity: 0
         };
       }
-      needed[key].quantity += 1;
+      // La quantità viene dal campo 'quantity' del record di alimentazione
+      needed[key].quantity += f.quantity; 
     });
 
-    // Recupera inventario
     const inventory = await FoodInventory.find({ user: userId });
 
     const suggestions = Object.values(needed).map(item => {
@@ -152,7 +196,7 @@ export const getFeedingSuggestions = async (req, res) => {
       );
 
       if (!stock) {
-        return { ...item, available: 0, warning: 'food_not_found'};
+        return { ...item, available: 0, warning: 'food_not_found' };
       }
 
       if (stock.quantity < item.quantity) {
@@ -168,4 +212,4 @@ export const getFeedingSuggestions = async (req, res) => {
     console.error('Error generating feeding suggestions:', err);
     res.status(500).json({ message: req.t('error_inventory') });
   }
-}; 
+};
