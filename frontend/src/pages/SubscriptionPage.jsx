@@ -156,42 +156,46 @@ const SubscriptionPage = () => {
     const [modal, setModal] = useState(null);
     const user = useSelector(selectUser);
     const [taxCode, setTaxCode] = useState(user?.fiscalDetails?.taxCode || "");
-const [showTaxCodeModal, setShowTaxCodeModal] = useState(false);
-const [pendingPlanKey, setPendingPlanKey] = useState(null);
-    
+    const [showTaxCodeModal, setShowTaxCodeModal] = useState(false);
+    const [pendingPlanKey, setPendingPlanKey] = useState(null);
 
-const requestTaxCode = (planKey) => {
-  setPendingPlanKey(planKey);
-  setShowTaxCodeModal(true);
-};
 
-const confirmTaxCode = async () => {
-  try {
-    await api.patch(`/user/fiscalDetails`, { taxCode });
-    setShowTaxCodeModal(false);
-    if (pendingPlanKey) {
-      handlePlanAction(pendingPlanKey); // retry
-      setPendingPlanKey(null);
-    }
-  } catch (err) {
-    alert(t('subscriptionPage.modal.invalidTaxCode'));
-  }
-};
-const handleApiResponse = () => ({
+    const requestTaxCode = (planKey) => {
+        setPendingPlanKey(planKey);
+        setShowTaxCodeModal(true);
+    };
+
+    const confirmTaxCode = async () => {
+        try {
+            await api.patch(`/user/fiscalDetails`, { taxCode });
+            setShowTaxCodeModal(false);
+            if (pendingPlanKey) {
+                handlePlanAction(pendingPlanKey); // retry
+                setPendingPlanKey(null);
+            }
+        } catch (err) {
+            alert(t('subscriptionPage.modal.invalidTaxCode'));
+        }
+    };
+    const handleApiResponse = () => ({
         onSuccess: (message) => setModal({ type: 'success', title: t('subscriptionPage.modal.successTitle'), message, onClose: () => window.location.reload() }),
         onError: (err) => setModal({ type: 'error', title: t('subscriptionPage.modal.errorTitle'), message: err.response?.data?.error || t('subscriptionPage.modal.errorMessage'), onClose: () => setModal(null) }),
         onFinally: () => setLoadingAction(null)
     });
 
     const handlePlanAction = async (planKey) => {
-            const country = user?.billingDetails?.address?.country || "IT";
-    const userTaxCode = user?.fiscalDetails?.taxCode;
+        const userCountry  = user?.billingDetails?.address?.country;
+        const userTaxCode = user?.fiscalDetails?.taxCode;
 
-        if (country === "IT" && !userTaxCode) {
-                return requestTaxCode(planKey);
-        
-                    }
-
+           if (userCountry === "IT" && !userTaxCode) {
+        return requestTaxCode(planKey);
+    }
+    if (!userCountry) {
+        const browserCountry = navigator.language?.split('-')[1]; 
+        if (browserCountry === "IT" && !userTaxCode) {
+            return requestTaxCode(planKey);
+        }
+    }
         if (!user || !user._id) {
             setModal({
                 type: 'error',
@@ -373,26 +377,25 @@ const handleApiResponse = () => ({
                     </div>
                 </footer>
             </div>
-{showTaxCodeModal && (
-  <Modal
-    type="info"
-    title={t('subscriptionPage.modal.taxCodeTitle')}
-    message={
-      <div>
-        <p>{t('subscriptionPage.modal.taxCodeMessage')}</p>
-        <input
-          type="text"
-          value={taxCode}
-          onChange={(e) => setTaxCode(e.target.value.toUpperCase())}
-          className="border rounded p-2 w-full mt-2"
-          placeholder="CODICE FISCALE"
-        />
-      </div>
-    }
-    onConfirm={confirmTaxCode}
-    onClose={() => setShowTaxCodeModal(false)}
-  />
-)}
+            {showTaxCodeModal && (
+                <Modal
+                    type="info"
+                    title={t('subscriptionPage.modal.taxCodeTitle')}
+                    message={
+                        <div>
+                            <p>{t('subscriptionPage.modal.taxCodeMessage')}</p>
+                            <input
+                                type="text"
+                                value={taxCode}
+                                onChange={(e) => setTaxCode(e.target.value.toUpperCase())}
+                                className="border rounded p-2 w-full mt-2"
+                            />
+                        </div>
+                    }
+                    onConfirm={confirmTaxCode}
+                    onClose={() => setShowTaxCodeModal(false)}
+                />
+            )}
             {modal && <Modal {...modal} />}
         </div>
     );

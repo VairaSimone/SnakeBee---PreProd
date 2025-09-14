@@ -425,7 +425,7 @@
         "modal": {
             "successTitle": "Operation completed ✅",
             "invalidTaxCode": "Invalid Tax Code",
-"taxCodeMessage": "Tax Code",
+"taxCodeMessage": "Enter your tax code",
 "taxCodeTitle": "Tax Code",
 "errorTitle": "Error",
             "errorMessage": "An error occurred. Please try again later.",
