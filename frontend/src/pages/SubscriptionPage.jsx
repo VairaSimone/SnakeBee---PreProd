@@ -187,7 +187,7 @@ const handleApiResponse = () => ({
             const country = user?.billingDetails?.address?.country || "IT";
     const userTaxCode = user?.fiscalDetails?.taxCode;
 
-        if (country === "IT" && (!taxCode|| userTaxCode)) {
+        if (country === "IT" && !userTaxCode) {
                 return requestTaxCode(planKey);
         
                     }
