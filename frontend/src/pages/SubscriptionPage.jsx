@@ -184,8 +184,10 @@ const handleApiResponse = () => ({
     });
 
     const handlePlanAction = async (planKey) => {
-        const country = user?.billingDetails?.address?.country || "IT";
-        if (country === "IT" && !taxCode) {
+            const country = user?.billingDetails?.address?.country || "IT";
+    const userTaxCode = user?.fiscalDetails?.taxCode;
+
+        if (country === "IT" && (!taxCode|| userTaxCode)) {
                 return requestTaxCode(planKey);
         
                     }
