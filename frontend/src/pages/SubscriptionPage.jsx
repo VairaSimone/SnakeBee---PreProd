@@ -184,7 +184,7 @@ const SubscriptionPage = () => {
     });
 
     const handlePlanAction = async (planKey) => {
-        const userCountry  = user?.billingDetails?.address?.country;
+        const userCountry  = user?.billingDetails?.address?.country || user.language;
         const userTaxCode = user?.fiscalDetails?.taxCode;
 
            if (userCountry === "IT" && !userTaxCode) {

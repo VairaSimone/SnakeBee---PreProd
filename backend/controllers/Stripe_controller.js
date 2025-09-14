@@ -69,7 +69,7 @@ export const createCheckoutSession = async (req, res) => {
     }
 
 
-        const country = user.billingDetails?.address?.country || 'IT';
+        const country = user.billingDetails?.address?.country || user.language;
     if (country === 'IT') {
       const taxCode = user.fiscalDetails?.taxCode;
       if (!taxCode) {

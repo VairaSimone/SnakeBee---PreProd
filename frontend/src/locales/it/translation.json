@@ -394,7 +394,7 @@
         "modal": {
             "successTitle": "Operazione completata ✅",
             "invalidTaxCode": "Codice fiscale invalido",
-            "taxCodeMessage": "Codice fiscale",
+            "taxCodeMessage": "inserisci il tuo Codice fiscale",
             "taxCodeTitle": "Codice fiscale",
             "errorTitle": "Errore",
             "errorMessage": "Si è verificato un errore. Riprova più tardi.",
