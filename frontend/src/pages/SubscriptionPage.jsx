@@ -165,18 +165,24 @@ const SubscriptionPage = () => {
         setShowTaxCodeModal(true);
     };
 
-    const confirmTaxCode = async () => {
-        try {
-            await api.patch(`/user/fiscalDetails`, { taxCode });
-            setShowTaxCodeModal(false);
-            if (pendingPlanKey) {
-                handlePlanAction(pendingPlanKey); // retry
-                setPendingPlanKey(null);
-            }
-        } catch (err) {
-            alert(t('subscriptionPage.modal.invalidTaxCode'));
+const confirmTaxCode = async () => {
+    try {
+        await api.patch(`/user/fiscalDetails`, { taxCode });
+        setShowTaxCodeModal(false);
+        if (pendingPlanKey) {
+            handlePlanAction(pendingPlanKey); // retry
+            setPendingPlanKey(null);
         }
-    };
+    } catch (err) {
+        // Show a modal instead of alert
+        setModal({
+            type: 'error',
+            title: t('subscriptionPage.modal.errorTitle'),
+            message: t('subscriptionPage.modal.invalidTaxCode'),
+            onClose: () => setModal(null),
+        });
+    }
+};
     const handleApiResponse = () => ({
         onSuccess: (message) => setModal({ type: 'success', title: t('subscriptionPage.modal.successTitle'), message, onClose: () => window.location.reload() }),
         onError: (err) => setModal({ type: 'error', title: t('subscriptionPage.modal.errorTitle'), message: err.response?.data?.error || t('subscriptionPage.modal.errorMessage'), onClose: () => setModal(null) }),
