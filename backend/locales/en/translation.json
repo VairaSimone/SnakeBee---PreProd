@@ -23,6 +23,8 @@
   "rabbit": "Rabbit",
   "chick": "Chick",
   "other": "Other",
+  "missing tax Code": "Missing tax code, request support at supporto@snakebee.it", 
+  "invalid_taxCode": "Invalid tax code, request support at support@snakebee.it",
   "email_changed": "Email updated! Check your new inbox.",
   "maintenance": "The platform is under maintenance. Please try again later.",
   "access_id": "Access denied. No resource ID provided.",

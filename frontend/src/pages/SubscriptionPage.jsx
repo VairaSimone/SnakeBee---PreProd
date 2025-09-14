@@ -155,6 +155,7 @@ const SubscriptionPage = () => {
     const [loadingAction, setLoadingAction] = useState(null);
     const [modal, setModal] = useState(null);
     const user = useSelector(selectUser);
+const [taxCode, setTaxCode] = useState(user?.fiscalDetails?.taxCode || "");
 
     const handleApiResponse = () => ({
         onSuccess: (message) => setModal({ type: 'success', title: t('subscriptionPage.modal.successTitle'), message, onClose: () => window.location.reload() }),
@@ -163,6 +164,37 @@ const SubscriptionPage = () => {
     });
 
     const handlePlanAction = async (planKey) => {
+          const country = user?.billingDetails?.address?.country || "IT";
+if (country === "IT" && !taxCode) {
+    setModal({
+      type: 'info',
+      title: t('subscriptionPage.modal.taxCodeTitle'),
+      message: (
+        <div>
+          <p>{t('subscriptionPage.modal.taxCodeMessage')}</p>
+          <input
+            type="text"
+            value={taxCode}
+            onChange={(e) => setTaxCode(e.target.value.toUpperCase())}
+            className="border rounded p-2 w-full mt-2"
+            placeholder="CODICE FISCALE"
+          />
+        </div>
+      ),
+      onConfirm: async () => {
+        try {
+          await api.patch(`/users/${user._id}/fiscalDetails`, { taxCode });
+          setModal(null);
+          handlePlanAction(planKey); // retry dopo salvataggio
+        } catch (err) {
+          alert(t('subscriptionPage.modal.invalidTaxCode'));
+        }
+      },
+      onClose: () => setModal(null)
+    });
+    return;
+  }
+
         if (!user || !user._id) {
             setModal({
                 type: 'error',
