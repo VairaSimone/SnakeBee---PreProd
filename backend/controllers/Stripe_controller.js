@@ -240,7 +240,7 @@ export const getSessionDetails = async (req, res) => {
  */
 export const createCustomerPortalSession = async (req, res) => {
   const userId = req.user.userid;
-
+let t = (key) => key;
   try {
     const user = await User.findById(userId);
     const t = i18next.getFixedT(user.language || 'it');
