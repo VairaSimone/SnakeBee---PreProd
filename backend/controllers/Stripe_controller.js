@@ -70,7 +70,7 @@ export const createCheckoutSession = async (req, res) => {
 
 
         const country = user.billingDetails?.address?.country || user.language;
-    if (country === 'IT') {
+    if (country.toLowerCase() === 'it') {
       const taxCode = user.fiscalDetails?.taxCode;
       if (!taxCode) {
         return res.status(400).json({ error: t('missing_taxCode') });
