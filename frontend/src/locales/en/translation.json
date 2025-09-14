@@ -192,7 +192,7 @@
         "submitFailed": "Submit error: {{message}}",
         "edit": "Edit",
         "delete": "Delete",
-"suggestionsError": "Error in calculation.",
+"suggestionsError": "No reptiles should eat today or they don't have the details entered.",
 "todaySuggestions": "Today's food suggestions for defrosting:",
 "toDefrost": "To Defrost:",
 "available": "Available",
