@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
-import {
+import api, {
     createStripeCheckout,
     manageStripeSubscription,
     cancelStripeSubscription,
@@ -182,8 +182,8 @@ if (country === "IT" && !taxCode) {
         </div>
       ),
       onConfirm: async () => {
-        try {
-          await api.patch(`/users/${user._id}/fiscalDetails`, { taxCode });
+        try { 
+          await api.patch(`/user/fiscalDetails`, { taxCode });
           setModal(null);
           handlePlanAction(planKey); // retry dopo salvataggio
         } catch (err) {
