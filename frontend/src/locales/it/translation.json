@@ -420,7 +420,7 @@
         "paymentStop": "Pagamento annullato",
         "paymentStopDesc": "Nessun addebito è stato effettuato. Puoi riprovare o tornare alla pagina degli abbonamenti.",
         "tryAgain": "Riprova abbonamento",
-        "backwards": "Torna agli abbonamenti"
+        "backwards": "Torna alla dashboard"
     },
     "breedingDashboard": {
         "male": "Maschio",

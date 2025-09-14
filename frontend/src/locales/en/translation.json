@@ -451,7 +451,7 @@
         "paymentStop": "Payment cancelled",
         "paymentStopDesc": "No charge has been made. You can try again or return to the subscription page.",
         "tryAgain": "Retry subscription",
-        "backwards": "Back to subscriptions"
+        "backwards": "Back to dashboard"
     },
     "breedingDashboard": {
         "male": "Male",
