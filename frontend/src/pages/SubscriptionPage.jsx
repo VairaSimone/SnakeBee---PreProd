@@ -187,14 +187,8 @@ const SubscriptionPage = () => {
         const userCountry  = user?.billingDetails?.address?.country || user.language;
         const userTaxCode = user?.fiscalDetails?.taxCode;
 
-           if (userCountry === "IT" && !userTaxCode) {
+           if (userCountry === "it" && !userTaxCode) {
         return requestTaxCode(planKey);
-    }
-    if (!userCountry) {
-        const browserCountry = navigator.language?.split('-')[1]; 
-        if (browserCountry === "IT" && !userTaxCode) {
-            return requestTaxCode(planKey);
-        }
     }
         if (!user || !user._id) {
             setModal({
