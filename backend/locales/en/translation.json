@@ -13,6 +13,7 @@
   "credential_error": "Error in the entered credentials",
   "passwordUpdate": "Password successfully updated.",
   "passwordOld": "The old password is incorrect.",
+  "not_authenticated": "Not authenticated",
        "email_required": "Email required",
       "already_subscribed": "Already subscribed",
       "subscribed_successfully": "Subscribed successfully",

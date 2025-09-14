@@ -424,7 +424,10 @@
         },
         "modal": {
             "successTitle": "Operation completed ✅",
-"errorTitle": "Error in title",
+            "invalidTaxCode": "Invalid Tax Code",
+"taxCodeMessage": "Tax Code",
+"taxCodeTitle": "Tax Code",
+"errorTitle": "Error",
             "errorMessage": "An error occurred. Please try again later.",
             "accessRequired": {
                 "title": "Access required",

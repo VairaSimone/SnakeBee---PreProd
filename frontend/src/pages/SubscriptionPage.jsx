@@ -155,45 +155,40 @@ const SubscriptionPage = () => {
     const [loadingAction, setLoadingAction] = useState(null);
     const [modal, setModal] = useState(null);
     const user = useSelector(selectUser);
-const [taxCode, setTaxCode] = useState(user?.fiscalDetails?.taxCode || "");
+    const [taxCode, setTaxCode] = useState(user?.fiscalDetails?.taxCode || "");
+const [showTaxCodeModal, setShowTaxCodeModal] = useState(false);
+const [pendingPlanKey, setPendingPlanKey] = useState(null);
+    
 
-    const handleApiResponse = () => ({
+const requestTaxCode = (planKey) => {
+  setPendingPlanKey(planKey);
+  setShowTaxCodeModal(true);
+};
+
+const confirmTaxCode = async () => {
+  try {
+    await api.patch(`/user/fiscalDetails`, { taxCode });
+    setShowTaxCodeModal(false);
+    if (pendingPlanKey) {
+      handlePlanAction(pendingPlanKey); // retry
+      setPendingPlanKey(null);
+    }
+  } catch (err) {
+    alert(t('subscriptionPage.modal.invalidTaxCode'));
+  }
+};
+const handleApiResponse = () => ({
         onSuccess: (message) => setModal({ type: 'success', title: t('subscriptionPage.modal.successTitle'), message, onClose: () => window.location.reload() }),
         onError: (err) => setModal({ type: 'error', title: t('subscriptionPage.modal.errorTitle'), message: err.response?.data?.error || t('subscriptionPage.modal.errorMessage'), onClose: () => setModal(null) }),
         onFinally: () => setLoadingAction(null)
     });
 
     const handlePlanAction = async (planKey) => {
-          const country = user?.billingDetails?.address?.country || "IT";
-if (country === "IT" && !taxCode) {
-    setModal({
-      type: 'info',
-      title: t('subscriptionPage.modal.taxCodeTitle'),
-      message: (
-        <div>
-          <p>{t('subscriptionPage.modal.taxCodeMessage')}</p>
-          <input
-            type="text"
-            value={taxCode}
-            onChange={(e) => setTaxCode(e.target.value.toUpperCase())}
-            className="border rounded p-2 w-full mt-2"
-            placeholder="CODICE FISCALE"
-          />
-        </div>
-      ),
-      onConfirm: async () => {
-        try { 
-          await api.patch(`/user/fiscalDetails`, { taxCode });
-          setModal(null);
-          handlePlanAction(planKey); // retry dopo salvataggio
-        } catch (err) {
-          alert(t('subscriptionPage.modal.invalidTaxCode'));
-        }
-      },
-      onClose: () => setModal(null)
-    });
-    return;
-  }
+        const country = user?.billingDetails?.address?.country || "IT";
+        if (country === "IT" && !taxCode) {
+                return requestTaxCode(planKey);
+        
+                    }
 
         if (!user || !user._id) {
             setModal({
@@ -208,10 +203,11 @@ if (country === "IT" && !taxCode) {
         const planKeyUpper = planKey.toUpperCase();
 
         // 🔒 se l’utente ha già il piano corrente → blocca e apri portale
-if (
-  (user.subscription?.status === 'active' || user.subscription?.status === 'processing') &&
-  user.subscription.plan === planKeyUpper
-){            return handlePortalRedirect();
+        if (
+            (user.subscription?.status === 'active' || user.subscription?.status === 'processing') &&
+            user.subscription.plan === planKeyUpper
+        ) {
+            return handlePortalRedirect();
         }
 
         setLoadingAction(planKey);
@@ -375,7 +371,26 @@ if (
                     </div>
                 </footer>
             </div>
-
+{showTaxCodeModal && (
+  <Modal
+    type="info"
+    title={t('subscriptionPage.modal.taxCodeTitle')}
+    message={
+      <div>
+        <p>{t('subscriptionPage.modal.taxCodeMessage')}</p>
+        <input
+          type="text"
+          value={taxCode}
+          onChange={(e) => setTaxCode(e.target.value.toUpperCase())}
+          className="border rounded p-2 w-full mt-2"
+          placeholder="CODICE FISCALE"
+        />
+      </div>
+    }
+    onConfirm={confirmTaxCode}
+    onClose={() => setShowTaxCodeModal(false)}
+  />
+)}
             {modal && <Modal {...modal} />}
         </div>
     );

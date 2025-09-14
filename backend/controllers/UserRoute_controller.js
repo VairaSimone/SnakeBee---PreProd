@@ -242,7 +242,7 @@ export const updateFiscalDetails = async (req, res) => {
     if (!validateItalianTaxCode(normalized)) {
       return res.status(400).json({ error: 'invalid_taxCode' });
     }
-
+ 
     const user = await User.findById(userId);
     if (!user) return res.status(404).json({ error: 'user_notFound' });
 
@@ -251,7 +251,7 @@ export const updateFiscalDetails = async (req, res) => {
     user.fiscalDetails.taxCode = normalized;
 
     await user.save();
-    await logAction(user._id, 'fiscal_taxcode_updated', `CF aggiornato`);
+    await logAction(user._id, 'fiscal_taxcode_updated', `CF Update`);
 
     // NON tornare tutto l'oggetto user (PII). Riduci la risposta.
     res.status(200).json({ success: true, fiscalDetails: { taxCode: normalized } });

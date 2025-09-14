@@ -12,6 +12,7 @@
   "password_error": "Questa password è troppo comune o compromessa. Scegline un'altra.",
   "credential_error": "Errore nelle credenziali inserite",
   "passwordUpdate": "Password aggiornata con successo.",
+  "not_authenticated": "Non autentificato",
   "passwordOld": "La vecchia password non è corretta.",
   "not_enough_stock": "Non è presente nell'inventario",
        "email_required": "Email richiesta",

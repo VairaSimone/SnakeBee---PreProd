@@ -393,7 +393,10 @@
         },
         "modal": {
             "successTitle": "Operazione completata ✅",
-            "errorTitle": "Errore nel titolo",
+            "invalidTaxCode": "Codice fiscale invalido",
+            "taxCodeMessage": "Codice fiscale",
+            "taxCodeTitle": "Codice fiscale",
+            "errorTitle": "Errore",
             "errorMessage": "Si è verificato un errore. Riprova più tardi.",
             "accessRequired": {
                 "title": "Accesso richiesto",
