@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import api from "../services/api";
 
 const TelegramAuth = () => {
   const navigate = useNavigate();
@@ -10,7 +11,8 @@ const TelegramAuth = () => {
     const token = params.get("token");
 
     if (token) {
-      axios.post(`${process.env.REACT_APP_BACKEND_URL}/telegram/connect`, { token }, { withCredentials: true })
+
+      api.post(`/telegram/connect?token=${token}`)
         .then(() => {
           alert("Account Telegram collegato con successo ✅");
           navigate("/dashboard");

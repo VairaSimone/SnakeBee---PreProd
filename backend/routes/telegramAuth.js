@@ -26,15 +26,14 @@ routerTelegram.get("/link", async (req, res) => {
 });
 
 // 2. Callback che collega l’utente loggato al telegramId
-routerTelegram.post("/connect", async (req, res) => {
+routerTelegram.post("/connect", authenticateJWT, async (req, res) => {
   try {
-    const { token } = req.body;
+    const token = req.query.token; // dal link magico
     if (!token) return res.status(400).json({ message: "Missing token" });
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const telegramId = decoded.telegramId;
 
-    // req.user viene da middleware di autenticazione (già loggato su SnakeBee)
     const user = await User.findById(req.user._id);
     if (!user) return res.status(404).json({ message: "User not found" });
 
@@ -42,9 +41,13 @@ routerTelegram.post("/connect", async (req, res) => {
     await user.save();
 
     return res.json({ message: "Telegram account linked successfully" });
+
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Server error" });
+    if (err.name === "TokenExpiredError") {
+      return res.status(401).json({ message: "Token scaduto, fai login di nuovo" });
+    } else {
+      return res.status(401).json({ message: "Token non valido" });
+    }
   }
 });
 
