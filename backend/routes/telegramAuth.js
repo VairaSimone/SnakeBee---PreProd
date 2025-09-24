@@ -26,7 +26,7 @@ routerTelegram.get("/link", async (req, res) => {
 });
 
 // 2. Callback che collega l’utente loggato al telegramId
-routerTelegram.post("/connect", authenticateJWT, async (req, res) => {
+routerTelegram.post("/connect", async (req, res) => {
   try {
     const { token } = req.body;
     if (!token) return res.status(400).json({ message: "Missing token" });
