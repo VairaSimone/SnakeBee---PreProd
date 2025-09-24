@@ -1,7 +1,12 @@
 import TelegramBot from "node-telegram-bot-api";
 import axios from "axios";
+let bot;
 
-const bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN, { polling: true });
+if (!global.bot) {
+  bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN, { polling: true });
+  global.bot = bot;
+
+
 
 bot.onText(/\/start/, async (msg) => {
   const chatId = msg.chat.id;
@@ -39,5 +44,7 @@ bot.onText(/\/feeding (.+)/, async (msg, match) => {
     bot.sendMessage(chatId, "Errore nell’aggiungere il feeding.");
   }
 });
-
+}else {
+  bot = global.bot;
+}
 export default bot;
