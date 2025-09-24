@@ -10,7 +10,7 @@ const TelegramAuth = () => {
     const token = params.get("token");
 
     if (token) {
-      axios.post(`${process.env.REACT_APP_BACKEND_URL}/v1/telegram/connect`, { token }, { withCredentials: true })
+      axios.post(`${process.env.REACT_APP_BACKEND_URL}/telegram/connect`, { token }, { withCredentials: true })
         .then(() => {
           alert("Account Telegram collegato con successo ✅");
           navigate("/dashboard");
