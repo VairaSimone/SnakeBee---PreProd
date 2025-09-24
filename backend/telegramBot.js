@@ -8,7 +8,7 @@ bot.onText(/\/start/, async (msg) => {
 
   try {
     // Chiedo al backend un link magico per collegare Telegram
-    const res = await axios.get(`${process.env.BACKEND_URL}/v1/telegram/link`, {
+    const res = await axios.get(`${process.env.BACKEND_URL}/telegram/link`, {
       params: { telegramId: chatId }
     });
 
@@ -28,7 +28,7 @@ bot.onText(/\/feeding (.+)/, async (msg, match) => {
   const reptileName = match[1];
 
   try {
-    await axios.post(`${process.env.BACKEND_URL}/v1/reptiles/feeding`, 
+    await axios.post(`${process.env.BACKEND_URL}/reptiles/feeding`, 
       { reptileName },
       { headers: { "x-telegram-id": chatId } } // il backend riconosce l’utente da telegramId
     );
