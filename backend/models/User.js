@@ -117,6 +117,11 @@ fiscalDetails: {
             type: Boolean,
             default: false
         },
+telegramId: {
+  type: String,
+  unique: true,
+  sparse: true // permette valori nulli
+},
 
         privacyConsent: {
             accepted: {

@@ -35,6 +35,7 @@ import TermsAndConditionsEN from './pages/TermsAndConditionsEN';
 import TermsAndConditionsIT from './pages/TermsAndConditionsIT';
 import api from './services/api';
 import NewsletterBanner from './components/NewsletterBanner';
+import TelegramAuth from './pages/TelegramAuth';
 
 function AppContent() {
   const dispatch = useDispatch();
@@ -75,6 +76,7 @@ function AppContent() {
         <Route path="/en/privacyPolicy" element={<PrivacyPolicyEN />} />
         <Route path="/en/terms" element={<TermsAndConditionsEN />} />
         <Route path="/it/terms" element={<TermsAndConditionsIT />} />
+        <Route path="/telegram-auth" element={<TelegramAuth />} />
 
 
         <Route path="/public/reptile/:reptileId" element={<ReptileDetails />} />
