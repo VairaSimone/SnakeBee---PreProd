@@ -54,4 +54,53 @@ routerTelegram.post("/connect", async (req, res) => {
     }
 });
 
+// routerTelegram.js
+import Reptile from "../models/Reptile.js"; 
+import mongoose from "mongoose";
+
+routerTelegram.get("/reptiles", async (req, res) => {
+  try {
+    const telegramId = req.header("x-telegram-id");
+    if (!telegramId) return res.status(400).json({ message: "Missing telegramId" });
+
+    // trova utente connesso a quel telegramId
+    const user = await User.findOne({ telegramId });
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    // trova rettili dell’utente
+    const reptiles = await Reptile.find({ user: new mongoose.Types.ObjectId(user._id) })
+      .select("name species sex morph");
+
+    res.json({ reptiles });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+// routerTelegram.js
+// routerTelegram.js
+routerTelegram.get("/reptile/:id", async (req, res) => {
+  try {
+    const telegramId = req.header("x-telegram-id");
+    if (!telegramId) return res.status(400).json({ message: "Missing telegramId" });
+
+    const user = await User.findOne({ telegramId });
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    const reptileId = req.params.id;
+
+    const reptile = await Reptile.findOne({
+      _id: reptileId,
+      user: user._id
+    }).lean();
+
+    if (!reptile) return res.status(404).json({ message: "Reptile not found" });
+
+    res.json({ reptile });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 export default routerTelegram; 
