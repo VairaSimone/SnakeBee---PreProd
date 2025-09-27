@@ -25,29 +25,33 @@ routerTelegram.get("/link", async (req, res) => {
   }
 });
 
-// 2. Callback che collega l’utente loggato al telegramId
-routerTelegram.post("/connect", authenticateJWT, async (req, res) => {
-  try {
-    const { token } = req.body; // token del link magico
-    if (!token) return res.status(400).json({ message: "Missing token" });
+routerTelegram.post("/connect", async (req, res) => {
+    try {
+        const { token } = req.body; // token del link magico
+        if (!token) return res.status(400).json({ message: "Missing token" });
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const telegramId = decoded.telegramId;
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const telegramId = decoded.telegramId;
 
-    const user = await User.findById(req.user._id);
-    if (!user) return res.status(404).json({ message: "User not found" });
+        // ❌ Senza req.user, come identifichi l’utente?
+        // Se vuoi, potresti passare anche l'userId nel body
+        const { userId } = req.body;
+        if (!userId) return res.status(400).json({ message: "Missing userId" });
 
-    user.telegramId = telegramId;
-    await user.save();
+        const user = await User.findById(userId);
+        if (!user) return res.status(404).json({ message: "User not found" });
 
-    return res.json({ message: "Telegram account linked successfully" });
-  } catch (err) {
-    if (err.name === "TokenExpiredError") {
-      return res.status(401).json({ message: "Token scaduto, fai login di nuovo" });
-    } else {
-      return res.status(401).json({ message: "Token non valido" });
+        user.telegramId = telegramId;
+        await user.save();
+
+        return res.json({ message: "Telegram account linked successfully" });
+    } catch (err) {
+        if (err.name === "TokenExpiredError") {
+            return res.status(401).json({ message: "Token scaduto, fai login di nuovo" });
+        } else {
+            return res.status(401).json({ message: "Token non valido" });
+        }
     }
-  }
 });
 
 export default routerTelegram; 
