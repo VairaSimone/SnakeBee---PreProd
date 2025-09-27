@@ -28,7 +28,7 @@ routerTelegram.get("/link", async (req, res) => {
 // 2. Callback che collega l’utente loggato al telegramId
 routerTelegram.post("/connect", authenticateJWT, async (req, res) => {
   try {
-    const token = req.query.token; // dal link magico
+    const { token } = req.body; // token del link magico
     if (!token) return res.status(400).json({ message: "Missing token" });
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -41,7 +41,6 @@ routerTelegram.post("/connect", authenticateJWT, async (req, res) => {
     await user.save();
 
     return res.json({ message: "Telegram account linked successfully" });
-
   } catch (err) {
     if (err.name === "TokenExpiredError") {
       return res.status(401).json({ message: "Token scaduto, fai login di nuovo" });

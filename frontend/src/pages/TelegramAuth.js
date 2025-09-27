@@ -13,18 +13,14 @@ useEffect(() => {
   if (token) {
     // Prendi il token di accesso dell'utente loggato dal localStorage (o dove lo salvi)
     const accessToken = localStorage.getItem("token"); // assicurati che sia salvato al login
-
+console.log(token)
     if (!accessToken) {
       alert("Devi essere loggato per collegare Telegram ❌");
       navigate("/login");
       return;
     }
 
-    api.post(`/telegram/connect?token=${token}`, null, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    })
+    api.post('/telegram/connect', { token })
       .then(() => {
         alert("Account Telegram collegato con successo ✅");
         navigate("/dashboard");
