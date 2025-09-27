@@ -2,49 +2,46 @@ import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import api from "../services/api";
 import { selectUser } from "../features/userSlice";
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 
 const TelegramAuth = () => {
   const navigate = useNavigate();
-  const user = useSelector(selectUser); // prendi l'utente dal Redux store
+  const user = useSelector(selectUser);
 
-useEffect(() => {
-  if (!user) return; // aspetta che lo user sia disponibile
+  useEffect(() => {
+    if (!user || !user.token) {
+      alert("Devi essere loggato per collegare Telegram ❌");
+      return navigate("/login");
+    }
 
-  const params = new URLSearchParams(window.location.search);
-  const token = params.get("token");
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get("token");
 
-  if (!token) {
-    alert("Link Telegram mancante ❌");
-    navigate("/");
-    return;
-  }
+    if (!token) {
+      alert("Link Telegram mancante ❌");
+      return navigate("/");
+    }
 
-  if (!user._id) {
-    alert("Devi essere loggato per collegare Telegram ❌");
-    navigate("/login");
-    return;
-  }
-
-  // POST con token e userId nel body
-  api.post('/telegram/connect', { token, userId: user._id })
-    .then(() => {
-      alert("Account Telegram collegato con successo ✅");
-      navigate("/dashboard");
-    })
-    .catch((err) => {
-      console.error(err.response?.data || err);
-      if (err.response?.status === 401) {
-        alert("Token non valido o scaduto ❌");
-      } else if (err.response?.status === 404) {
-        alert("Utente non trovato ❌");
-      } else {
-        alert("Errore nel collegamento a Telegram ❌");
+    const connectTelegram = async () => {
+      try {
+        await api.post(
+          '/telegram/connect',
+          { token }, // solo token, userId non serve più
+          { headers: { Authorization: `Bearer ${user.token}` } } // JWT per authenticateJWT
+        );
+        alert("Account Telegram collegato con successo ✅");
+        navigate("/dashboard");
+      } catch (err) {
+        console.error(err.response?.data || err);
+        if (err.response?.status === 401) alert("Token non valido o scaduto ❌");
+        else if (err.response?.status === 404) alert("Utente non trovato ❌");
+        else alert("Errore nel collegamento a Telegram ❌");
+        navigate("/");
       }
-      navigate("/");
-    });
+    };
 
-}, [user, navigate]);
+    connectTelegram();
+  }, [user, navigate]);
 
   return null;
 };
