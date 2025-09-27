@@ -46,7 +46,7 @@ i18next
   });
 app.set('trust proxy', 1);
 
-const allowedOrigins = [process.env.FRONTEND_URL,   'http://localhost:3000',
+const allowedOrigins = [process.env.FRONTEND_URL,   'http://localhost:3000', "http://82.165.134.168", 
   'http://snakebee.it', 'https://snakebee.it','https://blog-api-ten-flax.vercel.app'];
 
 app.use(cors({

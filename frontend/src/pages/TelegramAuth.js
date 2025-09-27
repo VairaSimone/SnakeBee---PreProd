@@ -6,23 +6,36 @@ import api from "../services/api";
 const TelegramAuth = () => {
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const token = params.get("token");
+useEffect(() => {
+  const params = new URLSearchParams(window.location.search);
+  const token = params.get("token");
 
-    if (token) {
+  if (token) {
+    // Prendi il token di accesso dell'utente loggato dal localStorage (o dove lo salvi)
+    const accessToken = localStorage.getItem("accessToken"); // assicurati che sia salvato al login
 
-      api.post(`/telegram/connect?token=${token}`)
-        .then(() => {
-          alert("Account Telegram collegato con successo ✅");
-          navigate("/dashboard");
-        })
-        .catch(() => {
-          alert("Errore nel collegamento a Telegram ❌");
-          navigate("/");
-        });
+    if (!accessToken) {
+      alert("Devi essere loggato per collegare Telegram ❌");
+      navigate("/login");
+      return;
     }
-  }, [navigate]);
+
+    api.post(`/telegram/connect?token=${token}`, null, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    })
+      .then(() => {
+        alert("Account Telegram collegato con successo ✅");
+        navigate("/dashboard");
+      })
+      .catch((err) => {
+        console.error(err.response?.data || err);
+        alert("Errore nel collegamento a Telegram ❌");
+        navigate("/");
+      });
+  }
+}, [navigate]);
 
   return null;
 };
