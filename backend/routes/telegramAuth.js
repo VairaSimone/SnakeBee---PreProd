@@ -7,7 +7,7 @@ import Reptile from "../models/Reptile.js";
 import Feeding from "../models/Feeding.js";
 import Event from "../models/Event.js"; // da creare se non esiste
 
-import { authenticateJWT, telegramTokenMiddleware } from "../middlewares/Auth.js";
+import { authenticateJWT } from "../middlewares/Auth.js";
 
 const routerTelegram = express.Router();
 
@@ -39,11 +39,19 @@ routerTelegram.get("/link", async (req, res) => {
 });
 
 // 2. Connetti Telegram all'utente loggato
-routerTelegram.post("/connect", authenticateJWT, telegramTokenMiddleware, async (req, res) => {
+routerTelegram.post("/connect", async (req, res) => {
   try {
+    const { token } = req.body;
+    if (!token) return res.status(400).json({ message: "Missing token" });
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const telegramId = decoded.telegramId;
 
     // utente loggato via JWT
-    const user = req.user;
+    const { userId } = req.body;
+    if (!userId) return res.status(400).json({ message: "Missing userId" });
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
     user.telegramId = telegramId;
     await user.save();
 
