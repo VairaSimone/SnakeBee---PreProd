@@ -12,7 +12,7 @@ useEffect(() => {
 
   if (token) {
     // Prendi il token di accesso dell'utente loggato dal localStorage (o dove lo salvi)
-    const accessToken = localStorage.getItem("accessToken"); // assicurati che sia salvato al login
+    const accessToken = localStorage.getItem("token"); // assicurati che sia salvato al login
 
     if (!accessToken) {
       alert("Devi essere loggato per collegare Telegram ❌");
