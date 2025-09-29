@@ -154,7 +154,7 @@ const UserProfile = () => {
     };
     const fetchReferralLink = async () => {
       try {
-        const { data } = await api.get('/v1/user/referral-link');
+        const { data } = await api.get('/user/referral-link');
         setReferralLink(data.referralLink);
       } catch (err) {
         setReferralError(err.response?.data?.message || t('UserProfile.referralError', 'Impossibile generare il link.'));
