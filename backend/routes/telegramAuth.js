@@ -6,9 +6,12 @@ import Reptile from "../models/Reptile.js";
 import Feeding from "../models/Feeding.js";
 import Event from "../models/Event.js"; // da creare se non esiste
 import FoodInventory from "../models/FoodInventory.js"; // <-- Aggiungi questa riga
-import { isInventoryAccessAllowed } from "../utils/inventoryUtils.js"; // <-- Potrebbe essere necessario creare questo file/funzione helper
 import { getUserPlan } from "../utils/getUserPlans.js"; 
 const routerTelegram = express.Router();
+async function isInventoryAccessAllowed(userId) {
+  const user = await User.findById(userId);
+  return user?.subscription?.plan === 'BREEDER';
+}
 
 // Middleware: trova user da telegramId
 async function telegramAuth(req, res, next) {
