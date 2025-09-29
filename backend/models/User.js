@@ -140,7 +140,20 @@ telegramId: {
             userAgent: String,
             createdAt: Date
         },
-
+referralCode: {
+            type: String,
+            unique: true,
+            sparse: true
+        },
+        referredBy: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User',
+            default: null
+        },
+        hasReferred: {
+            type: Boolean,
+            default: false
+        },
         refreshTokens: [{
             token: { type: String, required: true },
             createdAt: { type: Date, default: Date.now }

@@ -2,7 +2,7 @@ import TelegramBot from "node-telegram-bot-api";
 import axios from "axios";
 
 let bot;
-
+const userState = {};
 if (!global.bot) {
   bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN, { polling: true });
   global.bot = bot;
@@ -49,6 +49,53 @@ if (!global.bot) {
     }
   });
 
+  bot.onText(/\/cancel/, (msg) => {
+    const chatId = msg.chat.id;
+    if (userState[chatId]) {
+      delete userState[chatId];
+      bot.sendMessage(chatId, "Operazione annullata. 👍");
+    } else {
+      bot.sendMessage(chatId, "Nessuna operazione in corso.");
+    }
+  });
+
+  bot.onText(/\/inventory/, async (msg) => {
+    const chatId = msg.chat.id;
+    try {
+      const res = await axios.get(`${process.env.BACKEND_URL}/api/telegram/inventory`, {
+        headers: { "x-telegram-id": chatId }
+      });
+      const inventory = res.data.inventory;
+      if (!inventory || inventory.length === 0) {
+        return bot.sendMessage(chatId, "Il tuo inventario è vuoto. 텅 빈");
+      }
+      let text = "📦 *Il tuo inventario:*\n\n";
+      inventory.forEach(item => {
+        text += `• *${item.foodType}* (${item.weightPerUnit}g): ${item.quantity} unità\n`;
+      });
+      bot.sendMessage(chatId, text, { parse_mode: "Markdown" });
+
+    } catch (err) {
+      const errorMsg = err.response?.data?.message || "Errore nel recuperare l'inventario.";
+      bot.sendMessage(chatId, errorMsg);
+    }
+  });
+
+  bot.on("message", async (msg) => {
+    const chatId = msg.chat.id;
+    if (!userState[chatId] || msg.text.startsWith('/')) return; // Ignora se non c'è una conversazione attiva o è un comando
+
+    const state = userState[chatId];
+
+    // Aggiungi qui la logica per le diverse conversazioni
+    if (state.action === 'add_feeding') {
+      await handleFeedingConversation(chatId, msg.text);
+    } else if (state.action === 'add_event') {
+      await handleEventConversation(chatId, msg.text);
+    }
+  });
+
+
   // CALLBACK HANDLER
   bot.on("callback_query", async (callbackQuery) => {
     const chatId = callbackQuery.message.chat.id;
@@ -84,8 +131,10 @@ if (!global.bot) {
 
         // Keyboard feedings + eventi
         const keyboard = [
-          [{ text: "Mostra ultimi 5 feedings 🥩", callback_data: `feedings_${r._id}` }],
-          [{ text: "Mostra ultimi eventi 📅", callback_data: `events_${r._id}` }]
+          [{ text: "Aggiungi Alimentazione 🥩", callback_data: `add_feeding_${r._id}` }],
+          [{ text: "Aggiungi Evento 📅", callback_data: `add_event_${r._id}` }],
+          [{ text: "Storico Alimentazioni 🍽️", callback_data: `feedings_${r._id}` }],
+          [{ text: "Storico Eventi 📜", callback_data: `events_${r._id}` }]
         ];
 
         bot.sendMessage(chatId, text, {
@@ -101,7 +150,7 @@ if (!global.bot) {
         const feedings = resFeed.data.feedings;
         if (!feedings?.length) return sendError("Nessun feeding registrato per questo rettile.");
         let feedingText = "🍽 Ultimi 5 feedings:\n\n";
-        feedings.slice(0,5).forEach(f => {
+        feedings.slice(0, 5).forEach(f => {
           feedingText += `• ${new Date(f.date).toLocaleDateString("it-IT")}: ${f.foodType}, qty: ${f.quantity || "-"}\n`;
         });
         bot.sendMessage(chatId, feedingText);
@@ -123,7 +172,7 @@ if (!global.bot) {
         let text = "📅 Ultimi eventi per categoria:\n\n";
         for (const type in grouped) {
           text += `*${capitalize(type)}*\n`;
-          grouped[type].slice(0,3).forEach(ev => {
+          grouped[type].slice(0, 3).forEach(ev => {
             const date = new Date(ev.date).toLocaleDateString("it-IT");
             const extra = ev.weight ? ` - Peso: ${ev.weight}g` : "";
             text += `• ${date}${extra} ${ev.notes ? "- " + escapeMarkdown(ev.notes) : ""}\n`;
@@ -131,6 +180,40 @@ if (!global.bot) {
           text += "\n";
         }
         bot.sendMessage(chatId, text, { parse_mode: "Markdown" });
+      } else if (data.startsWith("add_feeding_")) {
+        const reptileId = data.split("_")[1];
+        userState[chatId] = {
+          action: 'add_feeding',
+          reptileId: reptileId,
+          step: 'foodType',
+          data: {}
+        };
+        bot.sendMessage(chatId, "🥩 Inserisci il *tipo* di cibo (es. Topo, Ratto):", { parse_mode: "Markdown" });
+      } else if (data.startsWith("add_event_")) {
+        const reptileId = data.split("_")[1];
+        userState[chatId] = {
+          action: 'add_event',
+          reptileId: reptileId,
+          step: 'type',
+          data: {}
+        };
+        // Chiedi il tipo di evento con una tastiera per comodità
+        bot.sendMessage(chatId, "📅 Seleziona il *tipo* di evento:", {
+          reply_markup: {
+            inline_keyboard: [
+              [{ text: "Muta", callback_data: "set_event_type_shed" }],
+              [{ text: "Feci", callback_data: "set_event_type_feces" }],
+              [{ text: "Veterinario", callback_data: "set_event_type_vet" }],
+              [{ text: "Pesata", callback_data: "set_event_type_weight" }]
+            ]
+          }
+        });
+      } else if (data.startsWith("set_event_type_")) {
+        if (!userState[chatId] || userState[chatId].action !== 'add_event') return;
+        const eventType = data.split("_")[3];
+        userState[chatId].data.type = eventType;
+        userState[chatId].step = 'notes';
+        bot.sendMessage(chatId, `Tipo impostato: ${eventType}.\n📝 Aggiungi delle note (o scrivi 'no'):`);
       }
 
     } catch (err) {
@@ -144,6 +227,83 @@ if (!global.bot) {
 }
 
 export default bot;
+
+async function handleFeedingConversation(chatId, text) {
+    const state = userState[chatId];
+    try {
+        switch (state.step) {
+            case 'foodType':
+                state.data.foodType = text;
+                state.step = 'quantity';
+                bot.sendMessage(chatId, "🔢 Inserisci la *quantità*:", { parse_mode: "Markdown" });
+                break;
+            case 'quantity':
+                state.data.quantity = parseInt(text, 10);
+                state.step = 'weightPerUnit';
+                bot.sendMessage(chatId, "⚖️ Inserisci il *peso per unità* in grammi:", { parse_mode: "Markdown" });
+                break;
+            case 'weightPerUnit':
+                state.data.weightPerUnit = parseInt(text, 10);
+                state.step = 'wasEaten';
+                bot.sendMessage(chatId, "✅ Il pasto è stato mangiato? (sì/no)");
+                break;
+            case 'wasEaten':
+                state.data.wasEaten = ['sì', 'si', 's', 'yes', 'y'].includes(text.toLowerCase());
+                state.step = 'notes';
+                bot.sendMessage(chatId, "📝 Aggiungi delle note (o scrivi 'no'):");
+                break;
+            case 'notes':
+                state.data.notes = (text.toLowerCase() === 'no') ? '' : text;
+                
+                // Chiamata API per salvare
+                await axios.post(`${process.env.BACKEND_URL}/api/telegram/reptile/${state.reptileId}/feedings`, state.data, {
+                    headers: { "x-telegram-id": chatId }
+                });
+                
+                bot.sendMessage(chatId, "✅ Alimentazione registrata con successo!");
+                delete userState[chatId]; // Pulisci lo stato
+                break;
+        }
+    } catch (err) {
+        const errorMsg = err.response?.data?.message || "Si è verificato un errore.";
+        bot.sendMessage(chatId, `❌ Errore: ${errorMsg}\nOperazione annullata.`);
+        delete userState[chatId];
+    }
+}
+
+async function handleEventConversation(chatId, text) {
+    const state = userState[chatId];
+    try {
+        switch (state.step) {
+            case 'notes':
+                state.data.notes = (text.toLowerCase() === 'no') ? '' : text;
+                if (state.data.type === 'weight') {
+                    state.step = 'weight';
+                    bot.sendMessage(chatId, "⚖️ Inserisci il *peso* in grammi:");
+                } else {
+                    await saveEvent(chatId, state);
+                }
+                break;
+            case 'weight':
+                state.data.weight = parseInt(text, 10);
+                await saveEvent(chatId, state);
+                break;
+        }
+    } catch (err) {
+        const errorMsg = err.response?.data?.message || "Si è verificato un errore.";
+        bot.sendMessage(chatId, `❌ Errore: ${errorMsg}\nOperazione annullata.`);
+        delete userState[chatId];
+    }
+}
+
+async function saveEvent(chatId, state) {
+    await axios.post(`${process.env.BACKEND_URL}/api/telegram/reptile/${state.reptileId}/events`, state.data, {
+        headers: { "x-telegram-id": chatId }
+    });
+    bot.sendMessage(chatId, "✅ Evento registrato con successo!");
+    delete userState[chatId]; // Pulisci lo stato
+}
+
 
 // Helper functions
 function escapeMarkdown(text) {

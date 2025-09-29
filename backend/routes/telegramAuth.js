@@ -1,14 +1,13 @@
 import express from "express";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
-
 import User from "../models/User.js";
 import Reptile from "../models/Reptile.js";
 import Feeding from "../models/Feeding.js";
 import Event from "../models/Event.js"; // da creare se non esiste
-
-import { authenticateJWT } from "../middlewares/Auth.js";
-
+import FoodInventory from "../models/FoodInventory.js"; // <-- Aggiungi questa riga
+import { isInventoryAccessAllowed } from "../utils/inventoryUtils.js"; // <-- Potrebbe essere necessario creare questo file/funzione helper
+import { getUserPlan } from "../utils/getUserPlans.js"; 
 const routerTelegram = express.Router();
 
 // Middleware: trova user da telegramId
@@ -91,6 +90,105 @@ routerTelegram.get("/reptile/:id/events", telegramAuth, async (req, res) => {
 
   const events = await Event.find({ reptile: reptile._id }).sort({ date: -1 }).lean();
   res.json({ events });
+});
+
+// 7. Visualizza inventario
+routerTelegram.get("/inventory", telegramAuth, async (req, res) => {
+    try {
+        const { plan } = getUserPlan(req.user);
+        [cite_start]
+        if (plan !== 'BREEDER') { // Logica basata su `isInventoryAccessAllowed` [cite: 118]
+            return res.status(403).json({ message: "Questa funzionalità è riservata agli utenti BREEDER." });
+        }
+        const inventory = await FoodInventory.find({ user: req.user._id }).lean();
+        res.json({ inventory });
+    } catch (err) {
+        console.error("Telegram inventory error:", err);
+        res.status(500).json({ message: "Errore nel recuperare l'inventario." });
+    }
+});
+
+// 8. Aggiungi alimentazione (POST)
+routerTelegram.post("/reptile/:id/feedings", telegramAuth, async (req, res) => {
+    try {
+        const reptile = await Reptile.findOne({ _id: req.params.id, user: req.user._id });
+        if (!reptile) return res.status(404).json({ message: "Rettile non trovato" });
+
+        const { foodType, quantity, weightPerUnit, wasEaten, notes, date } = req.body;
+        
+        const feedingDate = new Date(date || Date.now());
+        let nextFeedingDate = null;
+
+        // Logica per calcolare nextFeedingDate se il pasto è stato consumato
+        if (wasEaten && reptile.nextMealDay) {
+            nextFeedingDate = new Date(feedingDate);
+            nextFeedingDate.setDate(feedingDate.getDate() + reptile.nextMealDay);
+        }
+        
+        [cite_start]// Logica per decrementare l'inventario (simile a PostFeeding) [cite: 100, 101]
+        const meatTypes = ['Topo', 'Ratto', 'Coniglio', 'Pulcino'];
+        if (wasEaten && meatTypes.includes(foodType)) {
+            const invItem = await FoodInventory.findOne({ user: req.user._id, foodType, weightPerUnit });
+            if (!invItem || invItem.quantity < quantity) {
+                return res.status(400).json({ message: `Scorte insufficienti per ${foodType} da ${weightPerUnit}g.` });
+            }
+            invItem.quantity -= quantity;
+            await invItem.save();
+        }
+
+        const newFeeding = new Feeding({
+            reptile: req.params.id,
+            date: feedingDate,
+            foodType,
+            quantity,
+            weightPerUnit,
+            wasEaten,
+            notes,
+            nextFeedingDate: wasEaten ? nextFeedingDate : undefined,
+            retryAfterDays: !wasEaten ? 7 : undefined // Esempio, puoi personalizzarlo
+        });
+
+        await newFeeding.save();
+        res.status(201).json({ message: "Alimentazione aggiunta con successo!", feeding: newFeeding });
+
+    } catch (err) {
+        console.error("Telegram add feeding error:", err);
+        res.status(500).json({ message: "Errore durante l'aggiunta dell'alimentazione." });
+    }
+});
+
+// 9. Aggiungi evento (POST)
+routerTelegram.post("/reptile/:id/events", telegramAuth, async (req, res) => {
+    try {
+        const reptile = await Reptile.findOne({ _id: req.params.id, user: req.user._id });
+        if (!reptile) return res.status(404).json({ message: "Rettile non trovato" });
+
+        const { type, date, notes, weight } = req.body;
+
+        [cite_start]// Controllo limiti del piano utente (simile a CreateEvent) [cite: 77]
+        const { plan, limits } = getUserPlan(req.user);
+        if ((plan === 'NEOPHYTE' || plan === 'APPRENTICE') && limits.eventsPerTypePerReptile) {
+            const count = await Event.countDocuments({ reptile: req.params.id, type });
+            if (count >= limits.eventsPerTypePerReptile) {
+                return res.status(403).json({ message: `Hai raggiunto il limite di eventi di tipo '${type}' per questo rettile.` });
+            }
+        }
+        
+        const newEvent = new Event({
+            reptile: req.params.id,
+            type,
+            date: new Date(date || Date.now()),
+            notes,
+            weight: type === 'weight' ? weight : undefined
+        });
+
+        await newEvent.save();
+        res.status(201).json({ message: "Evento aggiunto con successo!", event: newEvent });
+
+    } catch (err) {
+        console.error("Telegram add event error:", err);
+        res.status(500).json({ message: "Errore durante l'aggiunta dell'evento." });
+    }
 });
 
 export default routerTelegram;
