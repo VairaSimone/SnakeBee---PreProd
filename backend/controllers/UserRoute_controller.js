@@ -264,19 +264,25 @@ export const updateFiscalDetails = async (req, res) => {
 
 
 export const generateReferralLink = async (req, res) => {
-    try {
-        const userId = req.user.userid;
+
+  try {
+const userId = req.user.userid || req.user.id || req.user._id;
         const user = await User.findById(userId);
 
         if (!user) {
+
             return res.status(404).json({ message: req.t('user_notFound') });
         }
 
         if (user.hasReferred) {
-            return res.status(400).json({ message: req.t('referral_limit_exceeded', 'Hai già invitato un amico con successo.') });
+
+            return res.status(400).json({ message: req.t('referral_limit_exceeded', 'Hai già invitato un amico con successo.') 
+              
+            });
         }
 
         if (!user.referralCode) {
+
             // Genera un codice univoco se non esiste già
             user.referralCode = crypto.randomBytes(5).toString('hex');
             await user.save();
@@ -287,6 +293,7 @@ export const generateReferralLink = async (req, res) => {
         res.status(200).json({ referralLink });
 
     } catch (error) {
+
         console.error('Error generating referral link:', error);
         res.status(500).json({ message: req.t('server_error') });
     }
