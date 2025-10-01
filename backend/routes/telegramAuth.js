@@ -99,7 +99,6 @@ routerTelegram.get("/reptile/:id/events", telegramAuth, async (req, res) => {
 routerTelegram.get("/inventory", telegramAuth, async (req, res) => {
     try {
         const { plan } = getUserPlan(req.user);
-        [cite_start]
         if (plan !== 'BREEDER') { // Logica basata su `isInventoryAccessAllowed` [cite: 118]
             return res.status(403).json({ message: "Questa funzionalità è riservata agli utenti BREEDER." });
         }
@@ -128,7 +127,6 @@ routerTelegram.post("/reptile/:id/feedings", telegramAuth, async (req, res) => {
             nextFeedingDate.setDate(feedingDate.getDate() + reptile.nextMealDay);
         }
         
-        [cite_start]// Logica per decrementare l'inventario (simile a PostFeeding) [cite: 100, 101]
         const meatTypes = ['Topo', 'Ratto', 'Coniglio', 'Pulcino'];
         if (wasEaten && meatTypes.includes(foodType)) {
             const invItem = await FoodInventory.findOne({ user: req.user._id, foodType, weightPerUnit });
@@ -168,7 +166,6 @@ routerTelegram.post("/reptile/:id/events", telegramAuth, async (req, res) => {
 
         const { type, date, notes, weight } = req.body;
 
-        [cite_start]// Controllo limiti del piano utente (simile a CreateEvent) [cite: 77]
         const { plan, limits } = getUserPlan(req.user);
         if ((plan === 'NEOPHYTE' || plan === 'APPRENTICE') && limits.eventsPerTypePerReptile) {
             const count = await Event.countDocuments({ reptile: req.params.id, type });
