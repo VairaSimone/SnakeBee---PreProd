@@ -9,7 +9,9 @@ const CALLBACK_PREFIX = {
     VIEW_FEEDINGS: 'feedings_',
     VIEW_EVENTS: 'events_',
     SET_EVENT_TYPE: 'set_event_type_',
-    BACK_TO_LIST: 'back_to_reptiles'
+    BACK_TO_LIST: 'back_to_reptiles',
+    SELECT_INVENTORY_ITEM: 'inv_item_', // Selezione articolo inventario
+    OTHER_FOOD_TYPE: 'other_food'
 };
 
 let bot;
@@ -245,7 +247,7 @@ async function handleCallbackQuery(callbackQuery) {
     // Risponde subito al callback per far sparire l'icona di caricamento sul client
     bot.answerCallbackQuery(callbackQuery.id);
 
-    if (data.startsWith(CALLBACK_PREFIX.REPTILE_SELECTED)) {
+ if (data.startsWith(CALLBACK_PREFIX.REPTILE_SELECTED)) {
         const reptileId = data.substring(CALLBACK_PREFIX.REPTILE_SELECTED.length);
         showReptileDetails(chatId, reptileId, messageId);
     } else if (data === CALLBACK_PREFIX.BACK_TO_LIST) {
@@ -264,11 +266,59 @@ async function handleCallbackQuery(callbackQuery) {
         startEventConversation(chatId, reptileId);
     } else if (data.startsWith(CALLBACK_PREFIX.SET_EVENT_TYPE)) {
         const eventType = data.substring(CALLBACK_PREFIX.SET_EVENT_TYPE.length);
-        handleEventConversation(chatId, eventType, true); // Passa 'true' per indicare che è un input da tastiera
-    } else if (data === 'feeding_eaten_yes' || data === 'feeding_eaten_no') {
-        // NUOVA LOGICA: Gestione della risposta al "wasEaten"
+        handleEventConversation(chatId, eventType, true);
+    // --- BLOCCO CORRETTO DELL'INVENTARIO/EATEN ---
+    } else if (data.startsWith(CALLBACK_PREFIX.SELECT_INVENTORY_ITEM)) { // <-- OK
+        const inventoryItemId = data.substring(CALLBACK_PREFIX.SELECT_INVENTORY_ITEM.length);
+        await selectInventoryItem(chatId, inventoryItemId, messageId);
+    } else if (data === CALLBACK_PREFIX.OTHER_FOOD_TYPE) { // <-- OK
+        await startManualFeeding(chatId, messageId);
+    } else if (data === 'feeding_eaten_yes' || data === 'feeding_eaten_no') { // <-- OK
         const wasEaten = data === 'feeding_eaten_yes';
         await advanceFeedingConversationAfterEaten(chatId, wasEaten, messageId);
+    }}
+
+async function startManualFeeding(chatId, messageId) {
+    const state = userState[chatId];
+    if (!state || state.step !== 'select_food') {
+        return bot.sendMessage(chatId, "⚠️ Sessione scaduta o non valida. Riprova con /reptiles.");
+    }
+    
+    // Modifica il messaggio precedente e avanza allo step manuale
+    await bot.editMessageText("Hai scelto *Altro*.", { chat_id: chatId, message_id: messageId, parse_mode: "Markdown" });
+    
+    state.step = 'manual_foodType';
+    bot.sendMessage(chatId, "🥩 Inserisci il *tipo* di cibo (es. Insetto, Verdura).", { parse_mode: "Markdown" });
+}
+async function selectInventoryItem(chatId, inventoryItemId, messageId) {
+    const state = userState[chatId];
+    if (!state || state.step !== 'select_food') {
+        return bot.sendMessage(chatId, "⚠️ Sessione scaduta o non valida. Riprova con /reptiles.");
+    }
+    
+    try {
+        // Recupera l'inventario per trovare l'oggetto selezionato (potrebbe essere ottimizzato memorizzando l'inventario)
+        const { inventory } = await apiRequest('get', '/inventory', chatId);
+        const selectedItem = inventory.find(item => item._id === inventoryItemId);
+
+        if (!selectedItem) {
+             return bot.sendMessage(chatId, "⚠️ Articolo non trovato. Riprova.");
+        }
+
+        // Auto-popola i dati
+        state.data.foodType = selectedItem.foodType;
+        state.data.weightPerUnit = selectedItem.weightPerUnit;
+        
+        // Conferma e passa a 'quantity'
+        await bot.editMessageText(`Hai selezionato: *${escapeMarkdown(selectedItem.foodType)}* (${selectedItem.weightPerUnit}g).\n\nProcedi con la quantità.`, 
+            { chat_id: chatId, message_id: messageId, parse_mode: "Markdown" });
+
+        state.step = 'quantity'; // Usa lo step esistente
+        bot.sendMessage(chatId, `🔢 Inserisci la *quantità* di unità da somministrare (max ${selectedItem.quantity} disponibili):`, { parse_mode: "Markdown" });
+
+    } catch (err) {
+        bot.sendMessage(chatId, `❌ Errore nella selezione dell'inventario: ${err.message}\nOperazione annullata.`);
+        delete userState[chatId];
     }
 }
 async function advanceFeedingConversationAfterEaten(chatId, wasEaten, messageId) {
@@ -310,31 +360,89 @@ async function handleMessage(msg) {
 
 // --- Logica delle Conversazioni ---
 
-function startFeedingConversation(chatId, reptileId) {
-    userState[chatId] = { action: 'add_feeding', reptileId, step: 'foodType', data: {} };
-    bot.sendMessage(chatId, "🥩 Inserisci il *tipo* di cibo (es. Topo, Ratto). \nUsa /cancel per annullare.", { parse_mode: "Markdown" });
-}
+async function startFeedingConversation(chatId, reptileId) {
+    userState[chatId] = { action: 'add_feeding', reptileId, step: 'check_inventory', data: {} };
+    bot.sendChatAction(chatId, 'typing');
 
+    try {
+        // Tentativo di recuperare l'inventario per gli utenti BREEDER
+        const { inventory } = await apiRequest('get', '/inventory', chatId);
+
+        if (inventory?.length) {
+            userState[chatId].step = 'select_food'; // Passa allo step di selezione
+
+            let text = "📦 Seleziona il cibo dal tuo *inventario* o scegli *Altro*:\n\n";
+            const inventoryButtons = inventory.map((item, index) => {
+                // Genera un ID compatto per il callback: inv_item_<index>_<foodType>_<weightPerUnit>
+                // L'indice serve per recuperare velocemente l'oggetto dall'array memorizzato nello stato temporaneo.
+                // In questo caso, passiamo i dati completi nel callback per la comodità di recupero.
+                const dataString = `${item.foodType}|${item.weightPerUnit}|${item._id}`;
+                text += `• *${escapeMarkdown(item.foodType)}* (${item.weightPerUnit}g): ${item.quantity} unità\n`;
+                // Utilizzo dell'ID di inventario per la callback per risalire all'oggetto.
+                return [{ 
+                    text: `${item.foodType} (${item.weightPerUnit}g) [${item.quantity}]`, 
+                    callback_data: `${CALLBACK_PREFIX.SELECT_INVENTORY_ITEM}${item._id}`
+                }];
+            });
+
+            inventoryButtons.push([{ text: "➡️ Altro (Inserimento manuale)", callback_data: CALLBACK_PREFIX.OTHER_FOOD_TYPE }]);
+
+            bot.sendMessage(chatId, text, {
+                parse_mode: "Markdown",
+                reply_markup: { inline_keyboard: inventoryButtons }
+            });
+
+        } else {
+            // Inventario non disponibile o vuoto, procedi con l'inserimento manuale
+            userState[chatId].step = 'manual_foodType'; // Nuovo step per distinguere l'inserimento manuale
+            bot.sendMessage(chatId, "🥩 Inserisci il *tipo* di cibo (es. Topo, Ratto). \nUsa /cancel per annullare.", { parse_mode: "Markdown" });
+        }
+    } catch (err) {
+        // Probabilmente errore 403, quindi utente non BREEDER o altro errore, procedi con l'inserimento manuale
+        if (err.message.includes("BREEDER")) {
+             bot.sendMessage(chatId, "⚠️ La funzionalità inventario è solo per gli utenti BREEDER. Procedi con l'inserimento manuale.");
+        } else {
+             console.error("Errore nel recupero inventario:", err.message);
+        }
+        userState[chatId].step = 'manual_foodType';
+        bot.sendMessage(chatId, "🥩 Inserisci il *tipo* di cibo (es. Topo, Ratto). \nUsa /cancel per annullare.", { parse_mode: "Markdown" });
+    }
+}
 async function handleFeedingConversation(chatId, text) {
     const state = userState[chatId];
     if (!state) return;
 
     try {
         switch (state.step) {
-            case 'foodType':
+               case 'manual_foodType': // NUOVO STEP per l'opzione 'Altro' o per non-BREEDER
                 state.data.foodType = text;
                 state.step = 'quantity';
                 bot.sendMessage(chatId, "🔢 Inserisci la *quantità*:", { parse_mode: "Markdown" });
                 break;
-            case 'quantity':
+        
+   case 'quantity':
                 state.data.quantity = parseInt(text, 10);
-                if (isNaN(state.data.quantity)) return bot.sendMessage(chatId, "Per favore, inserisci un numero valido.");
-                state.step = 'weightPerUnit';
-                bot.sendMessage(chatId, "⚖️ Inserisci il *peso per unità* in grammi:", { parse_mode: "Markdown" });
+                if (isNaN(state.data.quantity) || state.data.quantity <= 0) return bot.sendMessage(chatId, "Per favore, inserisci un numero valido e maggiore di zero.");
+                
+                // Se weightPerUnit non è stato pre-popolato (quindi non è stato selezionato dall'inventario)
+                if (!state.data.weightPerUnit) {
+                    state.step = 'weightPerUnit';
+                    bot.sendMessage(chatId, "⚖️ Inserisci il *peso per unità* in grammi:", { parse_mode: "Markdown" });
+                } else {
+                    // Se weightPerUnit è già presente (dal prelievo inventario), salta allo step 'wasEaten'
+                    state.step = 'wasEaten';
+                    bot.sendMessage(chatId, `✅ Dati precaricati: Tipo: *${escapeMarkdown(state.data.foodType)}*, Peso/Unità: *${state.data.weightPerUnit}g*.\n\nIl pasto è stato mangiato?`, {
+                        parse_mode: "Markdown",
+                        reply_markup: { inline_keyboard: [
+                            [{ text: "Sì", callback_data: "feeding_eaten_yes" }],
+                            [{ text: "No", callback_data: "feeding_eaten_no" }]
+                        ]}
+                    });
+                }
                 break;
             case 'weightPerUnit':
                 state.data.weightPerUnit = parseInt(text, 10);
-                if (isNaN(state.data.weightPerUnit)) return bot.sendMessage(chatId, "Per favore, inserisci un numero valido.");
+                if (isNaN(state.data.weightPerUnit) || state.data.weightPerUnit <= 0) return bot.sendMessage(chatId, "Per favore, inserisci un numero valido e maggiore di zero.");
                 state.step = 'wasEaten';
                 bot.sendMessage(chatId, "✅ Il pasto è stato mangiato?", {
                     reply_markup: { inline_keyboard: [
@@ -343,7 +451,7 @@ async function handleFeedingConversation(chatId, text) {
                     ]}
                 });
                 break;
-            case 'notes':
+          case 'notes':
                 state.data.notes = (text.toLowerCase() === 'no') ? '' : text;
                 bot.sendMessage(chatId, "Salvataggio in corso...");
                 await apiRequest('post', `/reptile/${state.reptileId}/feedings`, chatId, state.data);
