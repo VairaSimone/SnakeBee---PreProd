@@ -132,7 +132,7 @@ async function showReptileList(chatId, messageId = null) {
     try {
         const { reptiles } = await apiRequest('get', '/reptiles', chatId);
         if (!reptiles || reptiles.length === 0) {
-            const noReptilesText = "Non hai ancora registrato rettili 🦎. Aggiungine uno dall'app!";
+            const noReptilesText = "Non hai ancora registrato rettili 🦎. Aggiungine uno dal sito!";
             if (messageId) {
                 return bot.editMessageText(noReptilesText, { chat_id: chatId, message_id: messageId });
             }
@@ -265,9 +265,36 @@ async function handleCallbackQuery(callbackQuery) {
     } else if (data.startsWith(CALLBACK_PREFIX.SET_EVENT_TYPE)) {
         const eventType = data.substring(CALLBACK_PREFIX.SET_EVENT_TYPE.length);
         handleEventConversation(chatId, eventType, true); // Passa 'true' per indicare che è un input da tastiera
+    } else if (data === 'feeding_eaten_yes' || data === 'feeding_eaten_no') {
+        // NUOVA LOGICA: Gestione della risposta al "wasEaten"
+        const wasEaten = data === 'feeding_eaten_yes';
+        await advanceFeedingConversationAfterEaten(chatId, wasEaten, messageId);
     }
 }
+async function advanceFeedingConversationAfterEaten(chatId, wasEaten, messageId) {
+    const state = userState[chatId];
+    if (!state || state.step !== 'wasEaten') {
+        return bot.sendMessage(chatId, "⚠️ Sessione scaduta o non valida. Riprova con /reptiles.");
+    }
 
+    try {
+        state.data.wasEaten = wasEaten;
+        state.step = 'notes';
+
+        // Modifica il messaggio precedente per confermare la scelta
+        const confirmationText = wasEaten ? "✅ Pasto segnato come *Mangiato*." : "❌ Pasto segnato come *Non mangiato*.";
+        await bot.editMessageText(confirmationText, { chat_id: chatId, message_id: messageId, parse_mode: "Markdown" });
+
+        // Prosegui con lo step successivo (Note)
+        bot.sendMessage(chatId, "📝 Aggiungi delle note (o scrivi 'no'):");
+
+    } catch (err) {
+        // Gestione errore di modifica del messaggio (non bloccante)
+        console.error("Errore nell'avanzamento della conversazione dopo 'wasEaten':", err.message);
+        bot.sendMessage(chatId, `⚠️ Errore: ${err.message}. Per favore, riparti con /reptiles.`);
+        delete userState[chatId];
+    }
+}
 async function handleMessage(msg) {
     const chatId = msg.chat.id;
     // Ignora i messaggi se non c'è una conversazione attiva o se è un comando
@@ -315,11 +342,6 @@ async function handleFeedingConversation(chatId, text) {
                         [{ text: "No", callback_data: "feeding_eaten_no" }]
                     ]}
                 });
-                break;
-            case 'wasEaten': // Questo step ora è gestito da un callback, ma lo teniamo per completezza
-                state.data.wasEaten = ['sì', 'si', 's', 'yes', 'y'].includes(text.toLowerCase());
-                state.step = 'notes';
-                bot.sendMessage(chatId, "📝 Aggiungi delle note (o scrivi 'no'):");
                 break;
             case 'notes':
                 state.data.notes = (text.toLowerCase() === 'no') ? '' : text;
