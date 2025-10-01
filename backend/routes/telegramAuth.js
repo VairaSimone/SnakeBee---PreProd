@@ -120,11 +120,15 @@ routerTelegram.post("/reptile/:id/feedings", telegramAuth, async (req, res) => {
         
         const feedingDate = new Date(date || Date.now());
         let nextFeedingDate = null;
-
+        const retryDays = 1;
         // Logica per calcolare nextFeedingDate se il pasto è stato consumato
         if (wasEaten && reptile.nextMealDay) {
             nextFeedingDate = new Date(feedingDate);
             nextFeedingDate.setDate(feedingDate.getDate() + reptile.nextMealDay);
+        } else if (!wasEaten) {
+            // Caso 2: Non mangiato -> calcola in base ai giorni di retry
+            nextFeedingDate = new Date(feedingDate);
+            nextFeedingDate.setDate(feedingDate.getDate() + retryDays);
         }
         
         const meatTypes = ['Topo', 'Ratto', 'Coniglio', 'Pulcino'];
@@ -145,9 +149,8 @@ routerTelegram.post("/reptile/:id/feedings", telegramAuth, async (req, res) => {
             weightPerUnit,
             wasEaten,
             notes,
-            nextFeedingDate: wasEaten ? nextFeedingDate : undefined,
-            retryAfterDays: !wasEaten ? 7 : undefined // Esempio, puoi personalizzarlo
-        });
+           nextFeedingDate: nextFeedingDate, 
+            retryAfterDays: !wasEaten ? retryDays : undefined         });
 
         await newFeeding.save();
         res.status(201).json({ message: "Alimentazione aggiunta con successo!", feeding: newFeeding });
