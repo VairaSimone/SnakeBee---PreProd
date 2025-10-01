@@ -34,8 +34,10 @@ async function apiRequest(method, url, chatId, data = {}) {
             method,
             url: `${process.env.BACKEND_URL}/api/telegram${url}`,
             headers: { "x-telegram-id": chatId },
-            data
         };
+               if (method.toLowerCase() === 'post') {
+            config.data = data;
+        }
         const response = await axios(config);
         return response.data;
     } catch (err) {
@@ -65,7 +67,7 @@ if (!global.bot) {
         bot.sendMessage(chatId, `Ciao ${msg.from.first_name}! 👋\nTi sto generando un link per collegare il tuo account SnakeBee...`);
         bot.sendChatAction(chatId, 'typing');
         try {
-            const data = await apiRequest('get', '/link', chatId, { params: { telegramId: chatId } });
+            const data = await apiRequest('get', `/link?telegramId=${chatId}`, chatId);
             bot.sendMessage(chatId, `Per collegare il tuo account, clicca qui: ${data.url}\n\nUna volta fatto, usa /reptiles per iniziare!`);
         } catch (err) {
             bot.sendMessage(chatId, `❌ Errore nel generare il link: ${err.message}. Riprova più tardi.`);

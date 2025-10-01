@@ -81,7 +81,7 @@ const googleStrategy = new GoogleStrategy({
                     const promotionCode = await stripe.promotionCodes.create({
                         coupon: coupon.id,
                         max_redemptions: 1,
-                        code: `INVITO-${referrer.name.toUpperCase().replace(/\s/g, '')}-${crypto.randomBytes(3).toString('hex').toUpperCase()}`
+                        code: `COUPON-${referrer.name.toUpperCase().replace(/\s/g, '')}-${crypto.randomBytes(3).toString('hex').toUpperCase()}`
                     });
 
                     // 2. Invia l'email di ricompensa
