@@ -6,7 +6,7 @@ import Reptile from "../models/Reptile.js";
 import Feeding from "../models/Feeding.js";
 import Event from "../models/Event.js"; // da creare se non esiste
 import FoodInventory from "../models/FoodInventory.js"; // <-- Aggiungi questa riga
-import { getUserPlan } from "../utils/getUserPlans.js"; 
+import { getUserPlan } from "../utils/getUserPlans.js";
 const routerTelegram = express.Router();
 async function isInventoryAccessAllowed(userId) {
   const user = await User.findById(userId);
@@ -97,101 +97,104 @@ routerTelegram.get("/reptile/:id/events", telegramAuth, async (req, res) => {
 
 // 7. Visualizza inventario
 routerTelegram.get("/inventory", telegramAuth, async (req, res) => {
-    try {
-        const { plan } = getUserPlan(req.user);
-        if (plan !== 'BREEDER') { // Logica basata su `isInventoryAccessAllowed` [cite: 118]
-            return res.status(403).json({ message: "Questa funzionalità è riservata agli utenti BREEDER." });
-        }
-        const inventory = await FoodInventory.find({ user: req.user._id }).lean();
-        res.json({ inventory });
-    } catch (err) {
-        console.error("Telegram inventory error:", err);
-        res.status(500).json({ message: "Errore nel recuperare l'inventario." });
+  try {
+    const { plan } = getUserPlan(req.user);
+    if (plan !== 'BREEDER') { // Logica basata su `isInventoryAccessAllowed` [cite: 118]
+      return res.status(403).json({ message: "Questa funzionalità è riservata agli utenti BREEDER." });
     }
+    const inventory = await FoodInventory.find({ user: req.user._id }).lean();
+    res.json({ inventory });
+  } catch (err) {
+    console.error("Telegram inventory error:", err);
+    res.status(500).json({ message: "Errore nel recuperare l'inventario." });
+  }
 });
 
 // 8. Aggiungi alimentazione (POST)
 routerTelegram.post("/reptile/:id/feedings", telegramAuth, async (req, res) => {
-    try {
-        const reptile = await Reptile.findOne({ _id: req.params.id, user: req.user._id });
-        if (!reptile) return res.status(404).json({ message: "Rettile non trovato" });
+  try {
+    const reptile = await Reptile.findOne({ _id: req.params.id, user: req.user._id });
+    if (!reptile) return res.status(404).json({ message: "Rettile non trovato" });
 
-        const { foodType, quantity, weightPerUnit, wasEaten, notes, date } = req.body;
-        
-        const feedingDate = new Date(date || Date.now());
-        let nextFeedingDate = null;
-        const retryDays = 1;
-        // Logica per calcolare nextFeedingDate se il pasto è stato consumato
-        if (wasEaten && reptile.nextMealDay) {
-            nextFeedingDate = new Date(feedingDate);
-            nextFeedingDate.setDate(feedingDate.getDate() + reptile.nextMealDay);
-        } else if (!wasEaten) {
-            // Caso 2: Non mangiato -> calcola in base ai giorni di retry
-            nextFeedingDate = new Date(feedingDate);
-            nextFeedingDate.setDate(feedingDate.getDate() + retryDays);
-        }
-        
-        const meatTypes = ['Topo', 'Ratto', 'Coniglio', 'Pulcino'];
-        if (wasEaten && meatTypes.includes(foodType)) {
-            const invItem = await FoodInventory.findOne({ user: req.user._id, foodType, weightPerUnit });
-            if (!invItem || invItem.quantity < quantity) {
-                return res.status(400).json({ message: `Scorte insufficienti per ${foodType} da ${weightPerUnit}g.` });
-            }
-            invItem.quantity -= quantity;
-            await invItem.save();
-        }
+    const { foodType, quantity, weightPerUnit, wasEaten, notes, date } = req.body;
 
-        const newFeeding = new Feeding({
-            reptile: req.params.id,
-            date: feedingDate,
-            foodType,
-            quantity,
-            weightPerUnit,
-            wasEaten,
-            notes,
-           nextFeedingDate: nextFeedingDate, 
-            retryAfterDays: !wasEaten ? retryDays : undefined         });
-
-        await newFeeding.save();
-        res.status(201).json({ message: "Alimentazione aggiunta con successo!", feeding: newFeeding });
-
-    } catch (err) {
-        console.error("Telegram add feeding error:", err);
-        res.status(500).json({ message: "Errore durante l'aggiunta dell'alimentazione." });
+    const feedingDate = new Date(date || Date.now());
+    let nextFeedingDate = null;
+    const retryDays = 1;
+    // Logica per calcolare nextFeedingDate se il pasto è stato consumato
+    if (wasEaten && reptile.nextMealDay) {
+      nextFeedingDate = new Date(feedingDate);
+      nextFeedingDate.setDate(feedingDate.getDate() + reptile.nextMealDay);
+    } else if (!wasEaten) {
+      // Caso 2: Non mangiato -> calcola in base ai giorni di retry
+      nextFeedingDate = new Date(feedingDate);
+      nextFeedingDate.setDate(feedingDate.getDate() + retryDays);
     }
+
+    const meatTypes = ['Topo', 'Ratto', 'Coniglio', 'Pulcino'];
+    const { plan } = getUserPlan(req.user);
+    if (plan === 'BREEDER' && wasEaten && meatTypes.includes(foodType)) {
+      const invItem = await FoodInventory.findOne({ user: req.user._id, foodType, weightPerUnit });
+      if (!invItem || invItem.quantity < quantity) {
+        return res.status(400).json({ message: `Scorte insufficienti per ${foodType} da ${weightPerUnit}g.` });
+      }
+      invItem.quantity -= quantity;
+      await invItem.save();
+
+    }
+
+    const newFeeding = new Feeding({
+      reptile: req.params.id,
+      date: feedingDate,
+      foodType,
+      quantity,
+      weightPerUnit,
+      wasEaten,
+      notes,
+      nextFeedingDate: nextFeedingDate,
+      retryAfterDays: !wasEaten ? retryDays : undefined
+    });
+
+    await newFeeding.save();
+    res.status(201).json({ message: "Alimentazione aggiunta con successo!", feeding: newFeeding });
+
+  } catch (err) {
+    console.error("Telegram add feeding error:", err);
+    res.status(500).json({ message: "Errore durante l'aggiunta dell'alimentazione." });
+  }
 });
 
 // 9. Aggiungi evento (POST)
 routerTelegram.post("/reptile/:id/events", telegramAuth, async (req, res) => {
-    try {
-        const reptile = await Reptile.findOne({ _id: req.params.id, user: req.user._id });
-        if (!reptile) return res.status(404).json({ message: "Rettile non trovato" });
+  try {
+    const reptile = await Reptile.findOne({ _id: req.params.id, user: req.user._id });
+    if (!reptile) return res.status(404).json({ message: "Rettile non trovato" });
 
-        const { type, date, notes, weight } = req.body;
+    const { type, date, notes, weight } = req.body;
 
-        const { plan, limits } = getUserPlan(req.user);
-        if ((plan === 'NEOPHYTE' || plan === 'APPRENTICE') && limits.eventsPerTypePerReptile) {
-            const count = await Event.countDocuments({ reptile: req.params.id, type });
-            if (count >= limits.eventsPerTypePerReptile) {
-                return res.status(403).json({ message: `Hai raggiunto il limite di eventi di tipo '${type}' per questo rettile.` });
-            }
-        }
-        
-        const newEvent = new Event({
-            reptile: req.params.id,
-            type,
-            date: new Date(date || Date.now()),
-            notes,
-            weight: type === 'weight' ? weight : undefined
-        });
-
-        await newEvent.save();
-        res.status(201).json({ message: "Evento aggiunto con successo!", event: newEvent });
-
-    } catch (err) {
-        console.error("Telegram add event error:", err);
-        res.status(500).json({ message: "Errore durante l'aggiunta dell'evento." });
+    const { plan, limits } = getUserPlan(req.user);
+    if ((plan === 'NEOPHYTE' || plan === 'APPRENTICE') && limits.eventsPerTypePerReptile) {
+      const count = await Event.countDocuments({ reptile: req.params.id, type });
+      if (count >= limits.eventsPerTypePerReptile) {
+        return res.status(403).json({ message: `Hai raggiunto il limite di eventi di tipo '${type}' per questo rettile.` });
+      }
     }
+
+    const newEvent = new Event({
+      reptile: req.params.id,
+      type,
+      date: new Date(date || Date.now()),
+      notes,
+      weight: type === 'weight' ? weight : undefined
+    });
+
+    await newEvent.save();
+    res.status(201).json({ message: "Evento aggiunto con successo!", event: newEvent });
+
+  } catch (err) {
+    console.error("Telegram add event error:", err);
+    res.status(500).json({ message: "Errore durante l'aggiunta dell'evento." });
+  }
 });
 
 export default routerTelegram;
