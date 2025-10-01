@@ -155,9 +155,9 @@ const UserProfile = () => {
     const fetchReferralLink = async () => {
       try {
         const { data } = await api.get('/user/referral-link');
-        setReferralLink(data.referralLink);
+        setReferralLink(data.referralLink); 
       } catch (err) {
-        setReferralError(err.response?.data?.message || t('UserProfile.referralError', 'Impossibile generare il link.'));
+        setReferralError(err.response?.data?.message || t('UserProfile.referralError'));
       }
     };
     fetchUser();
@@ -316,7 +316,7 @@ const UserProfile = () => {
       setTimeout(() => setIsCopied(false), 2500); // Resetta il messaggio dopo 2.5 secondi
     }).catch(err => {
       console.error('Failed to copy text: ', err);
-      addToast(t('UserProfile.copyError', 'Copia fallita'), 'error');
+      addToast(t('UserProfile.copyError'), 'error');
     });
   };
 

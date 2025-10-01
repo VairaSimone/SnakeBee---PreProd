@@ -10,6 +10,8 @@
   "temporary_email": "Temporary emails cannot be used.",
   "connection_ip": "Too many registrations from this IP. Please try again later.",
   "password_error": "This password is too common or compromised. Choose another one.",
+    "referral_limit_exceeded": "You have already successfully invited a friend.",
+    "verifyEmail": "Registration almost complete! Check your email for the verification code.",
   "credential_error": "Error in the entered credentials",
   "passwordUpdate": "Password successfully updated.",
   "passwordOld": "The old password is incorrect.",
@@ -195,6 +197,14 @@
   },
   
   "emails": {
+       "referralReward": {
+      "subject": "Your friend has joined SnakeBee!",
+      "title": "Thanks for your invite! 🎉",
+      "text": "Hi {{name}},\n\nThanks for inviting a friend! As a reward, here’s a 30% discount code for your next subscription: {{promoCode}}",
+      "instructions": "Hi {{name}},<br>Your friend has signed up and successfully verified their email. As a thank you, we’re giving you 30% off your next subscription.",
+      "useCode": "Use the following code at checkout:",
+      "thanks": "Thanks for helping the SnakeBee community grow!"
+    },
     "eventReminder": {
       "subject": "Event reminder: {{title}}",
       "header": "Event Reminder 🐍",

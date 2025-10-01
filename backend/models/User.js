@@ -60,12 +60,12 @@ const userSchema = new Schema(
                 country: String
             }
         },
-fiscalDetails: {
-  vatNumber: String,
-  taxCode: String,
-  sdiCode: String,
-  pec: String
-},
+        fiscalDetails: {
+            vatNumber: String,
+            taxCode: String,
+            sdiCode: String,
+            pec: String
+        },
 
         loginHistory: [{
             ip: String,
@@ -117,11 +117,11 @@ fiscalDetails: {
             type: Boolean,
             default: false
         },
-telegramId: {
-  type: String,
-  unique: true,
-  sparse: true // permette valori nulli
-},
+        telegramId: {
+            type: String,
+            unique: true,
+            sparse: true // permette valori nulli
+        },
 
         privacyConsent: {
             accepted: {
@@ -140,7 +140,7 @@ telegramId: {
             userAgent: String,
             createdAt: Date
         },
-referralCode: {
+        referralCode: {
             type: String,
             unique: true,
             sparse: true

@@ -276,7 +276,7 @@ const userId = req.user.userid || req.user.id || req.user._id;
 
         if (user.hasReferred) {
 
-            return res.status(400).json({ message: req.t('referral_limit_exceeded', 'Hai già invitato un amico con successo.') 
+            return res.status(400).json({ message: req.t('referral_limit_exceeded') 
               
             });
         }

@@ -222,28 +222,27 @@ const sendReferralRewardEmail = async (to, lng, name, promoCode) => {
     const mailOptions = {
         from: `"SnakeBee" <noreply@snakebee.it>`,
         to,
-        subject: t('emails.referralReward.subject', 'Il tuo amico si è unito a SnakeBee!'),
-        text: t('emails.referralReward.text', `Ciao ${name},\n\nGrazie per aver invitato un amico! Come ringraziamento, ecco un codice sconto del 30% per il tuo prossimo abbonamento: ${promoCode}`),
+        subject: t('emails.referralReward.subject'),
+        text:  t('emails.referralReward.text', { name, promoCode }),
         html: `
         <div style="max-width:600px;margin:20px auto;padding:30px;background-color:#FAF3E0;border-radius:12px;font-family:'Poppins', sans-serif;color:#2B2B2B;">
             <div style="text-align:center;margin-bottom:30px;">
                 <img src="${process.env.LOGO_URL}" alt="SnakeBee Logo" style="max-width:180px;height:auto;">
             </div>
             <h1 style="color:#228B22;text-align:center;margin-bottom:25px;font-weight:700;">
-                ${t('emails.referralReward.title', 'Grazie per il tuo invito! 🎉')}
+                ${t('emails.referralReward.title')}
             </h1>
             <p style="font-size:16px;line-height:1.5;margin-bottom:20px;">
-                ${t('emails.referralReward.instructions', `Ciao ${name},<br>Il tuo amico si è registrato e ha verificato la sua email con successo. Per ringraziarti, ti offriamo uno sconto del 30% sul tuo prossimo abbonamento.`)}
+               ${t('emails.referralReward.instructions', { name })}
             </p>
             <p style="font-size:16px;line-height:1.5;margin-bottom:20px;">
-                ${t('emails.referralReward.useCode', 'Usa il seguente codice al momento del pagamento:')}
+                ${t('emails.referralReward.useCode')}
             </p>
             <div style="background-color:#EDE7D6;padding:20px;border-radius:8px;text-align:center;font-size:28px;letter-spacing:3px;font-weight:600;color:#556B2F;margin-bottom:30px;user-select:all;">
                 ${promoCode}
             </div>
             <p style="font-size:12px;color:#777;text-align:center;margin-top:40px;">
-                ${t('emails.referralReward.thanks', 'Grazie per aiutare la comunità di SnakeBee a crescere!')}
-            </p>
+               ${t('emails.referralReward.thanks')}
         </div>
         `
     };

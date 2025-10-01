@@ -9,6 +9,8 @@
   "privacyPolicy": "Devi accettare la Privacy Policy per registrarti.",
   "temporary_email": "Non è possibile usare email temporanee.",
   "connection_ip": "Troppe registrazioni da questo IP. Riprova più tardi.",
+  "referral_limit_exceeded": "Hai già invitato un amico con successo.",
+  "verifyEmail": "Registrazione quasi completata! Controlla la tua email per il codice di verifica.",
   "password_error": "Questa password è troppo comune o compromessa. Scegline un'altra.",
   "credential_error": "Errore nelle credenziali inserite",
   "passwordUpdate": "Password aggiornata con successo.",
@@ -194,6 +196,14 @@
     "activeStripe_subscription": "Il tuo abbonamento al piano {{subscription}} è stato attivato con successo."
   },
   "emails": {
+ "referralReward": {
+      "subject": "Il tuo amico si è unito a SnakeBee!",
+      "title": "Grazie per il tuo invito! 🎉",
+      "text": "Ciao {{name}},\n\nGrazie per aver invitato un amico! Come ringraziamento, ecco un codice sconto del 30% per il tuo prossimo abbonamento: {{promoCode}}",
+      "instructions": "Ciao {{name}},<br>Il tuo amico si è registrato a SnakeBee. Per ringraziarti, ti offriamo uno sconto del 30% sul tuo prossimo abbonamento.",
+      "useCode": "Usa il seguente codice al momento del pagamento:",
+      "thanks": "Grazie per aiutare la comunità di SnakeBee a crescere!"
+    },
     "eventReminder": {
       "subject": "Promemoria evento: {{title}}",
       "header": "Promemoria Evento 🐍",

@@ -26,6 +26,7 @@ import SubscriptionPage from './pages/SubscriptionPage';
 import SuccessPage from './pages/SuccessPage';
 import CancelPage from './pages/CancelPage';
 import { ToastContainer } from 'react-toastify';
+import "react-toastify/dist/ReactToastify.css";
 import i18n from './i18n';
 import { useTranslation } from 'react-i18next';
 import CalendarPage from './components/CalendarModal';
@@ -100,7 +101,7 @@ function AppContent() {
         <Route path="/canceled" element={<CancelPage />} />
 
       </Routes>
-      <ToastContainer position="top-right" autoClose={3000} />
+      <ToastContainer position="top-right" autoClose={3000} hideProgressBar  />
 
       <Footer />
       <ReptileTipBanner />

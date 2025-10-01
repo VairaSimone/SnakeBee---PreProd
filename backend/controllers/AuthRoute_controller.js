@@ -188,7 +188,7 @@ export const register = async (req, res, next) => {
     
     await newUser.save();
     await sendVerificationEmail(newUser.email, newUser.language, verificationCode);
-    res.status(201).json({ message: "Registrazione quasi completata! Controlla la tua email per il codice di verifica." });
+    res.status(201).json({ message: req.t('verifyEmail')});
   } catch (e) {
     if (e.name === 'SequelizeUniqueConstraintError') {
       return res.status(400).json({ message: req.t('Email_duplicated') });
@@ -462,9 +462,6 @@ export const verifyEmail = async (req, res, next) => {
       return res.status(400).json({ message: req.t('invalid_verification_code') });
     }
 
-    // INIZIO: Logica di ricompensa per il referral
-    // Eseguiamo la logica di ricompensa prima di salvare lo stato 'isVerified'
-    // per assicurarci che venga eseguita solo una volta.
     if (user.referredBy && !user.isVerified) {
         const referrer = await User.findById(user.referredBy);
 
@@ -494,7 +491,7 @@ export const verifyEmail = async (req, res, next) => {
             const promotionCode = await stripe.promotionCodes.create({
                 coupon: coupon.id,
                 max_redemptions: 1,
-                code: `INVITO-${referrer.name.toUpperCase().replace(/\s/g, '')}-${crypto.randomBytes(3).toString('hex').toUpperCase()}`
+                code: `COUPON-${referrer.name.toUpperCase().replace(/\s/g, '')}-${crypto.randomBytes(3).toString('hex').toUpperCase()}`
             });
 
             // 3. Invia l'email di ricompensa
