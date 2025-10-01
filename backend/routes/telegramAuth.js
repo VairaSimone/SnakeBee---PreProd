@@ -116,17 +116,24 @@ routerTelegram.post("/reptile/:id/feedings", telegramAuth, async (req, res) => {
     const reptile = await Reptile.findOne({ _id: req.params.id, user: req.user._id });
     if (!reptile) return res.status(404).json({ message: "Rettile non trovato" });
 
-    const { foodType, quantity, weightPerUnit, wasEaten, notes, date } = req.body;
+    const { foodType, quantity, weightPerUnit, wasEaten, notes, date, nextMealDayManual } = req.body;
 
     const feedingDate = new Date(date || Date.now());
     let nextFeedingDate = null;
     const retryDays = 1;
     // Logica per calcolare nextFeedingDate se il pasto è stato consumato
-    if (wasEaten && reptile.nextMealDay) {
-      nextFeedingDate = new Date(feedingDate);
-      nextFeedingDate.setDate(feedingDate.getDate() + reptile.nextMealDay);
-    } else if (!wasEaten) {
-      // Caso 2: Non mangiato -> calcola in base ai giorni di retry
+    if (wasEaten) {
+      // Usa il valore manuale se fornito, altrimenti quello del rettile
+      const daysToAdd = nextMealDayManual || reptile.nextMealDay;
+      if (daysToAdd) {
+        nextFeedingDate = new Date(feedingDate);
+        nextFeedingDate.setDate(feedingDate.getDate() + parseInt(daysToAdd, 10));
+      } else {
+        // Se arriviamo qui, significa che il bot non ha inviato i giorni necessari.
+        // È una salvaguardia per forzare il rispetto del requisito.
+        return res.status(400).json({ message: "Il numero di giorni per il prossimo pasto è obbligatorio." });
+      }
+    } else { // Caso in cui non ha mangiato
       nextFeedingDate = new Date(feedingDate);
       nextFeedingDate.setDate(feedingDate.getDate() + retryDays);
     }

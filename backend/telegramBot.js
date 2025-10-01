@@ -329,15 +329,31 @@ async function advanceFeedingConversationAfterEaten(chatId, wasEaten, messageId)
 
     try {
         state.data.wasEaten = wasEaten;
-        state.step = 'notes';
 
         // Modifica il messaggio precedente per confermare la scelta
         const confirmationText = wasEaten ? "✅ Pasto segnato come *Mangiato*." : "❌ Pasto segnato come *Non mangiato*.";
         await bot.editMessageText(confirmationText, { chat_id: chatId, message_id: messageId, parse_mode: "Markdown" });
 
         // Prosegui con lo step successivo (Note)
-        bot.sendMessage(chatId, "📝 Aggiungi delle note (o scrivi 'no'):");
+if (wasEaten) {
+            // Se ha mangiato, controlliamo se esiste una schedulazione
+            bot.sendChatAction(chatId, 'typing');
+            const { reptile } = await apiRequest('get', `/reptile/${state.reptileId}`, chatId);
 
+            if (reptile.nextMealDay) {
+                // Se la schedulazione esiste, procedi normalmente
+                state.step = 'notes';
+                bot.sendMessage(chatId, "📝 Aggiungi delle note (o scrivi 'no'):");
+            } else {
+                // Altrimenti, imposta il nuovo step e fai la domanda
+                state.step = 'ask_next_feeding_days';
+                bot.sendMessage(chatId, "📅 Tra quanti giorni prevedi la prossima alimentazione? Inserisci solo il numero (es. 7).");
+            }
+        } else {
+            // Se non ha mangiato, vai direttamente alle note
+            state.step = 'notes';
+            bot.sendMessage(chatId, "📝 Aggiungi delle note (o scrivi 'no'):");
+        }
     } catch (err) {
         // Gestione errore di modifica del messaggio (non bloccante)
         console.error("Errore nell'avanzamento della conversazione dopo 'wasEaten':", err.message);
@@ -439,6 +455,15 @@ async function handleFeedingConversation(chatId, text) {
                         ]}
                     });
                 }
+                break;
+                case 'ask_next_feeding_days':
+                const days = parseInt(text, 10);
+                if (isNaN(days) || days <= 0) {
+                    return bot.sendMessage(chatId, "Per favore, inserisci un numero valido e maggiore di zero.");
+                }
+                state.data.nextMealDayManual = days; // Salva il dato
+                state.step = 'notes'; // Prosegui allo step delle note
+                bot.sendMessage(chatId, "✅ Ottimo. Ora aggiungi delle note (o scrivi 'no'):");
                 break;
             case 'weightPerUnit':
                 state.data.weightPerUnit = parseInt(text, 10);
