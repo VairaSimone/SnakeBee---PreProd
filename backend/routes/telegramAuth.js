@@ -7,6 +7,8 @@ import Feeding from "../models/Feeding.js";
 import Event from "../models/Event.js"; // da creare se non esiste
 import FoodInventory from "../models/FoodInventory.js"; // <-- Aggiungi questa riga
 import { getUserPlan } from "../utils/getUserPlans.js";
+import { checkTelegramAccess } from "../middleware/checkTelegramAccess.js";
+
 const routerTelegram = express.Router();
 async function isInventoryAccessAllowed(userId) {
   const user = await User.findById(userId);
@@ -65,20 +67,20 @@ routerTelegram.post("/connect", async (req, res) => {
 });
 
 // 3. Lista rettili
-routerTelegram.get("/reptiles", telegramAuth, async (req, res) => {
+routerTelegram.get("/reptiles", telegramAuth, checkTelegramAccess, async (req, res) => {
   const reptiles = await Reptile.find({ user: req.user._id }).select("name species sex morph");
   res.json({ reptiles });
 });
 
 // 4. Dettagli rettile
-routerTelegram.get("/reptile/:id", telegramAuth, async (req, res) => {
+routerTelegram.get("/reptile/:id", telegramAuth, checkTelegramAccess, async (req, res) => {
   const reptile = await Reptile.findOne({ _id: req.params.id, user: req.user._id }).lean();
   if (!reptile) return res.status(404).json({ message: "Reptile not found" });
   res.json({ reptile });
 });
 
 // 5. Feedings
-routerTelegram.get("/reptile/:id/feedings", telegramAuth, async (req, res) => {
+routerTelegram.get("/reptile/:id/feedings", telegramAuth, checkTelegramAccess, async (req, res) => {
   const reptile = await Reptile.findOne({ _id: req.params.id, user: req.user._id });
   if (!reptile) return res.status(404).json({ message: "Reptile not found" });
 
@@ -87,7 +89,7 @@ routerTelegram.get("/reptile/:id/feedings", telegramAuth, async (req, res) => {
 });
 
 // 6. Eventi
-routerTelegram.get("/reptile/:id/events", telegramAuth, async (req, res) => {
+routerTelegram.get("/reptile/:id/events", telegramAuth, checkTelegramAccess, async (req, res) => {
   const reptile = await Reptile.findOne({ _id: req.params.id, user: req.user._id });
   if (!reptile) return res.status(404).json({ message: "Reptile not found" });
 
@@ -96,7 +98,7 @@ routerTelegram.get("/reptile/:id/events", telegramAuth, async (req, res) => {
 });
 
 // 7. Visualizza inventario
-routerTelegram.get("/inventory", telegramAuth, async (req, res) => {
+routerTelegram.get("/inventory", telegramAuth, checkTelegramAccess, async (req, res) => {
   try {
     const { plan } = getUserPlan(req.user);
     if (plan !== 'BREEDER') { // Logica basata su `isInventoryAccessAllowed` [cite: 118]
@@ -111,7 +113,7 @@ routerTelegram.get("/inventory", telegramAuth, async (req, res) => {
 });
 
 // 8. Aggiungi alimentazione (POST)
-routerTelegram.post("/reptile/:id/feedings", telegramAuth, async (req, res) => {
+routerTelegram.post("/reptile/:id/feedings", telegramAuth, checkTelegramAccess, async (req, res) => {
   try {
     const reptile = await Reptile.findOne({ _id: req.params.id, user: req.user._id });
     if (!reptile) return res.status(404).json({ message: "Rettile non trovato" });
@@ -172,7 +174,7 @@ routerTelegram.post("/reptile/:id/feedings", telegramAuth, async (req, res) => {
 });
 
 // 9. Aggiungi evento (POST)
-routerTelegram.post("/reptile/:id/events", telegramAuth, async (req, res) => {
+routerTelegram.post("/reptile/:id/events", telegramAuth, checkTelegramAccess, async (req, res) => {
   try {
     const reptile = await Reptile.findOne({ _id: req.params.id, user: req.user._id });
     if (!reptile) return res.status(404).json({ message: "Rettile non trovato" });

@@ -160,12 +160,16 @@ async function showReptileList(chatId, messageId = null) {
         }
 
     } catch (err) {
+        if (err.message.includes("Abbonamento non valido")) {
+    bot.sendMessage(chatId, "⚠️ Per usare il bot devi avere un abbonamento attivo.");
+  } else {
         const errorText = `❌ Errore nel recuperare la lista: ${err.message}`;
         if (messageId) {
             bot.editMessageText(errorText, { chat_id: chatId, message_id: messageId });
         } else {
             bot.sendMessage(chatId, errorText);
         }
+    }
     }
 }
 
