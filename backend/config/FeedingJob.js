@@ -102,6 +102,16 @@ cron.schedule(
                 ? i18next.t('female', { lng: user.language || 'it' })
                 : i18next.t('unknown', { lng: user.language || 'it' }),
         }));
+const reptilesForTelegram = reptiles.map((r) => {
+  const sexTranslated =
+    r.sex === 'M'
+      ? i18next.t('male', { lng: user.language || 'it' })
+      : r.sex === 'F'
+        ? i18next.t('female', { lng: user.language || 'it' })
+        : i18next.t('unknown', { lng: user.language || 'it' });
+
+  return `${r.name || 'Senza nome'} - ${r.morph || 'Morph sconosciuta'} - ${sexTranslated}`;
+}).join('\n');
 
         // Carica stringa HTML tradotta (contiene Handlebars {{#each reptiles}}...)
         const htmlTemplateString = i18next.t('feeding_email_html', {
@@ -157,15 +167,15 @@ cron.schedule(
           await notification.save();
           console.log(`Email inviata a ${user.email} (rettili: ${reptileListText})`);
        
-        if (user.telegramId) {
-            try {
-              const telegramMessage = `👋 Ciao ${user.name || ''}!\nOggi è il giorno del pasto per:\n\n*${reptileListText}*\n\nNon dimenticarti di loro! 🐍`;
-              await bot.sendMessage(user.telegramId, telegramMessage, { parse_mode: "Markdown" });
-              console.log(`Notifica Telegram inviata a ${user.telegramId}`);
-            } catch (telegramErr) {
-              console.error(`Errore nell'invio notifica Telegram a ${user.telegramId}:`, telegramErr.message);
-            }
-          }
+if (user.telegramId) {
+  try {
+    const telegramMessage = `👋 Ciao ${user.name || ''}!\nOggi è il giorno del pasto per:\n\n${reptilesForTelegram}\n\nNon dimenticarti di loro! 🐍`;
+    await bot.sendMessage(user.telegramId, telegramMessage, { parse_mode: "Markdown" });
+    console.log(`Notifica Telegram inviata a ${user.telegramId}`);
+  } catch (telegramErr) {
+    console.error(`Errore nell'invio notifica Telegram a ${user.telegramId}:`, telegramErr.message);
+  }
+}
 
         } catch (err) {
           console.error(`Errore nell'invio email a ${user.email}:`, err?.message || err);
