@@ -7,7 +7,7 @@ import Feeding from "../models/Feeding.js";
 import Event from "../models/Event.js"; // da creare se non esiste
 import FoodInventory from "../models/FoodInventory.js"; // <-- Aggiungi questa riga
 import { getUserPlan } from "../utils/getUserPlans.js";
-import { checkTelegramAccess } from "../middleware/checkTelegramAccess.js";
+import { checkTelegramAccess } from "../middlewares/checkTelegramAccess.js";
 
 const routerTelegram = express.Router();
 async function isInventoryAccessAllowed(userId) {
