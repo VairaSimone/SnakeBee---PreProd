@@ -14,7 +14,7 @@ export async function checkTelegramAccess(req, res, next) {
     }
 
     const planInfo = getUserPlan(user);
-    if (!planInfo.isAllowed) {
+if (planInfo.plan === 'NEOPHYTE') {
       return res.status(403).json({ message: "Abbonamento non valido per l'accesso al bot" });
     }
 
