@@ -1,5 +1,5 @@
 import User from "../models/User.js";
-import { getUserPlan } from "../utils/getUserPlan.js";
+import { getUserPlan } from "../utils/getUserPlans.js";
 
 export async function checkTelegramAccess(req, res, next) {
   try {
