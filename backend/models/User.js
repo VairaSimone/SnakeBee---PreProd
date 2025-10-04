@@ -117,12 +117,6 @@ const userSchema = new Schema(
             type: Boolean,
             default: false
         },
-        telegramId: {
-            type: String,
-            unique: true,
-            sparse: true // permette valori nulli
-        },
-
         privacyConsent: {
             accepted: {
                 type: Boolean,
@@ -140,6 +134,12 @@ const userSchema = new Schema(
             userAgent: String,
             createdAt: Date
         },
+         telegramId: {
+            type: String,
+            unique: true,
+            sparse: true // permette valori nulli
+        },
+
         referralCode: {
             type: String,
             unique: true,

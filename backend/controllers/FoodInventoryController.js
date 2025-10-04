@@ -126,85 +126,78 @@ export const getFeedingSuggestions = async (req, res) => {
     const todayUTC = new Date();
     todayUTC.setUTCHours(0, 0, 0, 0);
 
-    // Aggregation Pipeline per ottenere SOLO l'ultimo pasto per ogni rettile
-    const validFeedings = await Feeding.aggregate([
-      // Fase 1: Ordina tutti i pasti dal più recente al più vecchio
+    // Otteniamo gli ultimi 3 feeding per ogni rettile (solo quelli mangiati)
+    const recentFeedings = await Feeding.aggregate([
+      { $match: { wasEaten: true } },
       { $sort: { date: -1 } },
-      
-      // Fase 2: Raggruppa per rettile e prendi solo il primo documento (il più recente)
       {
         $group: {
-          _id: "$reptile", // Raggruppa per ID del rettile
-          latestFeeding: { $first: "$$ROOT" } // Prendi l'intero documento del pasto più recente
+          _id: "$reptile",
+          feedings: { $push: "$$ROOT" }
         }
       },
-
-      // Fase 3: Sostituisci la struttura del documento con quella del pasto più recente
-      { $replaceRoot: { newRoot: "$latestFeeding" } },
-
-      // Fase 4: Ora che abbiamo solo i pasti più recenti, filtriamo quelli la cui prossima data di pasto è passata
-      { $match: { nextFeedingDate: { $lte: todayUTC } } },
-
-      // Fase 5: "Popola" manualmente i dati del rettile per verificare l'utente proprietario
       {
-        $lookup: {
-          from: "Reptile", // Nome della collezione dei rettili
-          localField: "reptile",
-          foreignField: "_id",
-          as: "reptileInfo"
+        $project: {
+          reptile: "$_id",
+          feedings: { $slice: ["$feedings", 3] }
         }
-      },
-      
-      // Fase 6: Decomprimi l'array 'reptileInfo' creato da $lookup
-      { $unwind: "$reptileInfo" },
-
-      // Fase 7: Filtra per i rettili che appartengono all'utente corrente
-      { $match: { "reptileInfo.user": new mongoose.Types.ObjectId(userId) } },
-      
-      // Fase 8: Rinomina 'reptileInfo' in 'reptile' per coerenza con il codice originale
-      { $addFields: { reptile: "$reptileInfo" } },
-      { $project: { reptileInfo: 0 } }
-    ]);
-    
-    if (validFeedings.length === 0) {
-      return res.json({ message: req.t('no_feeding_today'), suggestions: [] });
-    }
-
-    // Il resto della logica per raggruppare il cibo necessario rimane invariato
-    const needed = {};
-    validFeedings.forEach(f => {
-      const foodType = f.foodType.trim(); // Aggiunto .trim() per rimuovere spazi come in " topi"
-      const weightPerUnit = f.weightPerUnit;
-      const key = `${foodType}_${weightPerUnit}`;
-
-      if (!needed[key]) {
-        needed[key] = {
-          foodType: foodType,
-          weightPerUnit: weightPerUnit,
-          quantity: 0
-        };
       }
-      // La quantità viene dal campo 'quantity' del record di alimentazione
-      needed[key].quantity += f.quantity; 
-    });
+    ]);
 
+    // Preleva informazioni rettili + inventario utente
+    const reptileIds = recentFeedings.map(f => f.reptile);
+    const reptiles = await Reptile.find({ _id: { $in: reptileIds }, user: userId });
     const inventory = await FoodInventory.find({ user: userId });
 
-    const suggestions = Object.values(needed).map(item => {
-      const stock = inventory.find(
-        i => i.foodType === item.foodType && i.weightPerUnit === item.weightPerUnit
-      );
+    const suggestions = [];
 
-      if (!stock) {
-        return { ...item, available: 0, warning: 'food_not_found' };
+    for (const reptileData of recentFeedings) {
+      const reptile = reptiles.find(r => r._id.toString() === reptileData.reptile.toString());
+      if (!reptile) continue;
+
+      // Calcolo media pesi e tipo più frequente
+      const avgWeight = reptileData.feedings.reduce((acc, f) => acc + f.weightPerUnit, 0) / reptileData.feedings.length;
+      const foodTypeFreq = reptileData.feedings.reduce((acc, f) => {
+        acc[f.foodType] = (acc[f.foodType] || 0) + 1;
+        return acc;
+      }, {});
+      const mostCommonType = Object.entries(foodTypeFreq).sort((a, b) => b[1] - a[1])[0][0];
+
+      const idealType = reptile.foodType || mostCommonType;
+      const idealWeight = reptile.weightPerUnit || Math.round(avgWeight);
+
+      // Cerca nell’inventario la preda più vicina per tipo
+      const sameTypeFoods = inventory.filter(i => i.foodType === idealType);
+      if (sameTypeFoods.length === 0) {
+        suggestions.push({
+          reptile: reptile.name,
+          idealFood: `${idealType} ${idealWeight}g`,
+          suggestion: null,
+          message: 'Nessuna preda di questo tipo in inventario'
+        });
+        continue;
       }
 
-      if (stock.quantity < item.quantity) {
-        return { ...item, available: stock.quantity, warning: 'not_enough_stock' };
-      }
+      // Ordina per distanza di peso
+      const bestMatch = sameTypeFoods.sort(
+        (a, b) => Math.abs(a.weightPerUnit - idealWeight) - Math.abs(b.weightPerUnit - idealWeight)
+      )[0];
 
-      return { ...item, available: stock.quantity, warning: null };
-    });
+      suggestions.push({
+        reptile: reptile.name,
+        idealFood: `${idealType} ${idealWeight}g`,
+        suggestion: `${bestMatch.foodType} ${bestMatch.weightPerUnit}g`,
+        available: bestMatch.quantity,
+        message:
+          bestMatch.weightPerUnit === idealWeight
+            ? 'Perfetta corrispondenza, scongela questa.'
+            : `Preda ideale non trovata, suggerita la più vicina (${bestMatch.weightPerUnit}g).`
+      });
+    }
+
+    if (suggestions.length === 0) {
+      return res.json({ message: req.t('no_feeding_today'), suggestions: [] });
+    }
 
     res.json({ suggestions });
 

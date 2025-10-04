@@ -23,18 +23,28 @@ authRouter.post('/reset-password', validateBody(validateAuth.resetPasswordSchema
 authRouter.post('/resend-verification', authController.resendVerificationEmail);
 authRouter.post("/change-email", authenticateJWT, validateBody(validateAuth.changeEmailSchema), authController.changeEmailAndResendVerification);
 authRouter.post("/change-password", [authenticateJWT, validateBody(validateAuth.changePasswordSchema)], authController.changePassword);
-authRouter.get("/login-google",  (req, res, next) => {
-    const refCode = req.query.ref;
-    if (refCode) {
-        req.session.refCode = refCode;
-    }
+// Nel tuo file di rotte (authRouter)
+// ... altri import
+
+authRouter.get(
+  "/login-google",
+  maintenanceCheck,
+  (req, res, next) => {
+    // Cattura il referralCode dalla query e lo passa come 'state' a Google.
+    // Passport lo renderà disponibile nel callback.
+    const { referralCode } = req.query;
+    const state = referralCode ? Buffer.from(JSON.stringify({ referralCode })).toString('base64') : undefined;
+    
     passport.authenticate("google", {
-        scope: ["profile", "email"],
-        accessType: "offline",
-        prompt: "consent"
+      scope: ["profile", "email"],
+      accessType: "offline",
+      prompt: "consent",
+      state: state // Passa lo stato qui
     })(req, res, next);
-});
-authRouter.get("/callback-google", passport.authenticate("google", { session: false }), maintenanceCheck, authController.callBackGoogle)
+  }
+);
+
+authRouter.get("/callback-google", passport.authenticate("google", { session: false }), authController.callBackGoogle);
 authRouter.get('/login-history', authenticateJWT, async (req, res) => {
     try {
         const user = await User.findById(req.user.userid).select('loginHistory');

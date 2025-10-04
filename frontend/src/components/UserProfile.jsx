@@ -4,7 +4,7 @@ import { useDispatch } from 'react-redux';
 import { logoutUser, setLanguage } from '../features/userSlice';
 import { Link, useNavigate } from 'react-router-dom';
 import i18n from '../i18n';
-import { FiUser, FiShield, FiBell, FiUpload, FiDownload, FiTrash2, FiAlertTriangle, FiCheckCircle, FiXCircle, FiGift } from 'react-icons/fi';
+import { FiUser, FiShield, FiBell, FiUpload, FiDownload, FiTrash2, FiAlertTriangle, FiCheckCircle, FiXCircle, FiGift, FiMail } from 'react-icons/fi';
 import { Trans, useTranslation } from 'react-i18next';
 
 
@@ -105,7 +105,13 @@ const UserProfile = () => {
   const [referralLink, setReferralLink] = useState('');
   const [referralError, setReferralError] = useState('');
   const [isCopied, setIsCopied] = useState(false);
-
+const [bulkFilters, setBulkFilters] = useState('{ "subscription.plan": "premium", "language": "it" }');
+const [bulkSubject, setBulkSubject] = useState('');
+const [bulkHtml, setBulkHtml] = useState('');
+const [bulkText, setBulkText] = useState('');
+const [sendingBulk, setSendingBulk] = useState(false);
+const [bulkResult, setBulkResult] = useState(null);
+const [bulkEmails, setBulkEmails] = useState(''); 
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const avatarInputRef = useRef(null);
@@ -135,7 +141,52 @@ const UserProfile = () => {
       setAvatarPreview('');
     }
   }, [avatar]);
+const handleSendBulkEmail = async (e) => {
+  e.preventDefault();
+  setSendingBulk(true);
+  setBulkResult(null);
 
+  let filtersObj = {};
+  try {
+    filtersObj = JSON.parse(bulkFilters);
+  } catch {
+    addToast("JSON filtri non valido", "error");
+    setSendingBulk(false);
+    return;
+  }
+
+  if (!bulkSubject || !bulkHtml) {
+    addToast("Oggetto e contenuto HTML sono obbligatori", "error");
+    setSendingBulk(false);
+    return;
+  }
+  const emailsArray = bulkEmails
+    .split(',')
+    .map(e => e.trim())
+    .filter(e => emailRegex.test(e)); // valida email
+
+  if (bulkEmails && emailsArray.length === 0) {
+    addToast("Formato email non valido", "error");
+    setSendingBulk(false);
+    return;
+  }
+  try {
+    const { data } = await api.post('/user/admin/send-bulk-email', {
+      filters: filtersObj,
+      emails: emailsArray,
+      subject: bulkSubject,
+      html: bulkHtml,
+      text: bulkText
+    });
+    setBulkResult(data);
+    addToast(`Email inviate: ${data.sent}/${data.total}`, 'success');
+  } catch (err) {
+    console.error(err);
+    addToast(err.response?.data?.error || "Errore invio email", "error");
+  } finally {
+    setSendingBulk(false);
+  }
+};
   useEffect(() => {
     const fetchUser = async () => {
       try {
@@ -496,6 +547,68 @@ const UserProfile = () => {
                 </div>
               )}
             </SettingsCard>
+
+{user.role === 'admin' && (
+  <SettingsCard title="Invio Email Bulk" icon={<FiMail className="text-indigo-500 w-6 h-6" />}>
+    <form onSubmit={handleSendBulkEmail} className="space-y-4">
+      <div>
+        <label className="block text-sm font-medium text-slate-600 mb-1">Filtri (JSON)</label>
+        <textarea
+          value={bulkFilters}
+          onChange={(e) => setBulkFilters(e.target.value)}
+          placeholder='{ "subscription.plan": "premium", "language": "it" }'
+          className="w-full border-slate-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition-colors bg-white text-black p-2 h-24"
+        />
+      </div>
+      <InputField
+  id="bulkEmails"
+  label="Email esterne (separate da virgola)"
+  value={bulkEmails}
+  onChange={(e) => setBulkEmails(e.target.value)}
+  placeholder="esempio1@email.com, esempio2@email.com"
+/>
+
+      <InputField
+        id="bulkSubject"
+        label="Oggetto"
+        value={bulkSubject}
+        onChange={(e) => setBulkSubject(e.target.value)}
+        required
+      />
+      <div>
+        <label className="block text-sm font-medium text-slate-600 mb-1">Contenuto HTML</label>
+        <textarea
+          value={bulkHtml}
+          onChange={(e) => setBulkHtml(e.target.value)}
+          placeholder="<h1>Ciao premium user</h1>"
+          className="w-full border-slate-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition-colors bg-white text-black p-2 h-32"
+          required
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-slate-600 mb-1">Testuale (opzionale)</label>
+        <textarea
+          value={bulkText}
+          onChange={(e) => setBulkText(e.target.value)}
+          placeholder="Ciao premium user, versione testuale"
+          className="w-full border-slate-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition-colors bg-white text-black p-2 h-24"
+        />
+      </div>
+      <button
+        type="submit"
+        className="w-full bg-indigo-600 text-white py-2 px-4 rounded-md font-semibold hover:bg-indigo-700 transition-colors"
+        disabled={sendingBulk}
+      >
+        {sendingBulk ? "Invio in corso..." : "Invia Email"}
+      </button>
+    </form>
+    {bulkResult && (
+      <div className="mt-4 text-sm text-slate-700">
+        Totale utenti: {bulkResult.total}, Inviate: {bulkResult.sent}, Fallite: {bulkResult.failed}
+      </div>
+    )}
+  </SettingsCard>
+)}
 
             <div className="bg-white rounded-lg shadow-md border-2 border-red-200">
               <div className="p-6 border-b border-red-200">
