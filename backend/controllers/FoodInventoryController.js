@@ -119,16 +119,18 @@ export const getFeedingSuggestions = async (req, res) => {
   try {
     const userId = req.user.userid;
 
+    // Controllo accesso premium
     if (!await isInventoryAccessAllowed(userId)) {
       return res.status(403).json({ message: req.t('premium_only_feature') });
     }
 
+    // Data di oggi (UTC)
     const todayUTC = new Date();
     todayUTC.setUTCHours(0, 0, 0, 0);
 
-    // Otteniamo gli ultimi 3 feeding per ogni rettile (solo quelli mangiati)
+    // Prendi ultimi 3 feedings mangiati per ogni rettile
     const recentFeedings = await Feeding.aggregate([
-      { $match: { wasEaten: true } },
+      { $match: { wasEaten: true, user: userId } },
       { $sort: { date: -1 } },
       {
         $group: {
@@ -144,10 +146,17 @@ export const getFeedingSuggestions = async (req, res) => {
       }
     ]);
 
-    // Preleva informazioni rettili + inventario utente
+    if (recentFeedings.length === 0) {
+      return res.json({ message: req.t('no_feeding_today'), suggestions: [] });
+    }
+
+    // Ottieni informazioni rettili e inventario
     const reptileIds = recentFeedings.map(f => f.reptile);
     const reptiles = await Reptile.find({ _id: { $in: reptileIds }, user: userId });
     const inventory = await FoodInventory.find({ user: userId });
+
+    // Copia temporanea dell’inventario per decrementare quantità
+    const tempInventory = inventory.map(i => ({ ...i }));
 
     const suggestions = [];
 
@@ -155,7 +164,7 @@ export const getFeedingSuggestions = async (req, res) => {
       const reptile = reptiles.find(r => r._id.toString() === reptileData.reptile.toString());
       if (!reptile) continue;
 
-      // Calcolo media pesi e tipo più frequente
+      // Calcola media pesi e tipo più frequente
       const avgWeight = reptileData.feedings.reduce((acc, f) => acc + f.weightPerUnit, 0) / reptileData.feedings.length;
       const foodTypeFreq = reptileData.feedings.reduce((acc, f) => {
         acc[f.foodType] = (acc[f.foodType] || 0) + 1;
@@ -166,22 +175,29 @@ export const getFeedingSuggestions = async (req, res) => {
       const idealType = reptile.foodType || mostCommonType;
       const idealWeight = reptile.weightPerUnit || Math.round(avgWeight);
 
-      // Cerca nell’inventario la preda più vicina per tipo
-      const sameTypeFoods = inventory.filter(i => i.foodType === idealType);
+      // Filtra prede disponibili dello stesso tipo
+      let sameTypeFoods = tempInventory.filter(i => i.foodType === idealType && i.quantity > 0);
+
       if (sameTypeFoods.length === 0) {
+        // Nessuna preda disponibile
         suggestions.push({
           reptile: reptile.name,
           idealFood: `${idealType} ${idealWeight}g`,
           suggestion: null,
-          message: 'Nessuna preda di questo tipo in inventario'
+          available: 0,
+          message: 'Nessuna preda di questo tipo in inventario',
+          warning: 'food_not_found'
         });
         continue;
       }
 
-      // Ordina per distanza di peso
+      // Ordina per distanza dal peso ideale
       const bestMatch = sameTypeFoods.sort(
         (a, b) => Math.abs(a.weightPerUnit - idealWeight) - Math.abs(b.weightPerUnit - idealWeight)
       )[0];
+
+      // Decrementa quantità temporanea
+      bestMatch.quantity--;
 
       suggestions.push({
         reptile: reptile.name,
@@ -191,12 +207,9 @@ export const getFeedingSuggestions = async (req, res) => {
         message:
           bestMatch.weightPerUnit === idealWeight
             ? 'Perfetta corrispondenza, scongela questa.'
-            : `Preda ideale non trovata, suggerita la più vicina (${bestMatch.weightPerUnit}g).`
+            : `Preda ideale non trovata, suggerita la più vicina (${bestMatch.weightPerUnit}g).`,
+        warning: bestMatch.weightPerUnit === idealWeight ? null : 'closest_match'
       });
-    }
-
-    if (suggestions.length === 0) {
-      return res.json({ message: req.t('no_feeding_today'), suggestions: [] });
     }
 
     res.json({ suggestions });
