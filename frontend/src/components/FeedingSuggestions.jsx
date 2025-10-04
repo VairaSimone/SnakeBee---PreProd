@@ -18,7 +18,7 @@ const mappedSuggestions = data.suggestions.map(s => ({
   foodType: s.idealFood?.split(" ")[0] ?? "—",
   idealWeight: parseInt(s.idealFood?.split(" ")[1]) || null,
   suggestedWeight: s.suggestion,
-  available: null,
+  available: s.available ?? "—",
   warning: s.suggestion === null ? "food_not_found" : null,
   note: s.message,
 }));
@@ -125,20 +125,6 @@ setMessage(null); // non serve, lo gestiamo in note
           </tbody>
         </table>
       </div>
-
-      {suggestions.some((s) => s.note) && (
-        <div className="mt-4 space-y-1">
-          {suggestions.map(
-            (s, i) =>
-              s.note && (
-                <p key={i} className="text-xs text-slate-600 italic">
-                  {s.reptileName ? `${s.reptileName}: ` : ""}
-                  {s.note}
-                </p>
-              )
-          )}
-        </div>
-      )}
     </div>
   );
 }
