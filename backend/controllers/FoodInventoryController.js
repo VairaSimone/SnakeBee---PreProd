@@ -130,7 +130,7 @@ export const getFeedingSuggestions = async (req, res) => {
 
     // Prendi ultimi 3 feedings mangiati per ogni rettile
     const recentFeedings = await Feeding.aggregate([
-      { $match: { wasEaten: true, user: userId } },
+      { $match: { wasEaten: true } },
       { $sort: { date: -1 } },
       {
         $group: {
@@ -152,7 +152,7 @@ export const getFeedingSuggestions = async (req, res) => {
 
     // Ottieni informazioni rettili e inventario
     const reptileIds = recentFeedings.map(f => f.reptile);
-    const reptiles = await Reptile.find({ _id: { $in: reptileIds }, user: userId });
+const reptiles = await Reptile.find({ _id: { $in: reptileIds }, user: userId });
     const inventory = await FoodInventory.find({ user: userId });
 
     // Copia temporanea dell’inventario per decrementare quantità
