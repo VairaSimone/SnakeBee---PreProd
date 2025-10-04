@@ -13,8 +13,17 @@ export default function FeedingSuggestions() {
     const fetchSuggestions = async () => {
       try {
         const { data } = await api.get("/inventory/feeding-suggestions");
-        setSuggestions(data.suggestions || []);
-        setMessage(data.message || null);
+const mappedSuggestions = data.suggestions.map(s => ({
+  reptileName: s.reptile,
+  foodType: s.idealFood?.split(" ")[0] ?? "—",
+  idealWeight: parseInt(s.idealFood?.split(" ")[1]) || null,
+  suggestedWeight: s.suggestion,
+  available: null,
+  warning: s.suggestion === null ? "food_not_found" : null,
+  note: s.message,
+}));
+setSuggestions(mappedSuggestions);
+setMessage(null); // non serve, lo gestiamo in note
       } catch (err) {
         console.error("Error fetching feeding suggestions:", err);
         setMessage(t("inventoryPage.error_loading"));

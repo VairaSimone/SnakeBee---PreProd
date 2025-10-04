@@ -197,10 +197,19 @@
         "suggestionsError": "No reptiles should eat today or they don't have the details entered.",
         "todaySuggestions": "Today's food suggestions for defrosting:",
         "toDefrost": "To Defrost:",
-        "available": "Available",
         "warning": "Warning:",
-        "not_enough_stock": "Food not in your inventory",
-        "food_not_found": "Food not found"
+        "feedingSuggestions": "Feeding Suggestions",
+"reptile": "Reptile",
+"idealSize": "Ideal Size",
+"suggestedSize": "Recommended Size",
+"available": "Available",
+"status": "Status",
+"closest": "Closest",
+"ok": "OK",
+"closest_match": "Closest Suggestion",
+"not_enough_stock": "Not enough",
+"food_not_found": "Food not found",
+"error_loading": "Error loading suggestions"
     },
     "home": {
         "hero": {
