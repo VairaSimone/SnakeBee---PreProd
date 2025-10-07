@@ -3,6 +3,8 @@ import api from "../services/api";
 import { useTranslation } from "react-i18next";
 import { AlertTriangle, CheckCircle, Info } from "lucide-react";
 
+const translateFoodType = (foodType, t) => t(`inventoryPage.${foodType}`, { defaultValue: foodType });
+
 export default function FeedingSuggestions() {
   const { t } = useTranslation();
   const [suggestions, setSuggestions] = useState([]);
@@ -16,18 +18,18 @@ export default function FeedingSuggestions() {
         const { data } = await api.get("/inventory/feeding-suggestions");
         const mappedSuggestions = data.suggestions.map(s => ({
           reptileName: s.reptile,
-          foodType: s.idealFood?.split(" ")[0] ?? "—",
+          foodType: translateFoodType(s.idealFood?.split(" ")[0] ?? "—", t),
           idealWeight: parseInt(s.idealFood?.split(" ")[1]) || null,
           suggestedWeight: s.suggestion
             ? parseInt(s.suggestion.split(" ")[1])
             : null,
-                      available: s.available ?? "—",
+          available: s.available ?? "—",
           warning: s.suggestion === null ? "food_not_found" : null,
           note: s.message,
         }));
         setSuggestions(mappedSuggestions);
-                setTotalSummary(data.totalSummary || []);
-        setMessage(null); // non serve, lo gestiamo in note
+        setTotalSummary(data.totalSummary || []);
+        setMessage(null);
       } catch (err) {
         console.error("Error fetching feeding suggestions:", err);
         setMessage(t("inventoryPage.error_loading"));
@@ -46,12 +48,12 @@ export default function FeedingSuggestions() {
   if (message && suggestions.length === 0)
     return <p className="text-center text-slate-600">{message}</p>;
 
- return (
+return (
     <div className="p-6 bg-white rounded-2xl shadow-md border border-slate-100">
       <h2 className="text-xl font-semibold text-slate-800 mb-4">
         {t("inventoryPage.feedingSuggestions")}
       </h2>
-      {/* --- Riepilogo Totale --- */}
+
       {totalSummary.length > 0 && (
         <div className="mt-4 p-4 bg-slate-50 rounded-lg border border-slate-200">
           <h3 className="text-lg font-semibold text-slate-700 mb-2">{t("inventoryPage.totalSummary")}</h3>
@@ -138,7 +140,6 @@ export default function FeedingSuggestions() {
           </tbody>
         </table>
       </div>
-
     </div>
   );
 }
