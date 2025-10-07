@@ -156,7 +156,7 @@ const reptiles = await Reptile.find({ _id: { $in: reptileIds }, user: userId });
     const inventory = await FoodInventory.find({ user: userId });
 
     // Copia temporanea dell’inventario per decrementare quantità
-    const tempInventory = inventory.map(i => ({ ...i }));
+const tempInventory = inventory.map(i => i.toObject());
 
     const suggestions = [];
 
@@ -165,7 +165,13 @@ const reptiles = await Reptile.find({ _id: { $in: reptileIds }, user: userId });
       if (!reptile) continue;
 
       // Calcola media pesi e tipo più frequente
-      const avgWeight = reptileData.feedings.reduce((acc, f) => acc + f.weightPerUnit, 0) / reptileData.feedings.length;
+const weights = reptileData.feedings
+  .map(f => f.weightPerUnit)
+  .filter(w => typeof w === 'number' && !isNaN(w));
+
+const avgWeight = weights.length
+  ? weights.reduce((a, b) => a + b) / weights.length
+  : 0;
       const foodTypeFreq = reptileData.feedings.reduce((acc, f) => {
         acc[f.foodType] = (acc[f.foodType] || 0) + 1;
         return acc;
@@ -192,9 +198,11 @@ const reptiles = await Reptile.find({ _id: { $in: reptileIds }, user: userId });
       }
 
       // Ordina per distanza dal peso ideale
-      const bestMatch = sameTypeFoods.sort(
-        (a, b) => Math.abs(a.weightPerUnit - idealWeight) - Math.abs(b.weightPerUnit - idealWeight)
-      )[0];
+      const bestMatch = sameTypeFoods.reduce((best, curr) => {
+  return !best || Math.abs(curr.weightPerUnit - idealWeight) < Math.abs(best.weightPerUnit - idealWeight)
+    ? curr
+    : best;
+}, null);
 
       // Decrementa quantità temporanea
       bestMatch.quantity--;
