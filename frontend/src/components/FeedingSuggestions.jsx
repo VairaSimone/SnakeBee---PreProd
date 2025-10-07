@@ -16,19 +16,30 @@ export default function FeedingSuggestions() {
     const fetchSuggestions = async () => {
       try {
         const { data } = await api.get("/inventory/feeding-suggestions");
-        const mappedSuggestions = data.suggestions.map(s => ({
-          reptileName: s.reptile,
-          foodType: translateFoodType(s.idealFood?.split(" ")[0] ?? "—", t),
-          idealWeight: parseInt(s.idealFood?.split(" ")[1]) || null,
-          suggestedWeight: s.suggestion
-            ? parseInt(s.suggestion.split(" ")[1])
-            : null,
-          available: s.available ?? "—",
-          warning: s.suggestion === null ? "food_not_found" : null,
-          note: s.message,
-        }));
-        setSuggestions(mappedSuggestions);
-        setTotalSummary(data.totalSummary || []);
+// Dentro FeedingSuggestions, subito dopo la fetch
+const mappedSuggestions = data.suggestions.map(s => ({
+  reptileName: s.reptile,
+  foodType: translateFoodType(s.idealFood?.split(" ")[0] ?? "—", t),
+  idealWeight: parseInt(s.idealFood?.split(" ")[1]) || null,
+  suggestedWeight: s.suggestion
+    ? parseInt(s.suggestion.split(" ")[1])
+    : null,
+  available: s.available ?? "—",
+  warning: s.suggestion === null ? "food_not_found" : null,
+  note: s.message,
+}));
+
+// Traduzione del riepilogo totale
+const translatedSummary = (data.totalSummary || []).map(item => {
+  // Esempio item: "2 Topo 35g"
+  const match = item.match(/^(\d+)\s+(\w+)\s+(.+)$/);
+  if (!match) return item; // se la stringa non è standard, la lascio così
+  const [, quantity, foodType, weight] = match;
+  return `${quantity} ${translateFoodType(foodType, t)} ${weight}`;
+});
+
+setSuggestions(mappedSuggestions);
+setTotalSummary(translatedSummary);
         setMessage(null);
       } catch (err) {
         console.error("Error fetching feeding suggestions:", err);
