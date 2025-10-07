@@ -165,6 +165,7 @@
     "inventoryPage": {
         "title": "Food Inventory",
         "foodType": "Food Type",
+        "totalSummary": "Total to thaw",
         "selectType": "Select type",
         "quantity": "Quantity",
         "quantityPlaceholder": "Enter quantity",

@@ -51,6 +51,17 @@ export default function FeedingSuggestions() {
       <h2 className="text-xl font-semibold text-slate-800 mb-4">
         {t("inventoryPage.feedingSuggestions")}
       </h2>
+      {/* --- Riepilogo Totale --- */}
+      {totalSummary.length > 0 && (
+        <div className="mt-4 p-4 bg-slate-50 rounded-lg border border-slate-200">
+          <h3 className="text-lg font-semibold text-slate-700 mb-2">{t("inventoryPage.totalSummary")}</h3>
+          <ul className="list-disc list-inside text-slate-700">
+            {totalSummary.map((item, idx) => (
+              <li key={idx}>{item}</li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       <div className="overflow-x-auto max-h-96 overflow-y-auto">
         <table className="w-full text-sm border-collapse">
@@ -128,17 +139,6 @@ export default function FeedingSuggestions() {
         </table>
       </div>
 
-      {/* --- Riepilogo Totale --- */}
-      {totalSummary.length > 0 && (
-        <div className="mt-4 p-4 bg-slate-50 rounded-lg border border-slate-200">
-          <h3 className="text-lg font-semibold text-slate-700 mb-2">{t("inventoryPage.totalSummary")}</h3>
-          <ul className="list-disc list-inside text-slate-700">
-            {totalSummary.map((item, idx) => (
-              <li key={idx}>{item}</li>
-            ))}
-          </ul>
-        </div>
-      )}
     </div>
   );
 }

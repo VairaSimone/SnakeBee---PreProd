@@ -164,6 +164,7 @@
     },
     "inventoryPage": {
         "title": "Inventario Cibo",
+        "totalSummary": "Totale da scongelare",
         "foodType": "Tipo Cibo",
         "selectType": "Seleziona tipo",
         "quantity": "Quantità",
