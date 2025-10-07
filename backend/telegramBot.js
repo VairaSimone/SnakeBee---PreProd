@@ -142,7 +142,7 @@ async function showReptileList(chatId, messageId = null) {
         }
 
         const inlineKeyboard = reptiles.map(r => ([{
-            text: r.name || "Senza nome",
+text: r.name || r.morph || "Senza nome", 
             callback_data: `${CALLBACK_PREFIX.REPTILE_SELECTED}${r._id}`
         }]));
 
