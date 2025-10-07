@@ -229,12 +229,12 @@ const avgWeight = weights.length
       // Decrementa quantità temporanea
       const availableBefore = bestMatch.quantity;
       bestMatch.quantity = Math.max(bestMatch.quantity - 1, 0); 
-      
+
       suggestions.push({
         reptile: reptile.name,
         idealFood: `${idealType} ${idealWeight}g`,
         suggestion: `${bestMatch.foodType} ${bestMatch.weightPerUnit}g`,
-        available: bestMatch.quantity,
+available: availableBefore,
         message:
           bestMatch.weightPerUnit === idealWeight
             ? 'Perfetta corrispondenza, scongela questa.'
