@@ -30,7 +30,7 @@ export const getInventory = async (req, res) => {
 
 export const updateInventoryItem = async (req, res) => {
   const { id } = req.params;
-  const { quantity, weightPerUnit } = req.body;
+  const { quantity, weightPerUnit, foodType  } = req.body;
 
   if (!isInventoryAccessAllowed(req.user.userid)) {
     return res.status(403).json({ message: req.t('premium_only_feature')  });
@@ -39,7 +39,7 @@ export const updateInventoryItem = async (req, res) => {
   try {
     const item = await FoodInventory.findOneAndUpdate(
       { _id: id, user: req.user.userid },
-      { quantity, weightPerUnit },
+      { quantity, weightPerUnit, foodType  },
       { new: true }
     );
 
@@ -118,6 +118,7 @@ export const deleteFeeding = async (req, res) => {
 export const getFeedingSuggestions = async (req, res) => {
   try {
     const userId = req.user.userid;
+const summary = {}; // Oggetto per accumulare i totali
 
     // Controllo accesso premium
     if (!await isInventoryAccessAllowed(userId)) {
@@ -241,9 +242,20 @@ available: availableBefore,
             : `Preda ideale non trovata, suggerita la più vicina (${bestMatch.weightPerUnit}g).`,
         warning: bestMatch.weightPerUnit === idealWeight ? null : 'closest_match'
       });
-    }
 
-    res.json({ suggestions });
+    const key = `${bestMatch.foodType} ${bestMatch.weightPerUnit}g`;
+  if (summary[key]) {
+    summary[key] += 1;
+  } else {
+    summary[key] = 1;
+  }
+}
+
+// Trasforma summary in array leggibile
+const summaryList = Object.entries(summary).map(([food, qty]) => `${qty} ${food}`);  
+    
+
+    res.json({ suggestions, totalSummary: summaryList  });
 
   } catch (err) {
     console.error('Error generating feeding suggestions:', err);

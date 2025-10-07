@@ -6,6 +6,7 @@ import { AlertTriangle, CheckCircle, Info } from "lucide-react";
 export default function FeedingSuggestions() {
   const { t } = useTranslation();
   const [suggestions, setSuggestions] = useState([]);
+  const [totalSummary, setTotalSummary] = useState([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState(null);
 
@@ -13,17 +14,20 @@ export default function FeedingSuggestions() {
     const fetchSuggestions = async () => {
       try {
         const { data } = await api.get("/inventory/feeding-suggestions");
-const mappedSuggestions = data.suggestions.map(s => ({
-  reptileName: s.reptile,
-  foodType: s.idealFood?.split(" ")[0] ?? "—",
-  idealWeight: parseInt(s.idealFood?.split(" ")[1]) || null,
-  suggestedWeight: s.suggestion,
-  available: s.available ?? "—",
-  warning: s.suggestion === null ? "food_not_found" : null,
-  note: s.message,
-}));
-setSuggestions(mappedSuggestions);
-setMessage(null); // non serve, lo gestiamo in note
+        const mappedSuggestions = data.suggestions.map(s => ({
+          reptileName: s.reptile,
+          foodType: s.idealFood?.split(" ")[0] ?? "—",
+          idealWeight: parseInt(s.idealFood?.split(" ")[1]) || null,
+          suggestedWeight: s.suggestion
+            ? parseInt(s.suggestion.split(" ")[1])
+            : null,
+                      available: s.available ?? "—",
+          warning: s.suggestion === null ? "food_not_found" : null,
+          note: s.message,
+        }));
+        setSuggestions(mappedSuggestions);
+                setTotalSummary(data.totalSummary || []);
+        setMessage(null); // non serve, lo gestiamo in note
       } catch (err) {
         console.error("Error fetching feeding suggestions:", err);
         setMessage(t("inventoryPage.error_loading"));
@@ -42,13 +46,13 @@ setMessage(null); // non serve, lo gestiamo in note
   if (message && suggestions.length === 0)
     return <p className="text-center text-slate-600">{message}</p>;
 
-  return (
+ return (
     <div className="p-6 bg-white rounded-2xl shadow-md border border-slate-100">
       <h2 className="text-xl font-semibold text-slate-800 mb-4">
         {t("inventoryPage.feedingSuggestions")}
       </h2>
 
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto max-h-96 overflow-y-auto">
         <table className="w-full text-sm border-collapse">
           <thead>
             <tr className="bg-slate-100 text-slate-700">
@@ -86,9 +90,7 @@ setMessage(null); // non serve, lo gestiamo in note
                     {formatWeight(s.idealWeight)}
                   </td>
                   <td className="p-3 text-right text-slate-700 font-mono">
-                    {s.suggestedWeight
-                      ? formatWeight(s.suggestedWeight)
-                      : formatWeight(s.idealWeight)}
+                    {s.suggestedWeight ? formatWeight(s.suggestedWeight) : formatWeight(s.idealWeight)}
                     {s.suggestedWeight && s.suggestedWeight !== s.idealWeight && (
                       <span className="ml-2 text-xs text-slate-500">
                         ({t("inventoryPage.closest")})
@@ -125,6 +127,18 @@ setMessage(null); // non serve, lo gestiamo in note
           </tbody>
         </table>
       </div>
+
+      {/* --- Riepilogo Totale --- */}
+      {totalSummary.length > 0 && (
+        <div className="mt-4 p-4 bg-slate-50 rounded-lg border border-slate-200">
+          <h3 className="text-lg font-semibold text-slate-700 mb-2">{t("inventoryPage.totalSummary")}</h3>
+          <ul className="list-disc list-inside text-slate-700">
+            {totalSummary.map((item, idx) => (
+              <li key={idx}>{item}</li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }
