@@ -157,13 +157,24 @@ const reptiles = await Reptile.find({ _id: { $in: reptileIds }, user: userId });
 
     // Copia temporanea dell’inventario per decrementare quantità
 const tempInventory = inventory.map(i => i.toObject());
-
     const suggestions = [];
 
     for (const reptileData of recentFeedings) {
-      const reptile = reptiles.find(r => r._id.toString() === reptileData.reptile.toString());
+      const reptile = reptiles.find(
+        (r) => r._id.toString() === reptileData.reptile.toString()
+      );
       if (!reptile) continue;
+      // Trova il tipo di cibo più usato negli ultimi 3 feedings
+      const foodTypeFreq = reptileData.feedings.reduce((acc, f) => {
+        acc[f.foodType] = (acc[f.foodType] || 0) + 1;
+        return acc;
+      }, {});
+      const mostCommonType = Object.entries(foodTypeFreq).sort((a, b) => b[1] - a[1])[0][0];
 
+      // Calcola media pesi solo per quel tipo
+      const recentOfSameType = reptileData.feedings.filter(
+        (f) => f.foodType === mostCommonType
+      );
       // Calcola media pesi e tipo più frequente
 const weights = reptileData.feedings
   .map(f => f.weightPerUnit)
@@ -172,17 +183,26 @@ const weights = reptileData.feedings
 const avgWeight = weights.length
   ? weights.reduce((a, b) => a + b) / weights.length
   : 0;
-      const foodTypeFreq = reptileData.feedings.reduce((acc, f) => {
-        acc[f.foodType] = (acc[f.foodType] || 0) + 1;
-        return acc;
-      }, {});
-      const mostCommonType = Object.entries(foodTypeFreq).sort((a, b) => b[1] - a[1])[0][0];
 
-      const idealType = reptile.foodType || mostCommonType;
-      const idealWeight = reptile.weightPerUnit || Math.round(avgWeight);
+    const idealType = reptile.foodType || mostCommonType;
+      const idealWeight = reptile.weightPerUnit || avgWeight || 0;
 
       // Filtra prede disponibili dello stesso tipo
-      let sameTypeFoods = tempInventory.filter(i => i.foodType === idealType && i.quantity > 0);
+    let sameTypeFoods = tempInventory.filter(
+        (i) =>
+          i.foodType === idealType &&
+          i.quantity > 0 &&
+          Math.abs(i.weightPerUnit - idealWeight) <= 10
+      );
+
+            if (sameTypeFoods.length === 0) {
+        sameTypeFoods = tempInventory.filter(
+          (i) =>
+            i.foodType === idealType &&
+            i.quantity > 0 &&
+            Math.abs(i.weightPerUnit - idealWeight) <= 20
+        );
+      }
 
       if (sameTypeFoods.length === 0) {
         // Nessuna preda disponibile
@@ -199,14 +219,17 @@ const avgWeight = weights.length
 
       // Ordina per distanza dal peso ideale
       const bestMatch = sameTypeFoods.reduce((best, curr) => {
-  return !best || Math.abs(curr.weightPerUnit - idealWeight) < Math.abs(best.weightPerUnit - idealWeight)
-    ? curr
-    : best;
-}, null);
+        return !best ||
+          Math.abs(curr.weightPerUnit - idealWeight) <
+            Math.abs(best.weightPerUnit - idealWeight)
+          ? curr
+          : best;
+      }, null);
 
       // Decrementa quantità temporanea
-      bestMatch.quantity--;
-
+      const availableBefore = bestMatch.quantity;
+      bestMatch.quantity = Math.max(bestMatch.quantity - 1, 0); 
+      
       suggestions.push({
         reptile: reptile.name,
         idealFood: `${idealType} ${idealWeight}g`,
