@@ -903,7 +903,9 @@
         "breeding": "Breeding",
         "inventory": "Inventory",
         "profile": "Profile",
-        "logout": "Logout"
+        "logout": "Logout",
+            "blog": "Blog",
+    "admin": "Admin Panel"
     },
     "footer": {
         "desc": "The Italian platform to manage, monitor and showcase your reptiles. From hatchlings to breeders, everything under control.",

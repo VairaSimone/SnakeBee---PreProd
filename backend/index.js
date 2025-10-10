@@ -29,6 +29,10 @@ import middleware from 'i18next-http-middleware';
 import calendar from './routes/Calendar.routes.js';
 import newsletterRoute from './routes/newsletter.router.js';
 import routerTelegram from './routes/telegramAuth.js';
+// ... all'inizio del file, con gli altri import
+import blogRouter from './routes/Blog.router.js';
+import './config/SchedulesPublishing.js'; // Avvia il cron job
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const port = process.env.PORT
@@ -88,6 +92,7 @@ app.use('/api/user', userRouter);
 app.use('/api/calendar', calendar);
 app.use('/api/telegram', routerTelegram);
 app.use("/api/newsletter", newsletterRoute);
+app.use('/api/blog', blogRouter);
 app.use('/api/reptile', reptileRouter);
 app.use('/api/feedings', feedingRouter);
 app.use('/api/breeding', breedingRouter);

@@ -872,7 +872,9 @@
         "breeding": "Riproduzione",
         "inventory": "Inventario",
         "profile": "Profilo",
-        "logout": "Esci"
+        "logout": "Esci",
+            "blog": "Blog",
+    "admin": "Admin Panel"
     },
     "footer": {
         "desc": " La piattaforma italiana per gestire, monitorare e valorizzare i tuoi rettili. Dai baby ai riproduttori, tutto sotto controllo.",
