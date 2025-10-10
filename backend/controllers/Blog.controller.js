@@ -24,7 +24,9 @@ export const createArticle = async (req, res, next) => {
             content,
             author: req.user.userid,
             status,
-            publishedAt: status === 'published' ? new Date() : (status === 'scheduled' ? publishedAt : null),
+publishedAt: status === 'published'
+  ? new Date()
+  : (status === 'scheduled' && publishedAt ? new Date(publishedAt) : null),
             tags,
             categories,
             meta,

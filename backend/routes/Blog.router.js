@@ -4,6 +4,7 @@ import { authenticateJWT } from '../middlewares/Auth.js';
 import { isAdmin, isOwnerOrAdmin } from '../middlewares/Authorization.js';
 import { sanitizeContent } from '../middlewares/Sanitize.middleware.js';
 import upload from '../config/MulterConfig.js';
+import Article from '../models/Article.model.js';
 
 const router = express.Router();
 
@@ -32,6 +33,17 @@ router.get('/admin', authenticateJWT, isAdmin, blogController.getAdminArticles);
 // Ottiene le statistiche del blog
 router.get('/stats', authenticateJWT, isAdmin, blogController.getBlogStats);
 
+// Rotta admin per ottenere articolo per ID
+router.get('/admin/article/:id', authenticateJWT, isAdmin, async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const article = await Article.findById(id);
+        if (!article) return res.status(404).json({ message: 'Articolo non trovato' });
+        res.status(200).json(article);
+    } catch (error) {
+        next(error);
+    }
+});
 
 /*
  * ===============================================

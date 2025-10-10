@@ -62,3 +62,6 @@ export const updateImage = (formData) => {
   // non è obbligatorio settare Content-Type: axios lo fa con il boundary.
   return api.post('/blog/upload', formData);
 };
+
+
+export const getArticleById = (id) => api.get(`/blog/admin/article/${id}`);

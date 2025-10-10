@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { createArticle, updateArticle, getArticleBySlug, updateImage} from '../../services/blogApi';
+import { createArticle, updateArticle, getArticleBySlug, updateImage, getArticleById} from '../../services/blogApi';
 import { useForm, Controller } from 'react-hook-form';
 import ReactQuill, { Quill } from 'react-quill';
 import 'react-quill/dist/quill.snow.css'; // Importa lo stile
@@ -29,53 +29,49 @@ const ArticleEditor = () => {
         }
     });
     
-    // Fetch article data if in editing mode
-    useEffect(() => {
-        if(isEditing) {
-            // NOTE: This assumes you have a way to get an article by ID for editing.
-            // The backend controller needs a getById for admins. Let's pretend it exists for the editor.
-            // A better way would be to pass the slug and have a dedicated admin endpoint.
-            // For now, let's just show an alert that this part needs backend logic.
-            alert("Modalità modifica: è necessario un endpoint admin per ottenere l'articolo tramite ID per popolare i campi.");
-            setLoading(false);
-            // Example of how it would work:
-            /*
-            const fetchArticle = async () => {
-                try {
-                    const { data } = await getAdminArticleById(articleId); // You'd need this API function
-                    reset({
-                        ...data,
-                        categories: data.categories.join(', '),
-                        tags: data.tags.join(', ')
-                    });
-                } catch(e) {
-                    toast.error("Articolo non trovato");
-                    navigate('/admin/blog');
-                } finally {
-                    setLoading(false);
-                }
+useEffect(() => {
+    if (isEditing) {
+        const fetchArticle = async () => {
+            try {
+                const { data } = await getArticleById(articleId); // nuovo servizio
+                reset({
+                    ...data,
+                    categories: data.categories?.join(', ') || '',
+                    tags: data.tags?.join(', ') || '',
+                    ogImage: data.ogImage || ''
+                });
+            } catch (e) {
+                toast.error("Articolo non trovato");
+                navigate('/admin/blog');
+            } finally {
+                setLoading(false);
             }
-            fetchArticle();
-            */
-        }
-    }, [isEditing, articleId, reset, navigate]);
+        };
+        fetchArticle();
+    }
+}, [isEditing, articleId, reset, navigate]);
 
 
 const onSubmit = async (data) => {
     try {
-        const payload = {
-            ...data,
-              ogImage: data.ogImage,
-            categories: data.categories.split(',').map(c => c.trim()).filter(Boolean),
-            tags: data.tags.split(',').map(t => t.trim()).filter(Boolean),
-            meta: {
-                title: { it: data.title.it, en: data.title.en },
-                description: {
-                    it: data.content.it.replace(/<[^>]+>/g, '').slice(0, 160),
-                    en: data.content.en.replace(/<[^>]+>/g, '').slice(0, 160)
-                }
-            }
-        };
+const payload = {
+  ...data,
+  categories: data.categories.split(',').map(c => c.trim()).filter(Boolean),
+  tags: data.tags.split(',').map(t => t.trim()).filter(Boolean),
+  meta: {
+    title: data.title,
+    description: {
+      it: data.content.it.replace(/<[^>]+>/g, '').slice(0, 160),
+      en: data.content.en.replace(/<[^>]+>/g, '').slice(0, 160)
+    }
+  },
+  ogImage: data.ogImage,
+};
+
+// Trasforma la stringa in Date solo se c'è
+if (data.publishedAt) {
+  payload.publishedAt = new Date(data.publishedAt);
+}
         if (!payload.publishedAt) delete payload.publishedAt;
 
         if (isEditing) {
@@ -122,7 +118,7 @@ const handleImageChange = async (e) => {
       }
 
       // se server restituisce path relativo, prefissa la base
-      const finalUrl = imageUrl.startsWith('http') ? imageUrl : `${process.env.REACT_APP_BACKEND_URL?.replace(/\/$/, '') || ''}${imageUrl}`;
+      const finalUrl = imageUrl.startsWith('http') ? imageUrl : `${process.env.REACT_APP_BACKEND_URL_IMAGE?.replace(/\/$/, '') || ''}${imageUrl}`;
 
       setValue('ogImage', finalUrl);
       toast.success('Immagine caricata!');
