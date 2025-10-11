@@ -34,7 +34,7 @@ const BlogPage = () => {
                 const { data } = await getArticles(params);
                 setArticles(data.articles || []);
             } catch (err) {
-                setError(t('error_loading_articles'));
+                setError(t('blog.error_loading_articles'));
             } finally {
                 setLoading(false);
             }
@@ -64,10 +64,10 @@ const BlogPage = () => {
             <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
                 <header className="text-center mb-12">
                     <h1 className="text-5xl md:text-7xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-emerald-500 to-green-500">
-                        {t('blog_title')}
+                        {t('blog.blog_title')}
                     </h1>
                     <p className="text-lg text-slate-600 mt-4 max-w-2xl mx-auto">
-                        {t('blog_subtitle')}
+                        {t('blog.blog_subtitle')}
                     </p>
                 </header>
 
@@ -80,7 +80,7 @@ const BlogPage = () => {
                                 : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-300'
                         }`}
                     >
-                        {t('all')}
+                        {t('blog.all')}
                     </button>
                     {categories.map((cat) => (
                         <button
@@ -114,8 +114,8 @@ const BlogPage = () => {
                     </>
                 ) : (
                     <div className="text-center py-20 border-2 border-dashed border-slate-300 rounded-lg">
-                        <p className="text-slate-500 text-xl">{t('no_articles')}</p>
-                        <p className="text-slate-400 mt-2">{t('try_another_category')}</p>
+                        <p className="text-slate-500 text-xl">{t('blog.no_articles')}</p>
+                        <p className="text-slate-400 mt-2">{t('blog.try_another_category')}</p>
                     </div>
                 )}
             </div>
