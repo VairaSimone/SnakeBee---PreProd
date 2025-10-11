@@ -297,3 +297,23 @@ export const getBlogStats = async (req, res, next) => {
         next(error);
     }
 }
+
+/**
+ * @description Ottiene tutte le categorie disponibili dagli articoli pubblicati
+ * @route GET /api/blog/categories
+ */
+export const getAvailableCategories = async (req, res, next) => {
+    try {
+        const categories = await Article.distinct("categories", {
+            status: "published",
+            publishedAt: { $lte: new Date() }
+        });
+
+        // Filtra eventuali categorie vuote o null
+        const validCategories = categories.filter(Boolean);
+
+        res.status(200).json(validCategories);
+    } catch (error) {
+        next(error);
+    }
+};

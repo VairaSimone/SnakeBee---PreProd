@@ -1,98 +1,121 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { getArticles } from '../services/blogApi';
+import { useTranslation } from 'react-i18next';
+import { getArticles, getCategories } from '../services/blogApi';
 import ArticleCard from '../components/ArticleCard';
-import { FaSpinner, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
+import { FaSpinner } from 'react-icons/fa';
 
 const BlogPage = () => {
+    const { t } = useTranslation();
     const [articles, setArticles] = useState([]);
+    const [categories, setCategories] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [page, setPage] = useState(1);
-    const [totalPages, setTotalPages] = useState(1);
-    const [searchParams] = useSearchParams();
+    const [searchParams, setSearchParams] = useSearchParams();
+    const activeCategory = searchParams.get('category');
+
+    useEffect(() => {
+        const fetchCategories = async () => {
+            try {
+                const data = await getCategories();
+                setCategories(data);
+            } catch (err) {
+                console.error('Errore caricamento categorie:', err);
+            }
+        };
+        fetchCategories();
+    }, []);
 
     useEffect(() => {
         const fetchArticles = async () => {
             setLoading(true);
             try {
-                const params = {
-                    page,
-                    limit: 9,
-                    category: searchParams.get('category'),
-                    tag: searchParams.get('tag')
-                };
+                const params = { page: 1, limit: 12, category: activeCategory };
                 const { data } = await getArticles(params);
-                setArticles(data.articles);
-                setTotalPages(data.totalPages);
+                setArticles(data.articles || []);
             } catch (err) {
-                setError('Impossibile caricare gli articoli. Riprova più tardi.');
-                console.error(err);
+                setError(t('error_loading_articles'));
             } finally {
                 setLoading(false);
             }
         };
-
         fetchArticles();
-    }, [page, searchParams]);
+    }, [activeCategory, t]);
 
-    if (loading) {
+    const featuredArticle = useMemo(() => articles?.[0], [articles]);
+    const otherArticles = useMemo(() => articles?.slice(1), [articles]);
+
+    if (loading)
         return (
             <div className="flex justify-center items-center h-screen bg-slate-50">
                 <FaSpinner className="animate-spin text-emerald-500 text-5xl" />
             </div>
         );
-    }
 
-    if (error) {
-        return <div className="text-center py-20 text-red-500 font-semibold">{error}</div>;
-    }
+    if (error)
+        return (
+            <div className="text-center py-20 text-red-500 font-semibold bg-slate-50 h-screen">
+                {error}
+            </div>
+        );
 
     return (
-        <div className="bg-slate-50 min-h-screen">
-            <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16">
-                {/* Header migliorato con gradiente e tipografia più d'impatto */}
-                <header className="text-center mb-16 p-8 bg-gradient-to-r from-emerald-500 to-green-500 rounded-xl shadow-lg">
-                    <h1 className="text-5xl md:text-6xl font-extrabold text-white tracking-tight">SnakeBee Blog</h1>
-                    <p className="text-lg text-emerald-100 mt-4 max-w-2xl mx-auto">
-                        Guide, approfondimenti e curiosità dal mondo dei rettili.
+        <div className="text-slate-800 min-h-screen">
+            <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
+                <header className="text-center mb-12">
+                    <h1 className="text-5xl md:text-7xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-emerald-500 to-green-500">
+                        {t('blog_title')}
+                    </h1>
+                    <p className="text-lg text-slate-600 mt-4 max-w-2xl mx-auto">
+                        {t('blog_subtitle')}
                     </p>
                 </header>
-                
-                {articles.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-                        {articles.map(article => (
-                            <ArticleCard key={article._id} article={article} />
-                        ))}
-                    </div>
-                ) : (
-                    <p className="text-center text-gray-500 text-xl py-20">Nessun articolo trovato.</p>
-                )}
 
-                {/* Paginazione ridisegnata */}
-                {totalPages > 1 && (
-                    <div className="flex justify-center mt-16">
-                        <nav className="flex items-center gap-4">
-                            <button 
-                                onClick={() => setPage(p => Math.max(1, p - 1))} 
-                                disabled={page === 1} 
-                                className="flex items-center justify-center w-10 h-10 bg-white border border-gray-300 rounded-full shadow-sm hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                                aria-label="Pagina precedente"
-                            >
-                                <FaChevronLeft className="h-4 w-4 text-gray-600" />
-                            </button>
-                            <span className="text-sm font-medium text-gray-700">
-                                Pagina <span className="font-bold text-emerald-600">{page}</span> di {totalPages}
-                            </span>
-                            <button 
-                                onClick={() => setPage(p => Math.min(totalPages, p + 1))} 
-                                disabled={page === totalPages} 
-                                className="flex items-center justify-center w-10 h-10 bg-white border border-gray-300 rounded-full shadow-sm hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                                aria-label="Pagina successiva"
-                            >
-                                <FaChevronRight className="h-4 w-4 text-gray-600" />
-                            </button>
-                        </nav>
+                <nav className="flex justify-center flex-wrap gap-3 mb-16">
+                    <button
+                        onClick={() => setSearchParams({})}
+                        className={`px-4 py-2 text-sm font-semibold rounded-full transition ${
+                            !activeCategory
+                                ? 'bg-emerald-500 text-white shadow'
+                                : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-300'
+                        }`}
+                    >
+                        {t('all')}
+                    </button>
+                    {categories.map((cat) => (
+                        <button
+                            key={cat}
+                            onClick={() => setSearchParams({ category: cat })}
+                            className={`px-4 py-2 text-sm font-semibold rounded-full transition ${
+                                activeCategory === cat
+                                    ? 'bg-emerald-500 text-white shadow'
+                                    : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-300'
+                            }`}
+                        >
+                            {cat}
+                        </button>
+                    ))}
+                </nav>
+
+                {articles.length > 0 ? (
+                    <>
+                        {featuredArticle && (
+                            <div className="mb-16">
+                                <ArticleCard article={featuredArticle} isFeatured />
+                            </div>
+                        )}
+                        {otherArticles.length > 0 && (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                                {otherArticles.map((article) => (
+                                    <ArticleCard key={article._id} article={article} />
+                                ))}
+                            </div>
+                        )}
+                    </>
+                ) : (
+                    <div className="text-center py-20 border-2 border-dashed border-slate-300 rounded-lg">
+                        <p className="text-slate-500 text-xl">{t('no_articles')}</p>
+                        <p className="text-slate-400 mt-2">{t('try_another_category')}</p>
                     </div>
                 )}
             </div>

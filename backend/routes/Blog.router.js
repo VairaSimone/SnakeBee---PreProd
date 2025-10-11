@@ -52,6 +52,7 @@ router.get('/admin/article/:id', authenticateJWT, isAdmin, async (req, res, next
  * Accessibili a tutti gli utenti
  */
 
+
 // Ottiene tutti gli articoli pubblicati (con paginazione e filtri)
 router.get('/', blogController.getPublishedArticles);
 
@@ -63,6 +64,7 @@ router.get('/:slug', (req, res, next) => {
     if (!authHeader) return next();
     authenticateJWT(req, res, next);
 }, blogController.getArticleBySlug);
+router.get('/categories', blogController.getAvailableCategories);
 
 
 /*

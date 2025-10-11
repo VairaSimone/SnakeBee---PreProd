@@ -65,3 +65,7 @@ export const updateImage = (formData) => {
 
 
 export const getArticleById = (id) => api.get(`/blog/admin/article/${id}`);
+export const getCategories = async () => {
+    const { data } = await api.get('/blog/categories');
+    return data;
+};

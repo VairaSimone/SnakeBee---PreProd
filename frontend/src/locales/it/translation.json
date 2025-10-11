@@ -873,8 +873,25 @@
         "inventory": "Inventario",
         "profile": "Profilo",
         "logout": "Esci",
-            "blog": "Blog",
+            "blog": "Le cronache",
     "admin": "Admin Panel"
+    },
+    "blog": {
+          "login_required": "Devi aver effettuato l'accesso per reagire.",
+  "reaction_error": "Errore durante la reazione all'articolo.",
+  "reactions": {
+    "like": "Mi piace",
+    "dislike": "Non mi piace",
+    "love": "Amo",
+    "fire": "🔥 Epico",
+    "thumbup": "Ben fatto" 
+  },
+   "blog_title": "Cronache di SnakeBee",
+  "blog_subtitle": "Esplorazioni nel mondo affascinante dei rettili e degli anfibi.",
+  "all": "Tutti",
+  "no_articles": "Nessun articolo trovato per questa categoria.",
+  "try_another_category": "Prova a selezionarne un'altra.",
+  "error_loading_articles": "Impossibile caricare gli articoli. Riprova più tardi."
     },
     "footer": {
         "desc": " La piattaforma italiana per gestire, monitorare e valorizzare i tuoi rettili. Dai baby ai riproduttori, tutto sotto controllo.",
