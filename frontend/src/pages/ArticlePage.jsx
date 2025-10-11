@@ -9,10 +9,13 @@ import ArticleReactions from '../components/ArticleReactions';
 
 // Componente per l'indice dei contenuti
 const TableOfContents = ({ headings }) => {
+    const { t } = useTranslation();
     if (!headings || headings.length === 0) return null;
     return (
         <aside className="hidden lg:block sticky top-28">
-            <h3 className="text-sm font-bold uppercase tracking-wider text-slate-500 mb-4">In questo articolo</h3>
+            <h3 className="text-sm font-bold uppercase tracking-wider text-slate-500 mb-4">
+                {t('blog.table_of_contents')}
+            </h3>
             <ul className="space-y-3 border-l-2 border-slate-200 pl-4">
                 {headings.map(h => (
                     <li key={h.id}>
@@ -25,14 +28,15 @@ const TableOfContents = ({ headings }) => {
         </aside>
     );
 };
+
 const ArticlePage = () => {
-    const { slug } = useParams();
+    const { slug, i18n } = useParams();
+    const { t } = useTranslation();
     const [article, setArticle] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [headings, setHeadings] = useState([]);
     const [readProgress, setReadProgress] = useState(0);
-    const { i18n } = useTranslation();
     const contentRef = useRef(null);
 
     // Calcolo progress bar
@@ -57,16 +61,16 @@ const ArticlePage = () => {
                 const { data } = await getArticleBySlug(slug);
                 setArticle(data);
             } catch (err) {
-                setError('Articolo non trovato o non hai i permessi per vederlo.');
+                setError(t('blog.article_not_found'));
                 console.error(err);
             } finally {
                 setLoading(false);
             }
         };
         fetchArticle();
-    }, [slug]);
+    }, [slug, t]);
 
-        useEffect(() => {
+    useEffect(() => {
         if (article && contentRef.current) {
             const nodes = contentRef.current.querySelectorAll('h2, h3');
             const extractedHeadings = Array.from(nodes).map(node => {
@@ -79,33 +83,55 @@ const ArticlePage = () => {
     }, [article]);
 
     if (loading) {
-        return <div className="flex justify-center items-center h-screen"><FaSpinner className="animate-spin text-emerald-500 text-4xl" /></div>;
+        return (
+            <div className="flex justify-center items-center h-screen">
+                <FaSpinner className="animate-spin text-emerald-500 text-4xl" />
+            </div>
+        );
     }
 
     if (error || !article) {
-        return <div className="text-center py-20 text-red-500 font-semibold text-lg">{error}</div>;
+        return (
+            <div className="text-center py-20 text-red-500 font-semibold text-lg">
+                {error}
+            </div>
+        );
     }
 
- const title = article.title?.[i18n.language] || article.title?.it;
+    const title = article.title?.[i18n.language] || article.title?.it;
     const sanitizedContent = DOMPurify.sanitize(article.content?.[i18n.language] || article.content?.it);
- return (
+
+    return (
         <>
             {/* Progress Bar */}
             <div className="fixed top-0 left-0 w-full h-1 z-50">
                 <div className="h-full bg-gradient-to-r from-emerald-400 to-green-400" style={{ width: `${readProgress}%` }} />
             </div>
 
-            <div className="">
+            <div>
                 {/* Header con immagine di sfondo */}
                 <header className="relative h-[60vh] min-h-[400px] flex items-center justify-center text-center text-white">
                     <div className="absolute inset-0 bg-black opacity-60 z-10"></div>
-                    {article.ogImage && <img src={article.ogImage} alt={title} className="absolute inset-0 w-full h-full object-cover" />}
+                    {article.ogImage && (
+                        <img src={article.ogImage} alt={title} className="absolute inset-0 w-full h-full object-cover" />
+                    )}
                     <div className="relative z-20 max-w-4xl mx-auto px-4">
-                        <Link to={`/blog?category=${article.categories?.[0]}`} className="text-sm font-bold text-emerald-400 uppercase tracking-wider mb-4 inline-block">{article.categories?.[0]}</Link>
+                        <Link
+                            to={`/blog?category=${article.categories?.[0]}`}
+                            className="text-sm font-bold text-emerald-400 uppercase tracking-wider mb-4 inline-block"
+                        >
+                            {article.categories?.[0]}
+                        </Link>
                         <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight leading-tight mb-4">{title}</h1>
                         <div className="flex justify-center items-center text-gray-200 text-base mt-6 space-x-6">
-                            <div className="flex items-center"><FaUserCircle className="mr-2 text-emerald-400" /> <span>{article.author.name}</span></div>
-                            <div className="flex items-center"><FaCalendarAlt className="mr-2 text-emerald-400" /> <span>{new Date(article.publishedAt).toLocaleDateString('it-IT', { year: 'numeric', month: 'long', day: 'numeric' })}</span></div>
+                            <div className="flex items-center">
+                                <FaUserCircle className="mr-2 text-emerald-400" /> 
+                                <span>{article.author.name}</span>
+                            </div>
+                            <div className="flex items-center">
+                                <FaCalendarAlt className="mr-2 text-emerald-400" /> 
+                                <span>{new Date(article.publishedAt).toLocaleDateString(i18n.language === 'it' ? 'it-IT' : 'en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                            </div>
                         </div>
                     </div>
                 </header>
@@ -119,7 +145,7 @@ const ArticlePage = () => {
                         
                         {/* Contenuto Principale */}
                         <main className="lg:col-span-9 xl:col-span-6 bg-white p-8 sm:p-10 rounded-xl shadow-lg border border-slate-200">
-                             <article>
+                            <article>
                                 <div
                                     ref={contentRef}
                                     className="prose lg:prose-lg max-w-full 
@@ -131,8 +157,12 @@ const ArticlePage = () => {
                                 />
                                 <hr className="my-12 border-slate-200" />
                                 <div className="bg-slate-100 p-6 rounded-lg text-center">
-                                    <h3 className="text-xl font-bold text-slate-800 mb-4">Questo articolo ti è stato utile?</h3>
-                                    <ArticleReactions articleId={article._id} initialCounts={article.reactionCounts} initialUserReaction={article.currentUserReaction} />
+                                    <h3 className="text-xl font-bold text-slate-800 mb-4">{t('blog.article_useful')}</h3>
+                                    <ArticleReactions
+                                        articleId={article._id}
+                                        initialCounts={article.reactionCounts}
+                                        initialUserReaction={article.currentUserReaction}
+                                    />
                                 </div>
                             </article>
                         </main>
@@ -145,4 +175,5 @@ const ArticlePage = () => {
         </>
     );
 };
+
 export default ArticlePage;

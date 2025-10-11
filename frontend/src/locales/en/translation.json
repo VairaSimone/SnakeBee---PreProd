@@ -908,6 +908,9 @@
         "admin": "Admin Panel"
     },
     "blog": {
+          "table_of_contents": "In this article",
+  "article_not_found": "Article not found or you don't have permission to view it.",
+  "article_useful": "Did you find this article useful?",
         "login_required": "You must be logged in to react.",
         "reaction_error": "Error while reacting to the article.",
         "reactions": {
