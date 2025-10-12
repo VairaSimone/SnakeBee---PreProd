@@ -30,8 +30,8 @@ const TableOfContents = ({ headings }) => {
 };
 
 const ArticlePage = () => {
-    const { slug, i18n } = useParams();
-    const { t } = useTranslation();
+    const { slug } = useParams(); 
+const { t, i18n } = useTranslation();
     const [article, setArticle] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -152,7 +152,7 @@ const ArticlePage = () => {
                                                prose-h2:text-emerald-600 prose-h2:font-bold 
                                                prose-a:text-emerald-600 hover:prose-a:text-emerald-700
                                                prose-blockquote:border-l-4 prose-blockquote:border-emerald-500 prose-blockquote:text-slate-500
-                                               prose-strong:text-slate-800"
+                                               prose-strong:text-slate-800 text-black"
                                     dangerouslySetInnerHTML={{ __html: sanitizedContent }}
                                 />
                                 <hr className="my-12 border-slate-200" />

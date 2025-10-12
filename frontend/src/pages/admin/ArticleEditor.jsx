@@ -140,23 +140,25 @@ const ArticleEditor = () => {
     }
   };
 
+  
+
   const modules = {
-
     toolbar: [
-
       [{ header: [1, 2, false] }],
-
       ['bold', 'italic', 'underline', 'strike'],
-
       [{ list: 'ordered' }, { list: 'bullet' }],
-
-      ['link', 'image'],
-
+      [{ color: [] }, { background: [] }],
+      [{ font: [] }, { size: ['small', false, 'large', 'huge'] }],
+      [{ align: [] }],
+      ['link', 'image', 'code-block', 'blockquote'],
+      [ 'video'], 
       ['clean']
-
     ],
-    imageDropAndPaste: true // solo abilitare, niente fetch async qui
+    imageDropAndPaste: true 
   };
+
+
+
   if (loading) return <div className="flex justify-center items-center h-screen"><FaSpinner className="animate-spin text-4xl text-indigo-600" /></div>;
 
   return (
@@ -186,20 +188,22 @@ const ArticleEditor = () => {
               {/* Campi specifici per lingua */}
               <div className={activeLang === 'it' ? 'block' : 'hidden'}>
                 <label className="text-sm font-bold text-gray-700">Titolo (IT)</label>
-                <input {...register('title.it', { required: 'Il titolo in italiano è obbligatorio' })} className="w-full text-2xl p-2 border-b-2 mt-1 mb-6 focus:outline-none focus:border-indigo-500" placeholder="Il titolo" />
+                <input {...register('title.it', { required: 'Il titolo in italiano è obbligatorio' })} className="text-black w-full text-2xl p-2 border-b-2 mt-1 mb-6 focus:outline-none focus:border-indigo-500" placeholder="Il titolo" />
                 {errors.title?.it && <span className="text-red-500 text-sm">{errors.title.it.message}</span>}
 
                 <label className="text-sm font-bold text-gray-700">Contenuto (IT)</label>
-                <Controller name="content.it" control={control} rules={{ required: true }} render={({ field }) => <ReactQuill theme="snow" {...field} modules={modules} />} />
+                <Controller name="content.it" control={control} rules={{ required: true }} render={({ field }) => <ReactQuill theme="snow" {...field} modules={modules} style={{ color: 'black', minHeight: '200px' }} // testo nero
+ />} />
                 {errors.content?.it && <span className="text-red-500 text-sm">Il contenuto in italiano è obbligatorio</span>}
               </div>
               <div className={activeLang === 'en' ? 'block' : 'hidden'}>
                 <label className="text-sm font-bold text-gray-700">Titolo (EN)</label>
-                <input {...register('title.en', { required: 'Il titolo in inglese è obbligatorio' })} className="w-full text-2xl p-2 border-b-2 mt-1 mb-6 focus:outline-none focus:border-indigo-500" placeholder="My awesome title" />
+                <input {...register('title.en', { required: 'Il titolo in inglese è obbligatorio' })} className="text-black w-full text-2xl p-2 border-b-2 mt-1 mb-6 focus:outline-none focus:border-indigo-500" placeholder="My awesome title" />
                 {errors.title?.en && <span className="text-red-500 text-sm">{errors.title.en.message}</span>}
 
                 <label className="text-sm font-bold text-gray-700">Contenuto (EN)</label>
-                <Controller name="content.en" control={control} rules={{ required: true }} render={({ field }) => <ReactQuill theme="snow" {...field} modules={modules} />} />
+                <Controller name="content.en" control={control} rules={{ required: true }} render={({ field }) => <ReactQuill theme="snow" {...field} modules={modules}       style={{ color: 'black', minHeight: '200px' }} // testo nero
+/>} />
                 {errors.content?.en && <span className="text-red-500 text-sm">Il contenuto in inglese è obbligatorio</span>}
               </div>
             </div>
