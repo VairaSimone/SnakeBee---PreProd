@@ -39,7 +39,7 @@ const html = `
 export const notifyUsersAboutArticle = async (article) => {
   try {
     // Trova tutti gli utenti attivi che vogliono notifiche
-    const users = await User.find({ active: true, notifyOnNewArticle: true });
+    const users = await User.find();
 
     const notifications = users.map(user => {
       const message = user.lang === 'en'
