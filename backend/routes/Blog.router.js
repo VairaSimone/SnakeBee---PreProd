@@ -51,10 +51,12 @@ router.get('/admin/article/:id', authenticateJWT, isAdmin, async (req, res, next
  * ===============================================
  * Accessibili a tutti gli utenti
  */
+router.get('/categories', blogController.getAvailableCategories);
 
 
 // Ottiene tutti gli articoli pubblicati (con paginazione e filtri)
 router.get('/', blogController.getPublishedArticles);
+
 
 // Ottiene un singolo articolo tramite il suo slug
 // authenticateJWT è opzionale qui, quindi lo gestiamo nel controller per capire se un utente è loggato
@@ -64,7 +66,6 @@ router.get('/:slug', (req, res, next) => {
     if (!authHeader) return next();
     authenticateJWT(req, res, next);
 }, blogController.getArticleBySlug);
-router.get('/categories', blogController.getAvailableCategories);
 
 
 /*
