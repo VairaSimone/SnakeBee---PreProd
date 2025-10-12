@@ -1,8 +1,8 @@
 import Newsletter from '../models/Newsletter.js';
-import { sendBroadcastEmailToUser } from './mailer.js';
 import i18next from 'i18next';
 import User from '../models/User.js';
 import Notification from '../models/Notification.js';
+import { sendBroadcastEmailToUser } from '../config/mailer.config.js';
 
 export const notifyNewsletterAboutArticle = async (article) => {
   try {
