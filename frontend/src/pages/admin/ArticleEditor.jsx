@@ -8,6 +8,7 @@ import { toast } from 'react-toastify';
 import { FaSpinner, FaUpload, FaTrash } from 'react-icons/fa';
 import ImageDropAndPaste from 'quill-image-drop-and-paste';
 
+
 Quill.register('modules/imageDropAndPaste', ImageDropAndPaste);
 
 // Componente per l'uploader dell'immagine di copertina
@@ -152,7 +153,7 @@ const ArticleEditor = () => {
       [{ align: [] }],
       ['link', 'image', 'code-block', 'blockquote'],
       [ 'video'], 
-      ['clean']
+      ['clean'],
     ],
     imageDropAndPaste: true 
   };

@@ -10,10 +10,12 @@ const dompurify = DOMPurify(window);
  */
 export const sanitizeContent = (req, res, next) => {
     if (req.body.content) {
-        // Itera su ogni lingua presente nel contenuto (es. 'it', 'en')
         for (const lang in req.body.content) {
             if (Object.hasOwnProperty.call(req.body.content, lang)) {
-                req.body.content[lang] = dompurify.sanitize(req.body.content[lang]);
+                req.body.content[lang] = dompurify.sanitize(req.body.content[lang], {
+                    ADD_TAGS: ['table', 'thead', 'tbody', 'tr', 'th', 'td'],
+                    ADD_ATTR: ['style', 'class'] // se vuoi permettere classi o inline styles
+                });
             }
         }
     }
