@@ -40,7 +40,7 @@ publishedAt: status === 'published'
         if (newArticle.status === 'published') {
     notifyNewsletterAboutArticle(newArticle); // fire-and-forget
 }
-for (const article of articlesToPublish) {
+        if (newArticle.status === 'published') {
     await notifyUsersAboutArticle(article);
 }
         res.status(201).json(newArticle);
