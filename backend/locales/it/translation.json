@@ -292,6 +292,12 @@
     "activeStripe_subscription": "Il tuo abbonamento al piano {{subscription}} è stato attivato con successo."
   },
   "emails": {
+      "newArticle": {
+      "subject": "Nuovo articolo pubblicato!",
+      "hello": "Ciao!",
+      "newArticlePublished": "È stato appena pubblicato un nuovo articolo sul nostro blog. Dai un'occhiata!",
+      "readNow": "Leggi ora"
+    },
  "referralReward": {
       "subject": "Il tuo amico si è unito a SnakeBee!",
       "title": "Grazie per il tuo invito! 🎉",

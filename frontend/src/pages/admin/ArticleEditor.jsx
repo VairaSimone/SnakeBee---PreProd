@@ -231,11 +231,11 @@ const ArticleEditor = () => {
               <h3 className="text-lg font-bold border-b pb-2 mb-4 text-black">Organizzazione</h3>
               <div>
                 <label className="font-bold text-sm text-gray-700 text-black">Categorie (separate da virgola)</label>
-                <input {...register('categories')} className="w-full p-2 border rounded mt-1 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="es. News, Tutorial" />
+                <input {...register('categories')} className="text-black w-full p-2 border rounded mt-1 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="es. News, Tutorial" />
               </div>
               <div className="mt-4">
                 <label className="font-bold text-sm text-gray-700">Tag (separati da virgola)</label>
-                <input {...register('tags')} className="w-full p-2 border rounded mt-1 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="es. react, javascript" />
+                <input {...register('tags')} className="text-black w-full p-2 border rounded mt-1 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="es. rettili, terrari" />
               </div>
             </div>
             <div className="bg-white p-6 rounded-lg shadow-md">

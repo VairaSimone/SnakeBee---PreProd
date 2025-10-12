@@ -1,5 +1,6 @@
 import cron from 'node-cron';
 import Article from '../models/Article.model.js';
+import { notifyNewsletterAboutArticle, notifyUsersAboutArticle } from '../utils/notifyNewsLetter.js';
 
 console.log('Scheduled publishing job initialized.');
 
@@ -22,7 +23,12 @@ cron.schedule('* * * * *', async () => {
                 { _id: { $in: articleIds } },
                 { $set: { status: 'published' } }
             );
-
+for (const article of articlesToPublish) {
+    notifyNewsletterAboutArticle(article);
+}
+for (const article of articlesToPublish) {
+    await notifyUsersAboutArticle(article);
+}
             console.log(`Successfully published ${articlesToPublish.length} scheduled article(s).`);
         }
     } catch (error) {

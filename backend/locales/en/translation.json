@@ -293,6 +293,12 @@
   },
   
   "emails": {
+        "newArticle": {
+      "subject": "New Article Published!",
+      "hello": "Hello!",
+      "newArticlePublished": "A new article has just been published on our blog. Check it out!",
+      "readNow": "Read now"
+    },
        "referralReward": {
       "subject": "Your friend has joined SnakeBee!",
       "title": "Thanks for your invite! 🎉",

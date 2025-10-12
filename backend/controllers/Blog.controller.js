@@ -1,6 +1,7 @@
 import Article from '../models/Article.model.js';
 import mongoose from 'mongoose';
 import User from "../models/User.js";
+import { notifyNewsletterAboutArticle, notifyUsersAboutArticle } from '../utils/notifyNewsLetter.js';
 
 // --- Funzioni per Amministratori ---
 
@@ -36,6 +37,12 @@ publishedAt: status === 'published'
         console.log("newArticle:", newArticle);
 
         await newArticle.save();
+        if (newArticle.status === 'published') {
+    notifyNewsletterAboutArticle(newArticle); // fire-and-forget
+}
+for (const article of articlesToPublish) {
+    await notifyUsersAboutArticle(article);
+}
         res.status(201).json(newArticle);
     } catch (error) {
         console.error("Errore createArticle:", error);
