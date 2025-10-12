@@ -41,7 +41,7 @@ publishedAt: status === 'published'
     notifyNewsletterAboutArticle(newArticle); // fire-and-forget
 }
         if (newArticle.status === 'published') {
-    await notifyUsersAboutArticle(article);
+    await notifyUsersAboutArticle(newArticle);
 }
         res.status(201).json(newArticle);
     } catch (error) {
