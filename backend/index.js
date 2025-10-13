@@ -1,5 +1,8 @@
 import 'dotenv/config';
 import "./telegramBot.js"; // avvia il bot
+import i18next from 'i18next';
+import Backend from 'i18next-fs-backend';
+import middleware from 'i18next-http-middleware';
 import cors from 'cors';
 import express from 'express';
 import mongoose from 'mongoose';
@@ -23,9 +26,6 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import stripeRouter from './routes/Stripe.router.js';
 import * as stripeController from './controllers/Stripe_controller.js';
-import i18next from 'i18next';
-import Backend from 'i18next-fs-backend';
-import middleware from 'i18next-http-middleware';
 import calendar from './routes/Calendar.routes.js';
 import newsletterRoute from './routes/newsletter.router.js';
 import routerTelegram from './routes/telegramAuth.js';
