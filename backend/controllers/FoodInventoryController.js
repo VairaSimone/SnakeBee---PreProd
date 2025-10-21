@@ -149,7 +149,7 @@ export const getFeedingSuggestions = async (req, res) => {
       return res.json({ message: req.t('no_feeding_today'), suggestions: [] });
     }
     const reptileIds = recentFeedings.map(f => f.reptile);
-    const reptiles = await Reptile.find({ _id: { $in: reptileIds }, user: userId });
+    const reptiles = await Reptile.find({ _id: { $in: reptileIds }, user: userId, status: 'active' });
     const inventory = await FoodInventory.find({ user: userId });
 
     const tempInventory = inventory.map(i => i.toObject());
