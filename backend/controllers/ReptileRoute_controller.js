@@ -74,14 +74,18 @@ export const GetReptileByUser = async (req, res) => {
         const userId = req.user.userid;
         const page = parseInt(req.query.page) || 1;
         const perPage = parseInt(req.query.perPage) || 24;
-        const { filterMorph, filterSpecies, filterSex, filterBreeder } = req.query;
+        const { filterMorph, filterSpecies, filterSex, filterBreeder, filterName } = req.query;
         const sortKey = req.query.sortKey || 'name';
         const sortOrder = req.query.sortOrder === 'desc' ? -1 : 1;
 
         const matchQuery = {
             user: new mongoose.Types.ObjectId(userId),
             status: 'active'
-        }; if (filterMorph) {
+        }; 
+        if (filterName) {
+             matchQuery.name = { $regex: filterName, $options: 'i' };
+        }
+        if (filterMorph) {
             matchQuery.morph = { $regex: filterMorph, $options: 'i' };
         }
         if (filterSpecies) {

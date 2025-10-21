@@ -8,50 +8,50 @@ import ReptileEditModal from '../components/ReptileEditModal.jsx';
 import FeedingModal from '../components/FeedingModal.jsx';
 import EventModal from '../components/EventModal.jsx';
 import ConfirmDeleteModal from '../components/ConfirmDeleteModal.jsx';
-import { FaMars, FaVenus, FaPlus, FaTag, FaPencilAlt, FaDrumstickBite, FaCalendarAlt, FaTrash, FaChartBar, FaPercentage, FaUtensils, FaEgg, FaSyncAlt, FaArchive } from 'react-icons/fa';import { useTranslation } from 'react-i18next';
+import { FaMars, FaVenus, FaPlus, FaTag, FaPencilAlt, FaDrumstickBite, FaCalendarAlt, FaTrash, FaChartBar, FaPercentage, FaUtensils, FaEgg, FaSyncAlt, FaArchive } from 'react-icons/fa'; import { useTranslation } from 'react-i18next';
 import CalendarModal from '../components/CalendarModal.jsx'
 
 // ... (hasPaidPlan, isDueOrOverdue, TabButton rimangono uguali) ...
 function hasPaidPlan(user) {
-    if (!user?.subscription) return false;
-    const { plan, status } = user.subscription;
-    return (plan === 'BREEDER');
-  }
+  if (!user?.subscription) return false;
+  const { plan, status } = user.subscription;
+  return (plan === 'BREEDER');
+}
 
-  const isDueOrOverdue = (date) => {
-    if (!date) return false;
-    const today = new Date();
-    today.setHours(0, 0, 0, 0); // reset ore
-    const feedingDate = new Date(date);
-    feedingDate.setHours(0, 0, 0, 0);
-    return feedingDate <= today;
-  };
+const isDueOrOverdue = (date) => {
+  if (!date) return false;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); // reset ore
+  const feedingDate = new Date(date);
+  feedingDate.setHours(0, 0, 0, 0);
+  return feedingDate <= today;
+};
 
-  // NUOVO: Componente Tab
-  const TabButton = ({ title, isActive, onClick }) => (
-    <button
-      onClick={onClick}
-      className={`py-3 px-6 font-semibold transition-all duration-300 ${isActive
-        ? 'border-b-2 border-forest text-forest'
-        : 'text-charcoal/60 hover:text-charcoal'
-        }`}
-    >
-      {title}
-    </button>
-  );
+// NUOVO: Componente Tab
+const TabButton = ({ title, isActive, onClick }) => (
+  <button
+    onClick={onClick}
+    className={`py-3 px-6 font-semibold transition-all duration-300 ${isActive
+      ? 'border-b-2 border-forest text-forest'
+      : 'text-charcoal/60 hover:text-charcoal'
+      }`}
+  >
+    {title}
+  </button>
+);
 
 
 // MODIFICA: Componente Card per Animali Archiviati
 // Aggiunti props per gestire i modali
 const ArchivedReptileCard = ({
-    reptile,
-    t,
-    carouselRefs,
-    scrollCarousel,
-    setSelectedReptile, // NUOVO
-    setShowEditModal,   // NUOVO
-    setPendingDelete,   // NUOVO
-    setShowDeleteModal  // NUOVO
+  reptile,
+  t,
+  carouselRefs,
+  scrollCarousel,
+  setSelectedReptile, // NUOVO
+  setShowEditModal,   // NUOVO
+  setPendingDelete,   // NUOVO
+  setShowDeleteModal  // NUOVO
 }) => {
   const statusLabel = reptile.status === 'ceded'
     ? t('dashboard.status.ceded')
@@ -125,30 +125,30 @@ const ArchivedReptileCard = ({
               {t('dashboard.common.notes')}: {reptile.deceasedDetails.notes}
             </p>
           )}
-           {/* Visualizza note generali se presenti e non ceduto/deceduto con note specifiche */}
-           {(reptile.status === 'other' || (reptile.status === 'deceased' && !reptile.deceasedDetails?.notes)) && reptile.notes && (
-             <p className="text-sm text-charcoal/60 truncate" title={`${t('dashboard.common.notes')}: ${reptile.notes}`}>
-               {t('dashboard.common.notes')}: {reptile.notes}
-             </p>
-           )}
+          {/* Visualizza note generali se presenti e non ceduto/deceduto con note specifiche */}
+          {(reptile.status === 'other' || (reptile.status === 'deceased' && !reptile.deceasedDetails?.notes)) && reptile.notes && (
+            <p className="text-sm text-charcoal/60 truncate" title={`${t('dashboard.common.notes')}: ${reptile.notes}`}>
+              {t('dashboard.common.notes')}: {reptile.notes}
+            </p>
+          )}
         </div>
 
         {/* NUOVO: Pulsanti Azione (Edit e Delete) */}
         <div className="mt-4 pt-4 border-t border-sand grid grid-cols-2 gap-4 text-center">
-             <button
-               onClick={(e) => { e.preventDefault(); e.stopPropagation(); editAction(); }}
-               title={t("dashboard.buttons.edit")}
-               className={`text-blue-600 p-2 rounded-lg hover:bg-blue-600/10 transition-colors duration-200`}
-             >
-               <FaPencilAlt />
-             </button>
-             <button
-               onClick={(e) => { e.preventDefault(); e.stopPropagation(); deleteAction(); }}
-               title={t("dashboard.buttons.delete")}
-               className={`text-red-600 p-2 rounded-lg hover:bg-red-600/10 transition-colors duration-200`}
-             >
-               <FaTrash />
-             </button>
+          <button
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); editAction(); }}
+            title={t("dashboard.buttons.edit")}
+            className={`text-blue-600 p-2 rounded-lg hover:bg-blue-600/10 transition-colors duration-200`}
+          >
+            <FaPencilAlt />
+          </button>
+          <button
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); deleteAction(); }}
+            title={t("dashboard.buttons.delete")}
+            className={`text-red-600 p-2 rounded-lg hover:bg-red-600/10 transition-colors duration-200`}
+          >
+            <FaTrash />
+          </button>
         </div>
       </div>
     </div> // Chiusura del div esterno
@@ -177,7 +177,7 @@ const Dashboard = () => {
   const [filterSex, setFilterSex] = useState('');
   const [filterBreeder, setFilterBreeder] = useState('');
   const [activeFilterSpecies, setActiveFilterSpecies] = useState(''); // MODIFICA: Rinominato da filterSpecies
-
+  const [filterName, setFilterName] = useState(''); // <-- NUOVO STATO
   // NUOVO: Stati per gli animali ARCHIVIATI
   const [archivedReptiles, setArchivedReptiles] = useState([]);
   const [archivedLoading, setArchivedLoading] = useState(true);
@@ -251,7 +251,8 @@ const Dashboard = () => {
         filterMorph,
         filterSpecies: activeFilterSpecies, // MODIFICA: usa lo stato rinominato
         filterSex,
-        filterBreeder
+        filterBreeder,
+        filterName,
       };
 
       const { data } = await api.get(`/reptile/${user._id}/AllReptileUser`, { params });
@@ -315,7 +316,7 @@ const Dashboard = () => {
     } else if (user?._id) {
       fetchReptiles();
     }
-  }, [sortKey, filterMorph, activeFilterSpecies, filterSex, filterBreeder]); // MODIFICA: usa activeFilterSpecies
+  }, [sortKey, filterMorph, activeFilterSpecies, filterSex, filterBreeder, filterName]); // MODIFICA: usa activeFilterSpecies
 
   useEffect(() => {
     if (user?._id) {
@@ -503,6 +504,19 @@ const Dashboard = () => {
                   <option value="species">{t('dashboard.filters.species')}</option>
                   <option value="nextFeedingDate">{t('dashboard.filters.nextMeal')}</option>
                 </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-charcoal/80 mb-1">
+                  {t('dashboard.filters.searchName')} 
+                </label>
+                <input
+                  type="text"
+                  value={filterName}
+                  onChange={(e) => setFilterName(e.target.value)}
+                  placeholder={t('dashboard.filters.namePlaceholder')} 
+                  className="w-full h-10 rounded-md border-transparent focus:ring-2 focus:ring-forest bg-white text-charcoal shadow px-2"
+                />
               </div>
 
               {/* Morph */}
@@ -705,17 +719,17 @@ const Dashboard = () => {
         {activeTab === 'archived' && (
           <main>
             {archivedLoading ? (
-             <div className="text-center py-20">
-               <div className="animate-spin h-12 w-12 border-4 border-forest border-t-transparent rounded-full mx-auto" />
-               <p className="mt-4 text-charcoal/80 text-lg">{t('dashboard.common.loadingReptiles')}</p>
-             </div>
+              <div className="text-center py-20">
+                <div className="animate-spin h-12 w-12 border-4 border-forest border-t-transparent rounded-full mx-auto" />
+                <p className="mt-4 text-charcoal/80 text-lg">{t('dashboard.common.loadingReptiles')}</p>
+              </div>
             ) : archivedReptiles.length === 0 ? (
               <div className="text-center py-20 bg-sand rounded-xl">
-               <h3 className="text-2xl font-bold text-olive">{t('dashboard.common.noArchivedReptiles')}</h3>
-               <p className="mt-2 text-charcoal/70">
-                 {archivedTotalResults > 0 ? t('dashboard.common.noReptilesFiltered') : t('dashboard.common.noArchivedFound')}
-               </p>
-             </div>
+                <h3 className="text-2xl font-bold text-olive">{t('dashboard.common.noArchivedReptiles')}</h3>
+                <p className="mt-2 text-charcoal/70">
+                  {archivedTotalResults > 0 ? t('dashboard.common.noReptilesFiltered') : t('dashboard.common.noArchivedFound')}
+                </p>
+              </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {archivedReptiles.map(reptile => (
