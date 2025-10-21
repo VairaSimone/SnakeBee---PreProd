@@ -15,12 +15,12 @@ export const GetAllReptile = async (req, res) => {
         const page = parseInt(req.query.page) || 1;
         const perPage = parseInt(req.query.perPage) || 20;
 
-        const reptile = await Reptile.find({})
+const reptile = await Reptile.find({ status: 'active' })
             .sort({ species: 1 })
             .skip((page - 1) * perPage)
             .limit(perPage);
 
-        const totalResults = await Reptile.countDocuments();
+const totalResults = await Reptile.countDocuments({ status: 'active' });
         const totalPages = Math.ceil(totalResults / perPage);
 
         res.send({
@@ -41,6 +41,9 @@ export const GetIDReptile = async (req, res) => {
         const reptile = await Reptile.findById(id)
 
         if (!reptile) res.status(404).send();
+        if (reptile.status !== 'active' && reptile.user.toString() !== req.user.userid) {
+             return res.status(404).send({ message: req.t('reptile_notFound') });
+        }
         else res.send(reptile);
     } catch (err) {
         console.log(err);
@@ -51,7 +54,7 @@ export const GetIDReptile = async (req, res) => {
 export const GetAllReptileByUser = async (req, res) => {
     try {
         const userId = req.user.userid;
-        const reptile = await Reptile.find({ user: userId })
+const reptile = await Reptile.find({ user: userId, status: 'active' })
             .sort({ species: 1 })
         if (!reptile || reptile.length === 0) {
             return res.status(404).send({ message: req.t('reptile_notFoundID') });
@@ -69,22 +72,17 @@ export const GetAllReptileByUser = async (req, res) => {
 export const GetReptileByUser = async (req, res) => {
   try {
     const userId = req.user.userid;
-
-    // 1. Estrarre e validare tutti i parametri dalla query
     const page = parseInt(req.query.page) || 1;
     const perPage = parseInt(req.query.perPage) || 24;
-    
-    // Parametri per filtro
     const { filterMorph, filterSpecies, filterSex, filterBreeder } = req.query;
+    const sortKey = req.query.sortKey || 'name'; 
+    const sortOrder = req.query.sortOrder === 'desc' ? -1 : 1; 
 
-    // Parametri per ordinamento
-    const sortKey = req.query.sortKey || 'name'; // Default: ordina per nome
-    const sortOrder = req.query.sortOrder === 'desc' ? -1 : 1; // Default: ascendente
-
-    // 2. Costruire la query di match dinamicamente
-    const matchQuery = { user: new mongoose.Types.ObjectId(userId) };
-    if (filterMorph) {
-      matchQuery.morph = { $regex: filterMorph, $options: 'i' }; // Case-insensitive
+const matchQuery = { 
+        user: new mongoose.Types.ObjectId(userId),
+        status: 'active' 
+    };    if (filterMorph) {
+      matchQuery.morph = { $regex: filterMorph, $options: 'i' }; 
     }
     if (filterSpecies) {
       matchQuery.species = { $regex: filterSpecies, $options: 'i' };
@@ -95,63 +93,125 @@ export const GetReptileByUser = async (req, res) => {
     if (filterBreeder) {
       matchQuery.isBreeder = filterBreeder === 'true';
     }
-
-    // 3. Costruire l'oggetto di ordinamento dinamicamente
     let sortOptions = {};
     if (sortKey === 'nextFeedingDate') {
       sortOptions['nextFeedingDate'] = sortOrder;
     } else {
-      // Per 'name' e 'species', usiamo la collation per un ordinamento case-insensitive corretto
       sortOptions[sortKey] = sortOrder;
     }
 
-    // 4. Aggregation Pipeline con $facet
     const results = await Reptile.aggregate([
-      // Fase di match con i filtri
       { $match: matchQuery },
 
-      // Lookup per i feedings
       {
         $lookup: {
-          from: "Feeding", // Assicurati che il nome della collection sia 'feedings'
+          from: "Feeding", 
           localField: "_id",
           foreignField: "reptile",
           as: "feedings"
         }
       },
 
-      // Calcola la prossima data di pasto (usando $max)
       {
         $addFields: {
           nextFeedingDate: { $max: "$feedings.nextFeedingDate" }
         }
       },
       
-      // Proietta i campi necessari (rimuovendo l'array feedings)
       {
         $project: {
           feedings: 0 
         }
       },
-
-      // Ordinamento dinamico
       { $sort: sortOptions },
-      
-      // $facet per eseguire paginazione e conteggio in una sola volta
-      {
+            {
         $facet: {
-          // Ramo per i metadati (conteggio totale)
           metadata: [ { $count: 'totalResults' } ],
-          // Ramo per i dati della pagina corrente
           dati: [
             { $skip: (page - 1) * perPage },
             { $limit: perPage }
           ]
         }
       }
-    ]).collation({ locale: "en", strength: 2 }); // Collation per ordinamento non sensibile alle maiuscole
+    ]).collation({ locale: "en", strength: 2 }); 
+    const dati = results[0].dati;
+    const totalResults = results[0].metadata[0]?.totalResults || 0;
+    const totalPages = Math.ceil(totalResults / perPage);
 
-    // 5. Formattare la risposta
+    res.send({
+      dati,
+      totalPages,
+      totalResults,
+      page,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send({ message: req.t('server_error') });
+  }
+};
+
+// NUOVO: Controller per animali archiviati (ceduti/deceduti)
+export const GetArchivedReptileByUser = async (req, res) => {
+  try {
+    const userId = req.user.userid;
+    const page = parseInt(req.query.page) || 1;
+    const perPage = parseInt(req.query.perPage) || 24;
+    const { filterSpecies, filterStatus } = req.query; // Filtri: 'ceded' o 'deceased'
+    const sortKey = req.query.sortKey || 'species'; // Default sort
+    const sortOrder = req.query.sortOrder === 'desc' ? -1 : 1;
+
+    const matchQuery = {
+      user: new mongoose.Types.ObjectId(userId),
+      status: { $in: ['ceded', 'deceased'] } // Query per 'ceded' o 'deceased'
+    };
+
+    if (filterSpecies) {
+      matchQuery.species = { $regex: filterSpecies, $options: 'i' };
+    }
+    if (filterStatus && ['ceded', 'deceased'].includes(filterStatus)) {
+      matchQuery.status = filterStatus; // Filtra per 'ceded' O 'deceased'
+    }
+
+    // Aggiungiamo un campo dinamico 'statusDate' per l'ordinamento
+    const aggregationPipeline = [
+      { $match: matchQuery },
+      {
+        $addFields: {
+          statusDate: { // Data di cessione o decesso
+            $cond: {
+              if: { $eq: ["$status", "ceded"] },
+              then: "$cededTo.date",
+              else: "$deceasedDetails.date"
+            }
+          }
+        }
+      }
+    ];
+
+    // Aggiungi ordinamento
+    let sortStage = {};
+    if (sortKey === 'statusDate') {
+      sortStage = { $sort: { statusDate: sortOrder } };
+    } else {
+      sortStage = { $sort: { [sortKey]: sortOrder } };
+    }
+    aggregationPipeline.push(sortStage);
+
+    // Aggiungi paginazione
+    aggregationPipeline.push(
+      {
+        $facet: {
+          metadata: [{ $count: 'totalResults' }],
+          dati: [
+            { $skip: (page - 1) * perPage },
+            { $limit: perPage }
+          ]
+        }
+      }
+    );
+
+    const results = await Reptile.aggregate(aggregationPipeline).collation({ locale: "en", strength: 2 });
+
     const dati = results[0].dati;
     const totalResults = results[0].metadata[0]?.totalResults || 0;
     const totalPages = Math.ceil(totalResults / perPage);
@@ -174,11 +234,9 @@ export const PostReptile = async (req, res) => {
         const userId = req.user.userid;
         const parsedParents = typeof parents === 'string' ? JSON.parse(parents) : parents;
         const parsedDocuments = typeof documents === 'string' ? JSON.parse(documents) : documents;
- 
-        // Maximum limit check
-        const user = await User.findById(userId);
+         const user = await User.findById(userId);
         const { plan: userPlan, limits } = getUserPlan(user);
-        const reptileCount = await Reptile.countDocuments({ user: userId });
+const reptileCount = await Reptile.countDocuments({ user: userId, status: 'active' });
 const normalizedFoodType = foodType && foodType.trim() !== '' ? foodType : 'Altro';
 
 
@@ -218,6 +276,7 @@ const normalizedFoodType = foodType && foodType.trim() !== '' ? foodType : 'Altr
             nextMealDay, 
             parents: parsedParents,
             documents: parsedDocuments,
+            status: 'active'
         });
 
         const createdReptile = await newReptile.save();
@@ -241,8 +300,10 @@ export const PutReptile = async (req, res) => {
         const id = req.params.reptileId;
         const user = await User.findById(req.user.userid);
         const { plan: userPlan, limits } = getUserPlan(user);
-        const { name, species, morph, sex, notes, birthDate, isBreeder, price, label, parents, documents, foodType, weightPerUnit, nextMealDay } = req.body;
-        let parsedParents, parsedDocuments;
+
+const { name, species, morph, sex, notes, birthDate, isBreeder, price, label, parents, documents, foodType, weightPerUnit, nextMealDay,
+                status, cededTo, deceasedDetails } = req.body;
+let parsedParents, parsedDocuments, parsedCededTo, parsedDeceasedDetails;
         if ('parents' in req.body) {
             parsedParents = typeof req.body.parents === 'string'
                 ? JSON.parse(req.body.parents)
@@ -255,6 +316,16 @@ export const PutReptile = async (req, res) => {
                 : req.body.documents;
         }
 
+if ('cededTo' in req.body) {
+            parsedCededTo = typeof req.body.cededTo === 'string'
+                ? JSON.parse(req.body.cededTo)
+                : req.body.cededTo;
+        }
+        if ('deceasedDetails' in req.body) {
+            parsedDeceasedDetails = typeof req.body.deceasedDetails === 'string'
+                ? JSON.parse(req.body.deceasedDetails)
+                : req.body.deceasedDetails;
+        }
 
         let reptile = await Reptile.findById(id);
 
@@ -331,6 +402,29 @@ export const PutReptile = async (req, res) => {
         if ('notes' in req.body) reptile.notes = notes;
         if ('parents' in req.body) reptile.parents = parsedParents;
         if ('documents' in req.body) reptile.documents = parsedDocuments;
+        if ('status' in req.body && ['active', 'ceded', 'deceased', 'other'].includes(status)) {
+            reptile.status = status;
+
+            if (status === 'ceded' && parsedCededTo) {
+                reptile.cededTo = {
+                    name: parsedCededTo.name,
+                    surname: parsedCededTo.surname,
+                    notes: parsedCededTo.notes,
+                    date: parsedCededTo.date ? new Date(parsedCededTo.date) : new Date() // Data o default a oggi
+                };
+                reptile.deceasedDetails = undefined; // Pulisce l'altro stato
+            } else if (status === 'deceased' && parsedDeceasedDetails) {
+                reptile.deceasedDetails = {
+                    notes: parsedDeceasedDetails.notes,
+                    date: parsedDeceasedDetails.date ? new Date(parsedDeceasedDetails.date) : new Date()
+                };
+                reptile.cededTo = undefined; // Pulisce l'altro stato
+            } else if (status === 'active') {
+                // Se l'animale torna attivo, puliamo i dettagli
+                reptile.cededTo = undefined;
+                reptile.deceasedDetails = undefined;
+            }
+        }
         const updatedReptile = await reptile.save();
 
         res.send(updatedReptile);
@@ -353,10 +447,7 @@ export const DeleteReptileImage = async (req, res) => {
         }
 
         const imageToRemove = reptile.image[index];
-
-        // Remove files from the filesystem
         await deleteFileIfExists(imageToRemove);
-
         reptile.image.splice(index, 1);
         await reptile.save();
 
@@ -379,9 +470,11 @@ export const DeleteReptile = async (req, res) => {
         const reptileId = req.params.reptileId;
         const reptile = await Reptile.findById(reptileId);
         if (!reptile) return res.status(404).send({ message: req.t('reptile_notFound') });
-        if (reptile.image) {
-            await deleteFileIfExists(reptile.image);
-        }
+if (reptile.image && reptile.image.length > 0) {
+  for (const imgPath of reptile.image) {
+    await deleteFileIfExists(imgPath);
+  }
+}
         await Feeding.deleteMany({ reptile: reptileId });
 
         await Notification.deleteMany({ reptile: reptileId });
@@ -400,21 +493,18 @@ export const DeleteReptile = async (req, res) => {
 export const GetReptilePublic = async (req, res) => {
     try {
         const reptileId = req.params.reptileId;
-
-        // Recupero il rettile con riferimento all'utente
         const reptile = await Reptile.findById(reptileId)
             .populate("user", "subscription name email address phoneNumber");
 
         if (!reptile) {
             return res.status(404).send({ message: req.t("reptile_notFound") });
         }
-
-        // 1. Controllo se ha QRCode
+        if (reptile.status !== 'active') {
+             return res.status(404).send({ message: req.t("reptile_notFound") });
+        }
         if (!reptile.qrCodeUrl) {
             return res.status(404).send({ message: req.t("reptile_notFound") });
         }
-
-        // 2. Controllo piano dell'utente
         const { plan, status } = reptile.user.subscription;
 
         const isPremiumActive =
@@ -424,8 +514,6 @@ export const GetReptilePublic = async (req, res) => {
         if (!isPremiumActive) {
             return res.status(404).send({ message: req.t("reptile_notFound") });
         }
-
-        // 3. Recupero feedings ed eventi
         const feedings = await Feeding.find({ reptile: reptileId })
             .sort({ date: -1 })
             .lean();
@@ -434,10 +522,8 @@ export const GetReptilePublic = async (req, res) => {
             .sort({ date: -1 })
             .lean();
 
-        // 4. Costruisco il payload
         const reptileData = reptile.toObject();
 
-        // dati utente limitati (solo name + email, niente subscription interna completa)
         const owner = {
             name: reptile.user.name,
             email: reptile.user.email,
@@ -446,7 +532,7 @@ export const GetReptilePublic = async (req, res) => {
 
         };
 
-        delete reptileData.user; // rimuovo l’intero oggetto user popolato
+        delete reptileData.user;
 
         res.send({
             reptile: reptileData,
