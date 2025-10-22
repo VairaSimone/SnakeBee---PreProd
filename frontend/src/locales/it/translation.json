@@ -72,9 +72,22 @@
             "edit": "Modifica",
             "feeding": "Pasto",
             "events": "Eventi",
-            "delete": "Elimina"
-        }
+            "delete": "Elimina",
+            "select": "Seleziona"
+        }, "multiSelect": {
+      "selected": "{{count}} animali selezionati",
+      "selectAll": "Seleziona tutti ({{count}})",
+      "deselectAll": "Deseleziona tutti",
+      "feedSelected": "Alimenta selezionati"
+    }
     },
+    "multipleFeedingModal": {
+    "title": "Alimentazione Multipla ({{count}} animali)",
+    "actions": {
+      "add": "Aggiungi nuovo pasto multiplo",
+      "addSubmit": "Aggiungi Pasto"
+    }
+  },
     "verifyEmail": {
         "errorVerifiy": "Errore nella verifica, contatta il supporto",
         "emailFirst": "Inserisci prima la tua email",

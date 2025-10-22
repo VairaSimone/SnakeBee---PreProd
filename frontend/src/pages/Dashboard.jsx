@@ -8,8 +8,14 @@ import ReptileEditModal from '../components/ReptileEditModal.jsx';
 import FeedingModal from '../components/FeedingModal.jsx';
 import EventModal from '../components/EventModal.jsx';
 import ConfirmDeleteModal from '../components/ConfirmDeleteModal.jsx';
-import { FaMars, FaVenus, FaPlus, FaTag, FaPencilAlt, FaDrumstickBite, FaCalendarAlt, FaTrash, FaChartBar, FaPercentage, FaUtensils, FaEgg, FaSyncAlt, FaArchive } from 'react-icons/fa'; import { useTranslation } from 'react-i18next';
+import MultipleFeedingModal from '../components/MultipleFeedingModal.jsx';
+import {
+  FaMars, FaVenus, FaPlus, FaTag, FaPencilAlt, FaDrumstickBite, FaCalendarAlt, FaTrash,
+  FaChartBar, FaPercentage, FaUtensils, FaEgg, FaSyncAlt, FaArchive, FaClipboardList,
+  FaCheckSquare, FaRegSquare
+} from 'react-icons/fa';
 import CalendarModal from '../components/CalendarModal.jsx'
+import { useTranslation } from 'react-i18next';
 
 // ... (hasPaidPlan, isDueOrOverdue, TabButton rimangono uguali) ...
 function hasPaidPlan(user) {
@@ -196,7 +202,8 @@ const Dashboard = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showFeedingModal, setShowFeedingModal] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
-
+  const [selectedReptileIds, setSelectedReptileIds] = useState(new Set());
+  const [showMultipleFeedingModal, setShowMultipleFeedingModal] = useState(false);
   const { t } = useTranslation();
   const [stats, setStats] = useState({
     successRate: null,
@@ -308,7 +315,28 @@ const Dashboard = () => {
   const handleDataRefresh = () => {
     fetchReptiles();
     fetchArchivedReptiles();
+    setSelectedReptileIds(new Set());
   }
+
+  const handleReptileSelect = (reptileId) => {
+    setSelectedReptileIds(prevSet => {
+      const newSet = new Set(prevSet);
+      if (newSet.has(reptileId)) {
+        newSet.delete(reptileId);
+      } else {
+        newSet.add(reptileId);
+      }
+      return newSet;
+    });
+  };
+
+  const handleSelectAll = () => {
+    if (selectedReptileIds.size === allReptiles.length) {
+      setSelectedReptileIds(new Set()); // Deseleziona tutti
+    } else {
+      setSelectedReptileIds(new Set(allReptiles.map(r => r._id))); // Seleziona tutti
+    }
+  };
   // ... (useEffect, StatCard, getPageNumbers, top3Incubations rimangono uguali) ...
   useEffect(() => {
     if (page !== 1) {
@@ -463,16 +491,45 @@ const Dashboard = () => {
             <TabButton
               title={`${t('dashboard.tabs.active')} (${totalResults})`}
               isActive={activeTab === 'active'}
-              onClick={() => setActiveTab('active')}
-            />
+              onClick={() => {
+                setActiveTab('active');
+                setSelectedReptileIds(new Set()); // NUOVO: resetta selezione
+              }} />
             <TabButton
               title={`${t('dashboard.tabs.archived')} (${archivedTotalResults})`}
               isActive={activeTab === 'archived'}
-              onClick={() => setActiveTab('archived')}
-            />
+              onClick={() => {
+                setActiveTab('archived');
+                setSelectedReptileIds(new Set()); // NUOVO: resetta selezione
+              }} />
           </div>
         </section>
-
+        {activeTab === 'active' && selectedReptileIds.size > 0 && (
+          <div className="mb-6 p-4 bg-forest/10 rounded-xl shadow-md flex flex-col sm:flex-row justify-between items-center gap-4 border border-forest">
+            <div className="font-semibold text-charcoal">
+              {t('dashboard.multiSelect.selected', { count: selectedReptileIds.size })}
+            </div>
+            <div className="flex flex-wrap gap-3">
+              <button
+                onClick={handleSelectAll}
+                className="px-4 py-2 rounded-md text-sm font-medium bg-white text-charcoal border border-gray-300 hover:bg-gray-50"
+              >
+                {/* MODIFICA: Mostra testo corretto se tutti sono già selezionati */}
+                {selectedReptileIds.size === allReptiles.length
+                  ? t('dashboard.multiSelect.deselectAll')
+                  : t('dashboard.multiSelect.selectAll', { count: allReptiles.length })
+                }
+              </button>
+              <button
+                onClick={() => setShowMultipleFeedingModal(true)}
+                className="flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium bg-forest text-white hover:bg-olive"
+              >
+                <FaClipboardList />
+                {t('dashboard.multiSelect.feedSelected')}
+              </button>
+            </div>
+          </div>
+        )}
         {/* ... (Filtri attivi e archiviati rimangono uguali) ... */}
         {activeTab === 'active' && (
           <>
@@ -508,13 +565,13 @@ const Dashboard = () => {
 
               <div>
                 <label className="block text-sm font-bold text-charcoal/80 mb-1">
-                  {t('dashboard.filters.searchName')} 
+                  {t('dashboard.filters.searchName')}
                 </label>
                 <input
                   type="text"
                   value={filterName}
                   onChange={(e) => setFilterName(e.target.value)}
-                  placeholder={t('dashboard.filters.namePlaceholder')} 
+                  placeholder={t('dashboard.filters.namePlaceholder')}
                   className="w-full h-10 rounded-md border-transparent focus:ring-2 focus:ring-forest bg-white text-charcoal shadow px-2"
                 />
               </div>
@@ -651,65 +708,106 @@ const Dashboard = () => {
                 </button>
               </div>
             ) : (
+
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {allReptiles.map(reptile => (
-                  <Link to={`/reptiles/${reptile._id}`} key={reptile._id} className="bg-white rounded-2xl shadow-lg overflow-hidden group transition-all duration-300  no-underline hover:no-underline hover:shadow-2xl hover:-translate-y-1.5 flex flex-col min-h-[460px] max-h-[460px]">
-                    <div className="relative h-[160px] w-full overflow-hidden">
-                      {reptile.label?.text && (
-                        <div
-                          className="absolute top-2 left-2 z-20 px-3 py-1 rounded-full text-xs font-bold text-white shadow-lg flex items-center gap-1.5"
-                          style={{ backgroundColor: reptile.label.color || '#228B22' }}
-                          title={reptile.label.text}
-                        >
-                          <FaTag size={10} /> {reptile.label.text}
-                        </div>
+
+                {allReptiles.map(reptile => {
+
+                  // NUOVO: Variabile per leggibilità
+                  const isSelected = selectedReptileIds.has(reptile._id);
+
+                  return (
+                    <Link
+                      to={`/reptiles/${reptile._id}`}
+                      key={reptile._id}
+                      // MODIFICA: Stili dinamici per la selezione
+                      className={`bg-white rounded-2xl shadow-lg overflow-hidden group transition-all duration-300 no-underline hover:no-underline flex flex-col min-h-[460px] max-h-[460px] relative
+                        ${isSelected
+                          ? 'scale-[0.98] shadow-forest/30 shadow-lg' // Stato "selezionato"
+                          : 'hover:-translate-y-1.5 hover:shadow-2xl' // Stato "non selezionato"
+                        }`
+                      }
+                    >
+
+                      {/* MODIFICA: Sostituito <input> con un <button> e icone */}
+                      <button
+                        type="button"
+                        title={t('dashboard.buttons.select')}
+                        className="absolute top-3 right-3 z-30 p-2 rounded-full bg-white/70 backdrop-blur-sm shadow-lg cursor-pointer hover:bg-white/100 transition-all duration-200"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          e.preventDefault();
+                          handleReptileSelect(reptile._id);
+                        }}
+                      >
+                        {isSelected ? (
+                          <FaCheckSquare size={22} className="text-forest" />
+                        ) : (
+                          <FaRegSquare size={22} className="text-charcoal/60" />
+                        )}
+                      </button>
+
+                      {/* MODIFICA: Bordo di evidenziazione (usiamo 'ring' che è più pulito di 'border') */}
+                      {isSelected && (
+                        <div className="absolute top-0 left-0 w-full h-full rounded-2xl ring-4 ring-forest pointer-events-none z-20"></div>
                       )}
-                      {reptile.image?.length > 1 ? (
-                        <div className="relative h-full w-full">
-                          <div className="flex overflow-x-auto scroll-smooth snap-x snap-mandatory no-scrollbar h-full" ref={(el) => (carouselRefs.current[reptile._id] = el)}>
-                            {reptile.image.map((img, idx) => (
-                              <img key={idx} src={`${process.env.REACT_APP_BACKEND_URL_IMAGE || ''}${img}`} alt={`${reptile.name}-${idx}`} className="object-cover w-full h-full flex-shrink-0 snap-center transition-transform duration-500  no-underline hover:no-underline group-hover:scale-105" />
-                            ))}
+
+                      <div className="relative h-[160px] w-full overflow-hidden">
+                        {reptile.label?.text && (
+                          <div
+                            className="absolute top-2 left-2 z-20 px-3 py-1 rounded-full text-xs font-bold text-white shadow-lg flex items-center gap-1.5"
+                            style={{ backgroundColor: reptile.label.color || '#228B22' }}
+                            title={reptile.label.text}
+                          >
+                            <FaTag size={10} /> {reptile.label.text}
                           </div>
-                          <button onClick={(e) => scrollCarousel(e, -1, reptile._id)} className="absolute left-0 top-1/2 -translate-y-1/2 h-full w-10 bg-black/20 text-white flex items-center justify-center z-10 opacity-0  no-underline hover:no-underline group-hover:opacity-100 transition-opacity">‹</button>
-                          <button onClick={(e) => scrollCarousel(e, 1, reptile._id)} className="absolute right-0 top-1/2 -translate-y-1/2 h-full w-10 bg-black/20 text-white flex items-center justify-center z-10 opacity-0  no-underline hover:no-underline group-hover:opacity-100 transition-opacity">›</button>
+                        )}
+                        {reptile.image?.length > 1 ? (
+                          <div className="relative h-full w-full">
+                            <div className="flex overflow-x-auto scroll-smooth snap-x snap-mandatory no-scrollbar h-full" ref={(el) => (carouselRefs.current[reptile._id] = el)}>
+                              {reptile.image.map((img, idx) => (
+                                <img key={idx} src={`${process.env.REACT_APP_BACKEND_URL_IMAGE || ''}${img}`} alt={`${reptile.name}-${idx}`} className="object-cover w-full h-full flex-shrink-0 snap-center transition-transform duration-500  no-underline hover:no-underline group-hover:scale-105" />
+                              ))}
+                            </div>
+                            <button onClick={(e) => scrollCarousel(e, -1, reptile._id)} className="absolute left-0 top-1/2 -translate-y-1/2 h-full w-10 bg-black/20 text-white flex items-center justify-center z-10 opacity-0  no-underline hover:no-underline group-hover:opacity-100 transition-opacity">‹</button>
+                            <button onClick={(e) => scrollCarousel(e, 1, reptile._id)} className="absolute right-0 top-1/2 -translate-y-1/2 h-full w-10 bg-black/20 text-white flex items-center justify-center z-10 opacity-0  no-underline hover:no-underline group-hover:opacity-100 transition-opacity">›</button>
+                          </div>
+                        ) : (
+                          <img src={reptile.image?.[0] ? `${process.env.REACT_APP_BACKEND_URL_IMAGE || ''}${reptile.image[0]}` : 'https://res.cloudinary.com/dg2wcqflh/image/upload/v1757791253/Logo_duqbig.png'} alt={reptile.name} className="object-cover w-full h-full transition-transform duration-500  no-underline hover:no-underline group-hover:scale-105" />
+                        )}
+                      </div>
+
+                      <div className="p-4 h-[300px] flex flex-col justify-between">
+                        <div className="flex justify-between items-start">
+                          <h3 className="text-xl font-bold text-charcoal  no-underline hover:no-underline group-hover:text-forest transition-colors duration-300 truncate">{reptile.name}</h3>
+                          <span title={reptile.sex === 'M' ? 'Maschio' : 'Femmina'}>
+                            {reptile.sex === 'M' && <FaMars className="text-blue-500 text-xl" />}
+                            {reptile.sex === 'F' && <FaVenus className="text-pink-500 text-xl" />}
+                          </span>
                         </div>
-                      ) : (
-                        <img src={reptile.image?.[0] ? `${process.env.REACT_APP_BACKEND_URL_IMAGE || ''}${reptile.image[0]}` : 'https://res.cloudinary.com/dg2wcqflh/image/upload/v1757791253/Logo_duqbig.png'} alt={reptile.name} className="object-cover w-full h-full transition-transform duration-500  no-underline hover:no-underline group-hover:scale-105" />
-                      )}
-                    </div>
+                        <p className="text-sm text-charcoal/60   no-underline hover:no-underline italic truncate">{reptile.species}</p>
+                        <p className="text-sm text-charcoal/80 mt-1  no-underline hover:no-underline font-medium truncate">Morph: {reptile.morph || 'N/A'}</p>
+                        <p className="text-sm text-charcoal/80  no-underline hover:no-underline">
+                          {t('feedingCard.nextFeeding')} <span className={`font-semibold  no-underline hover:no-underline ${isDueOrOverdue(reptile.nextFeedingDate)
+                            ? 'text-red-600'
+                            : 'text-charcoal'
+                            }`}>{reptile.nextFeedingDate ? new Date(reptile.nextFeedingDate).toLocaleDateString() : 'N/A'}</span>
+                        </p>
 
-                    <div className="p-4 h-[300px] flex flex-col justify-between">
-                      <div className="flex justify-between items-start">
-                        <h3 className="text-xl font-bold text-charcoal  no-underline hover:no-underline group-hover:text-forest transition-colors duration-300 truncate">{reptile.name}</h3>
-                        <span title={reptile.sex === 'M' ? 'Maschio' : 'Femmina'}>
-                          {reptile.sex === 'M' && <FaMars className="text-blue-500 text-xl" />}
-                          {reptile.sex === 'F' && <FaVenus className="text-pink-500 text-xl" />}
-                        </span>
+                        <div className="mt-4 pt-4 border-t border-sand grid grid-cols-4 gap-2 text-center">
+                          {[
+                            { icon: <FaPencilAlt />, label: t("dashboard.buttons.edit"), color: "blue", action: () => { setSelectedReptile(reptile); setShowEditModal(true); } },
+                            { icon: <FaDrumstickBite />, label: t("dashboard.buttons.feeding"), color: "amber", action: () => { setSelectedReptile(reptile); setShowFeedingModal(true); } },
+                            { icon: <FaCalendarAlt />, label: t("dashboard.buttons.events"), color: "purple", action: () => { setSelectedReptile(reptile); setShowEventModal(true); } },
+                            { icon: <FaTrash />, label: t("dashboard.buttons.delete"), color: "brick", action: () => { setPendingDelete(reptile); setShowDeleteModal(true); } }].map(btn => (
+                              <button key={btn.label} onClick={(e) => { e.preventDefault(); e.stopPropagation(); btn.action(); }} title={btn.label} className={`text-${btn.color} p-2 rounded-lg hover:bg-${btn.color}/10 transition-colors duration-200`}>
+                                {btn.icon}
+                              </button>
+                            ))}
+                        </div>
                       </div>
-                      <p className="text-sm text-charcoal/60   no-underline hover:no-underline italic truncate">{reptile.species}</p>
-                      <p className="text-sm text-charcoal/80 mt-1  no-underline hover:no-underline font-medium truncate">Morph: {reptile.morph || 'N/A'}</p>
-                      <p className="text-sm text-charcoal/80  no-underline hover:no-underline">
-                        {t('feedingCard.nextFeeding')} <span className={`font-semibold  no-underline hover:no-underline ${isDueOrOverdue(reptile.nextFeedingDate)
-                          ? 'text-red-600'
-                          : 'text-charcoal'
-                          }`}>{reptile.nextFeedingDate ? new Date(reptile.nextFeedingDate).toLocaleDateString() : 'N/A'}</span>
-                      </p>
-
-                      <div className="mt-4 pt-4 border-t border-sand grid grid-cols-4 gap-2 text-center">
-                        {[
-                          { icon: <FaPencilAlt />, label: t("dashboard.buttons.edit"), color: "blue", action: () => { setSelectedReptile(reptile); setShowEditModal(true); } },
-                          { icon: <FaDrumstickBite />, label: t("dashboard.buttons.feeding"), color: "amber", action: () => { setSelectedReptile(reptile); setShowFeedingModal(true); } },
-                          { icon: <FaCalendarAlt />, label: t("dashboard.buttons.events"), color: "purple", action: () => { setSelectedReptile(reptile); setShowEventModal(true); } },
-                          { icon: <FaTrash />, label: t("dashboard.buttons.delete"), color: "brick", action: () => { setPendingDelete(reptile); setShowDeleteModal(true); } }].map(btn => (
-                            <button key={btn.label} onClick={(e) => { e.preventDefault(); e.stopPropagation(); btn.action(); }} title={btn.label} className={`text-${btn.color} p-2 rounded-lg hover:bg-${btn.color}/10 transition-colors duration-200`}>
-                              {btn.icon}
-                            </button>
-                          ))}
-                      </div>
-                    </div>
-                  </Link>
-                ))}
+                    </Link>
+)})}
               </div>
             )}
           </main>
@@ -830,6 +928,16 @@ const Dashboard = () => {
       <ReptileCreateModal show={showCreateModal} handleClose={() => setShowCreateModal(false)} onSuccess={handleDataRefresh} setReptiles={setAllReptiles} />
       <ReptileEditModal show={showEditModal} handleClose={() => setShowEditModal(false)} reptile={selectedReptile} onSuccess={handleDataRefresh} setReptiles={setAllReptiles} />
       <FeedingModal show={showFeedingModal} handleClose={() => setShowFeedingModal(false)} reptileId={selectedReptile?._id} onSuccess={handleDataRefresh} setReptiles={setAllReptiles} />
+      <MultipleFeedingModal
+        show={showMultipleFeedingModal}
+        handleClose={() => setShowMultipleFeedingModal(false)}
+        reptileIds={selectedReptileIds}
+        onSuccess={() => {
+          handleDataRefresh(); // Aggiorna i dati
+          setShowMultipleFeedingModal(false); // Chiude il modale
+          // handleDataRefresh resetta già la selezione
+        }}
+      />
       <EventModal show={showEventModal} handleClose={() => setShowEventModal(false)} reptileId={selectedReptile?._id} setReptiles={setAllReptiles} onSuccess={handleDataRefresh} />
       <ConfirmDeleteModal show={showDeleteModal} onClose={() => { setShowDeleteModal(false); setPendingDelete(null); }} onConfirm={() => { if (pendingDelete?._id) { handleDelete(pendingDelete._id); } setShowDeleteModal(false); setPendingDelete(null); }} reptile={pendingDelete} />
     </div>
