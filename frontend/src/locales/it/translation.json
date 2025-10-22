@@ -40,7 +40,7 @@
             "nextMeal": "Pasto successivo",
             "searchMorph": "Cerca Morph",
             "searchName": "Cerca per Nome",
-      "namePlaceholder": "Nome rettile...",
+            "namePlaceholder": "Nome rettile...",
             "morphPlaceholder": "Es: 'Pastel'",
             "sex": "Genere",
             "all": "Tutti",
@@ -74,20 +74,21 @@
             "events": "Eventi",
             "delete": "Elimina",
             "select": "Seleziona"
-        }, "multiSelect": {
-      "selected": "{{count}} animali selezionati",
-      "selectAll": "Seleziona tutti ({{count}})",
-      "deselectAll": "Deseleziona tutti",
-      "feedSelected": "Alimenta selezionati"
-    }
+        },
+        "multiSelect": {
+            "selected": "{{count}} animali selezionati",
+            "selectAll": "Seleziona tutti ({{count}})",
+            "deselectAll": "Deseleziona tutti",
+            "feedSelected": "Alimenta selezionati"
+        }
     },
     "multipleFeedingModal": {
-    "title": "Alimentazione Multipla ({{count}} animali)",
-    "actions": {
-      "add": "Aggiungi nuovo pasto multiplo",
-      "addSubmit": "Aggiungi Pasto"
-    }
-  },
+        "title": "Alimentazione Multipla ({{count}} animali)",
+        "actions": {
+            "add": "Aggiungi nuovo pasto multiplo",
+            "addSubmit": "Aggiungi Pasto"
+        }
+    },
     "verifyEmail": {
         "errorVerifiy": "Errore nella verifica, contatta il supporto",
         "emailFirst": "Inserisci prima la tua email",
@@ -195,6 +196,17 @@
         "registerHere": "Registrati qui"
     },
     "inventoryPage": {
+        "analyticsFailed": "Impossibile caricare i dati analitici.",
+        "loadingAnalytics": "Caricamento analisi...",
+        "forecastTitle": "Previsioni Scorte",
+        "dailyRate": "Consumo medio: {{rate}} pz/giorno",
+        "daysLeft": "{{count}} giorni rimasti",
+        "depletionDate": "Fino al {{date}}",
+        "noConsumption": "Nessun consumo registrato negli ultimi 90 giorni.",
+        "noForecastData": "Nessun dato di consumo per calcolare le previsioni. Inizia a registrare i pasti.",
+        "recommendationsTitle": "Consigli d'Acquisto",
+        "recommendationDetails": "Compra: {{toBuy}} pz (Fabbisogno mensile: {{needed}} | In magazzino: {{inStock}})",
+        "noRecommendations": "Nessun consiglio disponibile. Assicurati di aver impostato il tipo di cibo e il peso preferiti nel profilo dei tuoi rettili.",
         "title": "Inventario Cibo",
         "totalSummary": "Totale da scongelare",
         "foodType": "Tipo Cibo",
