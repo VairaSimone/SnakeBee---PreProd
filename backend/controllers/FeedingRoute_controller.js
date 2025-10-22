@@ -205,7 +205,7 @@ export const PostMultipleFeedings = async (req, res) => {
       });
 
       if (!inv || inv.quantity < totalQuantityNeeded) {
-        return res.status(400).json({ message: req.t('foodTypeQuantity_insufficient') });
+        return res.status(400).json({ message: req.t('foodTypeQuantity') });
       }
       
       // Decrementa l'inventario del totale

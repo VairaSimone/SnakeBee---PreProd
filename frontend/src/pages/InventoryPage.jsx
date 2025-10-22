@@ -234,7 +234,7 @@ const InventoryPage = () => {
             <FaBoxOpen className="text-emerald-500 text-3xl" />
             {t('inventoryPage.currentInventory')}
           </h2>
-          <div className="overflow-x-auto">
+<div className="overflow-x-auto overflow-y-auto max-h-[400px] scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-slate-100 rounded-md">
             <table className="w-full text-sm">
               <thead className="bg-slate-100 text-left text-slate-700 uppercase tracking-wider text-xs">
                 <tr>
@@ -291,7 +291,9 @@ const InventoryPage = () => {
                 <FaTimes className="text-red-400" /> {analyticsError}
               </p>
             ) : forecast.length > 0 ? (
-              <ul className="divide-y divide-slate-100 border-t border-b border-slate-200 rounded-md">
+              <div className="overflow-y-auto max-h-[300px] scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-slate-100 rounded-md">
+
+  <ul className="divide-y divide-slate-100 border-t border-b border-slate-200">
                 {forecast.sort((a, b) => {
                   if (a.daysLeft === Infinity) return 1;
                   if (b.daysLeft === Infinity) return -1;
@@ -317,6 +319,7 @@ const InventoryPage = () => {
                   </li>
                 ))}
               </ul>
+              </div>
             ) : (
               <p className="text-slate-500 p-4 text-center">{t('inventoryPage.noForecastData')}</p>
             )}
