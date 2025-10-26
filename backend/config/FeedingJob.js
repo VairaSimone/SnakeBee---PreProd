@@ -15,7 +15,7 @@ import bot from "../telegramBot.js";
 function getRomeTodayString() {
   return DateTime.now().setZone('Europe/Rome').toISODate(); // Es: '2025-10-26'
 }
- 
+
 const getReptileDisplayName = (reptile, userLang = 'it') => {
   if (!reptile) return 'Unnamed';
   if (reptile.name && reptile.name.trim()) return reptile.name;
@@ -29,7 +29,7 @@ const getReptileDisplayName = (reptile, userLang = 'it') => {
 };
 
 cron.schedule(
-  '* * * * *',
+  '0 9 * * *',
   async () => {
     console.log('JOB - Feeding Job (start)');
 
