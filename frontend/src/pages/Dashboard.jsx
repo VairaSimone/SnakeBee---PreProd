@@ -24,15 +24,18 @@ function hasPaidPlan(user) {
   return (plan === 'BREEDER');
 }
 
-const isDueOrOverdue = (dateString) => { // Ora riceve 'YYYY-MM-DD'
+const isDueOrOverdue = (dateString) => { // Riceve "2025-11-01T22:00:00"
   if (!dateString) return false;
 
   const today = new Date();
   today.setHours(0, 0, 0, 0); // Inizio di oggi (locale)
 
+  // 1. Estrai solo la data (es. "2025-11-01")
+  const dateOnly = dateString.split('T')[0];
+
+  // 2. Ora la logica originale funziona correttamente
   // Crea la data del pasto impostandola a mezzogiorno locale
-  // per evitare problemi di DST o fuso orario.
-  const feedingDate = new Date(dateString + 'T12:00:00');
+  const feedingDate = new Date(dateOnly + 'T12:00:00');
   feedingDate.setHours(0, 0, 0, 0); // Inizio del giorno del pasto (locale)
 
   return feedingDate <= today;
@@ -230,12 +233,19 @@ const Dashboard = () => {
       node.scrollBy({ left: scrollAmount * direction, behavior: 'smooth' });
     }
   };
+
 const parseDateString = (dateStr) => {
   if (!dateStr) return 'N/A';
+  
+  // 1. Estrai solo la data (es. "2025-11-01") dalla stringa API
+  const dateOnly = dateStr.split('T')[0];
+
+  // 2. Ora la logica originale funziona correttamente
   // Aggiungendo T12:00:00 si evita che new Date() interpreti la stringa
   // come UTC e la sposti al giorno prima.
-  return new Date(dateStr + 'T12:00:00').toLocaleDateString();
+  return new Date(dateOnly + 'T12:00:00').toLocaleDateString();
 }
+
   const fetchStats = async () => {
     try {
       const [success, refusal, shed, incubation] = await Promise.all([
