@@ -4,7 +4,7 @@ import { FaBell, FaBars, FaTimes } from 'react-icons/fa';
 import { useDispatch, useSelector } from 'react-redux';
 import { logoutUser, selectUser } from '../features/userSlice';
 import api from '../services/api';
-import Notifications from './Notifications'; 
+import Notifications from './Notifications';
 import { useTranslation } from 'react-i18next';
 
 const Navbar = () => {
@@ -16,21 +16,21 @@ const Navbar = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const avatarMenuRef = useRef();
-  const notificationsRef = useRef(); 
-    const { t } = useTranslation();
-const getAvatarUrl = () => {
-  if (!user?.avatar?.trim()) {
-    return '/default-avatar.png';
-  }
+  const notificationsRef = useRef();
+  const { t } = useTranslation();
+  const getAvatarUrl = () => {
+    if (!user?.avatar?.trim()) {
+      return '/default-avatar.png';
+    }
 
-  // se inizia con http o https → è già un URL assoluto (Google, CDN ecc.)
-  if (/^https?:\/\//.test(user.avatar)) {
-    return user.avatar;
-  }
+    // se inizia con http o https → è già un URL assoluto (Google, CDN ecc.)
+    if (/^https?:\/\//.test(user.avatar)) {
+      return user.avatar;
+    }
 
-  // altrimenti lo considero un path relativo sul mio backend
-  return process.env.REACT_APP_BACKEND_URL_IMAGE + user.avatar;
-};
+    // altrimenti lo considero un path relativo sul mio backend
+    return process.env.REACT_APP_BACKEND_URL_IMAGE + user.avatar;
+  };
   const handleLogout = async () => {
     try {
       await api.post('/v1/logout', null, { withCredentials: true });
@@ -57,14 +57,14 @@ const getAvatarUrl = () => {
     const interval = setInterval(fetchNotificationsCount, 30000);
     return () => clearInterval(interval);
   }, [user]);
-  
+
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (avatarMenuRef.current && !avatarMenuRef.current.contains(e.target)) {
         setAvatarMenuOpen(false);
       }
       if (notificationsRef.current && !notificationsRef.current.contains(e.target) && !e.target.closest('.notification-bell-button')) {
-          setShowNotifications(false);
+        setShowNotifications(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -90,28 +90,29 @@ const getAvatarUrl = () => {
 
         {/* Desktop Menu */}
         <ul className="hidden sm:flex gap-6 items-center font-medium">
+                    <NavLink to="/blog" className={({ isActive }) => `hover:text-[#228B22] transition ${isActive ? 'text-[#228B22] underline underline-offset-4 font-semibold' : ''}`}>{t('navbar.blog')}</NavLink>
+<NavLink to="/shop" className={({ isActive }) => `hover:text-[#228B22] transition ${isActive ? 'text-[#228B22] underline underline-offset-4 font-semibold' : ''}`}>{t('navbar.shop', 'Shop')}</NavLink>
           {!user ? (
             <>
- <NavLink to="/blog" className={({ isActive }) => `hover:text-[#228B22] transition ${isActive ? 'text-[#228B22] underline underline-offset-4 font-semibold' : ''}`}>{t('navbar.blog')}</NavLink> 
               <NavLink to="/login" className={({ isActive }) => `hover:text-[#228B22] transition ${isActive ? 'text-[#228B22] underline underline-offset-4 font-semibold' : ''}`}>{t('navbar.login')}</NavLink>
               <NavLink to="/register" className={({ isActive }) => `hover:text-[#228B22] transition ${isActive ? 'text-[#228B22] underline underline-offset-4 font-semibold' : ''}`}>{t('navbar.register')}</NavLink>
               <NavLink to="/pricing" className={({ isActive }) => `hover:text-[#228B22] transition ${isActive ? 'text-[#228B22] underline underline-offset-4 font-semibold' : ''}`}>{t('navbar.subscription')}</NavLink>
             </>
           ) : (
             <>
-                    <NavLink to="/blog" className={({ isActive }) => `hover:text-[#228B22] transition ${isActive ? 'text-[#228B22] underline underline-offset-4 font-semibold' : ''}`}>{t('navbar.blog')}</NavLink> 
+              <NavLink to="/blog" className={({ isActive }) => `hover:text-[#228B22] transition ${isActive ? 'text-[#228B22] underline underline-offset-4 font-semibold' : ''}`}>{t('navbar.blog')}</NavLink>
               <NavLink to="/dashboard" className={({ isActive }) => `hover:text-[#228B22] transition ${isActive ? 'text-[#228B22] underline underline-offset-4 font-semibold' : ''}`}>{t('navbar.dashboard')}</NavLink>
               <NavLink to="/breeding" className={({ isActive }) => `hover:text-[#228B22] transition ${isActive ? 'text-[#228B22] underline underline-offset-4 font-semibold' : ''}`}>{t('navbar.breeding')}</NavLink>
               <NavLink to="/inventory" className={({ isActive }) => `hover:text-[#228B22] transition ${isActive ? 'text-[#228B22] underline underline-offset-4 font-semibold' : ''}`}>{t('navbar.inventory')}</NavLink>
-                          {user.role === 'admin' && (
+              {user.role === 'admin' && (
                 <NavLink to="/admin/blog" className={({ isActive }) => `hover:text-red-500 transition ${isActive ? 'text-red-600 underline underline-offset-4 font-semibold' : ''}`}>{t('navbar.admin')}</NavLink>
-            )}
+              )}
 
               {/* Bell + count */}
               <div className="relative">
-                <button 
-                  onClick={() => setShowNotifications(!showNotifications)} 
-                  className="relative notification-bell-button" 
+                <button
+                  onClick={() => setShowNotifications(!showNotifications)}
+                  className="relative notification-bell-button"
                 >
                   <FaBell className="text-xl hover:text-[#228B22]" />
                   {notificationsCount > 0 && (
@@ -120,17 +121,17 @@ const getAvatarUrl = () => {
                     </span>
                   )}
                 </button>
-                
+
                 <div
                   ref={notificationsRef}
                   className={`absolute top-full right-0 mt-3 w-80 sm:w-96 bg-[#FDFBF5] border border-gray-200 rounded-lg shadow-xl transition-all duration-300 ease-in-out z-50
                     ${showNotifications ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-[-10px] pointer-events-none'}`}
                 >
-                    <Notifications 
-                        onNotificationRead={fetchNotificationsCount} 
-                        closeDropdown={() => setShowNotifications(false)}
-                        refresh={notificationsCount} 
-                    />
+                  <Notifications
+                    onNotificationRead={fetchNotificationsCount}
+                    closeDropdown={() => setShowNotifications(false)}
+                    refresh={notificationsCount}
+                  />
                 </div>
               </div>
 
@@ -159,35 +160,36 @@ const getAvatarUrl = () => {
 
       {/* Mobile menu */}
       {mobileMenuOpen && (
-         <div className="sm:hidden px-4 py-3 bg-[#EDE7D6] text-base animate-fade-in-down">
-            <div className="flex flex-col gap-2">
-              {!user ? (
-                 <>
-                       <NavLink to="/blog" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-2 rounded hover:bg-[#E0D8C3] transition">{t('navbar.blog')}</NavLink> 
-                    <NavLink to="/login" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-2 rounded hover:bg-[#E0D8C3] transition">{t('navbar.login')}</NavLink>
-                    <NavLink to="/register" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-2 rounded hover:bg-[#E0D8C3] transition">{t('navbar.register')}</NavLink>
-                    <NavLink to="/pricing" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-2 rounded hover:bg-[#E0D8C3] transition">{t('navbar.subscription')}</NavLink>
-                 </>
-              ) : (
-                 <>
-                      <NavLink to="/blog" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-2 rounded hover:bg-[#E0D8C3] transition">{t('navbar.blog')}</NavLink> 
-                    <NavLink to="/dashboard" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-2 rounded hover:bg-[#E0D8C3] transition">{t('navbar.dashboard')}</NavLink>
-                    <NavLink to="/breeding" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-2 rounded hover:bg-[#E0D8C3] transition">{t('navbar.breeding')}</NavLink>
-                    <NavLink to="/inventory" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-2 rounded hover:bg-[#E0D8C3] transition">{t('navbar.inventory')}</NavLink>
-                        <NavLink to="/pricing" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-2 rounded hover:bg-[#E0D8C3] transition">
-      {t('navbar.subscription')}
-    </NavLink>
-                    <NavLink to="/profile" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-2 rounded hover:bg-[#E0D8C3] transition">{t('navbar.profile')}</NavLink>
-                    <button onClick={() => { handleLogout(); setMobileMenuOpen(false); }} className="block w-full text-left px-4 py-2 rounded text-red-600 hover:bg-[#FCEFEF] transition">{t('navbar.logout')}</button>
-                                     {user.role === 'admin' && (
-                       <NavLink to="/admin/blog" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-2 rounded hover:bg-[#E0D8C3] transition text-red-600 font-semibold">{t('navbar.admin')}</NavLink>
-                    )}
+        <div className="sm:hidden px-4 py-3 bg-[#EDE7D6] text-base animate-fade-in-down">
+          <div className="flex flex-col gap-2">
+                            <NavLink to="/blog" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-2 rounded hover:bg-[#E0D8C3] transition">{t('navbar.blog')}</NavLink>
+<NavLink to="/shop" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-2 rounded hover:bg-[#E0D8C3] transition">{t('navbar.shop', 'Shop')}</NavLink>
+            {!user ? (
+              <>
+                <NavLink to="/login" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-2 rounded hover:bg-[#E0D8C3] transition">{t('navbar.login')}</NavLink>
+                <NavLink to="/register" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-2 rounded hover:bg-[#E0D8C3] transition">{t('navbar.register')}</NavLink>
+                <NavLink to="/pricing" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-2 rounded hover:bg-[#E0D8C3] transition">{t('navbar.subscription')}</NavLink>
+              </>
+            ) : (
+              <>
+                <NavLink to="/blog" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-2 rounded hover:bg-[#E0D8C3] transition">{t('navbar.blog')}</NavLink>
+                <NavLink to="/dashboard" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-2 rounded hover:bg-[#E0D8C3] transition">{t('navbar.dashboard')}</NavLink>
+                <NavLink to="/breeding" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-2 rounded hover:bg-[#E0D8C3] transition">{t('navbar.breeding')}</NavLink>
+                <NavLink to="/inventory" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-2 rounded hover:bg-[#E0D8C3] transition">{t('navbar.inventory')}</NavLink>
+                <NavLink to="/pricing" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-2 rounded hover:bg-[#E0D8C3] transition">
+                  {t('navbar.subscription')}
+                </NavLink>
+                <NavLink to="/profile" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-2 rounded hover:bg-[#E0D8C3] transition">{t('navbar.profile')}</NavLink>
+                <button onClick={() => { handleLogout(); setMobileMenuOpen(false); }} className="block w-full text-left px-4 py-2 rounded text-red-600 hover:bg-[#FCEFEF] transition">{t('navbar.logout')}</button>
+                {user.role === 'admin' && (
+                  <NavLink to="/admin/blog" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-2 rounded hover:bg-[#E0D8C3] transition text-red-600 font-semibold">{t('navbar.admin')}</NavLink>
+                )}
 
-                 </>
+              </>
 
-              )}
-            </div>
-         </div>
+            )}
+          </div>
+        </div>
       )}
     </nav>
   );

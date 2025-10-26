@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, lazy, Suspense} from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { loginUser, setLanguage, selectLanguage  } from './features/userSlice';
 import axios from 'axios';
@@ -43,6 +43,9 @@ import AdminProtectedRoute from './components/AdminProtectedRoute';
 import AdminBlogDashboard from './pages/admin/AdminBlogDashboard';
 import ArticleEditor from './pages/admin/ArticleEditor';
 import ReferralBanner from './components/ReferralBanner';
+import Shop from './pages/Shop';
+import BreederProfile from './pages/BreederProfile';
+import BreederList from './pages/BreederList';
 
 function AppContent() {
   const dispatch = useDispatch();
@@ -86,7 +89,9 @@ function AppContent() {
         <Route path="/it/terms" element={<TermsAndConditionsIT />} />
         <Route path="/telegram-auth" element={<TelegramAuth />} />
 
-
+<Route path="/shop" element={<Shop />} />
+        <Route path="/shop/breeders" element={<BreederList />} />
+        <Route path="/shop/breeders/:userId" element={<BreederProfile />} />
         <Route path="/public/reptile/:reptileId" element={<ReptileDetails />} />
         <Route path="/register" element={<Register />} />
         <Route path="/verify-email" element={<VerifyEmail />} />

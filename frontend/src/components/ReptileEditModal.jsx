@@ -1,19 +1,37 @@
 import React, { useState, useEffect, Fragment } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import api from '../services/api';
+import { useSelector } from 'react-redux';
+import { selectUser } from '../features/userSlice';
+import { Link } from 'react-router-dom';
 import {
-  PhotoIcon,
-  IdentificationIcon,
-  UsersIcon,
-  DocumentTextIcon,
-  XMarkIcon,
-  TrashIcon,
-  ExclamationTriangleIcon,
-  TagIcon,
-  ArchiveBoxIcon // NUOVO
+  PhotoIcon,
+  IdentificationIcon,
+  UsersIcon,
+  DocumentTextIcon,
+  XMarkIcon,
+  TrashIcon,
+  ExclamationTriangleIcon,
+  TagIcon,
+  ArchiveBoxIcon,
+  EyeIcon, // NUOVO
+  EyeSlashIcon // NUOVO
 } from '@heroicons/react/24/outline';
 import { useTranslation } from 'react-i18next';
+const getPlanLimits = (user) => {
+  const plan = user?.subscription?.plan || 'NEOPHYTE';
+  const status = user?.subscription?.status;
+  const isActive = status === 'active' || status === 'pending_cancellation';
 
+  if (!isActive) return { plan: 'NEOPHYTE', publicReptiles: 0 };
+  
+  switch(plan) {
+    case 'APPRENTICE': return { plan, publicReptiles: 3 };
+    case 'PRACTITIONER': return { plan, publicReptiles: 10 };
+    case 'BREEDER': return { plan, publicReptiles: Infinity };
+    default: return { plan: 'NEOPHYTE', publicReptiles: 0 };
+  }
+};
 // ... (Il componente ConfirmationModal rimane invariato)
 const ConfirmationModal = ({ isOpen, onClose, onConfirm, title, children }) => {
   const { t } = useTranslation();
@@ -65,6 +83,7 @@ const ReptileEditModal = ({ show, handleClose, reptile, setReptiles, onSuccess }
       cites: { number: '', issueDate: '', issuer: '', load: '', unload: '' },
       microchip: { code: '', implantDate: '' }
     },
+    isPublic: false,
     price: { amount: '', currency: 'EUR' },
     foodType: '',
     weightPerUnit: '',
@@ -85,6 +104,8 @@ const ReptileEditModal = ({ show, handleClose, reptile, setReptiles, onSuccess }
   const [imageToDelete, setImageToDelete] = useState(null);
   const { t } = useTranslation();
   const [errors, setErrors] = useState({});
+  const user = useSelector(selectUser);
+  const userLimits = getPlanLimits(user);
   const FOOD_TYPES = [
     { value: 'Topo', labelKey: 'reptileEditModal.reptile.food.topo' },
     { value: 'Ratto', labelKey: 'reptileEditModal.reptile.food.ratto' },
@@ -106,6 +127,7 @@ const ReptileEditModal = ({ show, handleClose, reptile, setReptiles, onSuccess }
         sex: reptile.sex || '',
         isBreeder: !!reptile.isBreeder,
         notes: reptile.notes || '',
+        isPublic: !!reptile.isPublic,
         previousOwner: reptile.previousOwner || '',
         parents: {
           father: parents.father || '',
@@ -165,6 +187,12 @@ const ReptileEditModal = ({ show, handleClose, reptile, setReptiles, onSuccess }
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
+   if (toastMsg && toastMsg.type === 'danger') {
+      setToastMsg(null);
+    }
+    if (Object.keys(errors).length > 0) {
+      setErrors({});
+    }
     setFormData((prev) => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value
@@ -346,72 +374,90 @@ if (formData.previousOwner && formData.previousOwner.length > 100) errors.previo
 
 
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setToastMsg(null);
 
-    const validationErrors = validateForm();
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
-      setLoading(false);
-      setToastMsg({ type: 'danger', text: t('reptileEditModal.validation.fixErrors') });
-      return;
-    }
-    setErrors({});
+    const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setToastMsg(null);
 
-    const formDataToSubmit = new FormData();
+    try {
+      // 1. Validazione
+      const validationErrors = validateForm();
+      if (Object.keys(validationErrors).length > 0) {
+        setErrors(validationErrors);
+        setToastMsg({ type: 'danger', text: t('reptileEditModal.validation.fixErrors') });
+        // Lancia un errore per passare al blocco catch e poi al finally
+        // Questo interrompe l'esecuzione qui.
+        throw new Error("Validation failed");
+      }
+      
+      // 2. Se la validazione passa, pulisce gli errori
+      setErrors({});
 
-    // MODIFICA: Aggiunti 'cededTo' e 'deceasedDetails' alla lista da saltare
-    Object.entries(formData).forEach(([key, val]) => {
-      if (key === 'parents' || key === 'documents' || key === 'price' || key === 'cededTo' || key === 'deceasedDetails') {
-        // skip: will append them in controlled way below
-        return;
-      }
-      formDataToSubmit.append(key, val === undefined || val === null ? '' : String(val));
-    });
+      // 3. Preparazione FormData
+      const formDataToSubmit = new FormData();
+      // MODIFICA: Aggiunti 'cededTo' e 'deceasedDetails' alla lista da saltare
+      Object.entries(formData).forEach(([key, val]) => {
+        if (key === 'parents' || key === 'documents' || key === 'price' || key === 'cededTo' || key === 'deceasedDetails') {
+          // skip: will append them in controlled way below
+          return;
+        }
+        formDataToSubmit.append(key, val === undefined || val === null ? '' : String(val));
+      });
 
-    // parents / documents as JSON
-    formDataToSubmit.append('parents', JSON.stringify(formData.parents || {}));
-    formDataToSubmit.append('documents', JSON.stringify(formData.documents || {}));
+      // parents / documents as JSON
+      formDataToSubmit.append('parents', JSON.stringify(formData.parents || {}));
+      formDataToSubmit.append('documents', JSON.stringify(formData.documents || {}));
 
-    // NUOVO: Aggiunta logica per 'cededTo' e 'deceasedDetails'
-    formDataToSubmit.append('cededTo', JSON.stringify(formData.cededTo || {}));
-    formDataToSubmit.append('deceasedDetails', JSON.stringify(formData.deceasedDetails || {}));
+      // NUOVO: Aggiunta logica per 'cededTo' e 'deceasedDetails'
+      formDataToSubmit.append('cededTo', JSON.stringify(formData.cededTo || {}));
+      formDataToSubmit.append('deceasedDetails', JSON.stringify(formData.deceasedDetails || {}));
 
 
-    // price
-    const rawAmount = formData.price?.amount;
-    const priceToSubmit = (rawAmount === '' || rawAmount === null || rawAmount === undefined)
-      ? null
-      : { amount: parseFloat(String(rawAmount)) || 0, currency: formData.price?.currency || 'EUR' };
+      // price
+      const rawAmount = formData.price?.amount;
+      const priceToSubmit = (rawAmount === '' || rawAmount === null || rawAmount === undefined)
+        ? null
+        : { amount: parseFloat(String(rawAmount)) || 0, currency: formData.price?.currency || 'EUR' };
 
-    formDataToSubmit.append('price', JSON.stringify(priceToSubmit));
+      formDataToSubmit.append('price', JSON.stringify(priceToSubmit));
 
-    // label
-    formDataToSubmit.append('label', JSON.stringify(label || {}));
+      // label
+      formDataToSubmit.append('label', JSON.stringify(label || {}));
 
-    // images
-    newImages.forEach(img => {
-      formDataToSubmit.append('image', img);
-    });
+      // images
+      newImages.forEach(img => {
+        formDataToSubmit.append('image', img);
+      });
 
-    try {
-      const { data } = await api.put(`/reptile/${reptile._id}`, formDataToSubmit);
-      setToastMsg({ type: 'success', text: t('reptileEditModal.reptile.reptileUpdate') });
-      if (typeof setReptiles === 'function') {
-        setReptiles((prev) => prev.map((r) => (r._id === data._id ? data : r)));
-      }
-      onSuccess?.(); // Questo triggera il refresh della dashboard
-      handleClose();
-    } catch (err) {
-      let msg = t('reptileEditModal.reptile.reptileError');
-      if (err.response?.data?.message) msg = err.response.data.message;
-      setToastMsg({ type: 'danger', text: msg });
-    } finally {
-      setLoading(false);
-    }
-  };
+      // 4. Chiamata API
+      const { data } = await api.put(`/reptile/${reptile._id}`, formDataToSubmit);
+      
+      // 5. Successo
+      setToastMsg({ type: 'success', text: t('reptileEditModal.reptile.reptileUpdate') });
+      if (typeof setReptiles === 'function') {
+        setReptiles((prev) => prev.map((r) => (r._id === data._id ? data : r)));
+      }
+      onSuccess?.(); // Questo triggera il refresh della dashboard
+      handleClose();
+
+    } catch (err) {
+      // Gestisce sia l'errore di validazione che gli errori API
+      if (err.message !== "Validation failed") {
+        // Errore API o di runtime
+        console.error("Submit error:", err); // Logga l'errore per debugging
+        let msg = t('reptileEditModal.reptile.reptileError');
+        if (err.response?.data?.message) msg = err.response.data.message;
+        setToastMsg({ type: 'danger', text: msg });
+      }
+      // Se è "Validation failed", il toast è già stato impostato nella sezione di validazione,
+      // quindi non c'è bisogno di impostarne un altro qui.
+    } finally {
+      // 6. Questo blocco viene ESEGUITO SEMPRE,
+      // sia dopo il successo del try, sia dopo l'esecuzione del catch (per validazione o API error).
+      setLoading(false);
+    }
+  };
 
   const inputClasses = "w-full px-3 py-2 text-sm text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition";
   const labelClasses = "block text-sm font-medium text-gray-600 mb-1";
@@ -514,12 +560,45 @@ return (
                          </div>
                       </div>
                       {/* Riga 3: Checkbox Riproduttore */}
-                       <div className="mt-4">
-                        <div className="flex items-center">
-                           <input id="isBreeder" type="checkbox" name="isBreeder" checked={formData.isBreeder} onChange={handleChange} className="w-4 h-4 accent-emerald-600 rounded focus:ring-emerald-500" />
-                           <label htmlFor="isBreeder" className="ml-2 text-sm text-gray-700">{t('reptileEditModal.reptile.isBreeder')}</label>
-                         </div>
-                       </div>
+<div className="mt-4 flex flex-wrap gap-x-6 gap-y-4">
+                        <div className="flex items-center">
+                          <input id="isBreeder" type="checkbox" name="isBreeder" checked={formData.isBreeder} onChange={handleChange} className="w-4 h-4 accent-emerald-600 rounded focus:ring-emerald-500" />
+                          <label htmlFor="isBreeder" className="ml-2 text-sm text-gray-700">{t('reptileEditModal.reptile.isBreeder')}</label>
+                        </div>
+                        
+                        {/* NUOVO: Toggle Pubblico */}
+                        <div className="flex items-center">
+                          <input
+                            id="isPublic"
+                            type="checkbox"
+                            name="isPublic"
+                            checked={formData.isPublic}
+                            onChange={handleChange}
+                            disabled={userLimits.publicReptiles === 0}
+                            className="w-4 h-4 accent-blue-600 rounded focus:ring-blue-500 disabled:opacity-50"
+                          />
+                          <label htmlFor="isPublic" className="ml-2 text-sm text-gray-700">
+                            {t('reptileEditModal.fields.isPublic', 'Pubblica nello Shop')}
+                            {formData.isPublic 
+                              ? <EyeIcon className="inline w-4 h-4 ml-1 text-blue-600"/> 
+                              : <EyeSlashIcon className="inline w-4 h-4 ml-1 text-gray-500"/>}
+                          </label>
+                        </div>
+                      </div>
+                      
+                      {/* NUOVO: Messaggio di avviso per i limiti */}
+                      { userLimits.publicReptiles === 0 && (
+                         <p className="mt-2 text-xs text-red-600">
+                           {t('reptileEditModal.publicDisabled', 'Per pubblicare rettili nello shop, è necessario un piano ')}
+                           <Link to="/pricing" className="underline font-semibold">{t('reptileEditModal.subscription', 'abbonamento')}</Link>.
+                         </p>
+                      )}
+                      { userLimits.publicReptiles > 0 && userLimits.publicReptiles !== Infinity && (
+                         <p className="mt-2 text-xs text-blue-600">
+                           {t('reptileEditModal.publicLimit', 'Puoi pubblicare fino a {{count}} rettili con il tuo piano {{plan}}.', { count: userLimits.publicReptiles, plan: userLimits.plan })}
+                         </p>
+                      )}
+
                     </div>
 
                     {/* SEZIONE PREZZO */}
@@ -810,7 +889,19 @@ return (
                         </div>
                       )}
                     </div>
-
+                   {/* Toast Message */}
+                  {/* Toast Message */}
+  {toastMsg && (
+    <div
+      className={`w-full px-4 py-3 rounded-md text-sm font-medium shadow-lg mb-4 ${
+        toastMsg.type === 'danger'
+          ? 'bg-red-100 text-red-700 border border-red-300'
+          : 'bg-green-100 text-green-700 border border-green-300'
+      }`}
+    >
+      {toastMsg.text}
+    </div>
+  )}
 
                     {/* Area Pulsanti Azione */}
                     <div className="mt-8 pt-5 border-t border-gray-200 flex justify-end gap-4">
@@ -821,17 +912,6 @@ return (
                     </div>
                   </form>
 
-                   {/* Toast Message */}
-                  {toastMsg && (
-                    <div
-                      className={`fixed bottom-5 right-5 z-[100] px-4 py-3 rounded-md text-sm font-medium shadow-lg ${toastMsg.type === 'danger'
-                        ? 'bg-red-100 text-red-700 border border-red-300'
-                        : 'bg-green-100 text-green-700 border border-green-300'
-                      }`}
-                    >
-                      {toastMsg.text}
-                    </div>
-                  )}
 
                 </Dialog.Panel>
               </Transition.Child>
@@ -842,5 +922,6 @@ return (
     </>
   );
 };
+
 
 export default ReptileEditModal;

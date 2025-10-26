@@ -10,6 +10,30 @@ import { logAction } from "../utils/logAction.js";
 import QRCode from 'qrcode';
 import Event from "../models/Event.js";
 
+async function checkPublicReptileLimit(user, limits, plan, t) {
+  const publicLimit = limits.publicReptiles;
+  
+  // Breeder (null) ha limiti infiniti
+  if (publicLimit === null) {
+    return { allowed: true };
+  }
+
+  const currentPublicCount = await Reptile.countDocuments({ 
+    user: user._id, 
+    status: 'active', 
+    isPublic: true 
+  });
+
+  if (currentPublicCount >= publicLimit) {
+    return {
+      allowed: false,
+      message: t('public_reptile_limit', { count: publicLimit, plan: plan })
+    };
+  }
+  
+  return { allowed: true };
+}
+
 export const GetAllReptile = async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
@@ -276,12 +300,13 @@ export const GetArchivedReptileByUser = async (req, res) => {
 export const PostReptile = async (req, res) => {
     try {
         // MODIFICA: Aggiunto previousOwner
-        const { name, species, morph, birthDate, sex, isBreeder, notes, parents, documents, foodType, weightPerUnit, nextMealDay, previousOwner } = req.body;
+        const { name, species, morph, birthDate, sex, isBreeder, notes, parents, documents, foodType, weightPerUnit, nextMealDay, previousOwner, isPublic } = req.body;
         const userId = req.user.userid;
         const parsedParents = typeof parents === 'string' ? JSON.parse(parents) : parents;
         const parsedDocuments = typeof documents === 'string' ? JSON.parse(documents) : documents;
         const user = await User.findById(userId);
         const { plan: userPlan, limits } = getUserPlan(user);
+        
         const reptileCount = await Reptile.countDocuments({ user: userId, status: 'active' });
         const normalizedFoodType = foodType && foodType.trim() !== '' ? foodType : 'Altro';
 
@@ -291,6 +316,13 @@ export const PostReptile = async (req, res) => {
                 message: req.t('reptile_limit', { reptiles: limits.reptiles, plan: userPlan })
             });
 
+        }
+        const isPublicBool = isPublic === 'true' || isPublic === true;
+        if (isPublicBool) {
+          const limitCheck = await checkPublicReptileLimit(user, limits, userPlan, req.t);
+          if (!limitCheck.allowed) {
+            return res.status(400).json({ message: limitCheck.message });
+          }
         }
 
         let imageUrls = [];
@@ -323,7 +355,8 @@ export const PostReptile = async (req, res) => {
             nextMealDay,
             parents: parsedParents,
             documents: parsedDocuments, // Questo salva già i dati CITES (load/unload)
-            status: 'active'
+            status: 'active',
+            isPublic: isPublicBool
         });
 
         const createdReptile = await newReptile.save();
@@ -349,7 +382,7 @@ export const PutReptile = async (req, res) => {
         const { plan: userPlan, limits } = getUserPlan(user);
 
         const { name, species, morph, sex, notes, birthDate, isBreeder, price, label, parents, documents, foodType, weightPerUnit, nextMealDay,
-            status, cededTo, deceasedDetails, previousOwner } = req.body;
+            status, cededTo, deceasedDetails, previousOwner, isPublic } = req.body;
         let parsedParents, parsedDocuments, parsedCededTo, parsedDeceasedDetails;
         if ('parents' in req.body) {
             parsedParents = typeof req.body.parents === 'string'
@@ -380,6 +413,20 @@ export const PutReptile = async (req, res) => {
             return res.status(404).send({ message: req.t('reptile_notFound') });
         }
 
+        if ('isPublic' in req.body) {
+            const isPublicBool = isPublic === 'true' || isPublic === true;
+            
+            // Controlla solo se l'utente sta cercando di impostarlo a true
+            // e prima era false (per non bloccare se lo sta togliendo)
+            if (isPublicBool === true && reptile.isPublic === false) {
+                const limitCheck = await checkPublicReptileLimit(user, limits, userPlan, req.t);
+                if (!limitCheck.allowed) {
+                    return res.status(400).json({ message: limitCheck.message });
+                }
+            }
+            reptile.isPublic = isPublicBool; // Applica la modifica
+        }
+        
         let imageUrls = reptile.image || [];
         if ('price' in req.body) {
             let parsedPrice = req.body.price;

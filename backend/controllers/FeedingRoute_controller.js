@@ -3,7 +3,8 @@ import Feeding from "../models/Feeding.js";
 import Reptile from '../models/Reptile.js';
 import FoodInventory from '../models/FoodInventory.js';
 import { logAction } from "../utils/logAction.js";
-
+import { DateTime } from 'luxon';
+ 
 export const GetReptileFeeding = async (req, res) => {
   try {
     const { reptileId } = req.params;
@@ -46,11 +47,9 @@ export const PostFeeding = async (req, res) => {
       retryAfterDays
     } = req.body;
 
-    const feedingDate = new Date(date || Date.now());
-    let nextFeedingDate = new Date(feedingDate);
-
+    const feedingDate = DateTime.fromISO(date, { zone: 'utc' }); // Tratta '2025-10-26' come data
 const delta = parseInt(req.body.retryAfterDays, 10);
-    nextFeedingDate.setDate(nextFeedingDate.getDate() + delta);
+const nextFeedingDate = feedingDate.plus({ days: delta }).toISODate(); // Produce '2025-11-02'
 
     const reptile = await Reptile.findById(reptileId);
     if (!reptile) return res.status(404).json({ message: req.t('reptile_notFound') });
@@ -176,11 +175,10 @@ export const PostMultipleFeedings = async (req, res) => {
     }
 
     // 2. Calcolo date
-    const feedingDate = new Date(date || Date.now());
-    let nextFeedingDate = new Date(feedingDate);
-    const delta = parseInt(retryAfterDays, 10) || 0;
-    nextFeedingDate.setDate(nextFeedingDate.getDate() + delta);
-
+    const feedingDate = DateTime.fromISO(date, { zone: 'utc' }); // Tratta '2025-10-26' come data
+const delta = parseInt(req.body.retryAfterDays, 10);
+const nextFeedingDate = feedingDate.plus({ days: delta }).toISODate(); // Produce '2025-11-02'
+ 
     // 3. Verifica proprietà dei rettili
     const reptiles = await Reptile.find({
       '_id': { $in: reptileIds },

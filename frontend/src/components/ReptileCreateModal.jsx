@@ -4,8 +4,24 @@ import { Fragment } from 'react';
 import api from '../services/api';
 import { useSelector } from 'react-redux';
 import { selectUser } from '../features/userSlice';
-import { PhotoIcon, IdentificationIcon, UsersIcon, DocumentTextIcon, XMarkIcon, ExclamationCircleIcon } from '@heroicons/react/24/outline';
+import { PhotoIcon, IdentificationIcon, UsersIcon, DocumentTextIcon, XMarkIcon, ExclamationCircleIcon, EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
+
+const getPlanLimits = (user) => {
+  const plan = user?.subscription?.plan || 'NEOPHYTE';
+  const status = user?.subscription?.status;
+  const isActive = status === 'active' || status === 'pending_cancellation';
+
+  if (!isActive) return { plan: 'NEOPHYTE', publicReptiles: 0 };
+  
+  switch(plan) {
+    case 'APPRENTICE': return { plan, publicReptiles: 3 };
+    case 'PRACTITIONER': return { plan, publicReptiles: 10 };
+    case 'BREEDER': return { plan, publicReptiles: Infinity }; // Infinito per 'null'
+    default: return { plan: 'NEOPHYTE', publicReptiles: 0 };
+  }
+};
 
 const ReptileCreateModal = ({ show, handleClose, setReptiles, onSuccess }) => {
   const user = useSelector(selectUser);
@@ -13,6 +29,7 @@ const ReptileCreateModal = ({ show, handleClose, setReptiles, onSuccess }) => {
   const { t } = useTranslation();
   const [formErrors, setFormErrors] = useState({});
   const [toastMsg, setToastMsg] = useState(null);
+  const userLimits = getPlanLimits(user);
   const [imagePreviews, setImagePreviews] = useState([]);
 
   const initialFormData = {
@@ -23,6 +40,7 @@ const ReptileCreateModal = ({ show, handleClose, setReptiles, onSuccess }) => {
     birthDate: '',
     sex: 'M',
     isBreeder: false,
+    isPublic: false,
     notes: '',
     previousOwner: '', 
     parents: { father: '', mother: '' },
@@ -322,8 +340,40 @@ return (
                         <input id="isBreeder" type="checkbox" name="isBreeder" checked={formData.isBreeder} onChange={handleChange} className="w-4 h-4 accent-emerald-600 rounded focus:ring-emerald-500" />
                         <label htmlFor="isBreeder" className="ml-2 text-sm text-gray-700">{t('ReptileCreateModal.fields.isBreeder')}</label>
                       </div>
+
+                      <div className="flex items-center">
+                         <input
+                           id="isPublic"
+                           type="checkbox"
+                           name="isPublic"
+                           checked={formData.isPublic}
+                           onChange={handleChange}
+                           disabled={userLimits.publicReptiles === 0}
+                           className="w-4 h-4 accent-blue-600 rounded focus:ring-blue-500 disabled:opacity-50"
+                         />
+                         <label htmlFor="isPublic" className="ml-2 text-sm text-gray-700">
+                           {t('ReptileCreateModal.fields.isPublic', 'Pubblica nello Shop')}
+                           {formData.isPublic 
+                             ? <EyeIcon className="inline w-4 h-4 ml-1 text-blue-600"/> 
+                             : <EyeSlashIcon className="inline w-4 h-4 ml-1 text-gray-500"/>}
+                         </label>
+                       </div>
                     </div>
+
+{/* NUOVO: Messaggio di avviso per i limiti */}
+                     { userLimits.publicReptiles === 0 && (
+                         <p className="mt-2 text-xs text-red-600">
+                           {t('ReptileCreateModal.publicDisabled', 'Per pubblicare rettili nello shop, è necessario un piano ')}
+                           <Link to="/pricing" className="underline font-semibold">{t('ReptileCreateModal.subscription', 'abbonamento')}</Link>.
+                         </p>
+                     )}
+                     { userLimits.publicReptiles > 0 && userLimits.publicReptiles !== Infinity && (
+                         <p className="mt-2 text-xs text-blue-600">
+                           {t('ReptileCreateModal.publicLimit', 'Puoi pubblicare fino a {{count}} rettili con il tuo piano {{plan}}.', { count: userLimits.publicReptiles, plan: userLimits.plan })}
+                         </p>
+                     )}
                   </div>
+
 
                   {/* SEZIONE ALIMENTAZIONE */}
                    <div className={sectionClasses}>
