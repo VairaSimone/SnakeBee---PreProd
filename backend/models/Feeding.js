@@ -14,7 +14,7 @@ const feedingSchema = new Schema(
     },
     {
         collection: "Feeding"
-    }
+    } 
 ) 
 
 const Feeding = mongoose.models.Feeding || mongoose.model("Feeding", feedingSchema)

@@ -10,7 +10,7 @@ import i18next from 'i18next';
 import { DateTime } from 'luxon';
 import bot from "../telegramBot.js";
 
-// === MODIFICA ===
+// === MO DIFICA ===
 // Questa funzione ora restituisce solo la stringa 'YYYY-MM-DD' per Roma
 function getRomeTodayString() {
   return DateTime.now().setZone('Europe/Rome').toISODate(); // Es: '2025-10-26'

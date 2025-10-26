@@ -111,7 +111,7 @@ export const GetReptileByUser = async (req, res) => {
         }
         if (filterMorph) {
             matchQuery.morph = { $regex: filterMorph, $options: 'i' };
-        }
+        } 
         if (filterSpecies) {
             matchQuery.species = { $regex: filterSpecies, $options: 'i' };
         }

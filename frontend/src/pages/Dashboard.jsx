@@ -245,7 +245,7 @@ const parseDateString = (dateStr) => {
   // come UTC e la sposti al giorno prima.
   return new Date(dateOnly + 'T12:00:00').toLocaleDateString();
 }
-
+ 
   const fetchStats = async () => {
     try {
       const [success, refusal, shed, incubation] = await Promise.all([
