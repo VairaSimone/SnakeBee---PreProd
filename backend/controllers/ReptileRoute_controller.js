@@ -522,7 +522,9 @@ export const PutReptile = async (req, res) => {
         if ('documents' in req.body) reptile.documents = parsedDocuments;
         if ('status' in req.body && ['active', 'ceded', 'deceased', 'other'].includes(status)) {
             reptile.status = status;
-
+if (status !== 'active') {
+                reptile.isPublic = false;
+            }
             if (status === 'ceded' && parsedCededTo) {
                 reptile.cededTo = {
                     name: parsedCededTo.name,
