@@ -1,10 +1,15 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, Fragment } from 'react';
 import api from '../services/api';
+import { Switch } from '@headlessui/react';
 import { useDispatch, useSelector } from 'react-redux';
 import { logoutUser, selectUser, setLanguage } from '../features/userSlice';
 import { Link, useNavigate } from 'react-router-dom';
 import i18n from '../i18n';
-import { FiUser, FiShield, FiBell, FiUpload, FiDownload, FiTrash2, FiAlertTriangle, FiCheckCircle, FiXCircle, FiGift, FiMail, FiEye, FiEyeOff } from 'react-icons/fi';
+import { 
+  FiUser, FiShield, FiBell, FiUpload, FiDownload, FiTrash2, 
+  FiAlertTriangle, FiCheckCircle, FiXCircle, FiGift, FiMail, 
+  FiEye, FiEyeOff, FiFacebook, FiInstagram 
+} from 'react-icons/fi';
 import { Trans, useTranslation } from 'react-i18next';
 
 const Toast = ({ toasts, removeToast }) => (
@@ -116,8 +121,9 @@ const UserProfile = () => {
   const avatarInputRef = useRef(null);
   const [isPublic, setIsPublic] = useState(false);
   const loggedInUser = useSelector(selectUser);
-
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const [socialsFacebook, setSocialsFacebook] = useState('');
+  const [socialsInstagram, setSocialsInstagram] = useState('');
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
   const nameRegex = /^[a-zA-Z0-9\s]{2,}$/;
 
@@ -206,6 +212,8 @@ const UserProfile = () => {
         setAvatar(data.avatar);
         setAddress(data.address || '');
         setPhoneNumber(data.phoneNumber || '');
+        setSocialsFacebook(data.socials?.facebook || '');
+        setSocialsInstagram(data.socials?.instagram || '');
         setIsPublic(data.isPublic || false);
         setEmailFeedingNotifications(data.emailFeedingNotifications ?? true);
       } catch {
@@ -250,6 +258,8 @@ const UserProfile = () => {
       formData.append('address', address.trim());
       formData.append('phoneNumber', phoneNumber.trim());
 formData.append('isPublic', isPublic);
+formData.append('socialsFacebook', socialsFacebook.trim());
+      formData.append('socialsInstagram', socialsInstagram.trim());
       if (avatar instanceof File) {
         formData.append('avatar', avatar);
       }
@@ -406,19 +416,34 @@ const canBePublic = loggedInUser.subscription?.plan !== 'NEOPHYTE' &&
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <aside className="lg:col-span-1 space-y-8">
-            <div className="bg-white rounded-lg shadow-md p-6 text-center">
+<div className="bg-white rounded-lg shadow-md p-6 text-center">
               <div className="relative w-32 h-32 mx-auto group">
                 <img
                   src={avatarPreview || '/images/default_avatar.png'}
                   alt="Avatar"
                   className="w-full h-full rounded-full object-cover border-4 border-slate-200"
                 />
+                
+                {/* Overlay scuro su hover (opzionale, ma lo teniamo) */}
                 <div
                   className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
                   onClick={() => avatarInputRef.current?.click()}
+                  aria-hidden="true" // Nascosto agli screen reader (c'è già il bottone)
                 >
                   <FiUpload className="text-white h-8 w-8" />
                 </div>
+
+                {/* --- NUOVO PULSANTE SEMPRE VISIBILE --- */}
+                <button
+                  type="button"
+                  onClick={() => avatarInputRef.current?.click()}
+                  className="absolute bottom-0 right-0 w-9 h-9 bg-indigo-600 rounded-full flex items-center justify-center text-white shadow-md hover:bg-indigo-700 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                  aria-label={t('UserProfile.changeAvatar', 'Cambia foto profilo')}
+                >
+                  <FiUpload className="w-5 h-5" />
+                </button>
+                {/* --- FINE NUOVO PULSANTE --- */}
+
               </div>
               <input
                 ref={avatarInputRef}
@@ -429,8 +454,7 @@ const canBePublic = loggedInUser.subscription?.plan !== 'NEOPHYTE' &&
               />
               <h2 className="mt-4 text-2xl font-bold text-slate-800">{name}</h2>
               <p className="text-sm text-slate-500">{email}</p>
-            </div>
-            <SettingsCard title={t('UserProfile.exportData')} icon={<FiDownload className="text-indigo-500 w-6 h-6" />}>
+            </div>            <SettingsCard title={t('UserProfile.exportData')} icon={<FiDownload className="text-indigo-500 w-6 h-6" />}>
               <p className="text-sm text-slate-600 mb-4">
                 {t('UserProfile.downloadExcelInfo')}
               </p>
@@ -461,33 +485,62 @@ const canBePublic = loggedInUser.subscription?.plan !== 'NEOPHYTE' &&
                   onChange={(e) => setPhoneNumber(e.target.value)}
                   placeholder="+39 333 1234567"
                 />
-<div className="flex items-center justify-between pt-2">
-                  <div>
-                    <label htmlFor="isPublicToggle" className="block text-sm font-medium text-slate-600">
-                      {t('UserProfile.publicProfile', 'Profilo Allevatore Pubblico')}
-                    </label>
-                    <p className="text-xs text-slate-500">
-                      {t('UserProfile.publicProfileDesc', 'Permetti ad altri di trovarti nello Shop.')}
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setIsPublic(!isPublic)}
-                    disabled={!canBePublic}
-                    className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 ${isPublic ? 'bg-indigo-600' : 'bg-gray-200'}`}
-                  >
-                    <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${isPublic ? 'translate-x-5' : 'translate-x-0'}`} />
-                  </button>
-                </div>
-                { !canBePublic && (
-                  <p className="text-xs text-red-600 -mt-2">
-                    <Trans
-                      i18nKey="UserProfile.publicProfileDisabled"
-                      components={[<Link to="/pricing" className="underline font-semibold" />]}
-                      defaults="Funzione disponibile solo con un <0>piano di abbonamento</0> attivo (non Neofita)."
-                    />
-                  </p>
-                )}
+                <InputField
+                  id="socialsFacebook"
+                  label="Facebook"
+                  value={socialsFacebook}
+                  onChange={(e) => setSocialsFacebook(e.target.value)}
+                  placeholder={t('UserProfile.facebookPlaceholder', 'es. https://facebook.com/tuonome')}
+                />
+                <InputField
+                  id="socialsInstagram"
+                  label="Instagram"
+                  value={socialsInstagram}
+                  onChange={(e) => setSocialsInstagram(e.target.value)}
+                  placeholder={t('UserProfile.instagramPlaceholder', 'es. https://instagram.com/tuonome')}
+                />
+
+<div className="p-4 bg-slate-100 rounded-lg border border-slate-200">
+  <Switch.Group as="div" className="flex items-center justify-between">
+    <span className="flex-grow flex flex-col pr-3">
+      <Switch.Label as="span" className={`text-sm font-medium ${!canBePublic ? 'text-slate-400' : 'text-slate-900'}`} passive>
+        {t('UserProfile.publicProfile')}
+        {isPublic 
+          ? <FiEye className="inline w-4 h-4 ml-1.5 text-indigo-600"/> 
+          : <FiEyeOff className="inline w-4 h-4 ml-1.5 text-slate-500"/>}
+      </Switch.Label>
+      <Switch.Description as="span" className={`text-xs ${!canBePublic ? 'text-slate-400' : 'text-slate-500'}`}>
+        {t('UserProfile.publicProfileDesc')}
+      </Switch.Description>
+    </span>
+    <Switch
+      checked={isPublic}
+      onChange={setIsPublic} // Passa direttamente il valore
+      disabled={!canBePublic}
+      className={`${
+        isPublic ? 'bg-indigo-600' : 'bg-gray-200'
+      } relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed`}
+    >
+      <span
+        aria-hidden="true"
+        className={`${
+          isPublic ? 'translate-x-5' : 'translate-x-0'
+        } pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`}
+      />
+    </Switch>
+  </Switch.Group>
+  
+  {/* Messaggio di avviso/info integrato */}
+  {!canBePublic && (
+    <p className="mt-3 text-xs text-red-600 border-t border-slate-300 pt-3">
+      <Trans
+        i18nKey="UserProfile.publicProfileDisabled"
+        components={[<Link to="/pricing" className="underline font-semibold" />]}
+        defaults="Funzione disponibile solo con un <0>piano di abbonamento</0> attivo (non Neofita)."
+      />
+    </p>
+  )}
+</div>
                 <div>
                   <label htmlFor="language" className="block text-sm font-medium text-slate-600 mb-1">{t('UserProfile.language')}</label>
                   <select id="language" value={language} onChange={(e) => setLanguageLocal(e.target.value)} required className="w-full border-slate-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition-colors bg-white text-black">

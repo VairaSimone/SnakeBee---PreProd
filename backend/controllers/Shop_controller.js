@@ -20,7 +20,7 @@ export const getPublicShopReptiles = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const perPage = parseInt(req.query.perPage) || 20;
-    const { species, morph, zona } = req.query; // zona = indirizzo utente
+    const { species, morph, zona, sex, minPrice, maxPrice, breederName, birthYear } = req.query; // zona = indirizzo utente
 
     // 1. Match iniziale sui rettili
     const reptileMatch = {
@@ -33,7 +33,31 @@ export const getPublicShopReptiles = async (req, res) => {
     if (morph) {
       reptileMatch.morph = { $regex: morph, $options: 'i' };
     }
+if (sex) {
+      reptileMatch.sex = sex; // Es. 'M', 'F', 'Unknown'
+    }
 
+    // Range di prezzo
+    const priceFilter = {};
+    if (minPrice) {
+      priceFilter.$gte = parseFloat(minPrice);
+    }
+    if (maxPrice) {
+      priceFilter.$lte = parseFloat(maxPrice);
+    }
+    if (Object.keys(priceFilter).length > 0) {
+      reptileMatch['price.amount'] = priceFilter;
+    }
+
+    // Anno di nascita
+    if (birthYear) {
+      const year = parseInt(birthYear);
+      if (!isNaN(year)) {
+        const startDate = new Date(year, 0, 1); // 1 Gennaio
+        const endDate = new Date(year, 11, 31, 23, 59, 59); // 31 Dicembre
+        reptileMatch.birthDate = { $gte: startDate, $lte: endDate };
+      }
+    }
     // 2. Match sull'utente (allevatore)
     const activeSubscriptionMatch = getActiveSubscriptionMatch();
 
@@ -49,7 +73,9 @@ export const getPublicShopReptiles = async (req, res) => {
       // Aggiungiamo il prefisso anche al filtro 'zona'
       userMatch["breederInfo.address"] = { $regex: zona, $options: 'i' };
     }
-
+if (breederName) {
+        userMatch["breederInfo.name"] = { $regex: breederName, $options: 'i' };
+    }
     const aggregationPipeline = [
       { $match: reptileMatch },
       // Join con la collezione User
@@ -128,7 +154,7 @@ export const getPublicBreeders = async (req, res) => {
     };
 
     const users = await User.find(matchQuery)
-      .select('name avatar address subscription.plan')
+      .select('name avatar address subscription.plan socials')
       .sort({ name: 1 })
       .skip((page - 1) * perPage)
       .limit(perPage)
@@ -168,7 +194,7 @@ export const getPublicBreederProfile = async (req, res) => {
       _id: userId,
       isPublic: true,
       ...getActiveSubscriptionMatch()
-    }).select('name avatar address subscription.plan createdAt');
+    }).select('name avatar address subscription.plan createdAt email phoneNumber socials');
 
     if (!breeder) {
       return res.status(404).send({ message: req.t('user_notFound') });
@@ -180,7 +206,7 @@ export const getPublicBreederProfile = async (req, res) => {
       isPublic: true,
       status: 'active'
     })
-    .select('name species morph sex birthDate price image')
+    .select('name species morph sex birthDate price image createdAt')
     .sort({ createdAt: -1 });
 
     res.send({

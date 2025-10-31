@@ -67,7 +67,6 @@ export const PutUser = async (req, res) => {
     }
 
     if (req.file) {
-
       if (user.avatar) {
         await deleteFileIfExists(user.avatar);
       }
@@ -75,27 +74,27 @@ export const PutUser = async (req, res) => {
     }
     await logAction(req.user.userid, "Moodify User");
 
-    const fieldsAllowed = ['name', 'avatar', 'language', 'address', 'phoneNumber', 'isPublic'];
+    const fieldsAllowed = ['name', 'avatar', 'language', 'address', 'phoneNumber', 'isPublic', 'social'];
     if (userData.language && !['en', 'it'].includes(userData.language)) {
       return res.status(400).json({ message: req.t('invalid_language') });
     }
     if ('isPublic' in userData) {
-      const isPublicBool = userData.isPublic === 'true' || userData.isPublic === true;
-      if (isPublicBool) {
-        // Solo utenti con un piano (non NEOPHYTE) e abbonamento attivo
-        const plan = user.subscription?.plan || 'NEOPHYTE';
-        const status = user.subscription?.status;
-        const isActive = status === 'active' || status === 'pending_cancellation';
+        // ... (logica isPublic invariata) ...
+         const isPublicBool = userData.isPublic === 'true' || userData.isPublic === true;
+      if (isPublicBool) {
+        // Solo utenti con un piano (non NEOPHYTE) e abbonamento attivo
+        const plan = user.subscription?.plan || 'NEOPHYTE';
+        const status = user.subscription?.status;
+        const isActive = status === 'active' || status === 'pending_cancellation';
 
-        if (plan === 'NEOPHYTE' || !isActive) {
-          return res.status(403).json({ message: req.t('public_profile_disallowed') });
-        }
-      }
+        if (plan === 'NEOPHYTE' || !isActive) {
+          return res.status(403).json({ message: req.t('public_profile_disallowed') });
+        }
+      }
     }
     const updates = {};
     fieldsAllowed.forEach(field => {
       if (userData[field] !== undefined) {
-
         if (field === 'isPublic') {
           updates[field] = userData[field] === 'true' || userData[field] === true;
         } else {
@@ -104,6 +103,17 @@ export const PutUser = async (req, res) => {
       }
     });
 
+    // --- NUOVA GESTIONE SOCIALS ---
+    // Aggiungiamo i campi social all'oggetto 'updates'
+    // Mongoose può gestire l'aggiornamento di campi nidificati usando la dot notation
+    if (userData.socialsFacebook !== undefined) {
+      updates['socials.facebook'] = userData.socialsFacebook.trim();
+    }
+    if (userData.socialsInstagram !== undefined) {
+      updates['socials.instagram'] = userData.socialsInstagram.trim();
+    }
+    // --- FINE NUOVA GESTIONE ---
+
     const updatedUser = await User.findByIdAndUpdate(id, updates, { new: true });
     res.send(updatedUser);
   } catch (err) {
@@ -111,7 +121,6 @@ export const PutUser = async (req, res) => {
     res.status(500).send();
   }
 };
-
 
 export const updateEmailPreferences = async (req, res) => {
   try {

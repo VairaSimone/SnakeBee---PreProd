@@ -2,21 +2,27 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+// NUOVO: Importa icone per le nuove info
+import { Cake, CalendarPlus } from 'lucide-react';
 
 /**
  * ReptileCardPublic - markup + stile ridisegnati.
  * Nota: non tocco la logica esistente (image url, price formatting, link).
  */
 
+// NUOVO: Simboli universali di sesso (Unicode) all'interno di SVG per scalabilità e stili
 const IconMale = ({ className = '' }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-    <path d="M14 4h6v6h-2V6.414l-3.293 3.293-1.414-1.414L16.586 5H14V4z" />
-    <path d="M11 13a4 4 0 100-8 4 4 0 000 8z" />
+  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <circle cx="12" cy="12" r="5"></circle>
+    <line x1="16" y1="16" x2="20" y2="20"></line>
+    <line x1="4" y1="4" x2="20" y2="20"></line> {/* Rimossa la parte "freccia" per renderla neutra, solo cerchio e linea */}
   </svg>
 );
 const IconFemale = ({ className = '' }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-    <path d="M12 2a5 5 0 100 10 5 5 0 000-10zM11 14h2v3h3v2h-3v3h-2v-3H8v-2h3v-3z" />
+  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <circle cx="12" cy="12" r="5"></circle>
+    <line x1="12" y1="17" x2="12" y2="22"></line>
+    <line x1="17" y1="12" x2="22" y2="12"></line>
   </svg>
 );
 const IconUnknown = ({ className = '' }) => (
@@ -24,38 +30,58 @@ const IconUnknown = ({ className = '' }) => (
     <path d="M12 2a10 10 0 100 20 10 10 0 000-20zm.75 15h-1.5v-1.5h1.5V17zM13 11.5c0 .83-.67 1.5-1.5 1.5h-.25v1h-.75v-.5c0-.83.67-1.5 1.5-1.5h.25v-.5C11.5 10.67 12.17 10 13 10s1 .67 1 1.5V11.5z" />
   </svg>
 );
+// --- FINE ICONE SESSO ---
+
+// MIGLIORATO: Helper per formattare la data e gestire casi nulli/invalidi
+const formatDate = (dateString) => {
+  if (!dateString) return 'N/A';
+  const date = new Date(dateString);
+  // Controlla se la data è valida
+  if (isNaN(date.getTime())) {
+    return 'N/A';
+  }
+  return date.toLocaleDateString('it-IT', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  });
+};
+
 const ReptileCardPublic = ({ reptile }) => {
   const { t } = useTranslation();
 
-  const imageUrl = reptile.image?.[0]
-    ? `${process.env.REACT_APP_BACKEND_URL_IMAGE}${reptile.image[0]}`
-    : '/default-reptile.png';
+  const imageUrl = reptile.image && reptile.image.length > 0
+    ? reptile.image[0]
+    : 'https://res.cloudinary.com/dg2wcqflh/image/upload/v1757791253/Logo_duqbig.png';
 
   const getSexIcon = () => {
     if (reptile.sex === 'M')
       return (
-        <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 ring-1 ring-emerald-100">
+        // NUOVO: Colore blu per il maschio
+        <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-50 text-blue-600 ring-1 ring-blue-100 flex-shrink-0">
           <IconMale className="w-4 h-4" />
           <span className="sr-only">{t('shop.male', 'Maschio')}</span>
         </span>
       );
     if (reptile.sex === 'F')
       return (
-        <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-amber-50 text-amber-600 ring-1 ring-amber-100">
+        // NUOVO: Colore rosa per la femmina
+        <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-pink-50 text-pink-600 ring-1 ring-pink-100 flex-shrink-0">
           <IconFemale className="w-4 h-4" />
           <span className="sr-only">{t('shop.female', 'Femmina')}</span>
         </span>
       );
     return (
-      <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-neutral-50 text-stone-400 ring-1 ring-neutral-100">
+      <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-neutral-50 text-stone-400 ring-1 ring-neutral-100 flex-shrink-0">
         <IconUnknown className="w-4 h-4" />
         <span className="sr-only">{t('shop.unknown', 'Sconosciuto')}</span>
       </span>
     );
   };
 
+  // MODIFICATO: Ritorna null se il prezzo non è disponibile
   const formatPrice = (price) => {
-    if (!price || !price.amount) return t('shop.priceOnRequest', 'Prezzo su richiesta');
+    if (!price || !price.amount) return null;
     return new Intl.NumberFormat(t('locale', 'it-IT'), {
       style: 'currency',
       currency: price.currency || 'EUR',
@@ -63,18 +89,21 @@ const ReptileCardPublic = ({ reptile }) => {
   };
 
   const breederAvatar = reptile.breeder?.avatar
-    ? `${process.env.REACT_APP_BACKEND_URL_IMAGE}${reptile.breeder.avatar}`
+    ? `${reptile.breeder.avatar}` // Assumendo che l'URL sia già completo dal backend
     : '/default-avatar.png';
+
+  // MODIFICATO: Calcola il prezzo formattato prima del return
+  const formattedPrice = formatPrice(reptile.price);
 
   return (
     <article
-      className="group relative bg-white rounded-2xl shadow-md overflow-hidden transition-transform duration-300 hover:shadow-xl hover:-translate-y-1"
+      className="group relative bg-white rounded-2xl shadow-md overflow-hidden transition-transform duration-300 hover:shadow-xl hover:-translate-y-1 flex flex-col"
       aria-labelledby={`reptile-${reptile._id}-title`}
     >
-      {/* Top breeder badge (sticky-like, floats above image) */}
-<div className="absolute top-4 left-4 z-20">
+      {/* Top breeder badge */}
+      <div className="absolute top-4 left-4 z-20">
         <Link
-          to={`/shop/breeders/${reptile.user}`}
+          to={`/shop/breeders/${reptile.user}`} // reptile.user è l'ID
           className="flex items-center gap-3 bg-white/70 backdrop-blur-sm px-3 py-1.5 rounded-full shadow-sm border border-transparent hover:border-amber-300 hover:bg-white hover:shadow-md transition-all duration-200"
           aria-label={reptile.breeder?.name || t('shop.breeder', 'Allevatore')}
         >
@@ -89,26 +118,30 @@ const ReptileCardPublic = ({ reptile }) => {
           </span>
         </Link>
       </div>
+      
       {/* Image area */}
       <Link
         to={`/public/reptile/${reptile._id}`}
         className="block w-full h-56 md:h-64 bg-stone-100 relative"
         aria-hidden={false}
       >
-        {/* Image */}
         <img
           src={imageUrl}
           alt={reptile.name || reptile.species}
-className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"          loading="lazy"
+          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+          loading="lazy"
         />
+        <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-white/80 to-transparent pointer-events-none" />
+      </Link>
 
-        {/* subtle gradient overlay bottom for text contrast */}
-<div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-white/80 to-transparent pointer-events-none" />      </Link>
-
-      {/* Content */}
-      <div className="p-5 md:p-6">
-        <div className="flex items-start justify-between gap-4">
-          <div className="min-w-0">
+      {/* --- CONTENT AREA (RIORGANIZZATA) --- */}
+      {/* Aggiunto flex flex-col flex-grow per spingere la sezione prezzo/bottone in basso */}
+      <div className="p-5 md:p-6 flex flex-col flex-grow">
+        
+        {/* Sezione 1: Info (cresce) */}
+        <div className="flex-grow">
+          {/* Row 1: Species + Sex */}
+          <div className="flex items-start justify-between gap-4 mb-1">
             <h3
               id={`reptile-${reptile._id}-title`}
               className="text-lg md:text-xl font-semibold text-stone-900 truncate"
@@ -116,11 +149,34 @@ className="w-full h-full object-cover transition-transform duration-300 group-ho
             >
               {reptile.species}
             </h3>
-            <p className="text-sm text-stone-600 mt-1 truncate" title={reptile.morph}>
-              {reptile.morph || <span className="italic text-stone-400">{t('shop.noMorph', 'N/A')}</span>}
-            </p>
+            {getSexIcon()}
+          </div>
+          
+          {/* Row 2: Morph */}
+          <p className="text-sm text-stone-600 truncate" title={reptile.morph}>
+            {reptile.morph || <span className="italic text-stone-400">{t('shop.noMorph', 'N/A')}</span>}
+          </p>
+                    
+          {/* NUOVO: Row 4: Dettagli (Nascita, Pubblicazione, Luogo) */}
+          <div className="mt-4 space-y-2.5 text-sm text-stone-600">
+            {/* Data di Nascita */}
+            <div className="flex items-center gap-2">
+              <Cake className="w-4 h-4 text-stone-400 flex-shrink-0" aria-hidden="true" />
+              <span className="truncate">
+                {t('shop.born', 'Nato il:')} <strong>{formatDate(reptile.birthDate)}</strong>
+              </span>
+            </div>
+            
+            {/* Data di Pubblicazione */}
+            <div className="flex items-center gap-2">
+              <CalendarPlus className="w-4 h-4 text-stone-400 flex-shrink-0" aria-hidden="true" />
+              <span className="truncate">
+                {t('shop.listed', 'In vendita dal:')} <strong>{formatDate(reptile.createdAt)}</strong>
+              </span>
+            </div>
 
-<div className="mt-3 flex items-center gap-2">
+            {/* Luogo */}
+            <div className="flex items-center gap-2">
               <svg
                 className="w-4 h-4 text-stone-400 flex-shrink-0"
                 viewBox="0 0 24 24"
@@ -133,30 +189,32 @@ className="w-full h-full object-cover transition-transform duration-300 group-ho
                   clipRule="evenodd"
                 />
               </svg>
-                            <p className="text-sm text-stone-500 truncate" title={reptile.breeder?.address}>
+              <p className="text-sm text-stone-500 truncate" title={reptile.breeder?.address}>
                 {reptile.breeder?.address || t('shop.noAddress', 'Indirizzo non disponibile')}
               </p>
             </div>
           </div>
-
-          {/* Right column: sex icon + price */}
-          <div className="flex flex-col items-end justify-between">
-            <div className="mb-3">{getSexIcon()}</div>
-
-            <div className="mt-2">
-              <span
-                className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-semibold bg-gradient-to-br from-amber-50 to-amber-100 text-amber-700 ring-1 ring-amber-50 shadow-sm transform transition-all duration-200 group-hover:scale-105"
-                aria-label={t('shop.price', 'Prezzo')}
-                title={typeof reptile.price === 'object' ? reptile.price?.amount ? t('shop.price', 'Prezzo') : t('shop.priceOnRequest', 'Prezzo su richiesta') : t('shop.price', 'Prezzo')}
-              >
-                {formatPrice(reptile.price)}
-              </span>
-            </div>
-          </div>
         </div>
 
-        {/* CTA row (subtle, accessible) */}
-<Link
+        {/* Sezione 2: Azione (in basso) */}
+        {/* Layout riorganizzato: Prezzo a sinistra, Bottone a destra */}
+        <div className="mt-6 pt-5 border-t border-stone-100 flex items-center justify-between gap-4">
+          
+          {/* MODIFICATO: Prezzo (condizionale) */}
+          {formattedPrice ? (
+            <span
+              className="inline-flex text-black items-center px-3 py-1.5 rounded-full text-base font-semibold bg-gradient-to-br from-amber-50 to-amber-100 text-amber-700 ring-1 ring-amber-50 shadow-sm"
+              aria-label={t('shop.price', 'Prezzo')}
+              title={t('shop.price', 'Prezzo')}
+            >
+              {formattedPrice}
+            </span>
+          ) : (
+            <div /> // Div vuoto per mantenere l'allineamento (justify-between)
+          )}
+
+          {/* Pulsante Vedi Dettagli */}
+          <Link
             to={`/public/reptile/${reptile._id}`}
             className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 text-white text-sm font-medium shadow-md hover:bg-emerald-700 hover:shadow-lg hover:-translate-y-px transition-all duration-200"
             aria-label={t('shop.viewDetails', 'Vedi dettagli')}
@@ -167,9 +225,10 @@ className="w-full h-full object-cover transition-transform duration-300 group-ho
             </svg>
             {t('shop.view', 'Vedi')}
           </Link>
-
         </div>
-          </article>
+        
+      </div>
+    </article>
   );
 };
 

@@ -1,27 +1,25 @@
 // src/pages/Shop.js
 import React, { useState, useEffect, useCallback } from 'react';
 import { getPublicReptiles } from '../services/api';
+import { useNavigate } from 'react-router-dom';
 import ReptileCardPublic from '../components/ReptileCardPublic';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom';
-// NUOVO: Importa più icone per la UI
+// import { Link } from 'react-router-dom'; // Già presente
 import {
-  Store, // Per il titolo dello shop
-  SlidersHorizontal, // Per il titolo dei filtri
-  Filter, // Per il pulsante "Filtra"
-  X, // Per il pulsante "Azzera"
-  Tag, // Per l'input "Species" e "Morph"
-  MapPin, // Per l'input "Zona"
-  // Loader2 rimosso perché non utilizzato
-  AlertTriangle, // Per l'errore
-  SearchX, // Per "Nessun risultato"
-  ChevronLeft, // Paginazione
-  ChevronRight, // Paginazione
-  ArrowRight, // Per il link "Vedi allevatori"
-  ChevronDown, // Per il toggle dei filtri mobile
+  Store,
+  SlidersHorizontal,
+  Filter,
+  X,
+  Tag,
+  MapPin,
+  AlertTriangle,
+  SearchX,
+  ChevronLeft,
+  ChevronRight,
+  ArrowRight,
+  ChevronDown,User, // <-- ICONA AGGIUNTA
+  Calendar
 } from 'lucide-react';
-
-
 
 const SkeletonCard = () => (
   <div className="bg-white p-4 rounded-2xl shadow-lg animate-pulse">
@@ -33,76 +31,86 @@ const SkeletonCard = () => (
 );
 
 const Shop = () => {
-  const [reptiles, setReptiles] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [filters, setFilters] = useState({ species: '', morph: '', zona: '' });
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(0);
-  // NUOVO: Stato per gestire l'apertura/chiusura dei filtri
-  const [isFilterOpen, setIsFilterOpen] = useState(true);
-  const { t } = useTranslation();
+  const [reptiles, setReptiles] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [filters, setFilters] = useState({ species: '', morph: '', zona: '', sex: '',
+    minPrice: '',
+    maxPrice: '',
+    breederName: '',
+    birthYear: '' });
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+  const [isFilterOpen, setIsFilterOpen] = useState(true);
+  const { t } = useTranslation();
+  const navigate = useNavigate();
 
-  const fetchReptiles = useCallback(async (currentPage, currentFilters) => {
-    setLoading(true);
-    setError(null);
-    try {
-      // Filtra via i valori vuoti dai filtri prima di inviarli
-      const activeFilters = Object.fromEntries(
-        Object.entries(currentFilters).filter(([_, v]) => v !== '')
-      );
-      const params = { ...activeFilters, page: currentPage, perPage: 20 };
-      const { data } = await getPublicReptiles(params);
-      setReptiles(data.dati || []);
-      setTotalPages(data.totalPages || 0);
-    } catch (err) {
-      setError(t('shop.error', 'Impossibile caricare i rettili.'));
-    } finally {
-      setLoading(false);
-    }
-  }, [t]);
+  const fetchReptiles = useCallback(async (currentPage, currentFilters) => {
+    // ... (logica fetchReptiles invariata) ...
+    setLoading(true);
+    setError(null);
+    try {
+      const activeFilters = Object.fromEntries(
+        Object.entries(currentFilters).filter(([_, v]) => v !== '')
+      );
+      const params = { ...activeFilters, page: currentPage, perPage: 20 };
+      const { data } = await getPublicReptiles(params);
+      setReptiles(data.dati || []);
+      setTotalPages(data.totalPages || 0);
+    } catch (err) {
+      setError(t('shop.error', 'Impossibile caricare i rettili.'));
+    } finally {
+      setLoading(false);
+    }
+  }, [t]);
 
-  useEffect(() => {
-    fetchReptiles(page, filters);
-  }, [page, fetchReptiles]); // Rimosso 'filters' da qui, la ricerca si attiva solo con 'handleFilterSubmit'
+  useEffect(() => {
+    fetchReptiles(page, filters);
+  }, [page, fetchReptiles]);
 
-  const handleFilterChange = (e) => {
-    setFilters({ ...filters, [e.target.name]: e.target.value });
-  };
+  const handleFilterChange = (e) => {
+    // ... (invariato) ...
+    setFilters({ ...filters, [e.target.name]: e.target.value });
+  };
 
-  const handleFilterSubmit = (e) => {
-    e.preventDefault();
-    setPage(1);
-    fetchReptiles(1, filters);
-  };
+  const handleFilterSubmit = (e) => {
+    // ... (invariato) ...
+    e.preventDefault();
+    setPage(1);
+    fetchReptiles(1, filters);
+  };
 
-  // NUOVO: Funzione per azzerare i filtri e ricaricare
-  const handleClearFilters = () => {
-    const clearedFilters = { species: '', morph: '', zona: '' };
-    setFilters(clearedFilters);
-    setPage(1);
-    fetchReptiles(1, clearedFilters);
-  };
+  const handleClearFilters = () => {
+    // ... (invariato) ...
+    const clearedFilters = { species: '', morph: '', zona: '',sex: '',
+        minPrice: '',
+        maxPrice: '',
+        breederName: '',
+        birthYear: '' };
+    setFilters(clearedFilters);
+    setPage(1);
+    fetchReptiles(1, clearedFilters);
+  };
 
   return (
-    <div className="bg-stone-50 min-h-screen">
+    <div className="min-h-screen">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         
         {/* --- HEADER RIDISEGNATO --- */}
         <div className="flex flex-col md:flex-row justify-between md:items-center mb-10 gap-4">
           <h1 className="text-4xl font-bold tracking-tight text-stone-800 flex items-center gap-3">
             <Store className="w-9 h-9 text-amber-600" />
-            {t('shop.title', 'Reptile Shop')}
+            {t('shop.title', 'SnakeBee Shop')}
           </h1>
-          {/* Sostituito Link con <a> per il mock */}
-          <a 
-            href="/shop/breeders"
-            onClick={(e) => e.preventDefault()} // Previeni navigazione nel mock
-            className="text-sm font-medium text-amber-700 hover:text-amber-800 transition-colors duration-200 group flex items-center"
-          >
-            {t('shop.breederList', 'Vedi tutti gli allevatori')}
-            <ArrowRight className="w-4 h-4 ml-1.5 transition-transform group-hover:translate-x-1" />
-          </a>
+          <div className="text-center"> {/* Rimosso mb-6, già gestito dal gap del flex parent */}
+            <button
+              onClick={() => navigate('/shop/breeders')}
+              className="inline-flex items-center group px-6 py-2 bg-emerald-600 text-white font-semibold rounded-lg shadow-md hover:bg-emerald-700 transition-colors duration-300" // Cambiato colore a emerald per coerenza
+            >
+              {t('shop.breederList', 'Vedi tutti gli allevatori')}
+              <ArrowRight className="w-4 h-4 ml-1.5 transition-transform group-hover:translate-x-1" />
+            </button>
+          </div>
         </div>
 
         {/* --- NUOVO LAYOUT: FILTRI (Sidebar) + CONTENUTO (Grid) --- */}
@@ -125,20 +133,17 @@ const Shop = () => {
             </button>
 
             {/* Contenitore Filtri (Sticky su Desktop, Collassabile su Mobile) */}
-            {/* --- RIMOSSO: AnimatePresence --- */}
             <> 
-              {(isFilterOpen || (typeof window !== 'undefined' && window.innerWidth >= 1024)) && ( // Aggiunto check per 'window'
-                // --- RIMOSSO: motion.div, sostituito con div ---
+              {(isFilterOpen || (typeof window !== 'undefined' && window.innerWidth >= 1024)) && (
                 <div
                   key="filter-panel"
-                  // --- RIMOSSO: variants, initial, animate, exit ---
                   className={`
                     bg-white p-6 rounded-2xl shadow-lg 
                     lg:sticky lg:top-24 
                     ${isFilterOpen ? 'block' : 'hidden'} lg:block 
                     ${(isFilterOpen && (typeof window !== 'undefined' && window.innerWidth < 1024)) ? 'mt-4' : 'mt-0'} lg:mt-0
                     transition-all duration-300 ease-in-out ${isFilterOpen ? 'opacity-100 max-h-screen' : 'opacity-0 max-h-0'} lg:opacity-100 lg:max-h-full overflow-hidden
-                  `} // Sostituita animazione con classi 'transition' e 'max-h' (sebbene 'hidden' già lo gestisca)
+                  `}
                 >
                   <h2 className="text-xl font-semibold text-stone-800 mb-5 flex items-center gap-2 hidden lg:flex">
                     <SlidersHorizontal className="w-6 h-6 text-amber-600" />
@@ -158,7 +163,7 @@ const Shop = () => {
                         <input
                           type="text" name="species" id="species" value={filters.species} onChange={handleFilterChange}
                           placeholder={t('shop.filterSpecies', 'es. Python regius')}
-                          className="w-full pl-10 pr-3 py-2 border border-stone-300 rounded-lg shadow-sm focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-150"
+                          className="text-black w-full pl-10 pr-3 py-2 border border-stone-300 rounded-lg shadow-sm focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-150"
                         />
                       </div>
                     </div>
@@ -175,7 +180,7 @@ const Shop = () => {
                         <input
                           type="text" name="morph" id="morph" value={filters.morph} onChange={handleFilterChange}
                           placeholder={t('shop.filterMorph', 'es. Piebald')}
-                          className="w-full pl-10 pr-3 py-2 border border-stone-300 rounded-lg shadow-sm focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-150"
+                          className="text-black w-full pl-10 pr-3 py-2 border border-stone-300 rounded-lg shadow-sm focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-150"
                         />
                       </div>
                     </div>
@@ -192,7 +197,80 @@ const Shop = () => {
                         <input
                           type="text" name="zona" id="zona" value={filters.zona} onChange={handleFilterChange}
                           placeholder={t('shop.filterZone', 'es. Milano')}
-                          className="w-full pl-10 pr-3 py-2 border border-stone-300 rounded-lg shadow-sm focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-150"
+                          className="text-black w-full pl-10 pr-3 py-2 border border-stone-300 rounded-lg shadow-sm focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-150"
+                        />
+                      </div>
+                    </div>
+{/* Filtro Sesso */}
+                    <div>
+                      <label htmlFor="sex" className="block text-sm font-medium text-stone-600 mb-1">
+                        {t('shop.filterSexLabel', 'Sesso')}
+                      </label>
+                      <select
+                        name="sex" id="sex" value={filters.sex} onChange={handleFilterChange}
+                        className="text-black w-full pl-3 pr-3 py-2 border border-stone-300 rounded-lg shadow-sm focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-150"
+                      >
+                        <option value="">{t('shop.filterSexAll', 'Tutti')}</option>
+                        <option value="M">{t('shop.filterSexM', 'Maschio')}</option>
+                        <option value="F">{t('shop.filterSexF', 'Femmina')}</option>
+                        <option value="Unknown">{t('shop.filterSexU', 'Sconosciuto')}</option>
+                      </select>
+                    </div>
+
+                    {/* Filtro Range Prezzo */}
+                    <div>
+                      <label className="block text-sm font-medium text-stone-600 mb-1">
+                        {t('shop.filterPriceLabel', 'Range di Prezzo')}
+                      </label>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="number" name="minPrice" value={filters.minPrice} onChange={handleFilterChange}
+                          placeholder={t('shop.filterPriceMin', 'Min')}
+                          className="text-black w-full px-3 py-2 border border-stone-300 rounded-lg shadow-sm focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-150"
+                          min="0"
+                        />
+                        <span className="text-stone-500">-</span>
+                        <input
+                          type="number" name="maxPrice" value={filters.maxPrice} onChange={handleFilterChange}
+                          placeholder={t('shop.filterPriceMax', 'Max')}
+                          className="text-black w-full px-3 py-2 border border-stone-300 rounded-lg shadow-sm focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-150"
+                          min="0"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Filtro Nome Allevatore */}
+                    <div>
+                      <label htmlFor="breederName" className="block text-sm font-medium text-stone-600 mb-1">
+                        {t('shop.filterBreederLabel', 'Allevatore')}
+                      </label>
+                      <div className="relative">
+                        <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-stone-400">
+                          <User className="w-5 h-5" />
+                        </span>
+                        <input
+                          type="text" name="breederName" id="breederName" value={filters.breederName} onChange={handleFilterChange}
+                          placeholder={t('shop.filterBreeder', 'Nome allevatore...')}
+                          className="text-black w-full pl-10 pr-3 py-2 border border-stone-300 rounded-lg shadow-sm focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-150"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Filtro Anno Nascita */}
+                     <div>
+                      <label htmlFor="birthYear" className="block text-sm font-medium text-stone-600 mb-1">
+                        {t('shop.filterYearLabel', 'Anno di Nascita')}
+                      </label>
+                      <div className="relative">
+                        <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-stone-400">
+                          <Calendar className="w-5 h-5" />
+                        </span>
+                        <input
+                          type="number" name="birthYear" id="birthYear" value={filters.birthYear} onChange={handleFilterChange}
+                          placeholder={t('shop.filterYear', 'es. 2023')}
+                          className="text-black w-full pl-10 pr-3 py-2 border border-stone-300 rounded-lg shadow-sm focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-150"
+                          min="2000" 
+                          max={new Date().getFullYear()} // Imposta l'anno corrente come max
                         />
                       </div>
                     </div>
@@ -219,15 +297,15 @@ const Shop = () => {
                 </div>
               )}
             </>
-            {/* --- RIMOSSO: AnimatePresence --- */}
           </aside>
 
           {/* --- COLONNA CONTENUTO (Griglia) --- */}
           <main className="lg:col-span-3 mt-8 lg:mt-0">
             
             {/* --- STATO DI CARICAMENTO (Skeleton Grid) --- */}
+            {/* CORRETTO: Classi della griglia unificate */}
             {loading && (
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {[...Array(6)].map((_, i) => <SkeletonCard key={i} />)}
               </div>
             )}
@@ -253,20 +331,20 @@ const Shop = () => {
               </div>
             )}
 
-            {/* --- GRIGLIA RISULTATI --- */}
+            {/* --- GRIGLIA RISULTATI (CORRETTA) --- */}
+            {/* CORRETTO: Rimosso il div e la griglia annidati.
+                Il titolo <h2> è ora fuori dalla griglia. */}
             {!loading && !error && reptiles.length > 0 && (
-              // --- RIMOSSO: motion.div ---
-              <div 
-                className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"
-                // --- RIMOSSO: variants, initial, animate ---
-              >
-                {reptiles.map(reptile => (
-                  // --- RIMOSSO: motion.div ---
-                  <div key={reptile._id} /* variants={cardVariants} */>
-                    <ReptileCardPublic reptile={reptile} />
-                  </div>
-                ))}
-              </div>
+              <>
+                <h2 className="text-2xl font-bold mb-6 text-stone-800">
+                  {t('shop.resultsTitle', 'Rettili in Vendita')}
+                </h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {reptiles.map(reptile => (
+                    <ReptileCardPublic key={reptile._id} reptile={reptile} />
+                  ))}
+                </div>
+              </>
             )}
 
             {/* --- PAGINAZIONE --- */}
