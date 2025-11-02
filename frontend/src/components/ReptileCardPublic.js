@@ -88,12 +88,23 @@ const ReptileCardPublic = ({ reptile }) => {
     }).format(price.amount);
   };
 
-  const breederAvatar = reptile.breeder?.avatar
-    ? `${reptile.breeder.avatar}` // Assumendo che l'URL sia già completo dal backend
-    : '/default-avatar.png';
+const apiUrl = process.env.REACT_APP_BACKEND_URL_IMAGE; 
 
-  // MODIFICATO: Calcola il prezzo formattato prima del return
-  const formattedPrice = formatPrice(reptile.price);
+let breederAvatar = '/default-avatar.png'; // Immagine di default
+
+  if (reptile.breeder?.avatar) {
+    const avatarUrl = reptile.breeder.avatar;
+
+    // Controlla se l'URL è assoluto (http:// o https://)
+    if (avatarUrl.startsWith('http://') || avatarUrl.startsWith('https://')) {
+      breederAvatar = avatarUrl; // Usa l'URL così com'è
+    } 
+    // Altrimenti, se è un percorso relativo (inizia con /)
+    else if (avatarUrl.startsWith('/')) {
+      breederAvatar = `${apiUrl}${avatarUrl}`; // Aggiungi il prefisso apiUrl
+    }
+    // Potresti anche gestire percorsi non validi, ma per ora questo copre i casi principali
+  }  const formattedPrice = formatPrice(reptile.price);
 
   return (
     <article

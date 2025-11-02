@@ -102,7 +102,24 @@ const BreederProfile = () => {
 
   // --- FINE STATI ---
 
-  const avatarUrl = breeder.avatar || '/default-avatar.png';
+    const apiUrl = process.env.REACT_APP_BACKEND_URL_IMAGE; 
+let avatarUrl = '/default-avatar.png'; // Immagine di default
+
+  if (breeder.avatar) {
+    const avatarUrls = breeder.avatar;
+
+    // Controlla se l'URL è assoluto (http:// o https://)
+    if (avatarUrls.startsWith('http://') || avatarUrl.startsWith('https://')) {
+      avatarUrl = avatarUrls; // Usa l'URL così com'è
+    } 
+    // Altrimenti, se è un percorso relativo (inizia con /)
+    else if (avatarUrls.startsWith('/')) {
+      avatarUrl = `${apiUrl}${avatarUrls}`; // Aggiungi il prefisso apiUrl
+    }
+    // Potresti anche gestire percorsi non validi, ma per ora questo copre i casi principali
+  }
+
+
   const joinDate = formatJoinDate(breeder.createdAt, i18n.language);
   const reptileCount = reptiles.length;
   const uniqueSpecies = [...new Set(reptiles.map(r => r.species))].sort();

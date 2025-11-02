@@ -24,13 +24,13 @@ const getPlanLimits = (user) => {
   const status = user?.subscription?.status;
   const isActive = status === 'active' || status === 'pending_cancellation';
 
-  if (!isActive) return { plan: 'NEOPHYTE', publicReptiles: 0 };
+  if (!isActive) return { plan: 'NEOPHYTE', publicReptiles: 1 };
   
   switch(plan) {
     case 'APPRENTICE': return { plan, publicReptiles: 3 };
     case 'PRACTITIONER': return { plan, publicReptiles: 10 };
     case 'BREEDER': return { plan, publicReptiles: Infinity };
-    default: return { plan: 'NEOPHYTE', publicReptiles: 0 };
+    default: return { plan: 'NEOPHYTE', publicReptiles: 1 };
   }
 };
 // ... (Il componente ConfirmationModal rimane invariato)

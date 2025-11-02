@@ -390,8 +390,7 @@ addToast(err.response?.data?.message || t('UserProfile.errorProfileUpdate'), 'er
   };
 
   if (!user) return <div className="flex items-center justify-center h-screen text-slate-500">{t('UserProfile.loadingProfile')}</div>;
-const canBePublic = loggedInUser.subscription?.plan !== 'NEOPHYTE' && 
-                      (loggedInUser.subscription?.status === 'active' || loggedInUser.subscription?.status === 'pending_cancellation');
+const canBePublic = true
   return (
     <div className=" min-h-screen">
       <Toast toasts={toasts} removeToast={removeToast} />

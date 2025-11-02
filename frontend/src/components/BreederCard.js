@@ -37,7 +37,22 @@ const cardVariants = {
 
 const BreederCard = ({ breeder }) => {
   // Assumiamo che breeder.avatar sia un URL completo
-  const avatarUrl = breeder.avatar || '/default-avatar.png';
+    const apiUrl = process.env.REACT_APP_BACKEND_URL_IMAGE; 
+let avatarUrl = '/default-avatar.png'; // Immagine di default
+
+  if (breeder.avatar) {
+    const avatarUrls = breeder.avatar;
+
+    // Controlla se l'URL è assoluto (http:// o https://)
+    if (avatarUrls.startsWith('http://') || avatarUrl.startsWith('https://')) {
+      avatarUrl = avatarUrls; // Usa l'URL così com'è
+    } 
+    // Altrimenti, se è un percorso relativo (inizia con /)
+    else if (avatarUrls.startsWith('/')) {
+      avatarUrl = `${apiUrl}${avatarUrls}`; // Aggiungi il prefisso apiUrl
+    }
+    // Potresti anche gestire percorsi non validi, ma per ora questo copre i casi principali
+  }
 
   // MODIFICATO: Logica badge corretta in base allo schema User
   const getPlanBadgeClasses = (plan) => {

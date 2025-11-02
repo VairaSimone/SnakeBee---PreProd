@@ -1,6 +1,6 @@
 import React, { useEffect, lazy, Suspense} from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { loginUser, setLanguage, selectLanguage  } from './features/userSlice';
+import { loginUser, setLanguage, selectLanguage, selectUser  } from './features/userSlice';
 import axios from 'axios';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import NavBar from './components/Navbar';
@@ -46,12 +46,19 @@ import ReferralBanner from './components/ReferralBanner';
 import Shop from './pages/Shop';
 import BreederProfile from './pages/BreederProfile';
 import BreederList from './pages/BreederList';
+import { useState } from 'react';
 
+const AuthLoadingSpinner = () => (
+  <div className="flex justify-center items-center h-screen bg-[#FAF3E0]">
+    <div className="w-12 h-12 border-4 border-gray-300 border-t-[#228B22] rounded-full animate-spin"></div>
+  </div>
+);
 function AppContent() {
   const dispatch = useDispatch();
+  const user = useSelector(selectUser); // <-- MODIFICA: Seleziona l'utente
  const language = useSelector(selectLanguage);
   const { t } = useTranslation();
-
+const [isLoadingAuth, setIsLoadingAuth] = useState(true);
    useEffect(() => {
     dispatch(setLanguage(navigator.language.split('-')[0] || 'it'));
   }, [dispatch]);
@@ -70,10 +77,18 @@ function AppContent() {
         })
         .catch((err) => {
           localStorage.removeItem('token');
+        })
+        .finally(() => {
+          // In ogni caso (successo o fallimento), abbiamo finito di controllare
+          setIsLoadingAuth(false);
         });
+    } else {
+      setIsLoadingAuth(false);
     }
   }, [dispatch]);
-
+if (isLoadingAuth) {
+    return <AuthLoadingSpinner />;
+  }
   return (
     <>
       <NavBar />
@@ -82,7 +97,7 @@ function AppContent() {
       <Routes>
         <Route path="/" element={<Navigate to="/home" />} />
         <Route path="/home" element={<Home />} />
-        <Route path="/login" element={<Login />} />
+        <Route path="/login" element={user ? <Navigate to="/dashboard" replace /> : <Login />} />
         <Route path="/it/privacyPolicy" element={<PrivacyPolicyIT />} />
         <Route path="/en/privacyPolicy" element={<PrivacyPolicyEN />} />
         <Route path="/en/terms" element={<TermsAndConditionsEN />} />
@@ -93,7 +108,7 @@ function AppContent() {
         <Route path="/shop/breeders" element={<BreederList />} />
         <Route path="/shop/breeders/:userId" element={<BreederProfile />} />
         <Route path="/public/reptile/:reptileId" element={<ReptileDetails />} />
-        <Route path="/register" element={<Register />} />
+        <Route path="/register" element={user ? <Navigate to="/dashboard" replace /> : <Register />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />

@@ -4,14 +4,25 @@ import User from "../models/User.js";
 import Reptile from "../models/Reptile.js";
 import mongoose from 'mongoose';
 
-const getActiveSubscriptionMatch = () => {
-  // Utenti considerati "attivi" per lo shop
+const getActiveSubscriptionMatch = (prefix = '') => {
+  // Aggiunge il prefisso (es. "breederInfo.") solo se fornito.
+  const planField = `${prefix}subscription.plan`;
+  const statusField = `${prefix}subscription.status`;
+
+  // REGOLA: O sei NEOPHYTE (qualsiasi status), o hai un altro piano con status attivo.
   return {
-    'subscription.status': { $in: ['active', 'pending_cancellation', 'processing'] },
-    'subscription.plan': { $in: ['APPRENTICE', 'PRACTITIONER', 'BREEDER'] }
+    '$or': [
+      // 1. L'utente è NEOPHYTE (status: null, active, ecc. non importa)
+      { [planField]: 'NEOPHYTE' },
+      
+      // 2. L'utente ha un altro piano E il suo status è attivo
+      {
+        [planField]: { $in: ['APPRENTICE', 'PRACTITIONER', 'BREEDER'] },
+        [statusField]: { $in: ['active', 'pending_cancellation', 'processing'] }
+      }
+    ]
   };
 };
-
 /**
  * GET /api/v1/shop/reptiles
  * Recupera i rettili pubblici per lo shop, con filtri.
@@ -59,14 +70,13 @@ if (sex) {
       }
     }
     // 2. Match sull'utente (allevatore)
-    const activeSubscriptionMatch = getActiveSubscriptionMatch();
+    const activeSubscriptionMatch = getActiveSubscriptionMatch("breederInfo.");
 
     // Costruiamo il $match per l'utente, aggiungendo il prefisso "breederInfo."
     // a ogni campo, perché questo filtro viene applicato DOPO il $lookup.
     const userMatch = {
       "breederInfo.isPublic": true, // Profilo pubblico
-      "breederInfo.subscription.status": activeSubscriptionMatch['subscription.status'],
-      "breederInfo.subscription.plan": activeSubscriptionMatch['subscription.plan']
+...activeSubscriptionMatch
     };
     
     if (zona) {

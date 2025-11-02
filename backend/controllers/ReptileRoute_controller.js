@@ -122,11 +122,15 @@ export const GetReptileByUser = async (req, res) => {
             matchQuery.isBreeder = filterBreeder === 'true';
         }
         let sortOptions = {};
+        
         if (sortKey === 'nextFeedingDate') {
             sortOptions['nextFeedingDate'] = sortOrder;
-        } else {
-            sortOptions[sortKey] = sortOrder;
-        }
+        } else if (sortKey === 'lastFeedingDate') {
+            sortOptions['lastFeedingDate'] = sortOrder;
+        } 
+        else {
+            sortOptions[sortKey] = sortOrder;
+        }
 
         const results = await Reptile.aggregate([
             { $match: matchQuery },
@@ -159,7 +163,8 @@ export const GetReptileByUser = async (req, res) => {
             {
                 $addFields: {
                     // 2. Estrai il 'nextFeedingDate' da quell'ultimo pasto
-                    nextFeedingDate: "$lastFeeding.nextFeedingDate"
+                    nextFeedingDate: "$lastFeeding.nextFeedingDate",
+lastFeedingDate: "$lastFeeding.date" // <-- CAMPO AGGIUNTO
                 }
             },
             {

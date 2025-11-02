@@ -87,9 +87,6 @@ export const PutUser = async (req, res) => {
         const status = user.subscription?.status;
         const isActive = status === 'active' || status === 'pending_cancellation';
 
-        if (plan === 'NEOPHYTE' || !isActive) {
-          return res.status(403).json({ message: req.t('public_profile_disallowed') });
-        }
       }
     }
     const updates = {};

@@ -3,7 +3,7 @@ export const PLAN_LIMITS = {
     reptiles: 5,
     imagesPerReptile: 1,
     eventsPerTypePerReptile: 5,
-    publicReptiles: 0
+    publicReptiles: 1
   },
   APPRENTICE: {
     reptiles: 15,
