@@ -16,6 +16,7 @@ import reptileRouter from './routes/Reptile.router.js';
 import feedingRouter from './routes/Feeding.router.js';
 import breedingRouter from './routes/Breeding.router.js';
 import './config/FeedingJob.js';
+import './config/OnboardingEmailJob.js'; 
 import "./config/reminders.js";
 import "./config/SchedulesInventory.js";
 import './config/RemoveTokenJob.js';

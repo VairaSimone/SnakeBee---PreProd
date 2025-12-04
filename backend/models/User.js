@@ -97,6 +97,10 @@ const userSchema = new Schema(
         }, loginAttempts: {
             type: Number,
         },
+onboarding: {
+    hasSeenTutorial: { type: Boolean, default: false }, // Per il wizard frontend
+    emailsSent: [{ type: Number }] // Array per tracciare le email inviate (0, 1, 3, 7)
+},
         accountLockedUntil: {
             type: Date,
         }, address: {

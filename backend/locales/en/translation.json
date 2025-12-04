@@ -38,7 +38,7 @@
   "Nessun evento registrato.": "No events recorded.",
   "breeding_events": "Breeding Events",
 "reptile_sheet_title": "Technical Sheet: ",
-
+"public_reptile_limit": "With your subscription, you can no longer post a reptile in your ad.",
   "Code_reset_error": "Invalid reset code or email does not match.",
   "Code_reset_expired": "Reset code expired. Request a new password reset.",
   "password_reset": "Password successfully reset. You can now log in with your new password.",

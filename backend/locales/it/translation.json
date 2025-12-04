@@ -228,6 +228,7 @@
     "reptile_details": "📋 *{{name}}*\n\n🐍 Specie: {{species}}\n🎨 Morph: {{morph}}\n젠더 Sesso: {{sex}}\n{{birthDate}}\n{{diet}}",
     "unnamed": "Senza nome",
     "birth_date": "🎂 Nascita: {{date}}\n",
+    "public_reptile_limit": "Con il tuo abbonamento non puoi più pubblicare un rettile nell'annuncio.",
     "diet": "🍗 Dieta: {{foodType}}\n",
     "add_feeding": "Aggiungi Alimentazione 🥩",
     "add_event": "Aggiungi Evento 📅",
@@ -331,6 +332,36 @@
     "activeStripe_subscription": "Il tuo abbonamento al piano {{subscription}} è stato attivato con successo."
   },
   "emails": {
+    "onboarding": {
+      "day0": {
+        "subject": "Benvenuto in SnakeBee! 🐝 Iniziamo?",
+        "title": "Benvenuto nello sciame, {{name}}!",
+        "body": "<p>Siamo felicissimi di averti con noi. SnakeBee è nato per semplificare la vita agli appassionati come te.</p><p>Il primo passo per mettere ordine nel tuo allevamento è inserire il tuo primo animale. Non preoccuparti, ci vogliono solo 30 secondi!</p>",
+        "cta": "Aggiungi il primo Rettile",
+        "link": "{{frontendUrl}}/dashboard"
+      },
+      "day1": {
+        "subject": "I tuoi animali hanno fame? 🐁",
+        "title": "Gestisci i pasti come un Pro",
+        "body": "<p>Sapevi che SnakeBee può ricordarti quando è ora di alimentare i tuoi rettili?</p><p>Registrando i pasti, potrai generare grafici sulla frequenza di alimentazione e monitorare eventuali digiuni (refusal). Vai alla scheda del tuo animale e clicca sul pulsante 'Alimentazione'.</p>",
+        "cta": "Registra un Pasto",
+        "link": "{{frontendUrl}}/dashboard"
+      },
+      "day3": {
+        "subject": "Schede, Storico e QR Code 📊",
+        "title": "Tutto sotto controllo",
+        "body": "<p>Hai già esplorato le funzioni avanzate?</p><ul><li>Genera <b>QR Code</b> da attaccare alle teche.</li><li>Esporta la scheda clinica in <b>PDF</b> per il veterinario.</li><li>Controlla lo storico delle mute.</li></ul><p>Un archivio ordinato è la chiave per animali sani!</p>",
+        "cta": "Esplora la Dashboard",
+        "link": "{{frontendUrl}}/dashboard"
+      },
+      "day7": {
+        "subject": "Come ti trovi con SnakeBee? 💬",
+        "title": "La tua opinione conta",
+        "body": "<p>È passata una settimana! Speriamo che la gestione del tuo allevamento sia diventata più semplice.</p><p>SnakeBee cresce grazie ai feedback degli utenti. Se hai suggerimenti, bug da segnalare o nuove funzioni che vorresti vedere, scrivici!</p>",
+        "cta": "Contattaci o vai alla App",
+        "link": "{{frontendUrl}}/contact"
+      }
+    },
     "newArticle": {
       "subject": "Nuovo articolo pubblicato!",
       "hello": "Ciao!",

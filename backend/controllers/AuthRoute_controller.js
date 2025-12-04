@@ -8,6 +8,7 @@ import { logSecurityEvent } from "../utils/securityLogger.js";
 import { sendVerificationEmail, sendPasswordResetEmail } from "../config/mailer.config.js";
 import { logAction } from "../utils/logAction.js";
 import Stripe from "stripe";
+import Reptile from "../models/Reptile.js";
 import { sendReferralRewardEmail } from '../config/mailer.config.js';
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -179,7 +180,6 @@ export const register = async (req, res, next) => {
       userAgent: req.get('User-Agent') || 'unknown',
       createdAt: new Date()
     };
-    
     await newUser.save();
     await sendVerificationEmail(newUser.email, newUser.language, verificationCode);
     res.status(201).json({ message: req.t('verifyEmail')});

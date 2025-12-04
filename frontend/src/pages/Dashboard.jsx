@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import api from '../services/api.js';
+import OnboardingWizard from '../components/OnboardingWizard';
 import { useSelector } from 'react-redux';
 import { selectUser } from '../features/userSlice.jsx';
 import { Link } from 'react-router-dom';
@@ -176,7 +177,14 @@ const Dashboard = () => {
   const user = useSelector(selectUser);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [pendingDelete, setPendingDelete] = useState(null);
+const showWizard = user && !user.onboarding?.hasSeenTutorial; 
 
+  const handleWizardComplete = () => {
+      // Ricarica i dati utente e rettili per mostrare le nuove aggiunte
+      handleDataRefresh(); 
+      // Qui dovresti anche aggiornare lo stato utente in Redux o forzare un refetch del profilo
+      window.location.reload(); // Soluzione rapida per aggiornare tutto lo stato utente
+  };
   // NUOVO: Stato per il tab attivo
   const [activeTab, setActiveTab] = useState('active');
 
@@ -451,6 +459,7 @@ if (!dateStr || typeof dateStr !== 'string') {
 
   return (
     <div className="bg-clay min-h-screen font-sans text-charcoal p-4 sm:p-6 lg:p-8 relative">
+    {showWizard && <OnboardingWizard user={user} onComplete={handleWizardComplete} />}
       <div className="max-w-screen-xl mx-auto">
         {/* ... (Bottone Calendario, Header, Statistiche, Tabs rimangono uguali) ... */}
         {hasPaidPlan(user) && (
