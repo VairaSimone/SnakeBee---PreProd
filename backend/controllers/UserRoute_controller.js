@@ -120,7 +120,7 @@ export const PutUser = async (req, res) => {
 };
 // Aggiungi questa funzione alla fine del file UserRoute_controller.js
 
-export const completeOnboarding = async (req, res) => {
+export const completeOnboarding = async (req, res) => { 
   try {
     const userId = req.user.userid; // Recupera l'ID dal token
     const user = await User.findById(userId);

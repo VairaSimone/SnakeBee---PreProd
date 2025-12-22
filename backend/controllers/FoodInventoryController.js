@@ -123,65 +123,65 @@ export const getFeedingSuggestions = async (req, res) => {
     if (!await isInventoryAccessAllowed(userId)) {
       return res.status(403).json({ message: req.t('premium_only_feature') });
     }
-    const todayUTC = new Date();
-    todayUTC.setUTCHours(0, 0, 0, 0);
 
-    const recentFeedings = await Feeding.aggregate([
-      { $match: { wasEaten: true } },
-      { $sort: { date: -1 } },
-      {
-        $group: {
-          _id: "$reptile",
-          lastFeeding: { $first: "$$ROOT" },
-          feedings: { $push: "$$ROOT" }
-        }
-      },
-      {
-        $match: {
-          "lastFeeding.nextFeedingDate": { $lte: todayUTC }
-        }
-      },
-      {
-        $project: {
-          reptile: "$_id",
-          feedings: { $slice: ["$feedings", 3] }
-        }
-      }
-    ]);
-    if (recentFeedings.length === 0) {
-      return res.json({ message: req.t('no_feeding_today'), suggestions: [] });
-    }
-    const reptileIds = recentFeedings.map(f => f.reptile);
-    const reptiles = await Reptile.find({ _id: { $in: reptileIds }, user: userId, status: 'active' });
+    const reptiles = await Reptile.find({
+      user: userId,
+      status: 'active'
+    });
+
     const inventory = await FoodInventory.find({ user: userId });
-
     const tempInventory = inventory.map(i => i.toObject());
     const suggestions = [];
+    
+    const today = new Date();
+    today.setHours(23, 59, 59, 999); // Fine giornata
 
-    for (const reptileData of recentFeedings) {
-      const reptile = reptiles.find(
-        (r) => r._id.toString() === reptileData.reptile.toString()
-      );
-      if (!reptile) continue;
-      const foodTypeFreq = reptileData.feedings.reduce((acc, f) => {
-        acc[f.foodType] = (acc[f.foodType] || 0) + 1;
-        return acc;
-      }, {});
-      const mostCommonType = Object.entries(foodTypeFreq).sort((a, b) => b[1] - a[1])[0][0];
-      const recentOfSameType = reptileData.feedings.filter(
-        (f) => f.foodType === mostCommonType
-      );
-      const weights = reptileData.feedings
-        .map(f => f.weightPerUnit)
-        .filter(w => typeof w === 'number' && !isNaN(w));
+    for (const reptile of reptiles) {
+      const lastFeeding = await Feeding.findOne({ reptile: reptile._id, wasEaten: true })
+                                       .sort({ date: -1 });
 
-      const avgWeight = weights.length
-        ? weights.reduce((a, b) => a + b) / weights.length
-        : 0;
+      let nextDate = new Date(); // Default: oggi
 
-      const idealType = reptile.foodType || mostCommonType;
-      const idealWeight = reptile.weightPerUnit || avgWeight || 0;
+      if (lastFeeding) {
+        if (reptile.nextMealDay) {
+          // PRIORITÀ 1: Calcola usando la frequenza impostata sulla scheda del rettile
+          const lastDate = new Date(lastFeeding.date);
+          nextDate = new Date(lastDate.setDate(lastDate.getDate() + reptile.nextMealDay));
+        } else if (lastFeeding.nextFeedingDate) {
+          // PRIORITÀ 2 (FIX): Se manca la frequenza, usa la "prossima data" salvata nel record del pasto
+          nextDate = new Date(lastFeeding.nextFeedingDate);
+        }
+      } 
+      // Se non ha mai mangiato (!lastFeeding), nextDate rimane "Oggi"
 
+      // Se la data è futura, salta
+      if (nextDate > today) {
+        continue;
+      }
+
+      // --- LOGICA SUGGERIMENTO CIBO ---
+      let idealType = reptile.foodType;
+      let idealWeight = reptile.weightPerUnit;
+
+      // Fallback preferenze
+      if ((!idealType || !idealWeight) && lastFeeding) {
+         idealType = idealType || lastFeeding.foodType;
+         idealWeight = idealWeight || lastFeeding.weightPerUnit;
+      }
+
+      if (!idealType) {
+         suggestions.push({
+          reptile: reptile.name?.trim() || reptile.morph,
+          idealFood: "N/A",
+          suggestion: null,
+          available: 0,
+          message: 'Specifica il tipo di cibo nella scheda',
+          warning: 'no_preference_set'
+        });
+        continue;
+      }
+
+      // Cerca nell'inventario
       let sameTypeFoods = tempInventory.filter(
         (i) =>
           i.foodType === idealType &&
@@ -204,7 +204,7 @@ export const getFeedingSuggestions = async (req, res) => {
           idealFood: `${idealType} ${idealWeight}g`,
           suggestion: null,
           available: 0,
-          message: 'Nessuna preda di questo tipo in inventario',
+          message: 'Nessuna preda adatta in inventario',
           warning: 'food_not_found'
         });
         continue;
@@ -234,25 +234,21 @@ export const getFeedingSuggestions = async (req, res) => {
       });
 
       const key = `${bestMatch.foodType} ${bestMatch.weightPerUnit}g`;
-      if (summary[key]) {
-        summary[key] += 1;
-      } else {
-        summary[key] = 1;
-      }
+      summary[key] = (summary[key] || 0) + 1;
+    }
+
+    if (suggestions.length === 0) {
+       return res.json({ message: req.t('no_feeding_today'), suggestions: [], totalSummary: [] });
     }
 
     const summaryList = Object.entries(summary).map(([food, qty]) => `${qty} ${food}`);
-
-
     res.json({ suggestions, totalSummary: summaryList });
 
   } catch (err) {
     console.error('Error generating feeding suggestions:', err);
     res.status(500).json({ message: req.t('error_inventory') });
   }
-};
-
-/**
+};/**
  * Logica per calcolare la previsione di esaurimento scorte (basata sugli ultimi 90 giorni)
  */
 async function getInventoryForecastLogic(userId) {

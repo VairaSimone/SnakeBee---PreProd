@@ -5,13 +5,16 @@ import { DateTime } from 'luxon';
 
 // Configurazione giorni e chiavi corrispondenti nel JSON
 const EMAIL_STEPS = [
-    { day: 0, key: 'day0' }, // Benvenuto
-    { day: 1, key: 'day1' }, // Tutorial Alimentazione
-    { day: 3, key: 'day3' }, // Funzioni Pro
-    { day: 7, key: 'day7' }  // Feedback
+{ day: 0, key: 'day0' },  // Benvenuto
+    { day: 1, key: 'day1' },  // Tutorial Alimentazione/Dispensa
+    { day: 3, key: 'day3' },  // Peso e Grafici
+    { day: 5, key: 'day5' },  // QR Code (Nuovo)
+    { day: 7, key: 'day7' },  // Feedback
+    { day: 14, key: 'day14' }, // Calendario (Nuovo)
+    { day: 30, key: 'day30' }  // Blog/Community (Nuovo)
 ];
 
-cron.schedule('* * * * *', async () => { // Ogni giorno alle 10:00 Europe/Rome
+cron.schedule('0 10 * * *', async () => { // Ogni giorno alle 10:00 Europe/Rome
     console.log('JOB - Onboarding Email Job (start)');
     try {
         // Seleziona solo utenti verificati e non bannati

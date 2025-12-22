@@ -34,7 +34,7 @@ import routerTelegram from './routes/telegramAuth.js';
 import blogRouter from './routes/Blog.router.js';
 import './config/SchedulesPublishing.js'; 
 import shopRouter from './routes/shopRoutes.js';
-
+ 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const port = process.env.PORT

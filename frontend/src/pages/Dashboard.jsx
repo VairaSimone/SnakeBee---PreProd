@@ -177,14 +177,6 @@ const Dashboard = () => {
   const user = useSelector(selectUser);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [pendingDelete, setPendingDelete] = useState(null);
-const showWizard = user && !user.onboarding?.hasSeenTutorial; 
-
-  const handleWizardComplete = () => {
-      // Ricarica i dati utente e rettili per mostrare le nuove aggiunte
-      handleDataRefresh(); 
-      // Qui dovresti anche aggiornare lo stato utente in Redux o forzare un refetch del profilo
-      window.location.reload(); // Soluzione rapida per aggiornare tutto lo stato utente
-  };
   // NUOVO: Stato per il tab attivo
   const [activeTab, setActiveTab] = useState('active');
 
@@ -231,7 +223,6 @@ const showWizard = user && !user.onboarding?.hasSeenTutorial;
   const [isCalendarOpen, setCalendarOpen] = useState(false);
 
   const carouselRefs = useRef({});
-
   // ... (scrollCarousel, fetchStats, fetchReptiles, fetchArchivedReptiles, handleDelete, handleDataRefresh rimangono uguali) ...
   const scrollCarousel = (e, direction, reptileId) => {
     e.preventDefault();
@@ -348,6 +339,14 @@ if (!dateStr || typeof dateStr !== 'string') {
     setSelectedReptileIds(new Set());
   }
 
+  const showWizard = !loading && totalResults === 0 && !user?.onboarding?.hasSeenTutorial;
+  const handleWizardComplete = () => {
+      // Ricarica i dati utente e rettili per mostrare le nuove aggiunte
+      handleDataRefresh(); 
+      // Qui dovresti anche aggiornare lo stato utente in Redux o forzare un refetch del profilo
+      window.location.reload(); // Soluzione rapida per aggiornare tutto lo stato utente
+  };
+
   const handleReptileSelect = (reptileId) => {
     setSelectedReptileIds(prevSet => {
       const newSet = new Set(prevSet);
@@ -454,7 +453,7 @@ if (!dateStr || typeof dateStr !== 'string') {
 
     return [...stats.incubationBySpecies]
       .sort((a, b) => b.count - a.count)
-      .slice(0, 3);
+      .slice(0, 3); 
   }, [stats.incubationBySpecies]);
 
   return (

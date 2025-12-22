@@ -12,7 +12,7 @@ const transporter = nodemailer.createTransport({
     rejectUnauthorized: true,
   }
 });
-
+ 
 //Registration email
 const sendVerificationEmail = async (to, lng, code) => {
 const t = i18next.getFixedT(lng || 'it'); 
