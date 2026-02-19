@@ -7,7 +7,7 @@ const ReptileShop = () => {
   const handleCheckout = async (kit) => {
     setLoadingId(kit.id);
     try {        
-      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000/api'}/stripe/create-shop-checkout`, {
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000/api'}/stripe/create-shop-checkout`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
