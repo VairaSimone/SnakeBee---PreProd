@@ -538,8 +538,8 @@ export const createCheckoutSessionStore = async (req, res) => {
     }));
 
     // Creazione della sessione su Stripe
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card', 'paypal'], // I metodi di pagamento abilitati (paypal se attivato su Stripe)
+const session = await stripeInstance.checkout.sessions.create({
+        payment_method_types: ['card', 'paypal'], // I metodi di pagamento abilitati (paypal se attivato su Stripe)
       billing_address_collection: 'auto',
       shipping_address_collection: {
         allowed_countries: ['IT'], // Aggiungi altre sigle se spedisci all'estero (es. 'FR', 'DE')

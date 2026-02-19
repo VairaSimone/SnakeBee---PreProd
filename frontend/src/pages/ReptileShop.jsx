@@ -1,44 +1,37 @@
 import React, { useState } from 'react';
 import { snakebeeKits } from '../utils/marketData';
-
+import api from '../services/api';
 const ReptileShop = () => {
   const [loadingId, setLoadingId] = useState(null);
 
-  const handleCheckout = async (kit) => {
+const handleCheckout = async (kit) => {
     setLoadingId(kit.id);
-    try {        
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000/api'}/stripe/create-shop-checkout`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          // 'Authorization': `Bearer ${localStorage.getItem('token')}` // Decommenta se l'accesso è riservato solo agli utenti loggati
-        },
-        body: JSON.stringify({
-          items: [{
-            name: kit.name,
-            description: kit.description,
-            price: kit.price,
-            quantity: 1
-          }]
-        }),
+    try {
+      // Usiamo l'istanza "api" che invia automaticamente i cookies (grazie a withCredentials: true)
+      const response = await api.post('/stripe/create-shop-checkout', {
+        items: [{
+          name: kit.name,
+          description: kit.description,
+          price: kit.price,
+          quantity: 1
+        }]
       });
 
-      const data = await response.json();
+      const data = response.data;
 
-      if (response.ok && data.url) {
-        // Stripe reindirizzerà in automatico il cliente al suo portale sicuro di check-out
+      // Se la richiesta va a buon fine, reindirizza
+      if (data && data.url) {
         window.location.href = data.url; 
       } else {
-        alert(data.error || 'Errore durante la creazione del pagamento.');
+        alert('Errore durante la creazione del pagamento.');
       }
     } catch (error) {
       console.error('Errore Checkout:', error);
-      alert('Impossibile connettersi al server per il pagamento.');
+      alert(error.response?.data?.error || 'Impossibile connettersi al server per il pagamento.');
     } finally {
       setLoadingId(null);
     }
   };
-
   return (
     <div className="container mx-auto px-4 py-8 max-w-7xl">
       <div className="text-center mb-12">
