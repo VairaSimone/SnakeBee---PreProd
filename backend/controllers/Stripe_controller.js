@@ -524,7 +524,7 @@ export const stripeWebhook = async (req, res) => {
 export const createCheckoutSessionStore = async (req, res) => {
   try {
     const { items } = req.body;
-
+const stripeClient = new stripe(process.env.STRIPE_SECRET_KEY);
     const lineItems = items.map((item) => ({
       price_data: {
         currency: 'eur',
@@ -538,7 +538,7 @@ export const createCheckoutSessionStore = async (req, res) => {
     }));
 
     // Creazione della sessione su Stripe
-const session = await stripeInstance.checkout.sessions.create({
+const session = await stripeClient.checkout.sessions.create({
         payment_method_types: ['card', 'paypal'], // I metodi di pagamento abilitati (paypal se attivato su Stripe)
       billing_address_collection: 'auto',
       shipping_address_collection: {
