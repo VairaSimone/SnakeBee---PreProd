@@ -16,9 +16,9 @@ import reptileRouter from './routes/Reptile.router.js';
 import feedingRouter from './routes/Feeding.router.js';
 import breedingRouter from './routes/Breeding.router.js';
 import './config/FeedingJob.js';
-import './config/OnboardingEmailJob.js'; 
 import "./config/reminders.js";
 import "./config/SchedulesInventory.js";
+import './config/OnboardingEmailJob.js'; 
 import './config/RemoveTokenJob.js';
 import notificationRouter from './routes/Notification.router.js';
 import googleStrategy from './config/Passport.config.js ';
@@ -34,7 +34,7 @@ import routerTelegram from './routes/telegramAuth.js';
 import blogRouter from './routes/Blog.router.js';
 import './config/SchedulesPublishing.js'; 
 import shopRouter from './routes/shopRoutes.js';
- 
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const port = process.env.PORT
