@@ -520,3 +520,55 @@ export const stripeWebhook = async (req, res) => {
     res.status(500).json({ error: 'server_error' });
   }
 };
+
+export const createCheckoutSessionStore = async (req, res) => {
+  try {
+    const { items } = req.body;
+
+    const lineItems = items.map((item) => ({
+      price_data: {
+        currency: 'eur',
+        product_data: {
+          name: item.name,
+          description: item.description || 'Kit attrezzatura per rettili by SnakeBee',
+        },
+        unit_amount: Math.round(item.price * 100), // Stripe accetta gli importi in centesimi
+      },
+      quantity: item.quantity,
+    }));
+
+    // Creazione della sessione su Stripe
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card', 'paypal'], // I metodi di pagamento abilitati (paypal se attivato su Stripe)
+      billing_address_collection: 'auto',
+      shipping_address_collection: {
+        allowed_countries: ['IT'], // Aggiungi altre sigle se spedisci all'estero (es. 'FR', 'DE')
+      },
+      shipping_options: [
+        {
+          shipping_rate_data: {
+            type: 'fixed_amount',
+            fixed_amount: {
+              amount: 690, // Es: 6.90€ di spedizione. Modifica a tuo piacimento. (Se gratis metti 0)
+              currency: 'eur',
+            },
+            display_name: 'Spedizione Corriere Espresso',
+            delivery_estimate: {
+              minimum: { unit: 'business_day', value: 2 },
+              maximum: { unit: 'business_day', value: 4 },
+            },
+          },
+        },
+      ],
+      line_items: lineItems,
+      mode: 'payment',
+      success_url: `${process.env.FRONTEND_URL}/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${process.env.FRONTEND_URL}/shop`,
+    });
+
+    res.status(200).json({ id: session.id, url: session.url });
+  } catch (error) {
+    console.error('Errore durante la creazione della sessione di checkout:', error);
+    res.status(500).json({ error: 'Si è verificato un errore durante la creazione del pagamento.' });
+  }
+};

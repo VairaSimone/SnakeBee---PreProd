@@ -13,4 +13,5 @@ router.delete('/:id', deleteFeeding);
 router.get('/feeding-suggestions', getFeedingSuggestions)
 router.get('/forecast', getInventoryForecast);
 router.get('/recommendations', getPurchaseRecommendations);
+
 export default router;
