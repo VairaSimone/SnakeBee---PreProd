@@ -1,87 +1,149 @@
-import React, { useState } from 'react';
-import { snakebeeKits } from '../utils/marketData';
+import React, { useEffect, useState } from 'react';
+
 import api from '../services/api';
+import { useCart } from '../components/CartContext';
+
 const ReptileShop = () => {
-  const [loadingId, setLoadingId] = useState(null);
+  const [products, setProducts] = useState([]);
+  const [suggested, setSuggested] = useState([]);
+  const { cart, addToCart, removeFromCart, cartTotal } = useCart();
+  const [loading, setLoading] = useState(false);
+const [orders, setOrders] = useState([]);
 
-const handleCheckout = async (kit) => {
-    setLoadingId(kit.id);
+  useEffect(() => {
+    api.get('/shop/orders').then(res => setOrders(res.data));
+  }, []);
+
+  useEffect(() => {
+    const fetchShopData = async () => {
+      try {
+        const res = await api.get('/shop/prodotti');
+        setProducts(res.data.products);
+        setSuggested(res.data.suggested);
+      } catch (err) { console.error("Errore fetch dati store"); }
+    };
+    fetchShopData();
+  }, []);
+
+  const handleCheckout = async () => {
+    setLoading(true);
     try {
-      // Usiamo l'istanza "api" che invia automaticamente i cookies (grazie a withCredentials: true)
-      const response = await api.post('/stripe/create-shop-checkout', {
-        items: [{
-          name: kit.name,
-          description: kit.description,
-          price: kit.price,
-          quantity: 1
-        }]
+      const res = await api.post('/stripe/create-shop-checkout', {
+        cartItems: cart.map(c => ({ productId: c._id, quantity: c.quantity }))
       });
-
-      const data = response.data;
-
-      // Se la richiesta va a buon fine, reindirizza
-      if (data && data.url) {
-        window.location.href = data.url; 
-      } else {
-        alert('Errore durante la creazione del pagamento.');
-      }
-    } catch (error) {
-      console.error('Errore Checkout:', error);
-      alert(error.response?.data?.error || 'Impossibile connettersi al server per il pagamento.');
-    } finally {
-      setLoadingId(null);
+      window.location.href = res.data.url; // Redirige a Stripe
+    } catch (err) {
+      alert(err.response?.data?.error || "Errore durante il checkout");
     }
+    setLoading(false);
   };
-  return (
-    <div className="container mx-auto px-4 py-8 max-w-7xl">
-      <div className="text-center mb-12">
-        <h1 className="text-4xl font-extrabold mb-4 text-gray-800">SnakeBee Market</h1>
-        <p className="text-gray-600 max-w-2xl mx-auto">
-          Scopri i nostri Kit Pre-Assemblati! Risparmia tempo e denaro: tutto il necessario per i tuoi amati rettili in un'unica spedizione veloce.
-        </p>
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
-        {snakebeeKits.map((kit) => (
-          <div key={kit.id} className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col justify-between transform transition duration-300 hover:scale-105 hover:shadow-xl">
-            
-            {/* Box Placeholder Immagine (Puoi sostituirlo con <img src={kit.image} /> in futuro) */}
-            <div className="h-48 bg-gradient-to-r from-green-400 to-green-600 flex items-center justify-center">
-              <span className="text-white text-xl font-bold opacity-80">{kit.name}</span>
-            </div>
 
-            <div className="p-6 flex-grow flex flex-col justify-between">
-              <div>
-                <h2 className="text-xl font-bold text-gray-800 mb-2">{kit.name}</h2>
-                <p className="text-gray-500 text-sm mb-4 leading-relaxed">{kit.description}</p>
-              </div>
-              
-              <div className="mt-4 pt-4 border-t border-gray-100">
-                <div className="flex justify-between items-center mb-4">
-                  <span className="text-gray-500 text-sm font-medium">Prezzo KIT (Scontato)</span>
-                  <span className="text-2xl font-black text-green-600">€{kit.price.toFixed(2).replace('.', ',')}</span>
-                </div>
-                
-                <button 
-                  onClick={() => handleCheckout(kit)} 
-                  disabled={loadingId === kit.id}
-                  className={`w-full py-3 px-4 rounded-xl font-bold text-white transition-all flex justify-center items-center ${
-                    loadingId === kit.id ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700 shadow-md hover:shadow-lg'
-                  }`}
-                >
-                  {loadingId === kit.id ? (
-                    <span className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></span>
-                  ) : (
-                    "Acquista Ora"
-                  )}
-                </button>
-              </div>
+  return (
+    <div className="container mx-auto p-4 md:flex gap-6 relative">
+      <div className="flex-1">
+        {/* Suggerimenti Smart */}
+        {suggested.length > 0 && (
+          <div className="bg-yellow-100 border-l-4 border-yellow-500 p-4 mb-8 rounded-lg">
+            <h2 className="text-xl font-bold mb-4 text-yellow-800">✨ Consigliati per i tuoi Rettili</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {suggested.map(p => (
+                <ProductCard key={p._id} product={p} addToCart={addToCart} isSuggested />
+              ))}
             </div>
           </div>
-        ))}
+        )}
+
+        <h1 className="text-3xl font-bold mb-6">Tutti i Prodotti</h1>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {products.map(p => (
+             <ProductCard key={p._id} product={p} addToCart={addToCart} />
+          ))}
+        </div>
       </div>
+
+      {/* Carrello Spesa UI */}
+      <div className="w-full md:w-1/3 mt-8 md:mt-0 bg-white p-6 rounded-xl shadow-lg h-fit sticky top-20">
+        <h2 className="text-2xl font-bold mb-4">Carrello</h2>
+        {cart.length === 0 ? (
+          <p className="text-gray-500">Il tuo carrello è vuoto.</p>
+        ) : (
+          <>
+            <ul className="space-y-4 mb-6">
+              {cart.map((item) => (
+                <li key={item._id} className="flex justify-between items-center border-b pb-2">
+                  <div>
+                    <p className="font-semibold">{item.name}</p>
+                    <p className="text-sm text-gray-500">Q.tà: {item.quantity} x €{item.price}</p>
+                  </div>
+                  <button onClick={() => removeFromCart(item._id)} className="text-red-500 text-sm">Rimuovi</button>
+                </li>
+              ))}
+            </ul>
+            <div className="flex justify-between text-lg font-bold mb-4">
+              <span>Totale:</span>
+              <span>€{cartTotal.toFixed(2)}</span>
+            </div>
+            <button 
+              onClick={handleCheckout} 
+              disabled={loading}
+              className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-bold transition-all"
+            >
+              {loading ? 'Elaborazione...' : 'Procedi al Pagamento'}
+            </button>
+          </>
+        )}
+      </div>
+
+      <div className="bg-white p-6 rounded-lg shadow mt-6">
+      <h3 className="text-xl font-bold mb-4">I Miei Ordini</h3>
+      {orders.length === 0 ? <p>Nessun ordine trovato.</p> : (
+        <div className="space-y-4">
+          {orders.map(order => (
+            <div key={order._id} className="border p-4 rounded bg-gray-50 flex flex-col md:flex-row justify-between items-center gap-4">
+              <div>
+                <p className="text-sm text-gray-500">Ordine #{order._id.slice(-6)} del {new Date(order.createdAt).toLocaleDateString()}</p>
+                <p className="font-bold text-lg mt-1">Stato: <span className={`text-${order.status === 'Spedito' ? 'green' : 'blue'}-600`}>{order.status}</span></p>
+                {order.trackingNumber && <p className="text-sm mt-1 font-mono">Tracking: {order.trackingNumber}</p>}
+              </div>
+              <div className="text-right">
+                <p className="font-bold">Totale: €{order.totalAmount.toFixed(2)}</p>
+                {order.receiptUrl && (
+                  <a href={order.receiptUrl} target="_blank" rel="noreferrer" className="text-sm text-blue-500 hover:underline">
+                    Scarica Ricevuta
+                  </a>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
     </div>
   );
 };
+
+// Componente Singolo Prodotto
+const ProductCard = ({ product, addToCart, isSuggested }) => (
+  <div className={`border rounded-lg p-4 bg-white shadow-sm transition-transform hover:-translate-y-1 ${isSuggested ? 'border-yellow-400' : ''}`}>
+    <img src={product.imageUrl} alt={product.name} className="w-full h-48 object-cover rounded-md mb-4" />
+    <h3 className="font-bold text-lg">{product.name}</h3>
+    <p className="text-xl font-semibold mt-2">€{product.price}</p>
+    
+    {/* Contatore Stock */}
+    <p className={`text-sm mt-1 font-medium ${product.stock > 0 ? 'text-green-600' : 'text-red-600'}`}>
+      {product.stock > 0 ? `Disponibile: ${product.stock} pezzi` : 'Esaurito'}
+    </p>
+
+    <button 
+      onClick={() => addToCart(product)}
+      disabled={product.stock <= 0}
+      className={`mt-4 w-full py-2 rounded-lg font-semibold transition-colors ${
+        product.stock > 0 ? 'bg-orange-500 hover:bg-orange-600 text-white' : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+      }`}
+    >
+      {product.stock > 0 ? 'Aggiungi al Carrello' : 'Pre-Ordina (Contattaci)'}
+    </button>
+  </div>
+);
 
 export default ReptileShop;

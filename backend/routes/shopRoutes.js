@@ -2,11 +2,16 @@
 
 import express from 'express';
 import * as shopController from '../controllers/Shop_controller.js';
+import { authenticateJWT } from '../middlewares/Auth.js';
+import { getShopData, getUserOrders } from '../controllers/Store_controller.js';
 
 const shopRouter = express.Router();
 
 // Rotta per la lista pubblica dei rettili (lo shop)
 // Filtri: ?species=...&morph=...&zona=...
+
+shopRouter.get("/prodotti", authenticateJWT, getShopData);
+shopRouter.get("/orders", authenticateJWT, getUserOrders);
 shopRouter.get('/reptiles', shopController.getPublicShopReptiles);
 
 // Rotta per la lista pubblica degli allevatori

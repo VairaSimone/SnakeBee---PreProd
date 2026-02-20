@@ -4,6 +4,8 @@ import Notification from '../models/Notification.js';
 import { sendStripeNotificationEmail } from '../config/mailer.config.js';
 import { logAction } from "../utils/logAction.js";
 import i18next from 'i18next';
+import Product from "../models/Product.js";
+import Order from "../models/Order.js";
 
 function setPeriodEndIfLater(user, newDate) {
   if (!newDate) return false;
@@ -520,7 +522,7 @@ export const stripeWebhook = async (req, res) => {
     res.status(500).json({ error: 'server_error' });
   }
 };
-
+/*
 export const createCheckoutSessionStore = async (req, res) => {
   try {
     const { items } = req.body;
@@ -571,4 +573,90 @@ const session = await stripeClient.checkout.sessions.create({
     console.error('Errore durante la creazione della sessione di checkout:', error);
     res.status(500).json({ error: 'Si è verificato un errore durante la creazione del pagamento.' });
   }
+};
+*/
+
+export const createCheckoutSessionStore = async (req, res) => {
+  try {
+    const { cartItems } = req.body; // Array dal frontend: [{ productId, quantity }]
+    const line_items = [];
+    const orderItems = [];
+    let totalAmount = 0;
+
+    for (let item of cartItems) {
+      const product = await Product.findById(item.productId);
+      
+      // Controllo Stock Sicuro
+      if (!product || product.stock < item.quantity) {
+        return res.status(400).json({ error: `Stock insufficiente per ${product?.name}` });
+      }
+
+      line_items.push({
+        price_data: {
+          currency: 'eur',
+          product_data: { name: product.name, images: [product.imageUrl] },
+          unit_amount: Math.round(product.price * 100),
+        },
+        quantity: item.quantity,
+      });
+
+      orderItems.push({
+        product: product._id,
+        quantity: item.quantity,
+        price: product.price,
+        name: product.name
+      });
+      totalAmount += (product.price * item.quantity);
+    }
+
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card', 'paypal'],
+      line_items,
+      mode: 'payment',
+      shipping_address_collection: { allowed_countries: ['IT'] }, // Aggiungi nazioni
+      success_url: `${process.env.FRONTEND_URL}/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${process.env.FRONTEND_URL}/shop`,
+      metadata: { userId: req.user._id.toString() }
+    });
+
+    // Creazione ordine in sospeso
+    await Order.create({
+      user: req.user._id,
+      items: orderItems,
+      totalAmount,
+      stripeSessionId: session.id,
+      status: 'In lavorazione'
+    });
+
+    res.json({ url: session.url });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Webhook handling: Decrementa stock quando pagato (Gestione Inventario)
+export const webhookStripe = async (req, res) => {
+  const sig = req.headers['stripe-signature'];
+  let event;
+  try {
+    event = stripe.webhooks.constructEvent(req.rawBody, sig, process.env.STRIPE_WEBHOOK_SECRET);
+  } catch (err) {
+    return res.status(400).send(`Webhook Error: ${err.message}`);
+  }
+
+  if (event.type === 'checkout.session.completed') {
+    const session = event.data.object;
+    
+    const order = await Order.findOne({ stripeSessionId: session.id });
+    if (order) {
+      order.shippingDetails = session.shipping_details;
+      await order.save();
+
+      // Decrementa lo stock dal database amministratore
+      for (let item of order.items) {
+        await Product.findByIdAndUpdate(item.product, { $inc: { stock: -item.quantity } });
+      }
+    }
+  }
+  res.send();
 };

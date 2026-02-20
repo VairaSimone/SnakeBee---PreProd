@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { getAdminArticles, deleteArticle } from '../../services/blogApi';
 import { FaEdit, FaTrash, FaPlus, FaSpinner, FaSearch } from 'react-icons/fa';
 import { toast } from 'react-toastify';
-
+import api from '../../services/api';
 // Componente per i badge di stato (più pulito)
 const StatusBadge = ({ status }) => {
     const statusStyles = {
@@ -46,7 +46,17 @@ const AdminBlogDashboard = () => {
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
-    
+    const [orders, setOrders] = useState([]);
+
+  useEffect(() => {
+    // Rotta da creare sul backend: router.get('/admin/orders', isAdmin, getAdminOrders)
+    api.get('/admin/orders').then(res => setOrders(res.data));
+  }, []);
+
+  const updateTracking = async (id, status, tracking) => {
+    await api.put(`/admin/orders/${id}`, { status, trackingNumber: tracking });
+    // Ricarica ordini...
+  };
     // State per il modale
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [articleToDelete, setArticleToDelete] = useState(null);
@@ -172,6 +182,44 @@ const AdminBlogDashboard = () => {
                     </Link>
                 </div>
             )}
+
+            <div className="p-6">
+      <h1 className="text-3xl font-bold mb-6">Gestione Logistica Negozio</h1>
+      <table className="w-full text-left bg-white shadow rounded">
+        <thead>
+          <tr className="bg-gray-100">
+            <th className="p-3">Utente</th>
+            <th className="p-3">Indirizzo</th>
+            <th className="p-3">Articoli</th>
+            <th className="p-3">Stato</th>
+            <th className="p-3">Azione</th>
+          </tr>
+        </thead>
+        <tbody>
+          {orders.map(order => (
+            <tr key={order._id} className="border-b">
+              <td className="p-3">{order.user.email}</td>
+              <td className="p-3 text-sm">
+                {order.shippingDetails?.address?.line1}, {order.shippingDetails?.address?.city}
+              </td>
+              <td className="p-3">
+                {order.items.map(i => <div key={i._id}>{i.quantity}x {i.name}</div>)}
+              </td>
+              <td className="p-3 font-bold">{order.status}</td>
+              <td className="p-3">
+                <button 
+                  onClick={() => updateTracking(order._id, 'Spedito', prompt('Inserisci codice tracking:'))}
+                  className="bg-blue-500 text-white px-3 py-1 rounded text-sm"
+                >
+                  Segna Spedito
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  
         </div>
     );
 };
