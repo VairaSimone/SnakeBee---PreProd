@@ -22,7 +22,7 @@ const orderSchema = new mongoose.Schema(
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
     guestEmail: { type: String, default: null },  // per acquisti guest
     items: [orderItemSchema],
-    subtotal: { type: Number, required: true },   // euro, IVA inclusa
+    subtotal: { type: Number, required: true },   
     shippingCost: { type: Number, required: true, default: 0 },
     total: { type: Number, required: true },
     vatRate: { type: Number, default: 22 },

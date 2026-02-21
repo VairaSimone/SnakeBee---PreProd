@@ -127,6 +127,8 @@ const Navbar = () => {
   const commonLinks = [
     { to: '/blog', label: t('navbar.blog') },
     { to: '/shop', label: t('navbar.shop', 'Shop') },
+        { to: '/store', label: 'Market' },
+,
   ];
 
   const guestLinks = [
@@ -144,6 +146,7 @@ const Navbar = () => {
   const userDropdownLinks = [
     { to: '/profile', label: t('navbar.profile') },
     { to: '/pricing', label: t('navbar.subscription') },
+    { to: '/store/orders', label: 'I miei ordini' },
   ];
 
   return (
@@ -171,11 +174,6 @@ const Navbar = () => {
               <StyledNavLink to={link.to}>{link.label}</StyledNavLink>
             </li>
           ))}
-
-          {/* PULSANTE MARKET: VISIBILE A TUTTI (Spostato qui) */}
-          <li>
-             <MarketButton />
-          </li>
 
           {!user ? (
             <>
@@ -244,15 +242,17 @@ const Navbar = () => {
                         {link.label}
                       </AvatarDropdownLink>
                     ))}
-                    
                     {user.role === 'admin' && (
-                      <AvatarDropdownLink 
-                        to="/admin/blog" 
-                        onClick={() => setAvatarMenuOpen(false)}
-                      >
-                        <span className="font-semibold text-red-600">{t('navbar.admin')}</span>
-                      </AvatarDropdownLink>
-                    )}
+  <>
+    <AvatarDropdownLink to="/admin/blog" onClick={() => setAvatarMenuOpen(false)}>
+      <span className="font-semibold text-red-600">{t('navbar.admin')}</span>
+    </AvatarDropdownLink>
+    <AvatarDropdownLink to="/admin/store" onClick={() => setAvatarMenuOpen(false)}>
+      <span className="font-semibold text-amber-600">Admin Store 🛒</span>
+    </AvatarDropdownLink>
+  </>
+)}
+
                     
                     <hr className="my-1" />
 
@@ -285,9 +285,6 @@ const Navbar = () => {
                 {link.label}
               </StyledMobileLink>
             ))}
-
-            {/* PULSANTE MARKET MOBILE (Visibile a tutti) */}
-            <MarketButton mobile={true} />
 
             {!user ? (
               <>
@@ -327,7 +324,6 @@ const Navbar = () => {
                     {link.label}
                   </StyledMobileLink>
                 ))}
-
                 {user.role === 'admin' && (
                   <StyledMobileLink 
                     to="/admin/blog" 

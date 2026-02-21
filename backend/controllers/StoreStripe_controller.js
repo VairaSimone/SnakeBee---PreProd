@@ -326,7 +326,7 @@ export const storeWebhook = async (req, res) => {
               </table>
               <p><strong>Subtotale:</strong> ${parseFloat(subtotal).toFixed(2)}€</p>
               <p><strong>Spedizione:</strong> ${parseFloat(shippingCost) === 0 ? 'Gratuita' : parseFloat(shippingCost).toFixed(2) + '€'}</p>
-              <p><strong>Totale:</strong> ${parseFloat(total).toFixed(2)}€ (IVA inclusa)</p>
+              <p><strong>Totale:</strong> ${parseFloat(total).toFixed(2)}€</p>
               <h3>Indirizzo di spedizione</h3>
               <p>${shippingAddress.fullName}<br>${shippingAddress.address}<br>${shippingAddress.postalCode} ${shippingAddress.city} (${shippingAddress.province})</p>
               <p style="color:#777;font-size:13px;">Riceverai un'email con il codice di tracciamento non appena il pacco sarà spedito.</p>
