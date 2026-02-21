@@ -48,7 +48,6 @@ import BreederProfile from './pages/BreederProfile';
 import BreederList from './pages/BreederList';
 import { useState } from 'react';
 import BlackFridayBanner from './components/BlackFridayBanner';
-import ReptileShop from './pages/ReptileShop';
 
 const AuthLoadingSpinner = () => (
   <div className="flex justify-center items-center h-screen bg-[#FAF3E0]">
@@ -105,7 +104,6 @@ if (isLoadingAuth) {
         <Route path="/en/terms" element={<TermsAndConditionsEN />} />
         <Route path="/it/terms" element={<TermsAndConditionsIT />} />
         <Route path="/telegram-auth" element={<TelegramAuth />} />
-<Route path="/shopReptile" element={<ReptileShop />} />
 
 <Route path="/shop" element={<Shop />} />
         <Route path="/shop/breeders" element={<BreederList />} />
