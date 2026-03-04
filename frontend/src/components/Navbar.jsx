@@ -13,10 +13,9 @@ const StyledNavLink = ({ to, children }) => (
   <NavLink
     to={to}
     className={({ isActive }) =>
-      `hover:text-[#228B22] transition ${
-        isActive
-          ? 'text-[#228B22] underline underline-offset-4 font-semibold'
-          : ''
+      `hover:text-[#228B22] transition whitespace-nowrap ${isActive
+        ? 'text-[#228B22] underline underline-offset-4 font-semibold'
+        : ''
       }`
     }
   >
@@ -40,7 +39,7 @@ const AvatarDropdownLink = ({ to, children, onClick }) => (
   <NavLink
     to={to}
     onClick={onClick}
-    className="block w-full text-left px-4 py-2 hover:bg-[#F1F1F1]"
+    className="block w-full text-left px-4 py-2 hover:bg-[#F1F1F1] whitespace-nowrap"
   >
     {children}
   </NavLink>
@@ -52,11 +51,10 @@ const MarketButton = ({ mobile = false }) => (
     href={MARKET_URL}
     target="_blank"
     rel="noopener noreferrer"
-    className={`${
-      mobile ? 'block w-full text-left px-4' : 'px-4'
-    } py-2 rounded-md font-semibold text-black bg-amber-600 hover:bg-amber-500 transition-colors duration-200 flex items-center gap-2`}
+    className={`${mobile ? 'block w-full text-left px-4' : 'px-4'
+      } py-2 rounded-md font-semibold text-black bg-amber-600 hover:bg-amber-500 transition-colors duration-200 flex items-center gap-2`}
   >
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
     </svg>
     <span>Market</span> {/* Uso span per evitare errori se la traduzione non carica subito */}
@@ -68,7 +66,7 @@ const Navbar = () => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [avatarMenuOpen, setAvatarMenuOpen] = useState(false);
-  
+
   const user = useSelector(selectUser);
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -127,8 +125,8 @@ const Navbar = () => {
   const commonLinks = [
     { to: '/blog', label: t('navbar.blog') },
     { to: '/shop', label: t('navbar.shop', 'Shop') },
-        { to: '/store', label: 'Market' },
-,
+    { to: '/store', label: 'Market' },
+    ,
   ];
 
   const guestLinks = [
@@ -153,22 +151,16 @@ const Navbar = () => {
     <nav className="bg-[#FAF3E0] text-[#2B2B2B] shadow-md sticky w-full z-50 top-0">
       <div className="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
         {/* LOGO */}
-        <Link to="/" className="text-xl font-bold text-[#228B22] flex items-center gap-2">
-          <img src="/Logo.png" alt="SnakeBee" className="h-8" />
+        <Link to="/" className="text-xl font-bold text-[#228B22] flex items-center gap-2 shrink-0 whitespace-nowrap">          <img src="/Logo.png" alt="SnakeBee" className="h-8" />
           SnakeBee
         </Link>
 
         {/* Mobile menu toggle */}
-        <button
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="sm:hidden text-2xl"
-        >
-          {mobileMenuOpen ? <FaTimes /> : <FaBars />}
+        <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="lg:hidden text-2xl p-2 focus:outline-none">          {mobileMenuOpen ? <FaTimes /> : <FaBars />}
         </button>
 
         {/* --- 💻 Desktop Menu --- */}
-        <ul className="hidden sm:flex gap-6 items-center font-medium">
-          {/* Link Comuni */}
+        <ul className="hidden lg:flex gap-4 xl:gap-6 items-center font-medium">          {/* Link Comuni */}
           {commonLinks.map((link) => (
             <li key={link.to}>
               <StyledNavLink to={link.to}>{link.label}</StyledNavLink>
@@ -209,7 +201,7 @@ const Navbar = () => {
 
                 <div
                   ref={notificationsRef}
-                  className={`absolute top-full right-0 mt-3 w-80 sm:w-96 bg-[#FDFBF5] border border-gray-200 rounded-lg shadow-xl transition-all duration-300 ease-in-out z-50
+                  className={`absolute top-full right-0 mt-3 w-80 max-w-[90vw] bg-[#FDFBF5] border border-gray-200 rounded-lg shadow-xl transition-all duration-300 ease-in-out z-50 origin-top-right
                     ${showNotifications ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-[-10px] pointer-events-none'}`}
                 >
                   <Notifications
@@ -234,30 +226,30 @@ const Navbar = () => {
                 {avatarMenuOpen && (
                   <div className="absolute right-0 mt-2 w-48 bg-white border rounded-md shadow-lg z-50 animate-fade-in-down py-1">
                     {userDropdownLinks.map((link) => (
-                      <AvatarDropdownLink 
+                      <AvatarDropdownLink
                         key={link.to}
-                        to={link.to} 
+                        to={link.to}
                         onClick={() => setAvatarMenuOpen(false)}
                       >
                         {link.label}
                       </AvatarDropdownLink>
                     ))}
                     {user.role === 'admin' && (
-  <>
-    <AvatarDropdownLink to="/admin/blog" onClick={() => setAvatarMenuOpen(false)}>
-      <span className="font-semibold text-red-600">{t('navbar.admin')}</span>
-    </AvatarDropdownLink>
-    <AvatarDropdownLink to="/admin/store" onClick={() => setAvatarMenuOpen(false)}>
-      <span className="font-semibold text-amber-600">Admin Store 🛒</span>
-    </AvatarDropdownLink>
-  </>
-)}
+                      <>
+                        <AvatarDropdownLink to="/admin/blog" onClick={() => setAvatarMenuOpen(false)}>
+                          <span className="font-semibold text-red-600">{t('navbar.admin')}</span>
+                        </AvatarDropdownLink>
+                        <AvatarDropdownLink to="/admin/store" onClick={() => setAvatarMenuOpen(false)}>
+                          <span className="font-semibold text-amber-600">Admin Store 🛒</span>
+                        </AvatarDropdownLink>
+                      </>
+                    )}
 
-                    
+
                     <hr className="my-1" />
 
-                    <button 
-                      onClick={handleLogout} 
+                    <button
+                      onClick={handleLogout}
                       className="w-full text-left px-4 py-2 text-red-600 hover:bg-[#F1F1F1]"
                     >
                       {t('navbar.logout')}
@@ -272,76 +264,75 @@ const Navbar = () => {
 
       {/* --- 📱 Mobile Menu --- */}
       {mobileMenuOpen && (
-        <div className="sm:hidden px-4 py-3 bg-[#EDE7D6] text-base animate-fade-in-down">
-          <div className="flex flex-col gap-2">
-            
-            {/* Link Comuni */}
-            {commonLinks.map((link) => (
-              <StyledMobileLink 
-                key={link.to} 
-                to={link.to} 
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                {link.label}
-              </StyledMobileLink>
-            ))}
+        <div className="lg:hidden px-4 py-3 bg-[#EDE7D6] text-base animate-fade-in-down shadow-inner max-h-[80vh] overflow-y-auto">          <div className="flex flex-col gap-2">
 
-            {!user ? (
-              <>
-                {/* Link per Ospiti */}
-                {guestLinks.map((link) => (
-                  <StyledMobileLink 
-                    key={link.to} 
-                    to={link.to} 
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    {link.label}
-                  </StyledMobileLink>
-                ))}
-              </>
-            ) : (
-              <>
-                {/* Link per Utenti Loggati */}
-                {userNavLinks.map((link) => (
-                  <StyledMobileLink 
-                    key={link.to} 
-                    to={link.to} 
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    {link.label}
-                  </StyledMobileLink>
-                ))}
-                
-                <hr className="my-2 border-gray-400" />
-                
-                {/* Link Account Utente */}
-                {userDropdownLinks.map((link) => (
-                  <StyledMobileLink 
-                    key={link.to} 
-                    to={link.to} 
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    {link.label}
-                  </StyledMobileLink>
-                ))}
-                {user.role === 'admin' && (
-                  <StyledMobileLink 
-                    to="/admin/blog" 
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    <span className="font-semibold text-red-600">{t('navbar.admin')}</span>
-                  </StyledMobileLink>
-                )}
+          {/* Link Comuni */}
+          {commonLinks.map((link) => (
+            <StyledMobileLink
+              key={link.to}
+              to={link.to}
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              {link.label}
+            </StyledMobileLink>
+          ))}
 
-                <button 
-                  onClick={() => { handleLogout(); setMobileMenuOpen(false); }} 
-                  className="block w-full text-left px-4 py-2 rounded text-red-600 hover:bg-[#FCEFEF] transition"
+          {!user ? (
+            <>
+              {/* Link per Ospiti */}
+              {guestLinks.map((link) => (
+                <StyledMobileLink
+                  key={link.to}
+                  to={link.to}
+                  onClick={() => setMobileMenuOpen(false)}
                 >
-                  {t('navbar.logout')}
-                </button>
-              </>
-            )}
-          </div>
+                  {link.label}
+                </StyledMobileLink>
+              ))}
+            </>
+          ) : (
+            <>
+              {/* Link per Utenti Loggati */}
+              {userNavLinks.map((link) => (
+                <StyledMobileLink
+                  key={link.to}
+                  to={link.to}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  {link.label}
+                </StyledMobileLink>
+              ))}
+
+              <hr className="my-2 border-gray-400" />
+
+              {/* Link Account Utente */}
+              {userDropdownLinks.map((link) => (
+                <StyledMobileLink
+                  key={link.to}
+                  to={link.to}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  {link.label}
+                </StyledMobileLink>
+              ))}
+              {user.role === 'admin' && (
+                <StyledMobileLink
+                  to="/admin/blog"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <span className="font-semibold text-red-600">{t('navbar.admin')}</span>
+                </StyledMobileLink>
+              )}
+
+              <button
+                onClick={() => { handleLogout(); setMobileMenuOpen(false); }}
+                className="block w-full text-left px-4 py-2 rounded text-red-600 hover:bg-[#FCEFEF] transition"
+              >
+                {t('navbar.logout')}
+              </button>
+            </>
+          )}
+        </div>
         </div>
       )}
     </nav>
