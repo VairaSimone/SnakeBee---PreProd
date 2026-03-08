@@ -496,8 +496,7 @@ export const PutReptile = async (req, res) => {
 
         if ('name' in req.body) reptile.name = name;
         reptile.species = species || reptile.species;
-        reptile.morph = morph || reptile.morph;
-
+reptile.morph = morph !== undefined ? morph : reptile.morph;
         // Applica la data di nascita solo se è stata effettivamente inviata nel body
         // (Altrimenti birthDateObject sarebbe null e cancellerebbe la data esistente)
         if ('birthDate' in req.body) {
