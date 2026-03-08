@@ -12,6 +12,7 @@ import Stripe from "stripe";
 import { sendStripeNotificationEmail } from '../config/mailer.config.js';
 import { validateItalianTaxCode } from "../utils/checktaxCode.js";
 import crypto from 'crypto';
+import { syncReptileFeedingDates } from '../utils/syncReptileFeedings.js';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 export const GetAllUser = async (req, res) => {
@@ -358,4 +359,23 @@ export const generateReferralLink = async (req, res) => {
     console.error('Error generating referral link:', error);
     res.status(500).json({ message: req.t('server_error') });
   }
+};
+
+
+export const migrateAllReptilesFeedings = async (req, res) => {
+    try {
+        // Trova tutti i rettili (usiamo il cursore per non saturare la RAM del server)
+        const cursor = Reptile.find({ status: 'active' }).cursor();
+        let count = 0;
+
+        for (let doc = await cursor.next(); doc != null; doc = await cursor.next()) {
+            await syncReptileFeedingDates(doc._id);
+            count++;
+        }
+
+        res.status(200).json({ message: `Migrazione completata con successo. Aggiornati ${count} rettili.` });
+    } catch (err) {
+        console.error("Errore migrazione:", err);
+        res.status(500).json({ error: "Errore durante la migrazione" });
+    }
 };

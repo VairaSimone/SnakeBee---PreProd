@@ -99,106 +99,44 @@ export const GetReptileByUser = async (req, res) => {
         const page = parseInt(req.query.page) || 1;
         const perPage = parseInt(req.query.perPage) || 24;
         const { filterMorph, filterSpecies, filterSex, filterBreeder, filterName } = req.query;
+        
         const sortKey = req.query.sortKey || 'name';
         const sortOrder = req.query.sortOrder === 'desc' ? -1 : 1;
 
-        const matchQuery = {
-            user: new mongoose.Types.ObjectId(userId),
-            status: 'active'
-        }; 
-        if (filterName) {
-             matchQuery.name = { $regex: filterName, $options: 'i' };
-        }
-        if (filterMorph) {
-            matchQuery.morph = { $regex: filterMorph, $options: 'i' };
-        } 
-        if (filterSpecies) {
-            matchQuery.species = { $regex: filterSpecies, $options: 'i' };
-        }
-        if (filterSex) {
-            matchQuery.sex = filterSex;
-        }
-        if (filterBreeder) {
-            matchQuery.isBreeder = filterBreeder === 'true';
-        }
+        // Costruisci la query di filtro (identica a prima)
+        const matchQuery = { user: userId, status: 'active' }; 
+        if (filterName) matchQuery.name = { $regex: filterName, $options: 'i' };
+        if (filterMorph) matchQuery.morph = { $regex: filterMorph, $options: 'i' };
+        if (filterSpecies) matchQuery.species = { $regex: filterSpecies, $options: 'i' };
+        if (filterSex) matchQuery.sex = filterSex;
+        if (filterBreeder) matchQuery.isBreeder = filterBreeder === 'true';
+
+        // Imposta l'ordinamento (ora usa direttamente i nuovi campi!)
         let sortOptions = {};
-        
-        if (sortKey === 'nextFeedingDate') {
-            sortOptions['nextFeedingDate'] = sortOrder;
-        } else if (sortKey === 'lastFeedingDate') {
-            sortOptions['lastFeedingDate'] = sortOrder;
-        } 
-        else {
-            sortOptions[sortKey] = sortOrder;
-        }
+        sortOptions[sortKey] = sortOrder;
 
-        const results = await Reptile.aggregate([
-            { $match: matchQuery },
+        // ESECUZIONE QUERY PULITA E VELOCISSIMA
+        const reptiles = await Reptile.find(matchQuery)
+            .collation({ locale: "en", strength: 2 })
+            .sort(sortOptions)
+            .skip((page - 1) * perPage)
+            .limit(perPage);
 
-            {
-                $lookup: {
-                    from: "Feeding",
-                    localField: "_id",
-                    foreignField: "reptile",
-                    as: "feedings"
-                }
-            },
-
-{
-                $addFields: {
-                    // 1. Trova l'ultimo evento di pasto (basato sulla data in cui è avvenuto)
-                    lastFeeding: {
-                        $arrayElemAt: [
-                            {
-                                $sortArray: {
-                                    input: "$feedings",
-                                    sortBy: { date: -1 } // Ordina per data del pasto, decrescente
-                                }
-                            },
-                            0 // Prendi il primo (cioè il più recente)
-                        ]
-                    }
-                }
-            },
-            {
-                $addFields: {
-                    // 2. Estrai il 'nextFeedingDate' da quell'ultimo pasto
-                    nextFeedingDate: "$lastFeeding.nextFeedingDate",
-lastFeedingDate: "$lastFeeding.date" // <-- CAMPO AGGIUNTO
-                }
-            },
-            {
-                $project: {
-                    feedings: 0,     // Rimuovi l'array completo
-                    lastFeeding: 0   // Rimuovi il campo intermedio
-                }
-            },            { $sort: sortOptions },
-            {
-                $facet: {
-                    metadata: [{ $count: 'totalResults' }],
-                    dati: [
-                        { $skip: (page - 1) * perPage },
-                        { $limit: perPage }
-                    ]
-                }
-            }
-        ]).collation({ locale: "en", strength: 2 });
-        const dati = results[0].dati;
-        const totalResults = results[0].metadata[0]?.totalResults || 0;
+        const totalResults = await Reptile.countDocuments(matchQuery);
         const totalPages = Math.ceil(totalResults / perPage);
 
         res.send({
-            dati,
+            dati: reptiles,
             totalPages,
             totalResults,
             page,
         });
+
     } catch (err) {
         console.error(err);
         res.status(500).send({ message: req.t('server_error') });
     }
 };
-
 // NUOVO: Controller per animali archiviati (ceduti/deceduti)
 export const GetArchivedReptileByUser = async (req, res) => {
     try {

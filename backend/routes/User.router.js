@@ -29,7 +29,7 @@ userRouter.post("/admin/maintenance", authenticateJWT, isAdmin, async (req, res)
   await User.updateMany({}, { refreshTokens: [] });
   res.json({ message: "Updated configuration", config });
 });
-
+userRouter.post('/admin/migrate-feedings', authenticateJWT, isAdmin, userController.migrateAllReptilesFeedings);
 
 userRouter.post("/admin/send-bulk-email", authenticateJWT, isAdmin, async (req, res) => {
   try {
