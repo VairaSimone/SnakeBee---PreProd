@@ -16,7 +16,7 @@ userRouter.get('/:userId', authenticateJWT, isOwnerOrAdmin(User, 'userId'), user
 userRouter.put('/complete-onboarding', authenticateJWT, userController.completeOnboarding);
 userRouter.put("/:userId", authenticateJWT, isOwnerOrAdmin(User, "userId"), upload.single("avatar"), userController.PutUser);
 userRouter.delete('/:userId', authenticateJWT, isOwnerOrAdmin(User, "userId"), userController.DeleteUser);
-userRouter.patch('/users/email-settings/:userId', authenticateJWT, userController.updateEmailPreferences);
+userRouter.patch('/users/email-settings/:userId', authenticateJWT, isOwnerOrAdmin(User, 'userId'), userController.updateEmailPreferences);
 userRouter.patch('/admin/users/:userId/role', authenticateJWT, isAdmin, userController.UpdateUserRole);
 userRouter.patch('/fiscalDetails', authenticateJWT, userController.updateFiscalDetails);
 userRouter.post("/admin/maintenance", authenticateJWT, isAdmin, async (req, res) => {
