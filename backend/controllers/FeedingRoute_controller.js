@@ -119,7 +119,7 @@ export const PutFeeding = async (req, res) => {
     }, { new: true });
     if (!updatedFeeding) return res.status(404).json({ message: req.t('Feeding_notfound') });
     res.json(updatedFeeding);
-  //  await syncReptileFeedingDates(req.body.reptile);
+  await syncReptileFeedingDates(req.body.reptile);
   } catch (error) {
     res.status(500).json({ message: req.t('errorUpdate_feeding') });
   }
