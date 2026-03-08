@@ -605,7 +605,7 @@ export const DeleteReptile = async (req, res) => {
         await Feeding.deleteMany({ reptile: reptileId });
 
         await Notification.deleteMany({ reptile: reptileId });
-
+await Event.deleteMany({ reptile: reptileId });
         await Reptile.findByIdAndDelete(reptileId);
         await logAction(req.user.userid, "Delete reptile");
 

@@ -25,7 +25,9 @@ export const GetAllUser = async (req, res) => {
       .skip((page - 1) * perPage)
       .limit(perPage).select('-password -verificationCode -resetPasswordCode -refreshTokens -lastPasswordResetEmailSentAt -resetPasswordExpires -accountLockedUntil -loginAttempts'); if (!user) return res.status(404).json({ message: req.t('user_notFound') });
     ;
-
+if (!user || user.length === 0) {
+      return res.status(404).json({ message: req.t('user_notFound') });
+    }
     const totalResults = await User.countDocuments();
     const totalPages = Math.ceil(totalResults / perPage);
 
@@ -79,14 +81,16 @@ export const PutUser = async (req, res) => {
       return res.status(400).json({ message: req.t('invalid_language') });
     }
     if ('isPublic' in userData) {
-        // ... (logica isPublic invariata) ...
          const isPublicBool = userData.isPublic === 'true' || userData.isPublic === true;
       if (isPublicBool) {
-        // Solo utenti con un piano (non NEOPHYTE) e abbonamento attivo
         const plan = user.subscription?.plan || 'NEOPHYTE';
         const status = user.subscription?.status;
         const isActive = status === 'active' || status === 'pending_cancellation';
-
+if (!isActive || plan === 'NEOPHYTE') {
+          return res.status(403).json({ 
+            message: "Devi avere un abbonamento attivo (Apprentice o superiore) per rendere il profilo pubblico" 
+          });
+        }
       }
     }
     const updates = {};
