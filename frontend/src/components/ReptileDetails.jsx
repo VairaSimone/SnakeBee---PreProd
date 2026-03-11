@@ -288,7 +288,21 @@ const ReptileDetails = () => {
                                 <p className="text-black dark:text-black whitespace-pre-wrap">{reptile.notes}</p>
                             </InfoCard>
                         )}
-
+{reptile.pcrTests && reptile.pcrTests.length > 0 && (
+  <div className="pcr-tests-section mt-4">
+    <h3 className="font-bold text-lg">Storico Test Sanitari (PCR)</h3>
+    <ul className="list-disc pl-5">
+      {reptile.pcrTests.map((test, index) => (
+        <li key={index} className="mb-2">
+          <strong>{test.disease}</strong> - Eseguito il: {new Date(test.testDate).toLocaleDateString()} 
+          <span className={`ml-2 px-2 py-1 rounded text-sm ${test.result === 'Negativo' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+            {test.result}
+          </span>
+        </li>
+      ))}
+    </ul>
+  </div>
+)}
                         <InfoCard title={t('ReptileDetails.parents')}>
                             <InfoItem label={t('ReptileDetails.father')} value={reptile.parents?.father || t('ReptileDetails.notSpecified')} />
                             <InfoItem label={t('ReptileDetails.mother')} value={reptile.parents?.mother || t('ReptileDetails.notSpecified')} />

@@ -144,7 +144,11 @@ let breederAvatar = '/default-avatar.png'; // Immagine di default
         />
         <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-white/80 to-transparent pointer-events-none" />
       </Link>
-
+{hasNegativeTests && (
+      <div className="badge bg-green-500 text-white text-xs px-2 py-1 rounded absolute top-2 right-2">
+        🧪 PCR Tested
+      </div>
+    )}
       {/* --- CONTENT AREA (RIORGANIZZATA) --- */}
       {/* Aggiunto flex flex-col flex-grow per spingere la sezione prezzo/bottone in basso */}
       <div className="p-5 md:p-6 flex flex-col flex-grow">

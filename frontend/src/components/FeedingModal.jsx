@@ -205,7 +205,40 @@ if (inventoryRes.status === "fulfilled") {
                   <div className={sectionClasses}>
                     <h3 className={sectionTitleClasses}><PlusCircleIcon className="w-6 h-6 text-emerald-600" /> {t('feedingModal.actions.add')}</h3>
                     <form onSubmit={handleSubmit(onSubmit)} className="mt-4 space-y-4">
+<div className="form-group">
+  <label>Integratori (separati da virgola)</label>
+  <input 
+    type="text" 
+    placeholder="es. Calcio con D3, Multivitaminico"
+    onChange={(e) => {
+      // Converti la stringa in array prima di salvare nello state
+      const supplementsArray = e.target.value.split(',').map(s => s.trim());
+      setFormData({ ...formData, supplements: supplementsArray });
+    }}
+  />
+</div>
 
+<div className="form-group">
+  <h4>Trattamento Medico (Opzionale)</h4>
+  <input 
+    type="text" 
+    placeholder="Nome Farmaco (es. Panacur)"
+    value={formData.medication?.name || ''}
+    onChange={(e) => setFormData({ 
+      ...formData, 
+      medication: { ...formData.medication, name: e.target.value } 
+    })}
+  />
+  <input 
+    type="text" 
+    placeholder="Dosaggio (es. 0.1 ml)"
+    value={formData.medication?.dosage || ''}
+    onChange={(e) => setFormData({ 
+      ...formData, 
+      medication: { ...formData.medication, dosage: e.target.value } 
+    })}
+  />
+</div>
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-4">
                         <div>
                           <label htmlFor="date" className={labelClasses}>{t('feedingModal.fields.date')}</label>

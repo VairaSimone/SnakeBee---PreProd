@@ -40,7 +40,16 @@ const reptileSchema = new Schema(
     nextFeedingDate: { 
         type: Date, 
         default: null 
+    },pcrTests: [{
+    disease: { type: String, required: true }, // es. 'Nidovirus', 'Arenavirus'
+    testDate: { type: Date, required: true },
+    result: { 
+      type: String, 
+      enum: ['Negativo', 'Positivo', 'In attesa'], 
+      required: true 
     },
+    notes: { type: String } // Note aggiuntive opzionali
+  }],
     status: {
       type: String,
       enum: ['active', 'ceded', 'deceased', 'other'], // 'active' = tuo, 'ceded' = ceduto
