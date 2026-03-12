@@ -105,7 +105,7 @@ let breederAvatar = '/default-avatar.png'; // Immagine di default
     }
     // Potresti anche gestire percorsi non validi, ma per ora questo copre i casi principali
   }  const formattedPrice = formatPrice(reptile.price);
-
+const hasNegativeTests = reptile.pcrTests && reptile.pcrTests.some(test => test.result === 'Negativo');
   return (
     <article
       className="group relative bg-white rounded-2xl shadow-md overflow-hidden transition-transform duration-300 hover:shadow-xl hover:-translate-y-1 flex flex-col"

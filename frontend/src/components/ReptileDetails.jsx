@@ -288,7 +288,6 @@ const ReptileDetails = () => {
                                 <p className="text-black dark:text-black whitespace-pre-wrap">{reptile.notes}</p>
                             </InfoCard>
                         )}
-{reptile.pcrTests && reptile.pcrTests.length > 0 && (
   <div className="pcr-tests-section mt-4">
     <h3 className="font-bold text-lg">Storico Test Sanitari (PCR)</h3>
     <ul className="list-disc pl-5">
@@ -302,7 +301,7 @@ const ReptileDetails = () => {
       ))}
     </ul>
   </div>
-)}
+
                         <InfoCard title={t('ReptileDetails.parents')}>
                             <InfoItem label={t('ReptileDetails.father')} value={reptile.parents?.father || t('ReptileDetails.notSpecified')} />
                             <InfoItem label={t('ReptileDetails.mother')} value={reptile.parents?.mother || t('ReptileDetails.notSpecified')} />
@@ -391,16 +390,39 @@ const ReptileDetails = () => {
 
                     {/* COLONNA DESTRA */}
                     <div className="lg:col-span-2 space-y-6">
-                        <EventSection
+<EventSection
                             title={t('ReptileDetails.feeding')}
                             icon="🍖"
                             items={feedings}
                             visibleCount={visibleCounts.feedings}
                             onToggleVisibility={(showMore) => handleToggleVisibility('feedings', showMore)}
-                            renderItem={(item) => <FeedingCard key={item._id} feeding={item} />}
+                            renderItem={(item) => (
+                                <div key={item._id} className="relative mb-3">
+                                    {/* Renderizza la card classica del pasto */}
+                                    <FeedingCard feeding={item} />
+                                    
+                                    {/* NUOVO: Mostra farmaci e integratori se presenti */}
+                                    {(item.supplements?.length > 0 || item.medication?.name) && (
+                                        <div className="mt-1 ml-4 p-2 bg-amber-50/50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-900/30 rounded-lg text-sm flex flex-col gap-1">
+                                            {item.supplements?.length > 0 && (
+                                                <p className="text-stone-700 dark:text-stone-300">
+                                                    <span className="font-semibold mr-1">💊 Integratori:</span> 
+                                                    {item.supplements.join(', ')}
+                                                </p>
+                                            )}
+                                            {item.medication?.name && (
+                                                <p className="text-stone-700 dark:text-stone-300">
+                                                    <span className="font-semibold mr-1">🏥 Terapia:</span> 
+                                                    {item.medication.name} 
+                                                    {item.medication.dosage && ` (${item.medication.dosage})`}
+                                                </p>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                             emptyMessage={t('ReptileDetails.noFeedings')}
                         />
-
                         {eventSectionsConfig.map(section => {
                             const filteredEvents = events.filter(e => e.type === section.type);
                             return (

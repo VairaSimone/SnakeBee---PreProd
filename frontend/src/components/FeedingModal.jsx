@@ -79,6 +79,9 @@ const FeedingModal = ({ show, handleClose, reptileId, onSuccess }) => {
     wasEaten: true,
     retryAfterDays: '',
     notes: '',
+    supplementsStr: '', 
+    medicationName: '',
+    medicationDosage: '',
   });
 
   const { register, handleSubmit, watch, reset, control, setValue, formState: { errors } } = useForm({
@@ -136,7 +139,9 @@ if (inventoryRes.status === "fulfilled") {
     const weight = isCustom ? formData.customWeight : item?.weightPerUnit;
     const unit = isCustom ? formData.customWeightUnit : 'g';
     const weightInGrams = unit === 'kg' ? weight * 1000 : weight;
-
+const supplementsArray = formData.supplementsStr
+      ? formData.supplementsStr.split(',').map(s => s.trim()).filter(s => s !== '')
+      : [];
     const payload = {
       date: formData.date,
       foodType: isCustom ? ` ${formData.customFoodType}` : item?.foodType,
@@ -145,6 +150,11 @@ if (inventoryRes.status === "fulfilled") {
       retryAfterDays: formData.retryAfterDays,
       weightPerUnit: weightInGrams,
       notes: formData.notes || undefined,
+      supplements: supplementsArray,
+      medication: {
+        name: formData.medicationName,
+        dosage: formData.medicationDosage
+      }
     };
 
     try {
@@ -205,41 +215,43 @@ if (inventoryRes.status === "fulfilled") {
                   <div className={sectionClasses}>
                     <h3 className={sectionTitleClasses}><PlusCircleIcon className="w-6 h-6 text-emerald-600" /> {t('feedingModal.actions.add')}</h3>
                     <form onSubmit={handleSubmit(onSubmit)} className="mt-4 space-y-4">
-<div className="form-group">
-  <label>Integratori (separati da virgola)</label>
-  <input 
-    type="text" 
-    placeholder="es. Calcio con D3, Multivitaminico"
-    onChange={(e) => {
-      // Converti la stringa in array prima di salvare nello state
-      const supplementsArray = e.target.value.split(',').map(s => s.trim());
-      setFormData({ ...formData, supplements: supplementsArray });
-    }}
-  />
-</div>
+<div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+  <div className="md:col-span-2">
+    <label htmlFor="supplementsStr" className={labelClasses}>Integratori (separati da virgola)</label>
+    <input 
+      id="supplementsStr"
+      type="text" 
+      {...register('supplementsStr')} 
+      className={inputClasses}
+      placeholder="es. Calcio con D3, Multivitaminico"
+      disabled={isSubmitting}
+    />
+  </div>
 
-<div className="form-group">
-  <h4>Trattamento Medico (Opzionale)</h4>
-  <input 
-    type="text" 
-    placeholder="Nome Farmaco (es. Panacur)"
-    value={formData.medication?.name || ''}
-    onChange={(e) => setFormData({ 
-      ...formData, 
-      medication: { ...formData.medication, name: e.target.value } 
-    })}
-  />
-  <input 
-    type="text" 
-    placeholder="Dosaggio (es. 0.1 ml)"
-    value={formData.medication?.dosage || ''}
-    onChange={(e) => setFormData({ 
-      ...formData, 
-      medication: { ...formData.medication, dosage: e.target.value } 
-    })}
-  />
-</div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-4">
+  <div>
+    <label htmlFor="medicationName" className={labelClasses}>Nome Farmaco (Opzionale)</label>
+    <input 
+      id="medicationName"
+      type="text" 
+      {...register('medicationName')} 
+      className={inputClasses}
+      placeholder="es. Panacur"
+      disabled={isSubmitting}
+    />
+  </div>
+  
+  <div>
+    <label htmlFor="medicationDosage" className={labelClasses}>Dosaggio</label>
+    <input 
+      id="medicationDosage"
+      type="text" 
+      {...register('medicationDosage')} 
+      className={inputClasses}
+      placeholder="es. 0.1 ml"
+      disabled={isSubmitting}
+    />
+  </div>
+</div>                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-4">
                         <div>
                           <label htmlFor="date" className={labelClasses}>{t('feedingModal.fields.date')}</label>
                           <input id="date" type="date" {...register('date')} className={`${inputClasses} ${errors.date && 'border-red-500'}`} disabled={isSubmitting} />

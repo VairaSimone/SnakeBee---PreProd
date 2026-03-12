@@ -259,13 +259,12 @@ export const GetArchivedReptileByUser = async (req, res) => {
 export const PostReptile = async (req, res) => {
     try {
         // MODIFICA: Aggiunto previousOwner
-        const { name, species, morph, birthDate, sex, isBreeder, notes, parents, documents, foodType, weightPerUnit, nextMealDay, previousOwner, isPublic } = req.body;
-        const userId = req.user.userid;
+const { name, species, morph, birthDate, sex, isBreeder, notes, parents, documents, foodType, weightPerUnit, nextMealDay, previousOwner, isPublic, pcrTests } = req.body;        const userId = req.user.userid;
         const parsedParents = typeof parents === 'string' ? JSON.parse(parents) : parents;
         const parsedDocuments = typeof documents === 'string' ? JSON.parse(documents) : documents;
         const user = await User.findById(userId);
         const { plan: userPlan, limits } = getUserPlan(user);
-        
+        const parsedPcrTests = typeof pcrTests === 'string' ? JSON.parse(pcrTests) : (pcrTests || []);
         const reptileCount = await Reptile.countDocuments({ user: userId, status: 'active' });
         const normalizedFoodType = foodType && foodType.trim() !== '' ? foodType : 'Altro';
 
@@ -311,6 +310,7 @@ export const PostReptile = async (req, res) => {
             previousOwner, // MODIFICA: Aggiunto campo
             weightPerUnit,
             foodType: normalizedFoodType,
+            pcrTests: parsedPcrTests,
             nextMealDay,
             parents: parsedParents,
             documents: parsedDocuments, // Questo salva già i dati CITES (load/unload)
@@ -340,15 +340,16 @@ export const PutReptile = async (req, res) => {
         const user = await User.findById(req.user.userid);
         const { plan: userPlan, limits } = getUserPlan(user);
 
-        const { name, species, morph, sex, notes, birthDate, isBreeder, price, label, parents, documents, foodType, weightPerUnit, nextMealDay,
-            status, cededTo, deceasedDetails, previousOwner, isPublic } = req.body;
-        let parsedParents, parsedDocuments, parsedCededTo, parsedDeceasedDetails;
+const { name, species, morph, sex, notes, birthDate, isBreeder, price, label, parents, documents, foodType, weightPerUnit, nextMealDay, status, cededTo, deceasedDetails, previousOwner, isPublic, pcrTests } = req.body;        
+let parsedParents, parsedDocuments, parsedCededTo, parsedDeceasedDetails, parsedPcrTests; // Aggiungi la variabile
         if ('parents' in req.body) {
             parsedParents = typeof req.body.parents === 'string'
                 ? JSON.parse(req.body.parents)
                 : req.body.parents;
         }
-
+if ('pcrTests' in req.body) {
+            parsedPcrTests = typeof req.body.pcrTests === 'string' ? JSON.parse(req.body.pcrTests) : req.body.pcrTests;
+        }
         if ('documents' in req.body) {
             parsedDocuments = typeof req.body.documents === 'string'
                 ? JSON.parse(req.body.documents)
@@ -462,6 +463,7 @@ reptile.morph = morph !== undefined ? morph : reptile.morph;
         if ('previousOwner' in req.body) reptile.previousOwner = previousOwner;
         if ('parents' in req.body) reptile.parents = parsedParents;
         if ('documents' in req.body) reptile.documents = parsedDocuments;
+        if ('pcrTests' in req.body) reptile.pcrTests = parsedPcrTests;
         if ('status' in req.body && ['active', 'ceded', 'deceased', 'other'].includes(status)) {
             reptile.status = status;
 if (status !== 'active') {
