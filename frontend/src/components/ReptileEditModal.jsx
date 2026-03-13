@@ -486,7 +486,7 @@ const ReptileEditModal = ({ show, handleClose, reptile, setReptiles, onSuccess }
   const labelClasses = "block text-sm font-medium text-gray-600 mb-1";
   const sectionTitleClasses = "text-lg font-semibold text-gray-800 flex items-center gap-2";
   const sectionClasses = "bg-white p-6 rounded-lg shadow-sm border border-gray-200";
-
+const errorTextClasses = "flex items-center gap-1 mt-1 text-sm text-red-600";
   return (
     <>
       <ConfirmationModal
@@ -880,45 +880,47 @@ const ReptileEditModal = ({ show, handleClose, reptile, setReptiles, onSuccess }
                       </div>
                     </div>
 {/* SEZIONE TEST PCR */}
-                  <div className={sectionClasses}>
-                    <h3 className={sectionTitleClasses}>
-                      🧬 Test PCR
-                    </h3>
-                    <div className="mt-4">
-                      {formData.pcrTests.map((test, index) => (
-                        <div key={index} className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4 p-4 border border-gray-200 rounded-lg relative bg-gray-50">
-                          <button type="button" onClick={() => removePcrTest(index)} className="absolute top-2 right-2 text-red-500 hover:text-red-700">
-                            <XMarkIcon className="w-5 h-5" />
-                          </button>
-                          <div>
-                            <label className={labelClasses}>Malattia / Patogeno <span className="text-red-500">*</span></label>
-                            <input type="text" value={test.disease} onChange={(e) => handlePcrChange(index, 'disease', e.target.value)} className={`${inputClasses} ${formErrors[`pcrDisease_${index}`] ? 'border-red-500' : ''}`} placeholder="Es. Nidovirus" />
-                            {formErrors[`pcrDisease_${index}`] && <p className={errorTextClasses}>{formErrors[`pcrDisease_${index}`]}</p>}
-                          </div>
-                          <div>
-                            <label className={labelClasses}>Data Test <span className="text-red-500">*</span></label>
-                            <input type="date" value={test.testDate} onChange={(e) => handlePcrChange(index, 'testDate', e.target.value)} className={`${inputClasses} ${formErrors[`pcrDate_${index}`] ? 'border-red-500' : ''}`} />
-                            {formErrors[`pcrDate_${index}`] && <p className={errorTextClasses}>{formErrors[`pcrDate_${index}`]}</p>}
-                          </div>
-                          <div>
-                            <label className={labelClasses}>Risultato</label>
-                            <select value={test.result} onChange={(e) => handlePcrChange(index, 'result', e.target.value)} className={inputClasses}>
-                              <option value="In attesa">In attesa</option>
-                              <option value="Negativo">Negativo</option>
-                              <option value="Positivo">Positivo</option>
-                            </select>
-                          </div>
-                          <div>
-                            <label className={labelClasses}>Note</label>
-                            <input type="text" value={test.notes} onChange={(e) => handlePcrChange(index, 'notes', e.target.value)} className={inputClasses} placeholder="Note opzionali..." />
-                          </div>
-                        </div>
-                      ))}
-                      <button type="button" onClick={addPcrTest} className="mt-2 inline-flex items-center text-sm text-emerald-600 font-medium hover:text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-md border border-emerald-200">
-                        + Aggiungi Test PCR
-                      </button>
-                    </div>
-                  </div>
+<div className={sectionClasses}>
+  <h3 className={sectionTitleClasses}>
+    🧬 Test PCR
+  </h3>
+  <div className="mt-4">
+    {formData.pcrTests.map((test, index) => (
+      <div key={index} className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4 p-4 border border-gray-200 rounded-lg relative bg-gray-50">
+        <button type="button" onClick={() => removePcrTest(index)} className="absolute top-2 right-2 text-red-500 hover:text-red-700">
+          <XMarkIcon className="w-5 h-5" />
+        </button>
+        <div>
+          <label className={labelClasses}>Malattia / Patogeno <span className="text-red-500">*</span></label>
+          {/* CAMBIATO: errors invece di formErrors */}
+          <input type="text" value={test.disease} onChange={(e) => handlePcrChange(index, 'disease', e.target.value)} className={`${inputClasses} ${errors[`pcrDisease_${index}`] ? 'border-red-500' : ''}`} placeholder="Es. Nidovirus" />
+          {errors[`pcrDisease_${index}`] && <p className={errorTextClasses}>{errors[`pcrDisease_${index}`]}</p>}
+        </div>
+        <div>
+          <label className={labelClasses}>Data Test <span className="text-red-500">*</span></label>
+          {/* CAMBIATO: errors invece di formErrors */}
+          <input type="date" value={test.testDate} onChange={(e) => handlePcrChange(index, 'testDate', e.target.value)} className={`${inputClasses} ${errors[`pcrDate_${index}`] ? 'border-red-500' : ''}`} />
+          {errors[`pcrDate_${index}`] && <p className={errorTextClasses}>{errors[`pcrDate_${index}`]}</p>}
+        </div>
+        <div>
+          <label className={labelClasses}>Risultato</label>
+          <select value={test.result} onChange={(e) => handlePcrChange(index, 'result', e.target.value)} className={inputClasses}>
+            <option value="In attesa">In attesa</option>
+            <option value="Negativo">Negativo</option>
+            <option value="Positivo">Positivo</option>
+          </select>
+        </div>
+        <div>
+          <label className={labelClasses}>Note</label>
+          <input type="text" value={test.notes} onChange={(e) => handlePcrChange(index, 'notes', e.target.value)} className={inputClasses} placeholder="Note opzionali..." />
+        </div>
+      </div>
+    ))}
+    <button type="button" onClick={addPcrTest} className="mt-2 inline-flex items-center text-sm text-emerald-600 font-medium hover:text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-md border border-emerald-200">
+      + Aggiungi Test PCR
+    </button>
+  </div>
+</div>
                     {/* SEZIONE NOTE */}
                     <div className={sectionClasses}>
                       <h3 className={sectionTitleClasses}>📝 {t('reptileEditModal.reptile.note')}</h3> {/* Icona + Titolo */}

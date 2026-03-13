@@ -45,7 +45,9 @@ export const PostFeeding = async (req, res) => {
       notes,
       date,
       wasEaten,
-      retryAfterDays
+      retryAfterDays,
+      supplements, // <--- AGGIUNGI QUESTO
+      medication
     } = req.body;
 
     // 1. Interpreta il timestamp ISO ricevuto (es. "2025-10-25T22:00:00.000Z")
@@ -93,7 +95,9 @@ export const PostFeeding = async (req, res) => {
       weightPerUnit,
       notes,
       wasEaten,
-      retryAfterDays: wasEaten ? undefined : retryAfterDays
+      retryAfterDays: wasEaten ? undefined : retryAfterDays,
+      supplements, // <--- AGGIUNGI QUESTO
+      medication
     });
     await logAction(req.user.userid, "Create Feeding");
 
@@ -216,7 +220,9 @@ export const PostMultipleFeedings = async (req, res) => {
       notes,
       date,
       wasEaten,
-      retryAfterDays
+      retryAfterDays,
+      supplements,
+  medication
     } = req.body;
 
     const userId = req.user.userid;
@@ -284,7 +290,9 @@ export const PostMultipleFeedings = async (req, res) => {
       weightPerUnit,
       notes,
       wasEaten,
-      retryAfterDays: wasEaten ? undefined : retryAfterDays
+      retryAfterDays: wasEaten ? undefined : retryAfterDays,
+      supplements,
+  medication
     }));
 
     // 6. Inserimento multiplo nel database (molto efficiente)

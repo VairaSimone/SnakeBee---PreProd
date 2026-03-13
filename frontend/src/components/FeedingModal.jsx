@@ -53,6 +53,9 @@ const validationSchema = (t) => Yup.object().shape({
     .required(t("feedingModal.errors.retry.required"))
     .typeError(t("feedingModal.errors.retry.number")),
   notes: Yup.string().max(300, t("feedingModal.errors.notes.max")),
+  supplementsStr: Yup.string().notRequired(),
+  medicationName: Yup.string().notRequired(),
+  medicationDosage: Yup.string().notRequired(),
 });
 const translateFoodType = (foodType, t) => {
   // fallback se non hai chiave
@@ -144,8 +147,7 @@ const supplementsArray = formData.supplementsStr
       : [];
     const payload = {
       date: formData.date,
-      foodType: isCustom ? ` ${formData.customFoodType}` : item?.foodType,
-      quantity: formData.quantity,
+foodType: isCustom ? formData.customFoodType : item?.foodType,      quantity: formData.quantity,
       wasEaten: formData.wasEaten,
       retryAfterDays: formData.retryAfterDays,
       weightPerUnit: weightInGrams,
