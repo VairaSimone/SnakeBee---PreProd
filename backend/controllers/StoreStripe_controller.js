@@ -166,7 +166,7 @@ export const createStoreCheckoutSession = async (req, res) => {
       customer_email: stripeCustomerEmail,
       locale: 'it',
       billing_address_collection: 'required',
-      allow_promotion_codes: false,
+      allow_promotion_codes: true,
       metadata,
       success_url: `${process.env.FRONTEND_URL}/store/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.FRONTEND_URL}/store/cart`,
