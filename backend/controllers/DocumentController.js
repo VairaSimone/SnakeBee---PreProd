@@ -1,9 +1,14 @@
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
-
+import Reptile from '../models/Reptile.js';
 export const generateCustomCitesDocument = async (req, res) => {
     try {
         const { signerDetails, receiverDetails, extraDetails } = req.body;
-const sellerInfo = {
+       const { reptileId } = req.params;
+       const reptile = await Reptile.findById(reptileId);
+       if (!reptile) {
+            return res.status(404).json({ message: 'Rettile non trovato nel database.' });
+        }
+        const sellerInfo = {
             name: `${signerDetails?.name || ''} ${signerDetails?.surname || ''}`.trim(),
             address: `${signerDetails?.address || ''}, ${signerDetails?.city || ''} (${signerDetails?.province || ''})`,
             email: signerDetails?.email,
@@ -17,8 +22,17 @@ const sellerInfo = {
             PhoneNumber: receiverDetails?.phone // Nota: il frontend passa phone
         };
         const date = extraDetails?.date;
-        const animalInfo = req.body.animalInfo || {};
-        
+
+const animalInfo = {
+            species: reptile.species || '',
+            morph: reptile.morph || '',
+            sex: reptile.sex || '',
+            // Formattiamo la data se è presente nel DB
+            birthDate: reptile.birthDate ? new Date(reptile.birthDate).toLocaleDateString('it-IT') : '',
+            state: extraDetails?.originCountry || '', // Il paese di origine arriva ancora dal form
+            microchip: reptile.documents?.microchip?.code || '',
+            protocolNumber: reptile.documents?.cites?.number || ''
+        };
         const pdfDoc = await PDFDocument.create();
         const page = pdfDoc.addPage([595.28, 841.89]); // A4
         const { width, height } = page.getSize();
@@ -32,9 +46,9 @@ const sellerInfo = {
 
         // --- HEADER ---
         page.drawRectangle({
-            x: 0, y: height - 85, 
+            x: 0, y: height - 85,
             width: width, height: 85,
-            color: rgb(250/255, 243/255, 224/255) // CORRETTO: conversione in scala 0-1
+            color: rgb(250 / 255, 243 / 255, 224 / 255) // CORRETTO: conversione in scala 0-1
         });
 
         // Testo Header (Ho riaggiunto un nero o grigio molto scuro per contrastare lo sfondo chiaro)
@@ -48,12 +62,12 @@ const sellerInfo = {
 
         const drawSection = (title, items) => {
             page.drawRectangle({
-                x: 45, y: currentY - 15, 
+                x: 45, y: currentY - 15,
                 width: width - 90, height: 22,
                 color: rgb(0.92, 0.92, 0.92)
             });
             drawText(title, 50, currentY - 10, 11, fontBold);
-            
+
             currentY -= 35;
 
             items.forEach(item => {
@@ -63,7 +77,7 @@ const sellerInfo = {
             });
             currentY -= 15;
         };
- 
+
         // --- SEZIONE 1: CEDENTE ---
         drawSection('1. DATI DEL CEDENTE (Allevatore / Proprietario attuale)', [
             { label: 'Nome e Cognome', value: sellerInfo?.name },
@@ -95,15 +109,15 @@ const sellerInfo = {
         currentY -= 10;
         const todayDate = date || new Date().toLocaleDateString('it-IT');
         const cedenteName = sellerInfo?.name || '_______________________';
-        
+
         const declarationText = `Il sottoscritto ${cedenteName} dichiara sotto la propria responsabilità che ` +
             `l'esemplare\nsopra descritto è nato in cattività ed è stato regolarmente ceduto nel pieno\n` +
-            `rispetto della normativa CITES vigente in materia fornendo tutte le informazioni necessarie\n` +  
+            `rispetto della normativa CITES vigente in materia fornendo tutte le informazioni necessarie\n` +
             `al ricevente sulle operazione richieste per garantire una corretta assistenza degli esemplari.`;
-        
+
         drawText('DICHIARAZIONE:', 50, currentY, 10, fontBold);
         currentY -= 20;
-        
+
         const lines = declarationText.split('\n');
         lines.forEach(line => {
             drawText(line, 50, currentY, 10, fontRegular);
@@ -112,7 +126,7 @@ const sellerInfo = {
 
         // --- FIRME E DATA ---
         currentY -= 50;
-        
+
         // Data
         drawText('Data: __________________', 50, currentY, 10, fontBold);
 
@@ -121,7 +135,7 @@ const sellerInfo = {
         // Firma Cedente
         drawText('Firma del Cedente', 70, currentY, 10, fontBold);
         page.drawLine({ start: { x: 50, y: currentY - 20 }, end: { x: 220, y: currentY - 20 }, thickness: 1 });
-        
+
         // Firma Cessionario
         drawText('Firma del Cessionario', 370, currentY, 10, fontBold);
         page.drawLine({ start: { x: 350, y: currentY - 20 }, end: { x: 520, y: currentY - 20 }, thickness: 1 });

@@ -59,6 +59,7 @@ const CitesModal = ({ reptile, user, onClose }) => {
 
     const handleDownload = async () => {
         setLoading(true);
+        
         try {
             const response = await api.post(`/reptile/download-cites/${reptile._id}`, formData, {
                 responseType: 'blob'
