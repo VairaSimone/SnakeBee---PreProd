@@ -63,15 +63,16 @@ export const generateCustomCitesDocument = async (req, res) => {
         drawSection('1. DATI DEL CEDENTE (Allevatore / Proprietario attuale)', [
             { label: 'Nome e Cognome', value: sellerInfo?.name },
             { label: 'Indirizzo e Città', value: sellerInfo?.address },
-            { label: 'Documento di Identità', value: sellerInfo?.documentId },
-            { label: 'Num. Registro CITES', value: sellerInfo?.citesRegistry }
+            { label: 'Indirizzo Email', value: sellerInfo?.email },
+            { label: 'Numero di telefono', value: sellerInfo?.PhoneNumber }
         ]);
 
         // --- SEZIONE 2: CESSIONARIO ---
         drawSection('2. DATI DEL CESSIONARIO (Nuovo Proprietario)', [
             { label: 'Nome e Cognome', value: buyerInfo?.name },
             { label: 'Indirizzo e Città', value: buyerInfo?.address },
-            { label: 'Documento di Identità', value: buyerInfo?.documentId }
+            { label: 'Indirizzo Email', value: buyerInfo?.email },
+            { label: 'Numero di telefono', value: buyerInfo?.PhoneNumber }
         ]);
 
         // --- SEZIONE 3: ESEMPLARE ---
@@ -80,10 +81,9 @@ export const generateCustomCitesDocument = async (req, res) => {
             { label: 'Morph / Mutazione', value: animalInfo?.morph },
             { label: 'Sesso', value: animalInfo?.sex },
             { label: 'Data di Nascita', value: animalInfo?.birthDate },
-            { label: 'Microchip / Anello', value: animalInfo?.microchip },
+            { label: 'Paese di origine', value: animalInfo?.state },
+            { label: 'Estremi marcaggio', value: animalInfo?.microchip },
             { label: 'Num. Protocollo CITES', value: animalInfo?.protocolNumber },
-            { label: 'Padre (ID/Microchip)', value: animalInfo?.fatherId },
-            { label: 'Madre (ID/Microchip)', value: animalInfo?.motherId }
         ]);
 
         // --- SEZIONE 4: DICHIARAZIONE ---
@@ -92,8 +92,8 @@ export const generateCustomCitesDocument = async (req, res) => {
         const cedenteName = sellerInfo?.name || '_______________________';
         
         const declarationText = `Il sottoscritto ${cedenteName} dichiara sotto la propria responsabilità che ` +
-            `l'esemplare\nsopra descritto è nato in cattività nei propri locali ed è stato regolarmente ceduto in data ${todayDate}\n` +
-            `nel pieno rispetto della normativa CITES vigente in materia.`;
+            `l'esemplare\nsopra descritto è nato in cattività ed è stato regolarmente ceduto in data ${todayDate}\n` +
+            `nel pieno rispetto della normativa CITES vigente in materia fornendo tutte le informazioni necessarie al ricevente sulle operazione richieste per garantire una corretta assistenza degli esemplari.`;
         
         drawText('DICHIARAZIONE:', 50, currentY, 10, fontBold);
         currentY -= 20;
@@ -114,8 +114,8 @@ export const generateCustomCitesDocument = async (req, res) => {
         page.drawLine({ start: { x: 350, y: currentY - 20 }, end: { x: 500, y: currentY - 20 }, thickness: 1 });
 
         // --- FOOTER ---
-        drawText('Documento generato digitalmente tramite la piattaforma gestionale SnakeBee.it.', 
-                 50, 40, 8, fontRegular, rgb(0.6, 0.6, 0.6));
+        drawText('Data',  50, 40, 8,);
+        page.drawLine({ start: { x: 30, y: 40 }, end: { x: 220, y: currentY - 20 }, thickness: 1 });
 
         // 3. Serializza e Salva
         const pdfBytes = await pdfDoc.save();
