@@ -2,8 +2,23 @@ import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 
 export const generateCustomCitesDocument = async (req, res) => {
     try {
-        const { sellerInfo, buyerInfo, animalInfo, date } = req.body;
+        const { signerDetails, receiverDetails, extraDetails } = req.body;
+const sellerInfo = {
+            name: `${signerDetails?.name || ''} ${signerDetails?.surname || ''}`.trim(),
+            address: `${signerDetails?.address || ''}, ${signerDetails?.city || ''} (${signerDetails?.province || ''})`,
+            email: signerDetails?.email,
+            PhoneNumber: signerDetails?.phoneNumber // Nota: il frontend passa phoneNumber
+        };
 
+        const buyerInfo = {
+            name: `${receiverDetails?.name || ''} ${receiverDetails?.surname || ''}`.trim(),
+            address: `${receiverDetails?.address || ''}, ${receiverDetails?.city || ''} (${receiverDetails?.province || ''})`,
+            email: receiverDetails?.email,
+            PhoneNumber: receiverDetails?.phone // Nota: il frontend passa phone
+        };
+        const date = extraDetails?.date;
+        const animalInfo = req.body.animalInfo || {};
+        
         const pdfDoc = await PDFDocument.create();
         const page = pdfDoc.addPage([595.28, 841.89]); // A4
         const { width, height } = page.getSize();
@@ -48,7 +63,7 @@ export const generateCustomCitesDocument = async (req, res) => {
             });
             currentY -= 15;
         };
-
+ 
         // --- SEZIONE 1: CEDENTE ---
         drawSection('1. DATI DEL CEDENTE (Allevatore / Proprietario attuale)', [
             { label: 'Nome e Cognome', value: sellerInfo?.name },
