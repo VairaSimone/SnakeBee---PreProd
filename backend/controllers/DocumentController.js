@@ -93,7 +93,8 @@ export const generateCustomCitesDocument = async (req, res) => {
         
         const declarationText = `Il sottoscritto ${cedenteName} dichiara sotto la propria responsabilità che ` +
             `l'esemplare\nsopra descritto è nato in cattività ed è stato regolarmente ceduto in data ${todayDate}\n` +
-            `nel pieno rispetto della normativa CITES vigente in materia fornendo tutte le informazioni necessarie al ricevente sulle operazione richieste per garantire una corretta assistenza degli esemplari.`;
+            `nel pieno rispetto della normativa CITES vigente in materia fornendo tutte le informazioni necessarie\n` +  
+            `al ricevente sulle operazione richieste per garantire una corretta assistenza degli esemplari.`;
         
         drawText('DICHIARAZIONE:', 50, currentY, 10, fontBold);
         currentY -= 20;
@@ -113,9 +114,8 @@ export const generateCustomCitesDocument = async (req, res) => {
         drawText('Firma del Cessionario', 370, currentY, 10, fontBold);
         page.drawLine({ start: { x: 350, y: currentY - 20 }, end: { x: 500, y: currentY - 20 }, thickness: 1 });
 
-        // --- FOOTER ---
         drawText('Data',  50, 40, 8,);
-        page.drawLine({ start: { x: 30, y: 40 }, end: { x: 220, y: currentY - 20 }, thickness: 1 });
+        page.drawLine({ start: { x: 30, y: 40 }, end: { x: 220, y: 40 - 20 }, thickness: 1 });
 
         // 3. Serializza e Salva
         const pdfBytes = await pdfDoc.save();
