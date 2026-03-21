@@ -82,8 +82,8 @@ export const generateCustomCitesDocument = async (req, res) => {
         const cedenteName = sellerInfo?.name || '_______________________';
         
         const declarationText = `Il sottoscritto ${cedenteName} dichiara sotto la propria responsabilità che ` +
-            `l'esemplare\nsopra descritto è nato in cattività ed è stato regolarmente ceduto in data ${todayDate}\n` +
-            `nel pieno rispetto della normativa CITES vigente in materia fornendo tutte le informazioni necessarie\n` +  
+            `l'esemplare\nsopra descritto è nato in cattività ed è stato regolarmente ceduto nel pieno\n` +
+            `rispetto della normativa CITES vigente in materia fornendo tutte le informazioni necessarie\n` +  
             `al ricevente sulle operazione richieste per garantire una corretta assistenza degli esemplari.`;
         
         drawText('DICHIARAZIONE:', 50, currentY, 10, fontBold);
@@ -98,9 +98,9 @@ export const generateCustomCitesDocument = async (req, res) => {
         // --- FIRME E DATA ---
         currentY -= 50;
         
-        // Data (Spostata dinamicamente vicino alle firme)
-        drawText(`Data: ${todayDate}`, 50, currentY, 10, fontBold);
-        
+        // Data
+        drawText('Data: __________________', 50, currentY, 10, fontBold);
+
         currentY -= 40; // Spazio per le firme
 
         // Firma Cedente
