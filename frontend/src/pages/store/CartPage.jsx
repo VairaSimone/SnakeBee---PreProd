@@ -3,11 +3,11 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
 import { useSelector } from 'react-redux';
 import { selectUser } from '../../features/userSlice';
-import { Trash2, Plus, Minus, ShoppingCart, ArrowRight, Package } from 'lucide-react';
+import { Trash2, Plus, Minus, ShoppingCart, ArrowRight, Package, Truck, ShieldCheck } from 'lucide-react';
 import { toast } from 'react-toastify';
 
 const BACKEND = process.env.REACT_APP_BACKEND_URL_IMAGE || '';
-const FREE_SHIPPING_THRESHOLD = 60;
+const FREE_SHIPPING_THRESHOLD = 90;
 const SHIPPING_COST = 5.99;
 
 const CartPage = () => {
@@ -55,175 +55,227 @@ const CartPage = () => {
   const subtotal = cart.subtotal || 0;
   const shippingCost = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST;
   const total = subtotal + shippingCost;
+  
+  // Calcolo per la barra di progresso della spedizione gratuita
+  const shippingProgress = Math.min((subtotal / FREE_SHIPPING_THRESHOLD) * 100, 100);
 
   if (cartLoading) {
     return (
-      <div className="flex justify-center items-center min-h-screen bg-[#FAF3E0]">
-        <div className="animate-spin h-12 w-12 border-4 border-[#228B22] border-t-transparent rounded-full" />
+      <div className="flex flex-col items-center justify-center min-h-screen bg-[#FAF3E0]">
+        <div className="animate-spin h-14 w-14 border-4 border-[#EDE7D6] border-t-[#228B22] rounded-full mb-4" />
+        <p className="text-[#2B2B2B]/50 font-medium">Caricamento carrello...</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-[#FAF3E0] min-h-screen py-10">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6">
-        <h1 className="text-3xl font-extrabold text-[#2B2B2B] mb-2 flex items-center gap-3">
-          <ShoppingCart size={32} className="text-[#228B22]" /> Il tuo carrello
-        </h1>
-        <Link to="/store" className="text-sm text-[#2B2B2B]/50 hover:text-[#228B22] transition mb-8 inline-block">
-          ← Continua lo shopping
-        </Link>
+    <div className="bg-[#FAF3E0] min-h-screen py-12 font-sans">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6">
+        
+        {/* Header Carrello */}
+        <div className="mb-10">
+          <Link to="/store" className="inline-flex items-center text-sm font-semibold text-[#2B2B2B]/50 hover:text-[#228B22] transition-colors mb-6">
+            ← Continua lo shopping
+          </Link>
+          <h1 className="text-4xl font-black text-[#2B2B2B] flex items-center gap-4 tracking-tight">
+            <div className="p-3 bg-white rounded-2xl shadow-sm border border-[#EDE7D6]/50">
+              <ShoppingCart size={32} className="text-[#228B22]" />
+            </div>
+            Il tuo carrello
+          </h1>
+        </div>
 
         {cart.items?.length === 0 ? (
-          <div className="text-center py-24 bg-white rounded-2xl shadow-sm mt-8">
-            <Package size={56} className="text-[#228B22]/20 mx-auto mb-4" />
-            <h3 className="text-xl font-bold text-[#2B2B2B]/50">Il carrello è vuoto</h3>
+          /* Empty State */
+          <div className="text-center py-32 bg-white rounded-3xl shadow-sm border border-[#EDE7D6]/50 max-w-2xl mx-auto">
+            <div className="inline-flex p-6 bg-[#FAF3E0] rounded-full mb-6">
+              <Package size={64} className="text-[#556B2F]" />
+            </div>
+            <h3 className="text-3xl font-black text-[#2B2B2B] mb-3">Il carrello è vuoto</h3>
+            <p className="text-[#2B2B2B]/60 mb-8 text-lg">Sembra che tu non abbia ancora aggiunto nessun kit.</p>
             <Link
               to="/store"
-              className="mt-6 inline-flex items-center gap-2 bg-[#228B22] text-white px-6 py-3 rounded-xl font-semibold hover:bg-[#556B2F] transition"
+              className="inline-flex items-center gap-2 bg-[#228B22] text-white px-8 py-4 rounded-xl font-bold text-lg shadow-lg shadow-[#228B22]/20 hover:bg-[#1a6b1a] hover:shadow-xl active:scale-95 transition-all"
             >
-              Scopri i kit <ArrowRight size={18} />
+              Scopri i nostri kit <ArrowRight size={20} />
             </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
-            {/* Lista items */}
-            <div className="lg:col-span-2 space-y-4">
-              {cart.items.map((item) => {
-                const imgSrc = item.kit?.images?.[0]
-                  ? `${BACKEND}${item.kit.images[0]}`
-                  : 'https://placehold.co/120x90/EDE7D6/556B2F?text=Kit';
-                const isUpdating = updatingId === item._id;
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+            
+            {/* Lista Prodotti */}
+            <div className="lg:col-span-7 xl:col-span-8 space-y-5">
+              <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-[#EDE7D6]/50">
+                <div className="flow-root">
+                  <ul className="divide-y divide-[#EDE7D6]/60 -my-6">
+                    {cart.items.map((item) => {
+                      const imgSrc = item.kit?.images?.[0]
+                        ? `${BACKEND}${item.kit.images[0]}`
+                        : 'https://placehold.co/120x90/EDE7D6/556B2F?text=Kit';
+                      const isUpdating = updatingId === item._id;
 
-                return (
-                  <div
-                    key={item._id}
-                    className={`bg-white rounded-2xl shadow-sm p-4 flex gap-4 items-center transition-opacity ${isUpdating ? 'opacity-50' : ''}`}
-                  >
-                    <Link to={`/store/kits/${item.kit?._id}`} className="flex-shrink-0">
-                      <img
-                        src={imgSrc}
-                        alt={item.kit?.name}
-                        onError={(e) => { e.target.src = 'https://placehold.co/120x90/EDE7D6/556B2F?text=Kit'; }}
-                        className="w-24 h-20 object-cover rounded-xl"
-                      />
-                    </Link>
-
-                    <div className="flex-1 min-w-0">
-                      <Link to={`/store/kits/${item.kit?._id}`} className="no-underline">
-                        <h4 className="font-bold text-[#2B2B2B] truncate hover:text-[#228B22] transition">
-                          {item.kit?.name || 'Kit'}
-                        </h4>
-                      </Link>
-                      <p className="text-sm text-[#2B2B2B]/50 mt-0.5">
-                        €{item.priceSnapshot.toFixed(2)} / pz
-                      </p>
-
-                      <div className="flex items-center gap-3 mt-3">
-                        {/* Stepper quantità */}
-                        <div className="flex items-center rounded-lg border border-[#EDE7D6] overflow-hidden bg-[#FAF3E0]">
-                          <button
-                            onClick={() => handleQuantityChange(item, -1)}
-                            disabled={isUpdating}
-                            className="px-3 py-1.5 hover:bg-[#EDE7D6] transition text-[#2B2B2B]"
-                          >
-                            <Minus size={14} />
-                          </button>
-                          <span className="px-3 py-1.5 font-semibold text-[#2B2B2B] text-sm min-w-[2rem] text-center">
-                            {item.quantity}
-                          </span>
-                          <button
-                            onClick={() => handleQuantityChange(item, 1)}
-                            disabled={isUpdating}
-                            className="px-3 py-1.5 hover:bg-[#EDE7D6] transition text-[#2B2B2B]"
-                          >
-                            <Plus size={14} />
-                          </button>
-                        </div>
-
-                        <button
-                          onClick={() => handleRemove(item._id)}
-                          disabled={isUpdating}
-                          className="text-red-400 hover:text-red-600 transition p-1"
-                          title="Rimuovi"
+                      return (
+                        <li
+                          key={item._id}
+                          className={`flex py-6 transition-opacity duration-300 ${isUpdating ? 'opacity-50' : ''}`}
                         >
-                          <Trash2 size={16} />
-                        </button>
-                      </div>
-                    </div>
+                          {/* Immagine */}
+                          <div className="h-28 w-28 sm:h-32 sm:w-32 flex-shrink-0 overflow-hidden rounded-2xl border border-[#EDE7D6] bg-[#FAF3E0] group">
+                            <Link to={`/store/kits/${item.kit?._id}`}>
+                              <img
+                                src={imgSrc}
+                                alt={item.kit?.name}
+                                onError={(e) => { e.target.src = 'https://placehold.co/120x90/EDE7D6/556B2F?text=Kit'; }}
+                                className="h-full w-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
+                              />
+                            </Link>
+                          </div>
 
-                    <div className="text-right flex-shrink-0">
-                      <p className="font-extrabold text-[#228B22] text-lg">
-                        €{item.lineTotal.toFixed(2)}
-                      </p>
-                    </div>
-                  </div>
-                );
-              })}
+                          {/* Info Prodotto */}
+                          <div className="ml-4 sm:ml-6 flex flex-1 flex-col">
+                            <div>
+                              <div className="flex justify-between text-base font-bold text-[#2B2B2B]">
+                                <h4 className="line-clamp-2 hover:text-[#228B22] transition-colors">
+                                  <Link to={`/store/kits/${item.kit?._id}`}>{item.kit?.name || 'Kit'}</Link>
+                                </h4>
+                                <p className="ml-4 text-xl font-black text-[#228B22]">€{item.lineTotal.toFixed(2)}</p>
+                              </div>
+                              <p className="mt-1 text-sm text-[#2B2B2B]/50 font-medium">€{item.priceSnapshot.toFixed(2)} / pz</p>
+                            </div>
 
-              <button
-                onClick={handleClear}
-                className="text-sm text-red-400 hover:text-red-600 transition mt-2"
-              >
-                Svuota carrello
-              </button>
-            </div>
+                            <div className="flex flex-1 items-end justify-between text-sm">
+                              
+                              {/* Stepper Quantità */}
+                              <div className="flex items-center bg-[#FAF3E0] border border-[#EDE7D6] rounded-xl p-1 shadow-sm">
+                                <button
+                                  onClick={() => handleQuantityChange(item, -1)}
+                                  disabled={isUpdating}
+                                  className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white text-[#2B2B2B] transition-colors disabled:opacity-50"
+                                >
+                                  <Minus size={16} />
+                                </button>
+                                <span className="w-10 text-center font-bold text-[#2B2B2B] text-base">
+                                  {item.quantity}
+                                </span>
+                                <button
+                                  onClick={() => handleQuantityChange(item, 1)}
+                                  disabled={isUpdating}
+                                  className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white text-[#2B2B2B] transition-colors disabled:opacity-50"
+                                >
+                                  <Plus size={16} />
+                                </button>
+                              </div>
 
-            {/* Riepilogo */}
-            <div className="lg:col-span-1">
-              <div className="bg-white rounded-2xl shadow-sm p-6 sticky top-24">
-                <h3 className="font-bold text-xl text-[#2B2B2B] mb-5">Riepilogo ordine</h3>
-
-                <div className="space-y-3 text-sm">
-                  <div className="flex justify-between text-[#2B2B2B]/70">
-                    <span>Subtotale</span>
-                    <span>€{subtotal.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between text-[#2B2B2B]/70">
-                    <span>Spedizione</span>
-                    <span className={shippingCost === 0 ? 'text-[#228B22] font-semibold' : ''}>
-                      {shippingCost === 0 ? 'Gratuita 🎉' : `€${shippingCost.toFixed(2)}`}
-                    </span>
-                  </div>
-
-                  {shippingCost > 0 && (
-                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-2 text-xs text-black">
-                      Aggiungi <strong>€{(FREE_SHIPPING_THRESHOLD - subtotal).toFixed(2)}</strong> per la spedizione gratuita!
-                    </div>
-                  )}
-
-                  <div className="border-t border-[#EDE7D6] pt-3 flex justify-between font-extrabold text-[#2B2B2B] text-lg">
-                    <span>Totale</span>
-                    <span>€{total.toFixed(2)}</span>
-                  </div>
-                  <p className="text-xs text-[#2B2B2B]/40"></p>
+                              {/* Rimuovi */}
+                              <button
+                                onClick={() => handleRemove(item._id)}
+                                disabled={isUpdating}
+                                className="flex items-center gap-1.5 font-semibold text-red-500 hover:text-red-700 transition-colors bg-red-50 hover:bg-red-100 px-3 py-2 rounded-lg"
+                              >
+                                <Trash2 size={16} />
+                                <span className="hidden sm:inline">Rimuovi</span>
+                              </button>
+                            </div>
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ul>
                 </div>
+              </div>
 
-                {user ? (
-                  <button
-                    onClick={() => navigate('/store/checkout')}
-                    className="w-full mt-6 flex items-center justify-center gap-2 bg-[#228B22] text-white py-3.5 rounded-xl font-bold text-base hover:bg-[#556B2F] transition"
-                  >
-                    Procedi al pagamento <ArrowRight size={20} />
-                  </button>
-                ) : (
-                  <div className="mt-6 space-y-3">
-                    <Link
-                      to={`/login?redirect=/store/checkout`}
-                      className="block w-full text-center bg-[#228B22] text-white py-3.5 rounded-xl font-bold hover:bg-[#556B2F] transition"
-                    >
-                      Accedi e paga
-                    </Link>
-                    <button
-                      onClick={() => navigate('/store/checkout')}
-                      className="w-full text-center border-2 border-[#228B22] text-[#228B22] py-3 rounded-xl font-semibold hover:bg-[#228B22]/5 transition text-sm"
-                    >
-                      Continua come ospite
-                    </button>
-                  </div>
-                )}
+              {/* Azioni Carrello */}
+              <div className="flex justify-end">
+                <button
+                  onClick={handleClear}
+                  className="text-sm font-semibold text-[#2B2B2B]/40 hover:text-red-500 transition-colors underline underline-offset-4"
+                >
+                  Svuota tutto il carrello
+                </button>
               </div>
             </div>
+
+            {/* Riepilogo Ordine */}
+            <div className="lg:col-span-5 xl:col-span-4">
+              <div className="bg-white rounded-3xl shadow-sm border border-[#EDE7D6]/50 p-6 sm:p-8 sticky top-24">
+                <h3 className="text-2xl font-black text-[#2B2B2B] mb-6">Riepilogo</h3>
+
+                {/* Progress Bar Spedizione */}
+                <div className="mb-6 bg-[#FAF3E0] p-4 rounded-2xl border border-[#EDE7D6]">
+                  <div className="flex items-center gap-3 mb-2">
+                    <Truck size={20} className={shippingCost === 0 ? 'text-[#228B22]' : 'text-[#556B2F]'} />
+                    <span className="text-sm font-bold text-[#2B2B2B]">
+                      {shippingCost === 0 
+                        ? 'Spedizione gratuita sbloccata! 🎉' 
+                        : `Mancano €${(FREE_SHIPPING_THRESHOLD - subtotal).toFixed(2)} per la spedizione gratuita`}
+                    </span>
+                  </div>
+                  {shippingCost > 0 && (
+                    <div className="w-full bg-[#EDE7D6] rounded-full h-2 mt-3 overflow-hidden">
+                      <div 
+                        className="bg-[#228B22] h-2 rounded-full transition-all duration-1000 ease-out" 
+                        style={{ width: `${shippingProgress}%` }} 
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {/* Dettagli Costi */}
+                <div className="space-y-4 text-[15px] font-medium text-[#2B2B2B]/70">
+                  <div className="flex justify-between items-center">
+                    <span>Subtotale articoli</span>
+                    <span className="text-[#2B2B2B] font-bold">€{subtotal.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span>Costi di spedizione</span>
+                    <span className={shippingCost === 0 ? 'text-[#228B22] font-black' : 'text-[#2B2B2B] font-bold'}>
+                      {shippingCost === 0 ? 'Gratis' : `€${shippingCost.toFixed(2)}`}
+                    </span>
+                  </div>
+                  
+                  <div className="h-px w-full bg-[#EDE7D6] my-4" />
+                  
+                  <div className="flex justify-between items-center text-xl">
+                    <span className="font-bold text-[#2B2B2B]">Totale</span>
+                    <span className="font-black text-[#228B22] text-2xl tracking-tight">€{total.toFixed(2)}</span>
+                  </div>
+                  <p className="text-xs text-[#2B2B2B]/40 text-right mt-1">IVA inclusa, ove applicabile</p>
+                </div>
+
+                {/* CTA Pagamento */}
+                <div className="mt-8">
+                  {user ? (
+                    <button
+                      onClick={() => navigate('/store/checkout')}
+                      className="w-full flex items-center justify-center gap-2 bg-[#228B22] text-white py-4 rounded-xl font-bold text-lg shadow-md shadow-[#228B22]/20 hover:bg-[#1a6b1a] hover:shadow-lg active:scale-95 transition-all"
+                    >
+                      Vai alla Cassa <ArrowRight size={20} />
+                    </button>
+                  ) : (
+                    <div className="space-y-3">
+                      <Link
+                        to={`/login?redirect=/store/checkout`}
+                        className="flex items-center justify-center w-full bg-[#228B22] text-white py-4 rounded-xl font-bold text-lg shadow-md shadow-[#228B22]/20 hover:bg-[#1a6b1a] hover:shadow-lg active:scale-95 transition-all"
+                      >
+                        Accedi e Paga
+                      </Link>
+                      <button
+                        onClick={() => navigate('/store/checkout')}
+                        className="w-full text-center bg-white border-2 border-[#EDE7D6] text-[#2B2B2B] py-3.5 rounded-xl font-bold hover:bg-[#FAF3E0] hover:border-[#228B22] hover:text-[#228B22] active:scale-95 transition-all"
+                      >
+                        Continua come ospite
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Trust Badge */}
+                <div className="mt-6 flex items-center justify-center gap-2 text-xs font-semibold text-[#2B2B2B]/40">
+                  <ShieldCheck size={16} /> Pagamenti sicuri e crittografati
+                </div>
+              </div>
+            </div>
+
           </div>
         )}
       </div>
