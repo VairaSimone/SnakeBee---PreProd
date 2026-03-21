@@ -1,13 +1,21 @@
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
+import axios from 'axios';
+import fs from 'fs';
+import path from 'path';
 import Reptile from '../models/Reptile.js';
+import User from '../models/User.js';
+
 export const generateCustomCitesDocument = async (req, res) => {
     try {
-        const { signerDetails, receiverDetails, extraDetails } = req.body;
+        const { signerDetails, receiverDetails, extraDetails, options } = req.body;
        const { reptileId } = req.params;
+
        const reptile = await Reptile.findById(reptileId);
        if (!reptile) {
             return res.status(404).json({ message: 'Rettile non trovato nel database.' });
         }
+const userId = req.user?.userid || req.user?._id;
+        const user = await User.findById(userId);
         const sellerInfo = {
             name: `${signerDetails?.name || ''} ${signerDetails?.surname || ''}`.trim(),
             address: `${signerDetails?.address || ''}, ${signerDetails?.city || ''} (${signerDetails?.province || ''})`,
@@ -33,6 +41,7 @@ const animalInfo = {
             microchip: reptile.documents?.microchip?.code || '',
             protocolNumber: reptile.documents?.cites?.number || ''
         };
+
         const pdfDoc = await PDFDocument.create();
         const page = pdfDoc.addPage([595.28, 841.89]); // A4
         const { width, height } = page.getSize();
@@ -54,6 +63,53 @@ const animalInfo = {
         // Testo Header (Ho riaggiunto un nero o grigio molto scuro per contrastare lo sfondo chiaro)
         drawText('DOCUMENTO DI CESSIONE AI FINI CITES', 50, height - 50, 14, fontBold, rgb(0.2, 0.2, 0.2));
 
+        if (options?.includeProfilePic && user?.avatar) {
+            try {
+                let imageBuffer;
+                
+                // Fetch URL remoto (VPN / Google)
+                if (user.avatar.startsWith('http')) {
+                    const response = await axios.get(user.avatar, { responseType: 'arraybuffer' });
+                    imageBuffer = response.data;
+                } 
+                // Fallback per file locali
+                else if (user.avatar.startsWith('/uploads')) {
+                    const localPath = path.join(process.cwd(), user.avatar); // Usa process.cwd() invece di __dirname per sicurezza
+                    if (fs.existsSync(localPath)) {
+                        imageBuffer = fs.readFileSync(localPath);
+                    }
+                }
+
+                if (imageBuffer) {
+                    let profileImage;
+                    // Prova a embeddarlo come PNG, altrimenti tenta come JPG
+                    try {
+                        profileImage = await pdfDoc.embedPng(imageBuffer);
+                    } catch (e) {
+                        try {
+                            profileImage = await pdfDoc.embedJpg(imageBuffer);
+                        } catch (err) {
+                            console.error("Formato immagine non supportato (né PNG né JPG)");
+                        }
+                    }
+
+                    if (profileImage) {
+                        const imgSize = 50; // Dimensione finale in PDF (50x50 px)
+                        
+                        // Disegna l'immagine in alto a destra, nell'header
+                        page.drawImage(profileImage, {
+                            x: width - imgSize - 30, // 30px di margine da destra
+                            y: height - imgSize - 17, // Centraggio verticale rispetto all'header
+                            width: imgSize,
+                            height: imgSize,
+                        });
+                    }
+                }
+            } catch (imgErr) {
+                console.error("Errore durante il caricamento dell'immagine profilo:", imgErr.message);
+                // Non blocchiamo il PDF se fallisce l'immagine, andiamo avanti
+            }
+        }
         // --- RIFERIMENTI NORMATIVI ---
         drawText('Dichiarazione di cessione gratuita/vendita di esemplari inclusi nell\'Allegato B/C del Regolamento (CE) n. 338/97', 50, height - 120, 9, fontBold);
         drawText('e successive modifiche ed integrazioni.', 50, height - 135, 9, fontBold);
@@ -78,6 +134,8 @@ const animalInfo = {
             currentY -= 15;
         };
 
+
+        
         // --- SEZIONE 1: CEDENTE ---
         drawSection('1. DATI DEL CEDENTE (Allevatore / Proprietario attuale)', [
             { label: 'Nome e Cognome', value: sellerInfo?.name },
