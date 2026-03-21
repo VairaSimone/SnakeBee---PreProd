@@ -2,45 +2,36 @@ import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 
 export const generateCustomCitesDocument = async (req, res) => {
     try {
-        // Estrai i dati inviati dal frontend dal body della richiesta
-        // Personalizza i campi a seconda di ciò che invii dal tuo Form/Modal
         const { sellerInfo, buyerInfo, animalInfo, date } = req.body;
 
-        // 1. Crea un nuovo documento PDF
         const pdfDoc = await PDFDocument.create();
-        const page = pdfDoc.addPage([595.28, 841.89]); // Dimensioni standard A4
+        const page = pdfDoc.addPage([595.28, 841.89]); // A4
         const { width, height } = page.getSize();
 
-        // 2. Incorpora i font standard
         const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
         const fontRegular = await pdfDoc.embedFont(StandardFonts.Helvetica);
 
-        // --- HELPER: Funzione per disegnare il testo più facilmente ---
         const drawText = (text, x, y, size = 10, font = fontRegular, color = rgb(0, 0, 0)) => {
             page.drawText(text, { x, y, size, font, color });
         };
 
         // --- HEADER ---
-        // Striscia colorata in alto (Stile Dark per un look professionale / brandizzato SnakeBee)
         page.drawRectangle({
             x: 0, y: height - 85, 
             width: width, height: 85,
-            color: rgb(0.12, 0.12, 0.12) // Grigio scuro
+            color: rgb(250/255, 243/255, 224/255) // CORRETTO: conversione in scala 0-1
         });
 
-        // Testo Header
-        drawText('SNAKEBEE', 50, height - 40, 24, fontBold, rgb(1, 1, 1)); // Bianco
-        drawText('DOCUMENTO DI CESSIONE AI FINI CITES', 50, height - 60, 12, fontBold, rgb(0.8, 0.8, 0.8));
+        // Testo Header (Ho riaggiunto un nero o grigio molto scuro per contrastare lo sfondo chiaro)
+        drawText('DOCUMENTO DI CESSIONE AI FINI CITES', 50, height - 50, 14, fontBold, rgb(0.2, 0.2, 0.2));
 
         // --- RIFERIMENTI NORMATIVI ---
         drawText('Dichiarazione di cessione gratuita/vendita di esemplari inclusi nell\'Allegato B/C del Regolamento (CE) n. 338/97', 50, height - 120, 9, fontBold);
         drawText('e successive modifiche ed integrazioni.', 50, height - 135, 9, fontBold);
 
-        let currentY = height - 170; // Cursore verticale
+        let currentY = height - 170;
 
-        // --- HELPER: Funzione per creare i blocchi delle Sezioni ---
         const drawSection = (title, items) => {
-            // Sfondo del titolo della sezione (Grigio chiaro)
             page.drawRectangle({
                 x: 45, y: currentY - 15, 
                 width: width - 90, height: 22,
@@ -50,13 +41,12 @@ export const generateCustomCitesDocument = async (req, res) => {
             
             currentY -= 35;
 
-            // Stampa i campi: Etichetta in grassetto, Valore normale
             items.forEach(item => {
                 drawText(`${item.label}:`, 50, currentY, 10, fontBold);
                 drawText(`${item.value || '_______________________'}`, 180, currentY, 10, fontRegular);
                 currentY -= 20;
             });
-            currentY -= 15; // Margine in basso prima della prossima sezione
+            currentY -= 15;
         };
 
         // --- SEZIONE 1: CEDENTE ---
@@ -77,13 +67,13 @@ export const generateCustomCitesDocument = async (req, res) => {
 
         // --- SEZIONE 3: ESEMPLARE ---
         drawSection('3. DATI DELL\'ESEMPLARE', [
-            { label: 'Specie (Nome Scientifico)', value: animalInfo?.species },
+            { label: 'Specie (Nome Sci.)', value: animalInfo?.species },
             { label: 'Morph / Mutazione', value: animalInfo?.morph },
             { label: 'Sesso', value: animalInfo?.sex },
             { label: 'Data di Nascita', value: animalInfo?.birthDate },
             { label: 'Paese di origine', value: animalInfo?.state },
             { label: 'Estremi marcaggio', value: animalInfo?.microchip },
-            { label: 'Num. Protocollo CITES', value: animalInfo?.protocolNumber },
+            { label: 'Num. Protocollo CITES', value: animalInfo?.protocolNumber }
         ]);
 
         // --- SEZIONE 4: DICHIARAZIONE ---
@@ -99,23 +89,27 @@ export const generateCustomCitesDocument = async (req, res) => {
         drawText('DICHIARAZIONE:', 50, currentY, 10, fontBold);
         currentY -= 20;
         
-        // Vai a capo automaticamente per la dichiarazione
         const lines = declarationText.split('\n');
         lines.forEach(line => {
             drawText(line, 50, currentY, 10, fontRegular);
             currentY -= 15;
         });
 
-        // --- FIRME ---
+        // --- FIRME E DATA ---
         currentY -= 50;
-        drawText('Firma del Cedente', 70, currentY, 10, fontBold);
-        page.drawLine({ start: { x: 50, y: currentY - 20 }, end: { x: 200, y: currentY - 20 }, thickness: 1 });
         
-        drawText('Firma del Cessionario', 370, currentY, 10, fontBold);
-        page.drawLine({ start: { x: 350, y: currentY - 20 }, end: { x: 500, y: currentY - 20 }, thickness: 1 });
+        // Data (Spostata dinamicamente vicino alle firme)
+        drawText(`Data: ${todayDate}`, 50, currentY, 10, fontBold);
+        
+        currentY -= 40; // Spazio per le firme
 
-        drawText('Data',  50, 40, 8,);
-        page.drawLine({ start: { x: 30, y: 40 }, end: { x: 220, y: 40 - 20 }, thickness: 1 });
+        // Firma Cedente
+        drawText('Firma del Cedente', 70, currentY, 10, fontBold);
+        page.drawLine({ start: { x: 50, y: currentY - 20 }, end: { x: 220, y: currentY - 20 }, thickness: 1 });
+        
+        // Firma Cessionario
+        drawText('Firma del Cessionario', 370, currentY, 10, fontBold);
+        page.drawLine({ start: { x: 350, y: currentY - 20 }, end: { x: 520, y: currentY - 20 }, thickness: 1 });
 
         // 3. Serializza e Salva
         const pdfBytes = await pdfDoc.save();
