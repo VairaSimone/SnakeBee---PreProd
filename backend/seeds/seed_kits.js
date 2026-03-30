@@ -9,13 +9,13 @@ import Kit from '../models/Kit.js';
 
 const KITS = [
   {
-    name: 'Ciliatus Habitat Starter – Kit Arredo Completo',
+    name: 'Ciliatus – Kit Arredo Completo',
     description:
-      'Kit arredo completo per allestire un terrario funzionale per Rhacodactylus ciliatus. Include elementi per arricchimento verticale, rifugi naturali e controllo del umidità. Pensato per chi vuole un setup pronto e coerente senza acquistare singoli componenti separatamente.',
+      'Kit arredo completo per allestire un terrario funzionale per Gechi ciliatus. Include elementi per arricchimento verticale, rifugi naturali e controllo del umidità. Pensato per chi vuole un setup pronto e coerente senza acquistare singoli componenti separatamente.',
     price: 39.99,
-    quantity: 50,
-    vatRate: 22,
-    active: true,
+    quantity: 0,
+    vatRate: 0,
+    active: false,
     images: [],
     includedProducts: [
       'Igrometro',

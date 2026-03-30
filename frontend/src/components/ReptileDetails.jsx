@@ -288,21 +288,60 @@ const ReptileDetails = () => {
                                 <p className="text-black dark:text-black whitespace-pre-wrap">{reptile.notes}</p>
                             </InfoCard>
                         )}
-  <div className="pcr-tests-section mt-4">
-    <h3 className="font-bold text-lg">Storico Test Sanitari (PCR)</h3>
-    <ul className="list-disc pl-5">
-      {reptile.pcrTests.map((test, index) => (
-        <li key={index} className="mb-2">
-          <strong>{test.disease}</strong> - Eseguito il: {new Date(test.testDate).toLocaleDateString()} 
-          <span className={`ml-2 px-2 py-1 rounded text-sm ${test.result === 'Negativo' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-            {test.result}
-          </span>
-        </li>
-      ))}
-    </ul>
-  </div>
+{/* Sezione Test PCR - Mostrata solo se ci sono test registrati */}
+{reptile.pcrTests && reptile.pcrTests.length > 0 && (
+    <InfoCard title={t('ReptileDetails.pcrTests', 'Storico Test Sanitari (PCR)')}>
+        <div className="space-y-4 mt-4">
+            {reptile.pcrTests.map((test, index) => (
+                <div 
+                    key={index} 
+                    className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-white dark:bg-slate-800/40 rounded-xl border border-slate-100 dark:border-slate-700/50 shadow-sm hover:border-emerald-100 dark:hover:border-emerald-900/40 transition-colors"
+                >
+                    {/* Dettagli del test */}
+                    <div className="flex flex-col gap-1.5">
+                        <div className="flex items-center gap-2.5">
+                            {/* Icona della provetta più discreta */}
+                            <span className="text-emerald-600/80 dark:text-emerald-500/80">
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.628.29a2 2 0 01-1.564.03l-.333-.111a2 2 0 00-2.316.593l-1.62 1.81a2.132 2.132 0 00-.214 2.53l.613 1.045m10.396-9.696a2.132 2.132 0 00-2.132-2.132H10.5a2.132 2.132 0 00-2.132 2.132v4.263a2.132 2.132 0 002.132 2.132h4.263a2.132 2.132 0 002.132-2.132V8.5z" />
+                                </svg>
+                            </span>
+                            {/* TITOLO DEL TEST: Corretto il contrasto qui */}
+                            <span className="font-semibold text-slate-950 dark:text-black text-base leading-tight">
+                                {test.disease}
+                            </span>
+                        </div>
+                        
+                        <span className="text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400 ml-7.5">
+                            {new Date(test.testDate).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' })}
+                        </span>
 
-                        <InfoCard title={t('ReptileDetails.parents')}>
+                        {test.notes && (
+                            <div className="mt-1.5 ml-7.5 py-1 px-3 bg-slate-50 dark:bg-slate-900/60 rounded border-l-2 border-slate-200 dark:border-slate-700">
+                                <p className="text-sm text-slate-600 dark:text-slate-400 italic leading-relaxed">
+                                    "{test.notes}"
+                                </p>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Badge del Risultato */}
+                    <div className="mt-4 sm:mt-0 ml-7.5 sm:ml-0 flex-shrink-0">
+                        <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide
+                            ${test.result === 'Negativo' ? 'bg-emerald-100/70 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300' : 
+                              test.result === 'Positivo' ? 'bg-rose-100/70 text-rose-800 dark:bg-rose-500/15 dark:text-rose-300' : 
+                              'bg-amber-100/70 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300'}`}
+                        >
+                            {test.result === 'In attesa' && <span className="mr-1">⏳</span>}
+                            {test.result}
+                        </span>
+                    </div>
+                </div>
+            ))}
+        </div>
+    </InfoCard>
+)}    
+                    <InfoCard title={t('ReptileDetails.parents')}>
                             <InfoItem label={t('ReptileDetails.father')} value={reptile.parents?.father || t('ReptileDetails.notSpecified')} />
                             <InfoItem label={t('ReptileDetails.mother')} value={reptile.parents?.mother || t('ReptileDetails.notSpecified')} />
                         </InfoCard>
