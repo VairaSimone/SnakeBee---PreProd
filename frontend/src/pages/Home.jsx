@@ -66,7 +66,7 @@ const LeaderboardSection = () => {
             <div className="bg-white p-6 rounded-xl shadow-lg border-t-4 border-blue-500">
                 <div className="flex items-center mb-4 gap-2">
                     <Activity className="text-blue-500" />
-                    <h3 className="font-bold text-lg text-slate-800">Più Attivi (Pasti)</h3>
+                    <h3 className="font-bold text-lg text-slate-800">Più Attivi</h3>
                 </div>
                 <ul className="space-y-3">
                     {data.topActive.map((user, i) => (
@@ -82,7 +82,7 @@ const LeaderboardSection = () => {
             <div className="bg-white p-6 rounded-xl shadow-lg border-t-4 border-purple-500">
                 <div className="flex items-center mb-4 gap-2">
                     <Users className="text-purple-500" />
-                    <h3 className="font-bold text-lg text-slate-800">Referral Heroes</h3>
+                    <h3 className="font-bold text-lg text-slate-800">Eroi SnakeBee</h3>
                 </div>
                 <ul className="space-y-3">
                     {data.topReferrers.map((user, i) => (
