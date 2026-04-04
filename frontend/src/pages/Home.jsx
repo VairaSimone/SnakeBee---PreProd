@@ -15,6 +15,8 @@ import {
 } from "lucide-react";
 import MarketPromoSection from "../components/MarketPromoSection";
 import axios from 'axios';
+import { useState } from "react";
+import { useEffect } from "react";
 // Componente per le card delle funzionalità
 const FeatureCard = ({ icon, title, description }) => (
     <div className="bg-white/50 backdrop-blur-sm p-6 rounded-2xl shadow-lg border border-white/20 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
