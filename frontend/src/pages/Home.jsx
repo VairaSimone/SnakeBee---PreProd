@@ -11,7 +11,7 @@ import {
     Warehouse,
     hoppingCart,
     ShoppingCart,
-    Printer, Trophy, Users, Activity
+    Printer, Trophy, Users, Activity, Medal, Crown, Star
 } from "lucide-react";
 import MarketPromoSection from "../components/MarketPromoSection";
 import axios from 'axios';
@@ -44,56 +44,106 @@ const LeaderboardSection = () => {
 
     if (!data) return null;
 
+    // Helper per renderizzare la riga del rank
+    const RankItem = ({ rank, name, value, icon, unit }) => {
+        const isTopThree = rank <= 3;
+        const rankColors = {
+            1: "bg-yellow-400 text-white shadow-[0_0_15px_rgba(250,204,21,0.5)]",
+            2: "bg-slate-300 text-slate-700",
+            3: "bg-amber-600 text-brown",
+        };
+
+        return (
+            <li className={`flex items-center justify-between p-3 rounded-xl transition-all duration-300 hover:bg-slate-50 border border-transparent ${isTopThree ? 'hover:border-slate-200 shadow-sm' : ''}`}>
+                <div className="flex items-center gap-3">
+                    <div className={`
+                        w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm
+                        ${rankColors[rank] || "bg-slate-100 text-slate-500"}
+                    `}>
+                        {rank === 1 ? <Crown size={16} /> : rank}
+                    </div>
+                    <span className={`font-semibold ${isTopThree ? 'text-slate-800' : 'text-slate-600'}`}>
+                        {name}
+                    </span>
+                </div>
+                <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold uppercase tracking-wider text-slate-400">{unit}</span>
+                    <span className={`px-3 py-1 rounded-lg text-sm font-bold ${rank === 1 ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-700'}`}>
+                        {value} {icon}
+                    </span>
+                </div>
+            </li>
+        );
+    };
+
     return (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 my-10 px-4">
-            {/* Top 5 Rettili */}
-            <div className="bg-white p-6 rounded-xl shadow-lg border-t-4 border-green-500">
-                <div className="flex items-center mb-4 gap-2">
-                    <Trophy className="text-yellow-500" />
-                    <h3 className="font-bold text-lg text-slate-800">Top Allevatori (Rettili)</h3>
+        <section className="py-20 bg-slate-50/50">
+            <div className="container mx-auto px-6">
+                <div className="text-center mb-12">
+                    <span className="bg-amber-100 text-amber-700 px-4 py-1.5 rounded-full text-sm font-bold tracking-wider uppercase">
+                        Community Legends
+                    </span>
+                    <h2 className="text-4xl font-black text-slate-900 mt-4">Utenti SnakeBee</h2>
+                    <p className="text-slate-600 mt-2">I migliori allevatori e i membri più attivi</p>
                 </div>
-                <ul className="space-y-3">
-                    {data.topKeepers.map((user, i) => (
-                        <li key={i} className="flex justify-between border-b pb-1">
-                            <span className="text-slate-600 font-medium">{i+1}. {user.name}</span>
-                            <span className="bg-green-100 text-green-700 px-2 rounded-full text-sm">{user.count} 🐍</span>
-                        </li>
-                    ))}
-                </ul>
-            </div>
 
-            {/* Top 5 Più Attivi */}
-            <div className="bg-white p-6 rounded-xl shadow-lg border-t-4 border-blue-500">
-                <div className="flex items-center mb-4 gap-2">
-                    <Activity className="text-blue-500" />
-                    <h3 className="font-bold text-lg text-slate-800">Più Attivi</h3>
-                </div>
-                <ul className="space-y-3">
-                    {data.topActive.map((user, i) => (
-                        <li key={i} className="flex justify-between border-b pb-1">
-                            <span className="text-slate-600">{user.name}</span>
-                            <span className="bg-blue-100 text-blue-700 px-2 rounded-full text-sm">{user.activityCount} azioni</span>
-                        </li>
-                    ))}
-                </ul>
-            </div>
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    {/* Top Keepers */}
+                    <div className="bg-white rounded-3xl p-8 shadow-xl border border-slate-100 relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                            <Trophy size={120} />
+                        </div>
+                        <div className="flex items-center gap-3 mb-8">
+                            <div className="p-3 bg-green-100 rounded-2xl text-green-600">
+                                <Trophy size={28} />
+                            </div>
+                            <h3 className="font-black text-xl text-slate-800 tracking-tight">Top Allevatori</h3>
+                        </div>
+                        <ul className="space-y-2">
+                            {data.topKeepers.map((user, i) => (
+                                <RankItem key={i} rank={i+1} name={user.name} value={user.count} unit="Rettili" icon="🐍" />
+                            ))}
+                        </ul>
+                    </div>
 
-            {/* Top 5 Inviti */}
-            <div className="bg-white p-6 rounded-xl shadow-lg border-t-4 border-purple-500">
-                <div className="flex items-center mb-4 gap-2">
-                    <Users className="text-purple-500" />
-                    <h3 className="font-bold text-lg text-slate-800">Eroi SnakeBee</h3>
+                    {/* Top Active */}
+                    <div className="bg-white rounded-3xl p-8 shadow-xl border border-slate-100 relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                            <Activity size={120} />
+                        </div>
+                        <div className="flex items-center gap-3 mb-8">
+                            <div className="p-3 bg-blue-100 rounded-2xl text-blue-600">
+                                <Activity size={28} />
+                            </div>
+                            <h3 className="font-black text-xl text-slate-800 tracking-tight">Più Attivi</h3>
+                        </div>
+                        <ul className="space-y-2">
+                            {data.topActive.map((user, i) => (
+                                <RankItem key={i} rank={i+1} name={user.name} value={user.activityCount} unit="Azioni" icon="🔥" />
+                            ))}
+                        </ul>
+                    </div>
+
+                    {/* Top Referrers */}
+                    <div className="bg-white rounded-3xl p-8 shadow-xl border border-slate-100 relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                            <Star size={120} />
+                        </div>
+                        <div className="flex items-center gap-3 mb-8">
+                            <div className="p-3 bg-purple-100 rounded-2xl text-purple-600">
+                                <Star size={28} />
+                            </div>
+                            <h3 className="font-black text-xl text-slate-800 tracking-tight">Aiutanti SnakeBee</h3>
+                        </div>
+                        <ul className="space-y-2">
+                            {data.topReferrers.map((user, i) => (
+                                <RankItem key={i} rank={i+1} name={user.name} value={user.referralCount || 0} unit="Inviti" icon="✨" />
+                            ))}
+                        </ul>
+                    </div>
                 </div>
-                <ul className="space-y-3">
-                    {data.topReferrers.map((user, i) => (
-                        <li key={i} className="flex justify-between border-b pb-1">
-                            <span className="text-slate-600">{user.name}</span>
-                            <span className="bg-purple-100 text-purple-700 px-2 rounded-full text-sm">{user.referralCount || 0} inviti</span>
-                        </li>
-                    ))}
-                </ul>
             </div>
-        </div>
+        </section>
     );
 };
 
