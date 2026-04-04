@@ -147,9 +147,9 @@ const supplementsArray = formData.supplementsStr
       : [];
     const payload = {
       date: formData.date,
-foodType: isCustom ? formData.customFoodType : item?.foodType,      quantity: formData.quantity,
-      wasEaten: formData.wasEaten,
-      retryAfterDays: formData.retryAfterDays,
+foodType: isCustom ? `${formData.customFoodType} ` : item?.foodType,      wasEaten: formData.wasEaten,
+quantity: formData.quantity,      
+retryAfterDays: formData.retryAfterDays,
       weightPerUnit: weightInGrams,
       notes: formData.notes || undefined,
       supplements: supplementsArray,
