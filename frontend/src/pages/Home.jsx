@@ -11,9 +11,10 @@ import {
     Warehouse,
     hoppingCart,
     ShoppingCart,
-    Printer
+    Printer, Trophy, Users, Activity
 } from "lucide-react";
 import MarketPromoSection from "../components/MarketPromoSection";
+import axios from 'axios';
 // Componente per le card delle funzionalità
 const FeatureCard = ({ icon, title, description }) => (
     <div className="bg-white/50 backdrop-blur-sm p-6 rounded-2xl shadow-lg border border-white/20 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
@@ -24,6 +25,75 @@ const FeatureCard = ({ icon, title, description }) => (
         <p className="text-slate-600 leading-relaxed">{description}</p>
     </div>
 );
+const LeaderboardSection = () => {
+    const [data, setData] = useState(null);
+
+    useEffect(() => {
+        const fetchLeaderboards = async () => {
+            try {
+                const response = await axios.get('/api/gamification/leaderboards');
+                setData(response.data);
+            } catch (err) {
+                console.error("Errore caricamento leaderboards", err);
+            }
+        };
+        fetchLeaderboards();
+    }, []);
+
+    if (!data) return null;
+
+    return (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 my-10 px-4">
+            {/* Top 5 Rettili */}
+            <div className="bg-white p-6 rounded-xl shadow-lg border-t-4 border-green-500">
+                <div className="flex items-center mb-4 gap-2">
+                    <Trophy className="text-yellow-500" />
+                    <h3 className="font-bold text-lg text-slate-800">Top Allevatori (Rettili)</h3>
+                </div>
+                <ul className="space-y-3">
+                    {data.topKeepers.map((user, i) => (
+                        <li key={i} className="flex justify-between border-b pb-1">
+                            <span className="text-slate-600 font-medium">{i+1}. {user.name}</span>
+                            <span className="bg-green-100 text-green-700 px-2 rounded-full text-sm">{user.count} 🐍</span>
+                        </li>
+                    ))}
+                </ul>
+            </div>
+
+            {/* Top 5 Più Attivi */}
+            <div className="bg-white p-6 rounded-xl shadow-lg border-t-4 border-blue-500">
+                <div className="flex items-center mb-4 gap-2">
+                    <Activity className="text-blue-500" />
+                    <h3 className="font-bold text-lg text-slate-800">Più Attivi (Pasti)</h3>
+                </div>
+                <ul className="space-y-3">
+                    {data.topActive.map((user, i) => (
+                        <li key={i} className="flex justify-between border-b pb-1">
+                            <span className="text-slate-600">{user.name}</span>
+                            <span className="bg-blue-100 text-blue-700 px-2 rounded-full text-sm">{user.activityCount} azioni</span>
+                        </li>
+                    ))}
+                </ul>
+            </div>
+
+            {/* Top 5 Inviti */}
+            <div className="bg-white p-6 rounded-xl shadow-lg border-t-4 border-purple-500">
+                <div className="flex items-center mb-4 gap-2">
+                    <Users className="text-purple-500" />
+                    <h3 className="font-bold text-lg text-slate-800">Referral Heroes</h3>
+                </div>
+                <ul className="space-y-3">
+                    {data.topReferrers.map((user, i) => (
+                        <li key={i} className="flex justify-between border-b pb-1">
+                            <span className="text-slate-600">{user.name}</span>
+                            <span className="bg-purple-100 text-purple-700 px-2 rounded-full text-sm">{user.referralCount || 0} inviti</span>
+                        </li>
+                    ))}
+                </ul>
+            </div>
+        </div>
+    );
+};
 
 const Home = () => {
     const { t } = useTranslation();
@@ -104,7 +174,7 @@ const Home = () => {
                         </div>
                     </div>
                 </section>
-
+<LeaderboardSection></LeaderboardSection>
                 {/* Sezione "Chi Siamo" */}
                 <section id="chi-siamo" className="py-16 sm:py-24">
                     <div className="container mx-auto px-6 text-center">
