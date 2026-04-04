@@ -4,14 +4,14 @@ import Feeding from "../models/Feeding.js"; // Usato per misurare l'attività
 
 export const getLeaderboards = async (req, res) => {
     try {
-        // 1. Top 5 Allevatori con più rettili
+        // 1. Top 5 Allevatori (Reptile.user)
         const topKeepers = await Reptile.aggregate([
-            { $group: { _id: "$owner", count: { $sum: 1 } } }, // Raggruppa per proprietario
+            { $group: { _id: "$user", count: { $sum: 1 } } }, // Corretto: "user" invece di "owner"
             { $sort: { count: -1 } },
             { $limit: 5 },
             { 
-                $lookup: { // Join con la collezione User per i nomi
-                    from: "users",
+                $lookup: {
+                    from: "User", // Assicurati che su MongoDB la collezione si chiami esattamente "User"
                     localField: "_id",
                     foreignField: "_id",
                     as: "userDetails"
@@ -21,33 +21,28 @@ export const getLeaderboards = async (req, res) => {
             { $project: { name: "$userDetails.name", count: 1 } }
         ]);
 
-        // 2. Top 5 Allevatori più attivi (basato sul numero di pasti registrati)
-        // Poiché Log.js è vuoto, usiamo i pasti (Feeding) come proxy dell'attività
-        const topActive = await Feeding.aggregate([
-            { $group: { _id: "$userId", activityCount: { $sum: 1 } } },
-            { $sort: { activityCount: -1 } },
-            { $limit: 5 },
+        // 2. Top 5 Allevatori più attivi (Feeding -> Reptile -> User)
+const topActive = await User.aggregate([
             {
-                $lookup: {
-                    from: "users",
-                    localField: "_id",
-                    foreignField: "_id",
-                    as: "userDetails"
+                $project: {
+                    name: 1,
+                    // Calcoliamo la dimensione dell'array loginHistory
+                    // Usiamo $ifNull per evitare errori se l'array non esiste
+                    activityCount: { $size: { $ifNull: ["$loginHistory", []] } }
                 }
             },
-            { $unwind: "$userDetails" },
-            { $project: { name: "$userDetails.name", activityCount: 1 } }
+            { $sort: { activityCount: -1 } },
+            { $limit: 5 }
         ]);
-
-        // 3. Top 5 Allevatori che hanno invitato più persone
-        // Assumendo che il modello User abbia un campo 'referralCount' o simile
+        // 3. Top 5 Referrers (Funziona già perché interroga direttamente User)
         const topReferrers = await User.find()
-            .sort({ referralCount: -1 }) // Ordina per numero di inviti
+            .sort({ referralCount: -1 })
             .limit(5)
             .select("name referralCount");
 
         res.status(200).json({ topKeepers, topActive, topReferrers });
     } catch (error) {
+        console.error(error); // Logga l'errore per il debug
         res.status(500).json({ message: "Errore nel caricamento delle classifiche", error });
     }
 };
