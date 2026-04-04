@@ -4,3 +4,4 @@ const gamificationRouter = express.Router();
 
 gamificationRouter.get('/leaderboards', GamificationController.getLeaderboards);
 
+export default gamificationRouter;
