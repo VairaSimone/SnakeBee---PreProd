@@ -259,12 +259,15 @@ export const GetArchivedReptileByUser = async (req, res) => {
 export const PostReptile = async (req, res) => {
     try {
         // MODIFICA: Aggiunto previousOwner
-        const { name, species, morph, birthDate, sex, isBreeder, notes, parents, documents, foodType, weightPerUnit, nextMealDay, previousOwner, isPublic, pcrTests } = req.body; const userId = req.user.userid;
-        const parsedParents = typeof parents === 'string' ? JSON.parse(parents) : parents;
-        const parsedDocuments = typeof documents === 'string' ? JSON.parse(documents) : documents;
+        const { name, species, morph, birthDate, sex, isBreeder, notes, parents, documents, foodType, weightPerUnit, nextMealDay, previousOwner, isPublic, pcrTests } = req.body;
+        const userId = req.user.userid;
+
+        let parsedParents = typeof parents === 'string' ? JSON.parse(parents) : parents;
+        let parsedDocuments = typeof documents === 'string' ? JSON.parse(documents) : documents;
+        let parsedPcrTests = typeof pcrTests === 'string' ? JSON.parse(pcrTests) : (pcrTests || []);
+
         const user = await User.findById(userId);
         const { plan: userPlan, limits } = getUserPlan(user);
-        const parsedPcrTests = typeof pcrTests === 'string' ? JSON.parse(pcrTests) : (pcrTests || []);
         const reptileCount = await Reptile.countDocuments({ user: userId, status: 'active' });
         const normalizedFoodType = foodType && foodType.trim() !== '' ? foodType : 'Altro';
 
@@ -285,24 +288,30 @@ export const PostReptile = async (req, res) => {
 
         let imageUrls = [];
         let citesFileUrl = null;
-        if (req.files) {
-            if (req.files['image'].length > limits.imagesPerReptile) {
-                return res.status(400).json({
-                    message: req.t('reptile_limit_image', { imagesPerReptile: limits.imagesPerReptile, plan: userPlan })
-                });
-            }
-            imageUrls = req.files['image'].map(file => `/uploads/${file.filename}`);
-        }
-if (req.files['citesFile'] && req.files['citesFile'].length > 0) {
-                citesFileUrl = `/uploads/${req.files['citesFile'][0].filename}`;
+
+if (req.files) {
+            // Gestione Immagini
+            if (req.files['image'] && req.files['image'].length > 0) {
+                if (req.files['image'].length > limits.imagesPerReptile) {
+                    return res.status(400).json({
+                        message: req.t('reptile_limit_image', { imagesPerReptile: limits.imagesPerReptile, plan: userPlan })
+                    });
+                }
+                imageUrls = req.files['image'].map(file => `/uploads/${file.filename}`);
             }
 
-            if (citesFileUrl) {
+            // Gestione File CITES
+            if (req.files['citesFile'] && req.files['citesFile'].length > 0) {
+                citesFileUrl = `/uploads/${req.files['citesFile'][0].filename}`;
+            }
+        }
+
+        if (citesFileUrl) {
             if (!parsedDocuments) parsedDocuments = {};
             if (!parsedDocuments.cites) parsedDocuments.cites = {};
             parsedDocuments.cites.fileUrl = citesFileUrl;
         }
-        const birthDateObject = parseDateOrNull(birthDate);
+                const birthDateObject = parseDateOrNull(birthDate);
         const newReptile = new Reptile({
             _id: new mongoose.Types.ObjectId(),
             name,
@@ -415,7 +424,7 @@ export const PutReptile = async (req, res) => {
             // 2. Gestione Aggiornamento CITES File
             if (req.files['citesFile'] && req.files['citesFile'].length > 0) {
                 const newCitesUrl = `/uploads/${req.files['citesFile'][0].filename}`;
-                
+
                 // Se esiste già un vecchio file CITES, eliminiamolo per non occupare spazio
                 if (reptile.documents?.cites?.fileUrl) {
                     await deleteFileIfExists(reptile.documents.cites.fileUrl);
@@ -429,8 +438,8 @@ export const PutReptile = async (req, res) => {
 
         // Se non è stato caricato un nuovo file CITES, mantieni quello vecchio
         if (parsedDocuments && reptile.documents?.cites?.fileUrl && !req.files?.['citesFile']) {
-             if (!parsedDocuments.cites) parsedDocuments.cites = {};
-             parsedDocuments.cites.fileUrl = reptile.documents.cites.fileUrl;
+            if (!parsedDocuments.cites) parsedDocuments.cites = {};
+            parsedDocuments.cites.fileUrl = reptile.documents.cites.fileUrl;
         }
         if ('price' in req.body) {
             let parsedPrice = req.body.price;
@@ -457,20 +466,6 @@ export const PutReptile = async (req, res) => {
             } catch (err) {
                 console.warn('Invalid price format:', req.body.price);
             }
-        }
-        if (req.files && req.files.length > 0) {
-            const currentImageCount = imageUrls.length;
-            const newImageCount = req.files.length;
-            const totalImages = currentImageCount + newImageCount;
-
-            if (totalImages > limits.imagesPerReptile) {
-                return res.status(400).json({
-                    message: req.t('reptile_limit_image', { imagesPerReptile: limits.imagesPerReptile, plan: userPlan })
-                });
-            }
-
-            const newImages = req.files.map(file => `/uploads/${file.filename}`);
-            imageUrls = [...imageUrls, ...newImages];
         }
 
         // MODIFICA 1: Usa parseDateOrNull per birthDate
