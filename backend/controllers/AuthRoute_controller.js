@@ -149,14 +149,21 @@ export const register = async (req, res, next) => {
     }
 
     let referrer = null;
-    if (referralCode) {
+if (referralCode) {
+    try {
         referrer = await User.findOne({ referralCode });
-        if (!referrer || referrer.hasReferred) {
-          referrer.referralCount += 1;
-            referrer = null; 
+        
+        // Se l'invitante esiste, salviamo il "contatto"
+        if (referrer) {
+            referrer.referralCount = (referrer.referralCount || 0) + 1;
+            await referrer.save();
         }
+    } catch (err) {
+        console.error("Errore recupero referrer:", err);
+        // Non blocchiamo la registrazione se il referral fallisce
+        referrer = null; 
     }
-
+}
     const lang = req.body.language && ['it', 'en'].includes(req.body.language)
       ? req.body.language
       : 'it';
@@ -305,16 +312,16 @@ export const callBackGoogle = async (req, res, next) => {
           timestamp: new Date()
         }
       });
+    }
       user.loginHistory = user.loginHistory || [];
       user.loginHistory.push({
         ip: req.ip,
         userAgent: req.get('User-Agent') || 'unknown',
+        date: new Date()
       });
       if (user.loginHistory.length > 20) {
         user.loginHistory = user.loginHistory.slice(-20);
-      }
-      await user.save();
-    }
+      }    
 
 
     const hashedToken = await bcrypt.hash(refreshToken, 12);
@@ -457,7 +464,7 @@ export const verifyEmail = async (req, res, next) => {
         const referrer = await User.findById(user.referredBy);
 
         // 1. Gestione del Coupon Stripe del 30% (Comune a entrambi)
-        const couponId = 'REFERRAL30';
+        const couponId = 'REFERRAL30n';
         let coupon;
         try {
             coupon = await stripe.coupons.retrieve(couponId);
@@ -467,7 +474,7 @@ export const verifyEmail = async (req, res, next) => {
                     id: couponId,
                     percent_off: 30,
                     duration: 'once',
-                    name: 'Sconto del 30% per invito',
+                    name: 'Benvenuto 30%',
                 });
             } else {
                 throw error; 
