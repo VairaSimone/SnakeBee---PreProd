@@ -479,7 +479,7 @@ export const PutReptile = async (req, res) => {
         // (Altrimenti birthDateObject sarebbe null e cancellerebbe la data esistente)
         if ('birthDate' in req.body) {
             reptile.birthDate = birthDateObject;
-        }
+        } 
 
         reptile.image = imageUrls;
         reptile.sex = sex || reptile.sex;
