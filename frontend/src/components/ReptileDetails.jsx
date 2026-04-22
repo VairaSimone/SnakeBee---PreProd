@@ -373,9 +373,16 @@ const ReptileDetails = () => {
             onClick={() => setShowCitesModal(true)}
             className="bg-green-600 text-white px-4 py-2 rounded"
         >
-            Scarica CITES
+            Crea CITES di cessione
         </button>
-
+{reptile.citesFile && (
+                        <button
+                            onClick={handleDownloadCites}
+                            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
+                        >
+                            Scarica File CITES Originale
+                        </button>
+                    )}
         {showCitesModal && (
             <CitesModal
                 reptile={reptile}
