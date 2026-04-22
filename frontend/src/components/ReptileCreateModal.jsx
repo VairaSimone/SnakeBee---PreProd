@@ -249,11 +249,11 @@ const ReptileCreateModal = ({ show, handleClose, setReptiles, onSuccess }) => {
       } else {
         formDataToSend.append(key, val);
       }
+
+    });
       if (citesFile) {
     formDataToSend.append('citesFile', citesFile);
   }
-    });
-
     formDataToSend.append('user', user._id);
 
     try {
