@@ -193,8 +193,8 @@ const Dashboard = () => {
   const [filterBreeder, setFilterBreeder] = useState('');
   const [activeFilterSpecies, setActiveFilterSpecies] = useState(''); // MODIFICA: Rinominato da filterSpecies
   const [filterName, setFilterName] = useState(''); // <-- NUOVO STATO
-  // NUOVO: Stati per gli animali ARCHIVIATI
-  const [archivedReptiles, setArchivedReptiles] = useState([]);
+const [filterFeedingSoon, setFilterFeedingSoon] = useState(false); // <--- NUOVO STATO  
+const [archivedReptiles, setArchivedReptiles] = useState([]);
   const [archivedLoading, setArchivedLoading] = useState(true);
   const [archivedSortKey, setArchivedSortKey] = useState('statusDate'); // 'statusDate' o 'species'
   const [archivedSortOrder, setArchivedSortOrder] = useState('desc');
@@ -221,8 +221,8 @@ const Dashboard = () => {
     incubationBySpecies: []
   });
   const [isCalendarOpen, setCalendarOpen] = useState(false);
-const areFiltersActive = filterName || filterMorph || activeFilterSpecies || filterSex || filterBreeder;
   const carouselRefs = useRef({});
+  const areFiltersActive = filterName || filterMorph || activeFilterSpecies || filterSex || filterBreeder || filterFeedingSoon;
   // ... (scrollCarousel, fetchStats, fetchReptiles, fetchArchivedReptiles, handleDelete, handleDataRefresh rimangono uguali) ...
   const scrollCarousel = (e, direction, reptileId) => {
     e.preventDefault();
@@ -281,6 +281,7 @@ if (!dateStr || typeof dateStr !== 'string') {
         filterSex,
         filterBreeder,
         filterName,
+        filterFeedingSoon,
       };
 
       const { data } = await api.get(`/reptile/${user._id}/AllReptileUser`, { params });
@@ -373,7 +374,7 @@ const showWizard = !loading && totalResults === 0 && !user?.onboarding?.hasSeenT
     } else if (user?._id) {
       fetchReptiles();
     }
-  }, [sortKey, filterMorph, activeFilterSpecies, filterSex, filterBreeder, filterName]); // MODIFICA: usa activeFilterSpecies
+  }, [sortKey, filterMorph, activeFilterSpecies, filterSex, filterFeedingSoon, filterBreeder, filterName]); // MODIFICA: usa activeFilterSpecies
 
   useEffect(() => {
     if (user?._id) {
@@ -404,21 +405,21 @@ const showWizard = !loading && totalResults === 0 && !user?.onboarding?.hasSeenT
   }, [user]);
 
 
-  const StatCard = ({ icon, title, value, unit, bgColor, children }) => (
-    <div className={`flex-1 p-4 rounded-xl shadow-md flex items-start gap-4 ${bgColor}`}>
-      <div className="text-2xl text-white bg-white/20 p-3 rounded-lg">{icon}</div>
-      <div>
-        <p className="text-sm font-medium text-white/80">{title}</p>
+const StatCard = ({ icon, title, value, unit, bgColor, children }) => (
+    <div className={`flex-1 p-2.5 rounded-lg shadow-sm flex items-center gap-2.5 ${bgColor}`}>
+      <div className="text-lg text-white bg-white/20 p-2 rounded-md shrink-0">{icon}</div>
+      <div className="min-w-0 leading-tight">
+        <p className="text-[10px] uppercase tracking-tighter font-bold text-white/70 mb-0.5 truncate">{title}</p>
         {children ? (
-          <div className="text-white font-bold">{children}</div>
+          <div className="text-white font-bold text-xs">{children}</div>
         ) : (
-          <p className="text-2xl text-white font-bold">
-            {value ?? 'N/A'}<span className="text-base ml-1">{unit}</span>
+          <p className="text-lg text-white font-black">
+            {value ?? '0'}<span className="text-[10px] ml-0.5 font-normal opacity-80">{unit}</span>
           </p>
         )}
       </div>
     </div>
-  );
+);
   // === Funzione helper per il paginatore ===
   const getPageNumbers = (currentPage, totalPages, delta = 2) => {
     const range = [];
@@ -494,27 +495,25 @@ const showWizard = !loading && totalResults === 0 && !user?.onboarding?.hasSeenT
         </header>
 
         {/* === STATISTICS SECTION === */}
-        <section className="mb-8">
-          <h2 className="text-2xl font-bold text-charcoal mb-4 flex items-center gap-2">
-            <FaChartBar />{t('dashboard.quickStats')}
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <StatCard icon={<FaPercentage />} title={t('dashboard.stats.successRate')} value={stats.successRate} unit="%" bgColor="bg-forest" />
-            <StatCard icon={<FaUtensils />} title={t('dashboard.stats.feedingRefusal')} value={stats.feedingRefusalRate} bgColor="bg-amber" />
-            <StatCard icon={<FaSyncAlt />} title={t('dashboard.stats.avgShedInterval')} value={typeof stats.averageShedInterval === 'number' ? stats.averageShedInterval.toFixed(1) : '0'} unit={t('dashboard.units.days')} bgColor="bg-blue-500" />
-            <StatCard icon={<FaEgg />} title={t('dashboard.stats.incubationBySpecies')} bgColor="bg-purple-500">
-              <div className="text-sm space-y-1 mt-1">
-                {top3Incubations.length > 0 ? top3Incubations.map(s => (
-                  <div key={s.species}>
-                    <span className="font-semibold">{s.species}:</span>
-                    {!isNaN(Number(s.averageIncubationDays)) ? Number(s.averageIncubationDays).toFixed(0) : 'N/A'} {t('units.days')}
-                  </div>
-                )) : <p className="text-base">{t('dashboard.common.noData')}</p>}
-              </div>
-            </StatCard>
-          </div>
-        </section>
-
+<section className="mb-6">
+  <h2 className="text-lg font-bold text-charcoal mb-2 flex items-center gap-2">
+    <FaChartBar size={16} />{t('dashboard.quickStats')}
+  </h2>
+  <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
+     <StatCard icon={<FaPercentage />} title={t('dashboard.stats.successRate')} value={stats.successRate} unit="%" bgColor="bg-forest" />
+     <StatCard icon={<FaUtensils />} title={t('dashboard.stats.feedingRefusal')} value={stats.feedingRefusalRate} bgColor="bg-amber" />
+     <StatCard icon={<FaSyncAlt />} title={t('dashboard.stats.avgShedInterval')} value={typeof stats.averageShedInterval === 'number' ? stats.averageShedInterval.toFixed(1) : '0'} unit="d" bgColor="bg-blue-500" />
+     <StatCard icon={<FaEgg />} title="Incubazione" bgColor="bg-purple-500">
+        <div className="text-[10px] space-y-0.5">
+            {top3Incubations.slice(0, 2).map(s => (
+                <div key={s.species} className="truncate">
+                    <span className="opacity-70">{s.species.substring(0,3)}:</span> {Number(s.averageIncubationDays).toFixed(0)}d
+                </div>
+            ))}
+        </div>
+     </StatCard>
+  </div>
+</section>
         {/* NUOVO: TABS */}
         <section className="mb-8">
           <div className="flex border-b border-sand">
@@ -585,7 +584,7 @@ const showWizard = !loading && totalResults === 0 && !user?.onboarding?.hasSeenT
                 <select
                   value={sortKey}
                   onChange={(e) => setSortKey(e.target.value)}
-                  className="w-full h-10 rounded-md border-transparent focus:ring-2 focus:ring-forest bg-white text-charcoal shadow px-2"
+                  className="w-full h-9 rounded-md border-transparent focus:ring-2 focus:ring-forest bg-white text-charcoal shadow px-2"
                 >
                   <option value="name">{t('dashboard.filters.name')}</option>
                   <option value="species">{t('dashboard.filters.species')}</option>
@@ -603,10 +602,22 @@ const showWizard = !loading && totalResults === 0 && !user?.onboarding?.hasSeenT
                   value={filterName}
                   onChange={(e) => setFilterName(e.target.value)}
                   placeholder={t('dashboard.filters.namePlaceholder')}
-                  className="w-full h-10 rounded-md border-transparent focus:ring-2 focus:ring-forest bg-white text-charcoal shadow px-2"
+                  className="w-full h-9 rounded-md border-transparent focus:ring-2 focus:ring-forest bg-white text-charcoal shadow px-2"
                 />
               </div>
-
+<div className="flex flex-col justify-end">
+                <button
+                    onClick={() => setFilterFeedingSoon(!filterFeedingSoon)}
+                    className={`h-9 w-full rounded-md flex items-center justify-center gap-2 font-bold text-xs transition-all duration-200 border-2 ${
+                        filterFeedingSoon 
+                        ? 'bg-amber text-white border-amber' 
+                        : 'bg-white text-charcoal/60 border-transparent hover:border-amber/30'
+                    }`}
+                >
+                    <FaDrumstickBite />
+                    {filterFeedingSoon ? "Vedi Tutti" : "Da Mangiare"}
+                </button>
+            </div>
               {/* Morph */}
               <div>
                 <label className="block text-sm font-bold text-charcoal/80 mb-1">
@@ -617,7 +628,7 @@ const showWizard = !loading && totalResults === 0 && !user?.onboarding?.hasSeenT
                   value={filterMorph}
                   onChange={(e) => setFilterMorph(e.target.value)}
                   placeholder={t('dashboard.filters.morphPlaceholder')}
-                  className="w-full h-10 rounded-md border-transparent focus:ring-2 focus:ring-forest bg-white text-charcoal shadow px-2"
+                  className="w-full h-9 rounded-md border-transparent focus:ring-2 focus:ring-forest bg-white text-charcoal shadow px-2"
                 />
               </div>
 
@@ -629,7 +640,7 @@ const showWizard = !loading && totalResults === 0 && !user?.onboarding?.hasSeenT
                 <select
                   value={filterSex}
                   onChange={(e) => setFilterSex(e.target.value)}
-                  className="w-full h-10 rounded-md border-transparent focus:ring-2 focus:ring-forest bg-white text-charcoal shadow px-2"
+                  className="w-full h-9 rounded-md border-transparent focus:ring-2 focus:ring-forest bg-white text-charcoal shadow px-2"
                 >
                   <option value="">{t('dashboard.filters.all')}</option>
                   <option value="M">{t('dashboard.filters.male')}</option>
@@ -647,7 +658,7 @@ const showWizard = !loading && totalResults === 0 && !user?.onboarding?.hasSeenT
                   value={activeFilterSpecies} // MODIFICA: usa stato rinominato
                   onChange={(e) => setActiveFilterSpecies(e.target.value)} // MODIFICA: usa stato rinominato
                   placeholder={t('dashboard.filters.speciesPlaceholder')}
-                  className="w-full h-10 rounded-md border-transparent focus:ring-2 focus:ring-forest bg-white text-charcoal shadow px-2"
+                  className="w-full h-9 rounded-md border-transparent focus:ring-2 focus:ring-forest bg-white text-charcoal shadow px-2"
                 />
               </div>
 
@@ -659,7 +670,7 @@ const showWizard = !loading && totalResults === 0 && !user?.onboarding?.hasSeenT
                 <select
                   value={filterBreeder}
                   onChange={(e) => setFilterBreeder(e.target.value)}
-                  className="w-full h-10 rounded-md border-transparent focus:ring-2 focus:ring-forest bg-white text-charcoal shadow px-2"
+                  className="w-full h-9 rounded-md border-transparent focus:ring-2 focus:ring-forest bg-white text-charcoal shadow px-2"
                 >
                   <option value="">{t('dashboard.filters.all')}</option>
                   <option value="true">{t('dashboard.common.yes')}</option>
@@ -681,7 +692,7 @@ const showWizard = !loading && totalResults === 0 && !user?.onboarding?.hasSeenT
               <select
                 value={archivedSortKey}
                 onChange={(e) => setArchivedSortKey(e.target.value)}
-                className="w-full h-10 rounded-md border-transparent focus:ring-2 focus:ring-forest bg-white text-charcoal shadow px-2"
+                className="w-full h-9 rounded-md border-transparent focus:ring-2 focus:ring-forest bg-white text-charcoal shadow px-2"
               >
                 <option value="statusDate">{t('dashboard.filters.statusDate')}</option>
                 <option value="species">{t('dashboard.filters.species')}</option>
@@ -698,7 +709,7 @@ const showWizard = !loading && totalResults === 0 && !user?.onboarding?.hasSeenT
                 value={archivedFilterSpecies}
                 onChange={(e) => setArchivedFilterSpecies(e.target.value)}
                 placeholder={t('dashboard.filters.speciesPlaceholder')}
-                className="w-full h-10 rounded-md border-transparent focus:ring-2 focus:ring-forest bg-white text-charcoal shadow px-2"
+                className="w-full h-9 rounded-md border-transparent focus:ring-2 focus:ring-forest bg-white text-charcoal shadow px-2"
               />
             </div>
 
@@ -710,7 +721,7 @@ const showWizard = !loading && totalResults === 0 && !user?.onboarding?.hasSeenT
               <select
                 value={archivedFilterStatus}
                 onChange={(e) => setArchivedFilterStatus(e.target.value)}
-                className="w-full h-10 rounded-md border-transparent focus:ring-2 focus:ring-forest bg-white text-charcoal shadow px-2"
+                className="w-full h-9 rounded-md border-transparent focus:ring-2 focus:ring-forest bg-white text-charcoal shadow px-2"
               >
                 <option value="">{t('dashboard.filters.all')}</option>
                 <option value="ceded">{t('dashboard.status.ceded')}</option>

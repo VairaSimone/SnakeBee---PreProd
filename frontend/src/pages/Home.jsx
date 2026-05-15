@@ -1,33 +1,48 @@
 import { useTranslation } from "react-i18next";
 import {
     ChevronRight,
-    PawPrint,
-    Egg,
-    CalendarDays,
-    BarChart3,
-    QrCode,
-    Send,
-    FileText,
-    Warehouse,
-    hoppingCart,
-    ShoppingCart,
-    Printer, Trophy, Users, Activity, Medal, Crown, Star
+    Trophy, Users, Activity, Crown, Star,
+    ShieldCheck, Zap, Heart, CheckCircle2, Quote, Mail, Instagram, MessageCircle, ExternalLink,
+    ShoppingCart
 } from "lucide-react";
 import MarketPromoSection from "../components/MarketPromoSection";
 import axios from 'axios';
-import { useState } from "react";
-import { useEffect } from "react";
-// Componente per le card delle funzionalità
-const FeatureCard = ({ icon, title, description }) => (
-    <div className="bg-white/50 backdrop-blur-sm p-6 rounded-2xl shadow-lg border border-white/20 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-        <div className="flex items-center justify-center h-12 w-12 rounded-full bg-amber-400 text-slate-800 mb-4">
-            {icon}
+import { useState, useEffect } from "react";
+import { MARKET_URL } from '../utils/marketData';
+import { FaInstagram } from "react-icons/fa";
+
+
+
+// --- COMPONENTE MACRO-AREA (Feature Group) ---
+const FeatureGroup = ({ title, description, features, videoSrc, reverse }) => (
+    <div className={`flex flex-col lg:flex-row items-center gap-12 py-16 ${reverse ? 'lg:flex-row-reverse' : ''}`}>
+        <div className="flex-1 space-y-6">
+            <h3 className="text-3xl font-black text-slate-900 tracking-tight">{title}</h3>
+            <p className="text-lg text-slate-600 leading-relaxed">{description}</p>
+            <ul className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {features.map((f, i) => (
+                    <li key={i} className="flex items-start gap-2 bg-white p-3 rounded-xl shadow-sm border border-slate-100">
+                        <CheckCircle2 className="text-amber-500 mt-1 shrink-0" size={18} />
+                        <span className="text-sm font-semibold text-slate-700">{f}</span>
+                    </li>
+                ))}
+            </ul>
         </div>
-        <h3 className="text-xl font-bold text-slate-800 mb-2">{title}</h3>
-        <p className="text-slate-600 leading-relaxed">{description}</p>
+        <div className="flex-1 w-full max-w-2xl bg-slate-900 rounded-3xl overflow-hidden shadow-2xl border-8 border-slate-800">
+            {/* Sostituisci videoSrc con il link al tuo MP4/GIF */}
+            <video 
+                autoPlay loop muted playsInline 
+                className="w-full h-full object-cover opacity-90"
+                poster="https://placehold.co/600x400/1e293b/white?text=Anteprima+Dashboard"
+            >
+                <source src={videoSrc} type="video/mp4" />
+            </video>
+        </div>
     </div>
 );
-const LeaderboardSection = () => {
+
+// --- SEZIONE CLASSIFICHE COMPATTA ---
+const CompactLeaderboard = () => {
     const [data, setData] = useState(null);
 
     useEffect(() => {
@@ -35,112 +50,75 @@ const LeaderboardSection = () => {
             try {
                 const response = await axios.get('/api/gamification/leaderboards');
                 setData(response.data);
-            } catch (err) {
-                console.error("Errore caricamento leaderboards", err);
-            }
+            } catch (err) { console.error(err); }
         };
         fetchLeaderboards();
     }, []);
 
     if (!data) return null;
 
-    // Helper per renderizzare la riga del rank
-    const RankItem = ({ rank, name, value, icon, unit }) => {
-        const isTopThree = rank <= 3;
-        const rankColors = {
-            1: "bg-yellow-400 text-white shadow-[0_0_15px_rgba(250,204,21,0.5)]",
-            2: "bg-slate-300 text-slate-700",
-            3: "bg-amber-600 text-brown",
-        };
-
-        return (
-            <li className={`flex items-center justify-between p-3 rounded-xl transition-all duration-300 hover:bg-slate-50 border border-transparent ${isTopThree ? 'hover:border-slate-200 shadow-sm' : ''}`}>
-                <div className="flex items-center gap-3">
-                    <div className={`
-                        w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm
-                        ${rankColors[rank] || "bg-slate-100 text-slate-500"}
-                    `}>
-                        {rank === 1 ? <Crown size={16} /> : rank}
+    const Board = ({ title, items, icon: Icon, unit, color }) => (
+        <div className="flex-1 min-w-[300px] rounded-2xl p-5 shadow-md border border-slate-100">
+            <div className="flex items-center gap-2 mb-4">
+                <Icon size={20} className={color} />
+                <h4 className="font-bold text-slate-800 uppercase text-xs tracking-widest">{title}</h4>
+            </div>
+            <div className="space-y-2">
+                {items.slice(0, 5).map((item, i) => (
+                    <div key={i} className="flex items-center justify-between p-2 rounded-lg hover:bg-slate-50 transition-colors">
+                        <div className="flex items-center gap-3">
+                            <span className={`text-xs font-bold w-5 ${i === 0 ? 'text-amber-500' : 'text-slate-400'}`}>#{i+1}</span>
+                            <span className="text-sm font-bold text-slate-700">{item.name}</span>
+                        </div>
+                        <span className="text-xs font-mono font-bold bg-slate-100 px-2 py-1 rounded text-slate-600">
+                            {item.count || item.activityCount || item.referralCount} {unit}
+                        </span>
                     </div>
-                    <span className={`font-semibold ${isTopThree ? 'text-slate-800' : 'text-slate-600'}`}>
-                        {name}
-                    </span>
-                </div>
-                <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold uppercase tracking-wider text-slate-400">{unit}</span>
-                    <span className={`px-3 py-1 rounded-lg text-sm font-bold ${rank === 1 ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-700'}`}>
-                        {value} {icon}
-                    </span>
-                </div>
-            </li>
-        );
-    };
+                ))}
+            </div>
+        </div>
+    );
 
     return (
-        <section className="py-20 bg-slate-50/50">
+        <section className="py-12 bg-slate-50 border-y border-slate-200">
             <div className="container mx-auto px-6">
-                <div className="text-center mb-12">
-                    <span className="bg-amber-100 text-amber-700 px-4 py-1.5 rounded-full text-sm font-bold tracking-wider uppercase">
-                        Community Legends
-                    </span>
-                    <h2 className="text-4xl font-black text-slate-900 mt-4">Utenti SnakeBee</h2>
-                    <p className="text-slate-600 mt-2">I migliori allevatori e i membri più attivi</p>
+                <h2 className="text-2xl font-black text-center mb-8">Community Highlights</h2>
+                <div className="flex flex-wrap gap-6 justify-center">
+                    <Board title="Top Allevatori" items={data.topKeepers} icon={Trophy} unit="🐍" color="text-amber-500" />
+                    <Board title="Più Attivi" items={data.topActive} icon={Activity} unit="🔥" color="text-blue-500" />
+                    <Board title="Helpers" items={data.topReferrers} icon={Star} unit="✨" color="text-purple-500" />
                 </div>
+            </div>
+        </section>
+    );
+};
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* Top Keepers */}
-                    <div className="bg-white rounded-3xl p-8 shadow-xl border border-slate-100 relative overflow-hidden group">
-                        <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                            <Trophy size={120} />
-                        </div>
-                        <div className="flex items-center gap-3 mb-8">
-                            <div className="p-3 bg-green-100 rounded-2xl text-green-600">
-                                <Trophy size={28} />
-                            </div>
-                            <h3 className="font-black text-xl text-slate-800 tracking-tight">Top Allevatori</h3>
-                        </div>
-                        <ul className="space-y-2">
-                            {data.topKeepers.map((user, i) => (
-                                <RankItem key={i} rank={i+1} name={user.name} value={user.count} unit="Rettili" icon="🐍" />
-                            ))}
-                        </ul>
-                    </div>
+// --- SEZIONE TESTIMONIAL ---
+const Testimonials = () => {
+    const reviews = [
+        { name: "Marco R.", role: "Allevatore Professionista", text: "Finalmente un software che parla la nostra lingua. La gestione CITES mi risparmia ore di lavoro ogni mese.", stars: 5 },
+        { name: "Sara V.", role: "Appassionata", text: "Il bot Telegram è la svolta. Posso segnare i pasti mentre sono in allevamento senza toccare il PC.", stars: 5 },
+        { name: "Luca T.", role: "Vendor", text: "Professionale, intuitivo e completo. Il QR Code su ogni teca dà un'immagine pazzesca ai miei clienti.", stars: 5 },
+    ];
 
-                    {/* Top Active */}
-                    <div className="bg-white rounded-3xl p-8 shadow-xl border border-slate-100 relative overflow-hidden group">
-                        <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                            <Activity size={120} />
-                        </div>
-                        <div className="flex items-center gap-3 mb-8">
-                            <div className="p-3 bg-blue-100 rounded-2xl text-blue-600">
-                                <Activity size={28} />
+    return (
+        <section className="py-20">
+            <div className="container mx-auto px-6 text-center">
+                <h2 className="text-3xl font-black mb-12">Cosa dicono gli abbonati</h2>
+                <div className="grid md:grid-cols-3 gap-8">
+                    {reviews.map((rev, i) => (
+                        <div key={i} className="bg-amber-50 p-8 rounded-3xl relative text-left border border-amber-100 bg-white">
+                            <Quote className="absolute top-4 right-4 text-amber-200" size={40} />
+                            <div className="flex gap-1 mb-4 text-amber-500">
+                                {[...Array(rev.stars)].map((_, s) => <Star key={s} size={16} fill="currentColor" />)}
                             </div>
-                            <h3 className="font-black text-xl text-slate-800 tracking-tight">Più Attivi</h3>
-                        </div>
-                        <ul className="space-y-2">
-                            {data.topActive.map((user, i) => (
-                                <RankItem key={i} rank={i+1} name={user.name} value={user.activityCount} unit="Azioni" icon="🔥" />
-                            ))}
-                        </ul>
-                    </div>
-
-                    {/* Top Referrers */}
-                    <div className="bg-white rounded-3xl p-8 shadow-xl border border-slate-100 relative overflow-hidden group">
-                        <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                            <Star size={120} />
-                        </div>
-                        <div className="flex items-center gap-3 mb-8">
-                            <div className="p-3 bg-purple-100 rounded-2xl text-purple-600">
-                                <Star size={28} />
+                            <p className="text-slate-700 italic mb-6">"{rev.text}"</p>
+                            <div>
+                                <p className="font-bold text-slate-900">{rev.name}</p>
+                                <p className="text-sm text-slate-500">{rev.role}</p>
                             </div>
-                            <h3 className="font-black text-xl text-slate-800 tracking-tight">Aiutanti SnakeBee</h3>
                         </div>
-                        <ul className="space-y-2">
-                            {data.topReferrers.map((user, i) => (
-                                <RankItem key={i} rank={i+1} name={user.name} value={user.referralCount || 0} unit="Inviti" icon="✨" />
-                            ))}
-                        </ul>
-                    </div>
+                    ))}
                 </div>
             </div>
         </section>
@@ -150,127 +128,153 @@ const LeaderboardSection = () => {
 const Home = () => {
     const { t } = useTranslation();
 
-    const features = [
-        { icon: <PawPrint size={24} />, title: t('home.features.management.title'), description: t('home.features.management.desc') },
-        { icon: <Egg size={24} />, title: t('home.features.breeding.title'), description: t('home.features.breeding.desc') },
-        { icon: <Warehouse size={24} />, title: t('home.features.inventory.title'), description: t('home.features.inventory.desc') },
-        { icon: <ShoppingCart size={24} />, title: t('home.features.shop.title'), description: t('home.features.shop.desc') },
-        { icon: <CalendarDays size={24} />, title: t('home.features.calendar.title'), description: t('home.features.calendar.desc') },
-        { icon: <BarChart3 size={24} />, title: t('home.features.stats.title'), description: t('home.features.stats.desc') },
-        { icon: <Printer size={24} />, title: t('home.features.citesGen.title'), description: t('home.features.citesGen.desc') },
-        { icon: <FileText size={24} />, title: t('home.features.docs.title'), description: t('home.features.docs.desc') },
-        { icon: <Send size={24} />, title: t('home.features.telegram.title'), description: t('home.features.telegram.desc') },
-        { icon: <QrCode size={24} />, title: t('home.features.qr.title'), description: t('home.features.qr.desc') },
-    ];
-
     return (
         <div className="min-h-screen text-slate-800 font-sans">
-            {/* Sezione Hero */}
-            <main className="relative overflow-hidden">
-                <section className="bg-gradient-to-br from-amber-50 to-yellow-100">
-                    <div className="container mx-auto px-6 pt-24 pb-16 sm:pt-32 sm:pb-24 text-center">
-                        <h1 className="text-4xl md:text-6xl font-extrabold text-slate-900 mb-6 leading-tight">
-                            {t('home.hero.title')}
-                        </h1>
-                        <p className="text-lg text-slate-700 max-w-3xl mx-auto mb-10">
-                            {t('home.hero.subtitle')}
+            {/* HERO SECTION */}
+            <section className="relative bg-gradient-to-br from-amber-50 via-yellow-100 to-white overflow-hidden">
+                <div className="container mx-auto px-6 pt-24 pb-20 text-center">
+                    <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur px-4 py-2 rounded-full border border-amber-200 text-amber-700 text-sm font-bold mb-6">
+                        <Zap size={16} fill="currentColor" /> {t('home.hero.badge', 'La rivoluzione del rettilario è qui')}
+                    </div>
+                    <h1 className="text-5xl md:text-7xl font-black text-slate-900 mb-6 leading-tight tracking-tight">
+                        {t('home.hero.title')}
+                    </h1>
+                    <p className="text-xl text-slate-700 max-w-3xl mx-auto mb-10 leading-relaxed">
+                        {t('home.hero.subtitle')}
+                    </p>
+                    <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                        <a href="/register" className="group bg-slate-900 text-white px-10 py-5 rounded-full font-black text-lg hover:bg-slate-800 transition-all hover:scale-105 shadow-xl flex items-center gap-2">
+                            {t('home.hero.ctaStart')}
+                            <ChevronRight className="group-hover:translate-x-1 transition-transform" />
+                        </a>
+                        <div className="flex items-center gap-4 text-slate-500 text-sm font-medium">
+                            <span className="flex -space-x-2">
+                                {[1,2,3,4].map(i => <div key={i} className="w-8 h-8 rounded-full border-2 border-white bg-slate-200 flex items-center justify-center text-[10px] font-bold overflow-hidden"><img src={`https://i.pravatar.cc/100?img=${i+10}`} alt="user"/></div>)}
+                            </span>
+                            +100 Allevatori attivi
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* FEATURES SECTION (RISTRUTTURATA) */}
+            <section id="funzionalita" className="py-20">
+                <div className="container mx-auto px-6">
+                    <div className="text-center mb-16">
+                        <h2 className="text-4xl font-black text-slate-900 mb-4">{t('home.features.title')}</h2>
+                        <p className="text-slate-600 max-w-2xl mx-auto text-lg">{t('home.features.subtitle')}</p>
+                    </div>
+
+                    {/* Macro Area 1: Gestione Biologica */}
+                    <FeatureGroup 
+                        title="Gestione Biologica & Allevamento"
+                        description="Monitora ogni aspetto vitale dei tuoi animali con una precisione chirurgica. Genetica, crescita e benessere in un'unica vista."
+                        features={["Schede Rettili Dettagliate", "Pianificazione Breeding", "Inventario Pasti Auto-aggiornante", "Analisi Tassi di Successo"]}
+                        videoSrc="/videos/biological-demo.mp4" // Sostituisci con file reale
+                        reverse={false}
+                    />
+
+                    {/* Macro Area 2: Amministrazione & CITES */}
+                    <FeatureGroup 
+                        title="Amministrazione & CITES"
+                        description="Dimentica la burocrazia manuale. Genera documenti legali e traccia la genealogia con un click."
+                        features={["Generatore CITES PDF", "Registri Carico/Scarico", "Archivio Documenti Digitali", "QR Code Professionali"]}
+                        videoSrc="/videos/admin-demo.mp4" // Sostituisci con file reale
+                        reverse={true}
+                    />
+
+                    {/* Macro Area 3: Automazioni & Smart Tools */}
+                    <FeatureGroup 
+                        title="Automazioni & Smart Tools"
+                        description="Il software lavora per te. Gestisci l'allevamento mentre sei fuori casa o direttamente dalla tua chat preferita."
+                        features={["Bot Telegram Dedicato", "Calendario Eventi Intelligente", "Notifiche Real-time", "Accesso Multi-dispositivo"]}
+                        videoSrc="/videos/automation-demo.mp4" // Sostituisci con file reale
+                        reverse={false}
+                    />
+                </div>
+            </section>
+
+            {/* SOCIAL PROOF (NOVITÀ) */}
+            <Testimonials />
+
+            {/* LEADERBOARD COMPATTA (RISTRETTA) */}
+            <CompactLeaderboard />
+
+
+            {/* CHI SIAMO */}
+            <section id="chi-siamo" className="py-24 border-t border-slate-100">
+                <div className="container mx-auto px-6 grid md:grid-cols-2 gap-16 items-center text-left">
+                    <div>
+                        <h2 className="text-4xl font-black text-slate-900 mb-6">{t('home.about.title')}</h2>
+                        <div className="w-20 h-2 bg-amber-400 mb-8 rounded-full"></div>
+                        <p className="text-slate-700 text-lg leading-relaxed mb-6 italic border-l-4 border-amber-200 pl-6">
+                            "{t('home.about.desc')}"
                         </p>
-                        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                            <a
-                                href="/register"
-                                className="group bg-amber-400 text-slate-900 px-8 py-4 rounded-full font-bold text-lg hover:bg-amber-500 transition-transform duration-300 hover:scale-105 shadow-lg"
+                    </div>
+                    <div className="bg-slate-100 h-80 rounded-[3rem] flex items-center justify-center border-4 border-white shadow-inner">
+                         <img src="/Logo.png" alt="About" className="h-48 opacity-50" />
+                    </div>
+                </div>
+            </section>
+
+{/* SEZIONE CONTATTI MIGLIORATA */}
+            <section id="contatti" className="py-24">
+                <div className="container mx-auto px-6">
+                    <div className="max-w-4xl mx-auto text-center">
+                        <h2 className="text-3xl md:text-4xl font-black text-slate-900 mb-4">
+                            {t('home.contact.title', 'Restiamo in Contatto')}
+                        </h2>
+                        <p className="text-slate-600 mb-12 text-lg">
+                            {t('home.contact.subtitle', 'Hai domande o vuoi proporre una collaborazione? Scegli il canale che preferisci.')}
+                        </p>
+
+                        <div className="grid md:grid-cols-2 gap-8">
+                            {/* Card Email */}
+                            <a 
+                                href="mailto:support@snakebee.it" 
+                                className="group bg-white p-8 rounded-[2rem] shadow-sm border border-slate-200 hover:border-amber-400 hover:shadow-xl transition-all duration-300 text-left flex items-center gap-6"
                             >
-                                {t('home.hero.ctaStart')}
-                                <ChevronRight className="inline-block ml-2 group-hover:translate-x-1 transition-transform" />
+                                <div className="p-4 bg-amber-100 text-amber-600 rounded-2xl group-hover:bg-black-500 group-hover:text-black transition-colors">
+                                    <Mail size={32} />
+                                </div>
+                                <div>
+                                    <h4 className="font-bold text-xl text-slate-900">Supporto Email</h4>
+                                    <p className="text-slate-500 text-sm mb-1">Rispondiamo entro 24h</p>
+                                    <span className="text-amber-600 font-semibold group-hover:underline flex items-center gap-1">
+                                        support@snakebee.it <ExternalLink size={14} />
+                                    </span>
+                                </div>
+                            </a>
+
+                            {/* Card Instagram */}
+                            <a 
+                                href="https://www.instagram.com/snakebeeofficial/" 
+                                target="_blank" 
+                                rel="noreferrer"
+                                className="group bg-white p-8 rounded-[2rem] shadow-sm border border-slate-200 hover:border-pink-500 hover:shadow-xl transition-all duration-300 text-left flex items-center gap-6"
+                            >
+                                <div className="p-4 bg-pink-100 text-pink-600 rounded-2xl group-hover:bg-pink-500 group-hover:text-white transition-colors">
+                                    <FaInstagram size={32} />
+                                </div>
+                                <div>
+                                    <h4 className="font-bold text-xl text-slate-900">Instagram</h4>
+                                    <p className="text-slate-500 text-sm mb-1">Segui i nostri update</p>
+                                    <span className="text-pink-600 font-semibold group-hover:underline flex items-center gap-1">
+                                        @snakebeeofficial <ExternalLink size={14} />
+                                    </span>
+                                </div>
                             </a>
                         </div>
-                    </div>
-                </section>
-<MarketPromoSection />
-                {/* Sezione Anteprima Dashboard */}
-                <section className="relative py-16 sm:py-24">
-                    <div className="container mx-auto px-6">
-                        <div className="max-w-5xl mx-auto bg-white rounded-2xl shadow-2xl p-4 border border-slate-200">
-                            {/* Mockup della barra del browser */}
-                            <div className="flex items-center gap-2 mb-3 px-2">
-                                <span className="w-3 h-3 bg-red-400 rounded-full"></span>
-                                <span className="w-3 h-3 bg-yellow-400 rounded-full"></span>
-                                <span className="w-3 h-3 bg-green-400 rounded-full"></span>
-                            </div>
-                            {/* Immagine */}
-                            <img
-                                src="https://res.cloudinary.com/dg2wcqflh/image/upload/v1760704915/dashboard_b3addu.png"
-                                alt={t('home.dashboard.alt')}
-                                className="w-full h-auto rounded-lg"
-                                onError={(e) => { e.target.onerror = null; e.target.src = 'https://placehold.co/1200x800/cccccc/334155?text=Image+Not+Found'; }}
-                            />
-                        </div>
-                    </div>
-                </section>
 
-
-                {/* Sezione Funzionalità */}
-                <section id="funzionalita" className="py-16 sm:py-24 bg-gradient-to-br from-amber-50 to-yellow-100">
-                    <div className="container mx-auto px-6 text-center">
-                        <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">{t('home.features.title')}</h2>
-                        <p className="text-lg text-slate-700 max-w-3xl mx-auto mb-12">{t('home.features.subtitle')}</p>
-                        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 text-left">
-{features.map((feature) => (
-    <FeatureCard
-        key={feature.title}
-        icon={feature.icon}
-        title={feature.title}
-        description={feature.description} // <-- qui va la prop
-    />
-))}
-                        </div>
-                    </div>
-                </section>
-<LeaderboardSection></LeaderboardSection>
-                {/* Sezione "Chi Siamo" */}
-                <section id="chi-siamo" className="py-16 sm:py-24">
-                    <div className="container mx-auto px-6 text-center">
-                        <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">{t('home.about.title')}</h2>
-                        <p className="max-w-3xl mx-auto text-slate-700 text-lg leading-relaxed">
-                           {t('home.about.desc')}
+                        {/* Tip veloce o FAQ link */}
+                        <p className="mt-12 text-slate-400 text-sm">
+                            Cerchi aiuto immediato? Consulta la nostra <a href="/faq" className="underline hover:text-slate-600">Guida all'uso</a>.
                         </p>
                     </div>
-                </section>
-                
-                {/* Sezione CTA Finale */}
-                <section className="bg-amber-400">
-                     <div className="container mx-auto px-6 py-16 sm:py-24 text-center">
-                        <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">{t('home.ctaEnd.title')}</h2>
-                        <p className="text-lg text-slate-800 max-w-2xl mx-auto mb-8">
-                            {t('home.ctaEnd.desc')}
-                        </p>
-                        <a
-                            href="/register"
-                            className="bg-slate-900 text-white px-8 py-4 rounded-full font-bold text-lg hover:bg-slate-800 transition-transform duration-300 hover:scale-105 shadow-lg"
-                        >
-                           {t('home.ctaEnd.cta')}
-                        </a>
-                    </div>
-                </section>
-
-                {/* Footer Contatti */}
-                <footer id="contatti" className=" text-slate-300 py-12">
-                     <div className="container mx-auto px-6 text-center">
-                        <h3 className="text-2xl font-semibold mb-4 text-black">{t('home.contact.title')}</h3>
-                        <p className="text-slate-800">
-                            {t('home.contact.desc')}{" "}
-                            <a href="mailto:support@snakebee.it" className="text-amber-400 underline hover:text-amber-300 transition">support@snakebee.it</a>
-                            {" "}{t('home.contact.or')}{" "}
-                            <a href="https://www.instagram.com/snakebeeofficial/" className="text-amber-400 underline hover:text-amber-300" target="_blank" rel="noopener noreferrer">
-                                {t('home.contact.instagram')}
-                            </a>.
-                        </p>
-                     </div>
-                </footer>
-            </main>
+                </div>
+            </section>
         </div>
     );
 };
 
 export default Home;
-

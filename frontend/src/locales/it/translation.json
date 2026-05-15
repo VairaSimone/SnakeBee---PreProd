@@ -258,87 +258,59 @@
         "error_loading": "Errore nel caricamento dei suggerimenti"
     },
     "market": {
-    "nav_label": "Market",
-    "promo_title": "Scopri Snakebee Market",
-    "promo_subtitle": "Il nuovo punto di riferimento per l'attrezzatura del tuo rettile. Kit completi, selezionati da esperti.",
-    "cta_button": "Visita lo Shop",
-    "featured_kits": "Kit in evidenza",
-    "benefit_label": "Buono mensile Market: {{amount}}€",
-    "explanation": {
-        "title": "Come funziona il Buono Market?",
-        "subtitle": "Il tuo allevamento ti ripaga. Ecco come ottenere e usare il tuo sconto mensile.",
-        "step1_title": "Rinnovo Mensile",
-        "step1_desc": "Il buono viene rigenerato automaticamente ad ogni rinnovo del tuo abbonamento Snakebee.",
-        "step2_title": "Ricevi l'Email",
-        "step2_desc": "Entro 48 ore dal rinnovo, riceverai un'email con il tuo codice sconto univoco.",
-        "step3_title": "Risparmia Subito",
-        "step3_desc": "Usa il codice su Snakebee Market per acquistare kit, cibo o accessori.",
-        "note": "⚠️ Nota bene: Il buono è valido solamente per un ordine nel mese corrente e non è cumulabile con i mesi successivi. Usalo o lo perdi!"
-    }
-  },
+        "nav_label": "Market",
+        "promo_title": "Scopri Snakebee Market",
+        "promo_subtitle": "Il nuovo punto di riferimento per l'attrezzatura del tuo rettile. Kit completi, selezionati da esperti.",
+        "cta_button": "Visita lo Shop",
+        "featured_kits": "Kit in evidenza",
+        "benefit_label": "Buono mensile Market: {{amount}}€",
+        "explanation": {
+            "title": "Come funziona il Buono Market?",
+            "subtitle": "Il tuo allevamento ti ripaga. Ecco come ottenere e usare il tuo sconto mensile.",
+            "step1_title": "Rinnovo Mensile",
+            "step1_desc": "Il buono viene rigenerato automaticamente ad ogni rinnovo del tuo abbonamento Snakebee.",
+            "step2_title": "Ricevi l'Email",
+            "step2_desc": "Entro 48 ore dal rinnovo, riceverai un'email con il tuo codice sconto univoco.",
+            "step3_title": "Risparmia Subito",
+            "step3_desc": "Usa il codice su Snakebee Market per acquistare kit, cibo o accessori.",
+            "note": "⚠️ Nota bene: Il buono è valido solamente per un ordine nel mese corrente e non è cumulabile con i mesi successivi. Usalo o lo perdi!"
+        }
+    },
     "home": {
         "hero": {
-            "title": "Il Gestionale Definitivo per Allevatori di Rettili",
-            "subtitle": "Creato da un allevatore, per gli allevatori. SnakeBee è lo strumento tutto-in-uno che trasforma la gestione della tua passione in un'esperienza semplice, automatizzata e professionale.",
-            "ctaStart": "Inizia la Prova Gratuita"
+            "badge": "Il tuo aiutante personale è qui",
+            "title": "Gestione Professionale. Zero Stress.",
+            "subtitle": "SnakeBee è il tuo aiutante per il tuo allevamento. Dalla alimentazione ai documenti CITES, automatizza tutto e torna a goderti i tuoi animali.",
+            "ctaStart": "Crea il tuo Account"
         },
         "dashboard": {
             "alt": "Anteprima della dashboard di SnakeBee"
         },
-        "features": {
-            "title": "Tutto ciò di cui hai bisogno, e anche di più",
-            "subtitle": "Abbiamo integrato ogni strumento necessario per gestire un allevamento, dal singolo esemplare a centinaia di animali, con la massima efficienza.",
-            "management": {
-                "title": "🦎 Gestione Completa",
-                "desc": "Crea una scheda dettagliata per ogni animale: peso, pasti, salute, genetica e foto. Tutto a portata di mano, sempre aggiornato."
+"features": {
+            "title": "Efficienza a portata di click",
+            "subtitle": "Abbiamo eliminato il superfluo per darti solo gli strumenti che contano davvero per la tua crescita.",
+            "biological": {
+                "title": "Gestione Biologica",
+                "desc": "Tutto il ciclo vitale, monitorato perfettamente."
             },
-            "shop": {
-        "title": "Shop Animali",
-        "desc": "Sfoglia e acquista animali direttamente dagli allevatori sulla nostra piattaforma."
-      },
-      "citesGen": {
-            "title": "🖨️ Generatore CITES Automatico",
-            "desc": "Dimentica la compilazione manuale. Seleziona un animale, inserisci i dati dell'acquirente e genera in un click il modulo di cessione PDF precompilato e pronto alla firma."
-        },
-            "breeding": {
-                "title": "🧬 Breeding Avanzato",
-                "desc": "Pianifica accoppiamenti, traccia deposizioni e nascite. Analizza i tassi di successo per migliorare la tua genetica anno dopo anno."
+            "admin": {
+                "title": "Amministrazione & CITES",
+                "desc": "Burocrazia azzerata, sicurezza garantita."
             },
-            "inventory": {
-                "title": "🥩 Inventario Intelligente",
-                "desc": "Gestisci le scorte di cibo. L'inventario si aggiorna automaticamente ad ogni pasto, suggerendoti anche cosa scongelare."
-            },
-            "calendar": {
-                "title": "📅 Calendario Unificato",
-                "desc": "Una visione chiara di tutti gli impegni: pasti, eventi sanitari, deposizioni e promemoria personalizzati in un unico posto."
-            },
-            "stats": {
-                "title": "📈 Statistiche e Analisi",
-                "desc": "Prendi decisioni basate sui dati. Analizza il tasso di rifiuto, l'intervallo tra le mute e le performance riproduttive."
-            },
-            "docs": {
-                "title": "📄 Documenti e CITES",
-                "desc": "Archivia digitalmente CITES, microchip e registri di carico/scarico. Esporta PDF e Excel pronti per ogni evenienza."
-            },
-            "telegram": {
-                "title": "🤖 Bot Telegram",
-                "desc": "Gestisci il tuo allevamento direttamente da chat. Registra un pasto, controlla un evento o consulta l'inventario, ovunque tu sia."
-            },
-            "qr": {
-                "title": "🔗 QR Code Pubblici",
-                "desc": "Genera un QR Code per ogni animale e condividi una scheda pubblica con clienti o amici, in modo semplice e professionale."
+            "automation": {
+                "title": "Automazione Bot",
+                "desc": "Il tuo allevamento in tasca, ovunque."
             }
         },
-        "about": {
-            "title": "Da un Allevatore, per gli Allevatori",
-            "desc": "SnakeBee è nato dalla mia passione e dalla necessità di uno strumento che non esisteva. È stato sviluppato con determinazione, senza team né finanziamenti, con l'unico scopo di offrire una soluzione potente e intuitiva alla community italiana di appassionati e professionisti. Questa è la nostra missione."
+"about": {
+            "title": "Creato sul campo",
+            "desc": "SnakeBee non è nato in un ufficio, ma tra i rack di un allevatore. È la risposta a chi vuole professionalità senza dover combattere con fogli Excel obsoleti."
         },
-        "ctaEnd": {
-            "title": "Pronto a Semplificare il tuo Allevamento?",
-            "desc": "Smetti di usare fogli di calcolo e appunti sparsi. Unisciti a centinaia di allevatori che hanno già scelto di gestire la loro passione in modo più intelligente.",
-            "cta": "Crea il tuo Account"
-        },
-        "contact": {
+"ctaEnd": {
+            "title": "Sei pronto a fare il salto di qualità?",
+            "desc": "Unisciti agli allevatori che hanno scelto il futuro.",
+            "cta": "Inizia la prova gratuita"
+        },        "contact": {
             "title": "Restiamo in Contatto",
             "desc": "Per qualsiasi domanda, suggerimento o collaborazione, scrivici a",
             "or": "oppure seguici su",
@@ -357,9 +329,9 @@
         "warning": "Access token mancante. Riprova ad accedere."
     },
     "blackFridayBanner": {
-  "promoText": "Sconto 50% su tutti i piani. Solo fino al 1 Dicembre!",
-  "ctaButton": "Scopri ora"
-},
+        "promoText": "Sconto 50% su tutti i piani. Solo fino al 1 Dicembre!",
+        "ctaButton": "Scopri ora"
+    },
     "forgotPassword": {
         "error": "Errore nella richiesta, richiedi al supporto",
         "forgotPassword": "Hai dimenticato la password?",
@@ -377,12 +349,12 @@
         "loading": "Caricamento...",
         "cancelling": "Annullamento...",
         "blackFriday": {
-  "title": "🔥 BLACK FRIDAY!",
-  "subtitle": "SCONTO 50% SU TUTTI I PIANI",
-  "duration": "Offerta valida dal 24 Novembre al 1 Dicembre.",
-  "instructions": "In fase di pagamento, inserisci il codice <strong>BLACKFRIDAY</strong>",
-  "terms": "*Lo sconto è valido solo per la prima mensilità."
-},
+            "title": "🔥 BLACK FRIDAY!",
+            "subtitle": "SCONTO 50% SU TUTTI I PIANI",
+            "duration": "Offerta valida dal 24 Novembre al 1 Dicembre.",
+            "instructions": "In fase di pagamento, inserisci il codice <strong>BLACKFRIDAY</strong>",
+            "terms": "*Lo sconto è valido solo per la prima mensilità."
+        },
         "plans": {
             "neophyte": {
                 "title": "Neofita",
@@ -429,7 +401,6 @@
                     "Esportazione dati in Excel",
                     "Sezione riproduzione con tracciamento accoppiamenti",
                     "Puoi pubblicare fino a 10 rettili negli annunci"
-
                 ],
                 "button": {
                     "subscribeNow": "Abbonati Ora",
@@ -499,71 +470,71 @@
             "connected": "Account Telegram collegato con successo ✅"
         }
     },
-  "locale": "it-IT",
-  "shop": {
-    "error": "Impossibile caricare i rettili.",
-    "title": "SnakeBee Shop",
-    "breederList": "Vedi tutti gli allevatori",
-    "filterTitle": "Filtri di Ricerca",
-    "filterSpeciesLabel": "Specie",
-    "filterSpecies": "es. Python regius",
-    "filterMorphLabel": "Morph",
-    "filterMorph": "es. Piebald",
-    "filterZoneLabel": "Zona",
-    "filterZone": "es. Milano",
-    "filterSexLabel": "Sesso",
-    "filterSexAll": "Tutti",
-    "filterSexM": "Maschio",
-    "filterSexF": "Femmina",
-    "filterSexU": "Sconosciuto",
-    "filterPriceLabel": "Range di Prezzo",
-    "filterPriceMin": "Min",
-    "filterPriceMax": "Max",
-    "filterBreederLabel": "Allevatore",
-    "filterBreeder": "Nome allevatore...",
-    "filterYearLabel": "Anno di Nascita",
-    "filterYear": "es. 2023",
-    "filterButton": "Filtra",
-    "clearFilters": "Azzera",
-    "noResultsTitle": "Nessun risultato",
-    "noResults": "Nessun rettile trovato. Prova a modificare i filtri.",
-    "resultsTitle": "Rettili in Vendita",
-    "prev": "Precedente",
-    "page": "Pagina {{page}} di {{totalPages}}",
-    "next": "Successiva",
-    "back": "Torna allo Shop",
-    "male": "Maschio",
-    "female": "Femmina",
-    "unknown": "Sconosciuto",
-    "breeder": "Allevatore",
-    "noMorph": "N/A",
-    "born": "Nato il:",
-    "listed": "In vendita dal:",
-    "noAddress": "Indirizzo non disponibile",
-    "price": "Prezzo",
-    "viewDetails": "Vedi dettagli",
-    "view": "Vedi"
-  },
-  "breederProfile": {
-    "error": "Impossibile caricare il profilo.",
-    "notFound": "Allevatore non trovato.",
-    "notFoundDesc": "Impossibile trovare questo allevatore. Potrebbe non essere più attivo.",
-    "verified": "Allevatore Verificato",
-    "facebook": "Facebook",
-    "instagram": "Instagram",
-    "joined": "Membro dal:",
-    "plan": "Piano:",
-    "reptile": "rettile",
-    "reptiles": "rettili",
-    "onSale": "in vendita",
-    "reptilesTitle": "Rettili disponibili"
-  },
-  "breeders": {
-    "error": "Impossibile caricare gli allevatori.",
-    "title": "Allevatori Pubblici",
-    "noResultsTitle": "Nessun allevatore trovato",
-    "noResults": "Al momento non ci sono allevatori pubblici disponibili."
-  },
+    "locale": "it-IT",
+    "shop": {
+        "error": "Impossibile caricare i rettili.",
+        "title": "SnakeBee Shop",
+        "breederList": "Vedi tutti gli allevatori",
+        "filterTitle": "Filtri di Ricerca",
+        "filterSpeciesLabel": "Specie",
+        "filterSpecies": "es. Python regius",
+        "filterMorphLabel": "Morph",
+        "filterMorph": "es. Piebald",
+        "filterZoneLabel": "Zona",
+        "filterZone": "es. Milano",
+        "filterSexLabel": "Sesso",
+        "filterSexAll": "Tutti",
+        "filterSexM": "Maschio",
+        "filterSexF": "Femmina",
+        "filterSexU": "Sconosciuto",
+        "filterPriceLabel": "Range di Prezzo",
+        "filterPriceMin": "Min",
+        "filterPriceMax": "Max",
+        "filterBreederLabel": "Allevatore",
+        "filterBreeder": "Nome allevatore...",
+        "filterYearLabel": "Anno di Nascita",
+        "filterYear": "es. 2023",
+        "filterButton": "Filtra",
+        "clearFilters": "Azzera",
+        "noResultsTitle": "Nessun risultato",
+        "noResults": "Nessun rettile trovato. Prova a modificare i filtri.",
+        "resultsTitle": "Rettili in Vendita",
+        "prev": "Precedente",
+        "page": "Pagina {{page}} di {{totalPages}}",
+        "next": "Successiva",
+        "back": "Torna allo Shop",
+        "male": "Maschio",
+        "female": "Femmina",
+        "unknown": "Sconosciuto",
+        "breeder": "Allevatore",
+        "noMorph": "N/A",
+        "born": "Nato il:",
+        "listed": "In vendita dal:",
+        "noAddress": "Indirizzo non disponibile",
+        "price": "Prezzo",
+        "viewDetails": "Vedi dettagli",
+        "view": "Vedi"
+    },
+    "breederProfile": {
+        "error": "Impossibile caricare il profilo.",
+        "notFound": "Allevatore non trovato.",
+        "notFoundDesc": "Impossibile trovare questo allevatore. Potrebbe non essere più attivo.",
+        "verified": "Allevatore Verificato",
+        "facebook": "Facebook",
+        "instagram": "Instagram",
+        "joined": "Membro dal:",
+        "plan": "Piano:",
+        "reptile": "rettile",
+        "reptiles": "rettili",
+        "onSale": "in vendita",
+        "reptilesTitle": "Rettili disponibili"
+    },
+    "breeders": {
+        "error": "Impossibile caricare gli allevatori.",
+        "title": "Allevatori Pubblici",
+        "noResultsTitle": "Nessun allevatore trovato",
+        "noResults": "Al momento non ci sono allevatori pubblici disponibili."
+    },
     "cancelPage": {
         "paymentStop": "Pagamento annullato",
         "paymentStopDesc": "Nessun addebito è stato effettuato. Puoi riprovare o tornare alla pagina degli abbonamenti.",
@@ -676,7 +647,7 @@
         "referralTitle": "Invita un Amico",
         "referralDesc": "Invita un amico a registrarsi. Se completa la registrazione e verifica la sua email, riceverai uno sconto del 30% sulla tua prima mensilità dell'abbonamento! (sconto usabile solo per il primo amico invitato)",
         "copied": "Copiato",
-        "copy": "Copia", 
+        "copy": "Copia",
         "cancel": "Annulla",
         "confirm": "Conferma",
         "loadingProfile": "Caricamento profilo...",
@@ -767,7 +738,7 @@
             "species": "Specie *",
             "isBreederDesc": "Seleziona se questo animale fa parte del tuo programma di riproduzione.",
             "morph": "Morph",
-                        "isPublic": "Pubblica nello Shop",
+            "isPublic": "Pubblica nello Shop",
             "isPublicDesc": "Rendi questo animale visibile a tutti nello shop pubblico.",
             "previousOwner": "Allevatore Precedente/Acquistato da",
             "loadCites": "Codice Carico CITES",

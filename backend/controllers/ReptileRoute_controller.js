@@ -93,29 +93,40 @@ export const GetAllReptileByUser = async (req, res) => {
     }
 };
 
+// Localizzazione: controllers/ReptileRoute_controller.js
+
 export const GetReptileByUser = async (req, res) => {
     try {
         const userId = req.user.userid;
         const page = parseInt(req.query.page) || 1;
         const perPage = parseInt(req.query.perPage) || 24;
-        const { filterMorph, filterSpecies, filterSex, filterBreeder, filterName } = req.query;
+        const { filterMorph, filterSpecies, filterSex, filterBreeder, filterName, filterFeedingSoon } = req.query;
 
         const sortKey = req.query.sortKey || 'name';
         const sortOrder = req.query.sortOrder === 'desc' ? -1 : 1;
 
-        // Costruisci la query di filtro (identica a prima)
         const matchQuery = { user: userId, status: 'active' };
+        
         if (filterName) matchQuery.name = { $regex: filterName, $options: 'i' };
         if (filterMorph) matchQuery.morph = { $regex: filterMorph, $options: 'i' };
         if (filterSpecies) matchQuery.species = { $regex: filterSpecies, $options: 'i' };
         if (filterSex) matchQuery.sex = filterSex;
         if (filterBreeder) matchQuery.isBreeder = filterBreeder === 'true';
 
-        // Imposta l'ordinamento (ora usa direttamente i nuovi campi!)
+        // MIGLIORAMENTO: Parsing booleano più sicuro
+        if (String(filterFeedingSoon) === 'true') {
+            const today = new Date();
+            // Impostiamo alla fine della giornata per includere chi deve mangiare oggi
+            today.setHours(23, 59, 59, 999); 
+            
+            // Filtro: data prossima alimentazione <= oggi (scaduti o oggi)
+            // Usiamo $lte (less than or equal)
+            matchQuery.nextFeedingDate = { $ne: null, $lte: today };
+        }
+
         let sortOptions = {};
         sortOptions[sortKey] = sortOrder;
 
-        // ESECUZIONE QUERY PULITA E VELOCISSIMA
         const reptiles = await Reptile.find(matchQuery)
             .collation({ locale: "en", strength: 2 })
             .sort(sortOptions)
@@ -133,11 +144,10 @@ export const GetReptileByUser = async (req, res) => {
         });
 
     } catch (err) {
-        console.error(err);
+        console.error("Errore GetReptileByUser:", err);
         res.status(500).send({ message: req.t('server_error') });
     }
-};
-// NUOVO: Controller per animali archiviati (ceduti/deceduti)
+};// NUOVO: Controller per animali archiviati (ceduti/deceduti)
 export const GetArchivedReptileByUser = async (req, res) => {
     try {
         const userId = req.user?.userid; // Accesso sicuro a userid
