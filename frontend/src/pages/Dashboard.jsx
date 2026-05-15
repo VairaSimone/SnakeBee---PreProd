@@ -347,7 +347,21 @@ const showWizard = !loading && totalResults === 0 && !user?.onboarding?.hasSeenT
       // Qui dovresti anche aggiornare lo stato utente in Redux o forzare un refetch del profilo
       window.location.reload(); // Soluzione rapida per aggiornare tutto lo stato utente
   };
+const handleImport = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
 
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+        const response = await api.post('/reptile/import', formData);
+        alert(response.data.message);
+        handleDataRefresh(); // Ricarica la lista dopo l'import
+    } catch (err) {
+        alert(err.response?.data?.message || "Errore import");
+    }
+};
   const handleReptileSelect = (reptileId) => {
     setSelectedReptileIds(prevSet => {
       const newSet = new Set(prevSet);
@@ -492,6 +506,11 @@ const StatCard = ({ icon, title, value, unit, bgColor, children }) => (
             <FaPlus />
             {t('dashboard.addReptile')}
           </button>
+          <label className="flex items-center gap-2 bg-blue-600 text-white px-4 py-3 rounded-lg font-semibold cursor-pointer hover:bg-blue-700 transition-all shadow-md">
+    <FaClipboardList />
+    Importa CSV/Excel
+    <input type="file" className="hidden" onChange={handleImport} accept=".csv, .xlsx, .xls" />
+</label>
         </header>
 
         {/* === STATISTICS SECTION === */}

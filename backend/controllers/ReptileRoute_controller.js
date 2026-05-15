@@ -663,3 +663,89 @@ export const GetReptilePublic = async (req, res) => {
         res.status(500).send({ message: req.t("server_error") });
     }
 };
+
+import XLSX from 'xlsx';
+
+export const ImportReptiles = async (req, res) => {
+    try {
+        if (!req.file) return res.status(400).send({ message: "Nessun file caricato" });
+
+        const userId = req.user.userid;
+        const user = await User.findById(userId);
+        const { plan: userPlan, limits } = getUserPlan(user);
+
+        // 1. Controllo Limiti Attuali
+        const currentCount = await Reptile.countDocuments({ user: userId, status: 'active' });
+        const remainingSlots = limits.reptiles - currentCount;
+
+        if (remainingSlots <= 0) {
+            return res.status(400).json({ 
+                message: req.t('reptile_limit', { reptiles: limits.reptiles, plan: userPlan }) 
+            });
+        }
+
+        // 2. Lettura File
+        const workbook = XLSX.readFile(req.file.path);
+        const sheetName = workbook.SheetNames[0];
+        const rawData = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
+
+        if (rawData.length === 0) return res.status(400).send({ message: "File vuoto" });
+
+        // 3. Limitiamo i dati al numero di slot rimanenti
+        const dataToImport = rawData.slice(0, remainingSlots);
+        const skippedCount = rawData.length - dataToImport.length;
+
+        // 4. Mapping Dinamico
+        // Questa mappa associa i possibili nomi delle colonne dell'utente ai tuoi campi DB
+        const fieldMapping = {
+            name: ['nome', 'name', 'identificativo'],
+            species: ['specie', 'species', 'scientific name'],
+            morph: ['morph', 'morfo', 'colorazione'],
+            sex: ['sesso', 'sex', 'gender'],
+            birthDate: ['nascita', 'birth', 'data nascita', 'dob'],
+            notes: ['note', 'notes', 'descrizione']
+        };
+
+        const reptilesToInsert = dataToImport.map(row => {
+            const mappedReptile = { user: userId, status: 'active' };
+
+            // Cerchiamo nel file dell'utente una colonna che corrisponda ai nostri alias
+            Object.keys(fieldMapping).forEach(dbField => {
+                const userHeader = Object.keys(row).find(key => 
+                    fieldMapping[dbField].includes(key.toLowerCase().trim())
+                );
+                if (userHeader) mappedReptile[dbField] = row[userHeader];
+            });
+
+            // Normalizzazione Sesso (M, F, Unknown)
+            if (mappedReptile.sex) {
+                const s = mappedReptile.sex.toString().toUpperCase();
+                if (s.startsWith('M')) mappedReptile.sex = 'M';
+                else if (s.startsWith('F')) mappedReptile.sex = 'F';
+                else mappedReptile.sex = 'Unknown';
+            } else {
+                mappedReptile.sex = 'Unknown';
+            }
+
+            // Validazione campo obbligatorio Specie
+            if (!mappedReptile.species) mappedReptile.species = "Sconosciuta";
+
+            return mappedReptile;
+        });
+
+        // 5. Inserimento Massive
+        await Reptile.insertMany(reptilesToInsert);
+        
+        // Pulizia file temporaneo
+        await deleteFileIfExists(req.file.path);
+
+        res.status(201).send({
+            message: `Importati con successo ${reptilesToInsert.length} animali.`,
+            skipped: skippedCount > 0 ? `Saltati ${skippedCount} per limite abbonamento.` : 0
+        });
+
+    } catch (error) {
+        console.error("Import Error:", error);
+        res.status(500).send({ message: "Errore durante l'importazione" });
+    }
+};

@@ -34,5 +34,5 @@ reptileRouter.delete('/events/:eventId',authenticateJWT,   DeleteEvent);
 reptileRouter.delete('/:reptileId/image/:imageIndex', authenticateJWT, isOwnerOrAdmin(Reptile, 'reptileId'), reptileController.DeleteReptileImage);
 reptileRouter.get('/public/reptile/:reptileId', reptileController.GetReptilePublic);
 reptileRouter.post('/download-cites/:reptileId', authenticateJWT, generateCustomCitesDocument);
-
+reptileRouter.post('/import', authenticateJWT, upload.single('file'), reptileController.ImportReptiles);
 export default reptileRouter;
