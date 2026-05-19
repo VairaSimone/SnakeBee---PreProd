@@ -333,3 +333,63 @@ function toObjectId(id) {
   if (mongoose.Types.ObjectId.isValid(id)) return new mongoose.Types.ObjectId(id);
   throw new Error('Invalid ObjectId');
 }
+export const registerHatching = async (req, res) => {
+  try {
+    const { breedingId } = req.params;
+    const { numberOfBabies, hatchDate } = req.body;
+    const userId = req.user._id; // Assumendo che usi un middleware di auth
+
+    // 1. Trova la riproduzione e ottieni i dati dei genitori
+    const breeding = await Breeding.findOne({ _id: breedingId, userId })
+                                   .populate('femaleId')
+                                   .populate('maleId');
+    
+    if (!breeding) {
+      return res.status(404).json({ message: "Riproduzione non trovata o non autorizzata." });
+    }
+
+    if (breeding.status === 'Completed') {
+      return res.status(400).json({ message: "Questa riproduzione è già stata completata in precedenza." });
+    }
+
+    // 2. Prepara l'array dei nuovi cuccioli da inserire
+    const newReptiles = [];
+    const motherName = breeding.femaleId?.name || 'Sconosciuta';
+    const species = breeding.femaleId?.species || 'Non specificata';
+
+    for (let i = 1; i <= numberOfBabies; i++) {
+      // Genera un nome temporaneo per i cuccioli (es. "Baby di Luna #1")
+      const babyName = `Baby di ${motherName} #${i}`;
+      
+      newReptiles.push({
+        userId,
+        name: babyName,
+        species: species, // Eredita la specie dalla madre
+        sex: 'Unknown', // Sesso da determinare in futuro
+        birthDate: hatchDate || new Date(),
+        weight: 0,
+        status: 'Available', // o un nuovo stato come 'Baby/Holdback'
+        // Se nel modello Reptile hai i campi motherId e fatherId, puoi salvarli:
+        motherId: breeding.femaleId?._id,
+        fatherId: breeding.maleId?._id,
+        notes: `Generato automaticamente dalla riproduzione #${breedingId}`
+      });
+    }
+
+    // 3. Salva tutti i cuccioli nel database in un solo colpo
+    const insertedReptiles = await Reptile.insertMany(newReptiles);
+
+    // 4. Aggiorna lo stato della riproduzione e chiudila
+    breeding.status = 'Completed'; // Cambia lo stato
+    breeding.offspringCount = numberOfBabies; // Traccia quanti ne sono nati
+    await breeding.save();
+
+    res.status(200).json({
+      message: `${numberOfBabies} nuovi esemplari inseriti con successo e pronti nella Dashboard!`,
+      reptiles: insertedReptiles
+    });
+  } catch (error) {
+    console.error("Errore nell'automazione della nascita:", error);
+    res.status(500).json({ message: "Errore interno del server durante la schiusa." });
+  }
+};

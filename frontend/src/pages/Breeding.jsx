@@ -7,7 +7,7 @@ import Modal from '../components/BreedingModal.jsx';
 import { selectUser } from '../features/userSlice.jsx';
 import { useTranslation } from 'react-i18next';
 import Select from "react-select";
-
+import PostBirthAutomation from '../components/PostBirthAutomation.jsx'; // Aggiungi questo!
 const FilterBar = ({ yearFilter, setYearFilter, onFiltersChange }) => {
   const [speciesFilter, setSpeciesFilter] = useState("");
   const [morphFilter, setMorphFilter] = useState("");
@@ -120,7 +120,7 @@ const StatCard = ({ title, children }) => (
   </div>
 );
 
-const BreedingCard = ({ breeding, onAddEvent, onUpdateOutcome, onEditEvent, onDeleteEventRequest, onDeleteBreedingRequest }) => {
+const BreedingCard = ({ breeding, onAddEvent, onUpdateOutcome, onEditEvent, onDeleteEventRequest, onDeleteBreedingRequest, onOpenAutomation }) => {
   const { t } = useTranslation();
   const translate = useBreedingTranslator();
 
@@ -186,6 +186,14 @@ const BreedingCard = ({ breeding, onAddEvent, onUpdateOutcome, onEditEvent, onDe
               <button onClick={() => onUpdateOutcome(breeding._id)} className="btn btn-sm btn-secondary-outline">
                 {t('breedingDashboard.buttons.updateOutcome')}
               </button>
+              {(breeding.clutchSize?.hatchedOrBorn > 0 && breeding.status !== 'Completed') && (
+                <button 
+                  onClick={() => onOpenAutomation(breeding._id)} 
+                  className="btn btn-sm bg-green-100 text-green-700 hover:bg-green-200 border-none font-semibold"
+                >
+                  🐣 Registra Nati ({breeding.clutchSize.hatchedOrBorn})
+                </button>
+              )}
             </div>
           </div>
           </div>
@@ -259,7 +267,7 @@ const BreedingCard = ({ breeding, onAddEvent, onUpdateOutcome, onEditEvent, onDe
       const translate = useBreedingTranslator();
       const [filters, setFilters] = useState({species: "", morph: "" });
       const [eventError, setEventError] = useState("");
-
+const [automationBreedingId, setAutomationBreedingId] = useState(null);
   const filteredBreedings = useMemo(() => {
     return breedings.filter(b => {
       const matchSpecies = filters.species ?
@@ -338,7 +346,18 @@ const BreedingCard = ({ breeding, onAddEvent, onUpdateOutcome, onEditEvent, onDe
       setSelectedBreedingId(breedingId);
       setShowOutcomeModal(true);
   };
-
+const reloadBreedings = async () => {
+    try {
+      const res = await api.get(`/breeding?year=${yearFilter}`);
+      const sortedBreedings = res.data.map(b => ({
+        ...b,
+        events: b.events.sort((a, b) => new Date(b.date) - new Date(a.date))
+      }));
+      setBreedings(sortedBreedings);
+    } catch (err) {
+      console.error(err);
+    }
+  };
   const submitOutcome = async () => {
     try {
       const payload = {
@@ -577,6 +596,7 @@ const handleSubmit = async () => {
                       onEditEvent={openEditEventModal}
                       onDeleteEventRequest={requestDeleteEvent}
                       onDeleteBreedingRequest={requestDeleteBreeding}
+                      onOpenAutomation={setAutomationBreedingId}
                     />
                   ))
                 ) : (
@@ -806,7 +826,18 @@ const handleSubmit = async () => {
             onClose={closeToast}
           />
         )}
-
+{automationBreedingId && (
+          <Modal onClose={() => setAutomationBreedingId(null)}>
+            <PostBirthAutomation
+              breedingId={automationBreedingId}
+              onHatchSuccess={() => {
+                setAutomationBreedingId(null); // Chiude il modale
+                reloadBreedings(); // Ricarica la Dashboard per nascondere il bottone
+                showToast("Generazione automatica completata con successo!", "success");
+              }}
+            />
+          </Modal>
+        )}
       </div>
 
       );
