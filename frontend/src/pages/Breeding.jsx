@@ -333,19 +333,19 @@ const [automationBreedingId, setAutomationBreedingId] = useState(null);
         showToast(err.response?.data?.error || t('breedingDashboard.errors.deletePair'), 'error');
     }
   };
-  const handleUpdateOutcome = (breedingId) => {
-    const breeding = breedings.find(b => b._id === breedingId);
-      setOutcomeData({
-        outcome: 'Unknown',
-      clutchSize: {
-        total: breeding?.clutchSize?.total || '',
-      fertile: breeding?.clutchSize?.fertile || '',
-      hatchedOrBorn: breeding?.clutchSize?.hatchedOrBorn || ''
-      }
-    });
-      setSelectedBreedingId(breedingId);
-      setShowOutcomeModal(true);
-  };
+const handleUpdateOutcome = (breedingId) => {
+  const breeding = breedings.find(b => b._id === breedingId);
+  setOutcomeData({
+    outcome: breeding?.outcome || 'Unknown', // Carica l'esito reale (es. 'Success')
+    clutchSize: {
+      total: breeding?.clutchSize?.total ?? '',
+      fertile: breeding?.clutchSize?.fertile ?? '',
+      hatchedOrBorn: breeding?.clutchSize?.hatchedOrBorn ?? ''
+    }
+  });
+  setSelectedBreedingId(breedingId);
+  setShowOutcomeModal(true);
+};
 const reloadBreedings = async () => {
     try {
       const res = await api.get(`/breeding?year=${yearFilter}`);
@@ -358,29 +358,38 @@ const reloadBreedings = async () => {
       console.error(err);
     }
   };
-  const submitOutcome = async () => {
-    try {
-      const payload = {
-        outcome: outcomeData.outcome,
+ const submitOutcome = async () => {
+  try {
+    const payload = {
+      outcome: outcomeData.outcome,
       clutchSize: {
-        total: outcomeData.clutchSize.total ? Number(outcomeData.clutchSize.total) : undefined,
-      fertile: outcomeData.clutchSize.fertile ? Number(outcomeData.clutchSize.fertile) : undefined,
-      hatchedOrBorn: outcomeData.clutchSize.hatchedOrBorn ? Number(outcomeData.clutchSize.hatchedOrBorn) : undefined
-        }
-      };
-      await api.patch(`/breeding/${selectedBreedingId}/outcome`, payload);
-      setBreedings(prev =>
-        prev.map(b =>
-      b._id === selectedBreedingId
-      ? {...b, outcome: payload.outcome || b.outcome, clutchSize: {...b.clutchSize, ...payload.clutchSize } }
-      : b
+        total: outcomeData.clutchSize.total !== '' ? Number(outcomeData.clutchSize.total) : 0,
+        fertile: outcomeData.clutchSize.fertile !== '' ? Number(outcomeData.clutchSize.fertile) : 0,
+        hatchedOrBorn: outcomeData.clutchSize.hatchedOrBorn !== '' ? Number(outcomeData.clutchSize.hatchedOrBorn) : 0
+      }
+    };
+    
+    await api.patch(`/breeding/${selectedBreedingId}/outcome`, payload);
+    
+    setBreedings(prev =>
+      prev.map(b =>
+        b._id === selectedBreedingId
+          ? { 
+              ...b, 
+              outcome: payload.outcome, 
+              clutchSize: payload.clutchSize,
+              // Forza il ricalcolo dello stato se necessario
+              status: b.status 
+            }
+          : b
       )
-      );
-      setShowOutcomeModal(false);
-    } catch (err) {
-        showToast(err.response?.data?.error || t('breedingDashboard.errors.updateOutcome'), 'error');
-    }
-  };
+    );
+    setShowOutcomeModal(false);
+  } catch (err) {
+      showToast(err.response?.data?.error || t('breedingDashboard.errors.updateOutcome'), 'error');
+  }
+};
+
   const extractErrorMessage = (err) => {
     if (!err) return "Unknown error";
       if (err.response?.data?.error) return err.response.data.error;

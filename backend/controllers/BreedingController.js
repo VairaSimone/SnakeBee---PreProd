@@ -380,9 +380,7 @@ export const registerHatching = async (req, res) => {
     const insertedReptiles = await Reptile.insertMany(newReptiles);
 
     // 4. Aggiorna lo stato della riproduzione e chiudila
-    breeding.status = 'Completed'; // Cambia lo stato
-    breeding.offspringCount = numberOfBabies; // Traccia quanti ne sono nati
-    await breeding.save();
+        await breeding.save();
 
     res.status(200).json({
       message: `${numberOfBabies} nuovi esemplari inseriti con successo e pronti nella Dashboard!`,
