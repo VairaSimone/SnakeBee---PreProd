@@ -337,14 +337,17 @@ export const registerHatching = async (req, res) => {
   try {
     const { breedingId } = req.params;
     const { numberOfBabies, hatchDate } = req.body;
-    const userId = req.user._id; // Assicurati che req.user._id sia valorizzato correttamente dal middleware
+    
+    // CORREZIONE: Usa .userid per uniformità con gli altri endpoint del controller
+    const userId = req.user.userid; 
 
-    // 1. Trova la riproduzione usando i nomi dei campi corretti dello schema ('female' e 'male')
-    const breeding = await Breeding.findOne({ _id: breedingId, user: userId }) // Nello schema il campo è 'user', non 'userId'
+    // 1. Trova la riproduzione verificando l'id e l'utente corretto
+    const breeding = await Breeding.findOne({ _id: breedingId, user: userId })
                                    .populate('female')
                                    .populate('male');
     
     if (!breeding) {
+      // Se req.user.userid era sbagliato o mancante, il codice si fermava qui con il 404
       return res.status(404).json({ message: "Riproduzione non trovata o non autorizzata." });
     }
 
@@ -361,15 +364,15 @@ export const registerHatching = async (req, res) => {
       const babyName = `Baby di ${motherName} #${i}`;
       
       newReptiles.push({
-        user: userId, // Nello schema Reptile il riferimento all'utente si chiama 'user'
+        user: userId, // Associa il cucciolo all'utente corretto
         name: babyName,
         species: species, 
         sex: 'Unknown', 
         birthDate: hatchDate || new Date(),
         weight: 0,
-        status: 'active', // 'active' è un valore ammesso dall'enum del tuo schema Reptile
+        status: 'active',
         parents: {
-          mother: breeding.female?.name || 'Sconosciuta', // Il tuo schema Reptile accetta String per parents.mother/father
+          mother: breeding.female?.name || 'Sconosciuta',
           father: breeding.male?.name || 'Sconosciuto'
         },
         notes: `Generato automaticamente dalla riproduzione #${breedingId}`
@@ -379,8 +382,7 @@ export const registerHatching = async (req, res) => {
     // 3. Salva tutti i cuccioli nel database
     const insertedReptiles = await Reptile.insertMany(newReptiles);
 
-    // 4. Aggiorna lo stato della riproduzione e chiudila (se hai un campo status o outcome)
-    // breeding.outcome = 'Success'; 
+    // 4. Salva eventuali modifiche (es. se vuoi aggiungere un campo status o eventi alla riproduzione)
     await breeding.save();
 
     res.status(200).json({
