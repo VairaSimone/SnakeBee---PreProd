@@ -337,12 +337,12 @@ export const registerHatching = async (req, res) => {
   try {
     const { breedingId } = req.params;
     const { numberOfBabies, hatchDate } = req.body;
-    const userId = req.user._id; // Assumendo che usi un middleware di auth
+    const userId = req.user._id; // Assicurati che req.user._id sia valorizzato correttamente dal middleware
 
-    // 1. Trova la riproduzione e ottieni i dati dei genitori
-    const breeding = await Breeding.findOne({ _id: breedingId, userId })
-                                   .populate('femaleId')
-                                   .populate('maleId');
+    // 1. Trova la riproduzione usando i nomi dei campi corretti dello schema ('female' e 'male')
+    const breeding = await Breeding.findOne({ _id: breedingId, user: userId }) // Nello schema il campo è 'user', non 'userId'
+                                   .populate('female')
+                                   .populate('male');
     
     if (!breeding) {
       return res.status(404).json({ message: "Riproduzione non trovata o non autorizzata." });
@@ -354,27 +354,34 @@ export const registerHatching = async (req, res) => {
 
     // 2. Prepara l'array dei nuovi cuccioli da inserire
     const newReptiles = [];
-    const motherName = breeding.femaleId?.name || 'Sconosciuta';
-    const species = breeding.femaleId?.species || 'Non specificata';
+    const motherName = breeding.female?.name || 'Sconosciuta';
+    const species = breeding.female?.species || 'Non specificata';
 
     for (let i = 1; i <= numberOfBabies; i++) {
-      // Genera un nome temporaneo per i cuccioli (es. "Baby di Luna #1")
       const babyName = `Baby di ${motherName} #${i}`;
       
       newReptiles.push({
-        userId,
+        user: userId, // Nello schema Reptile il riferimento all'utente si chiama 'user'
         name: babyName,
-        species: species, // Eredita la specie dalla madre
-        sex: 'Unknown', // Sesso da determinare in futuro
+        species: species, 
+        sex: 'Unknown', 
         birthDate: hatchDate || new Date(),
+        weight: 0,
+        status: 'active', // 'active' è un valore ammesso dall'enum del tuo schema Reptile
+        parents: {
+          mother: breeding.female?.name || 'Sconosciuta', // Il tuo schema Reptile accetta String per parents.mother/father
+          father: breeding.male?.name || 'Sconosciuto'
+        },
+        notes: `Generato automaticamente dalla riproduzione #${breedingId}`
       });
     }
 
-    // 3. Salva tutti i cuccioli nel database in un solo colpo
+    // 3. Salva tutti i cuccioli nel database
     const insertedReptiles = await Reptile.insertMany(newReptiles);
 
-    // 4. Aggiorna lo stato della riproduzione e chiudila
-        await breeding.save();
+    // 4. Aggiorna lo stato della riproduzione e chiudila (se hai un campo status o outcome)
+    // breeding.outcome = 'Success'; 
+    await breeding.save();
 
     res.status(200).json({
       message: `${numberOfBabies} nuovi esemplari inseriti con successo e pronti nella Dashboard!`,
