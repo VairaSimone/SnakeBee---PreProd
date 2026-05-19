@@ -367,12 +367,6 @@ export const registerHatching = async (req, res) => {
         species: species, // Eredita la specie dalla madre
         sex: 'Unknown', // Sesso da determinare in futuro
         birthDate: hatchDate || new Date(),
-        weight: 0,
-        status: 'Available', // o un nuovo stato come 'Baby/Holdback'
-        // Se nel modello Reptile hai i campi motherId e fatherId, puoi salvarli:
-        motherId: breeding.femaleId?._id,
-        fatherId: breeding.maleId?._id,
-        notes: `Generato automaticamente dalla riproduzione #${breedingId}`
       });
     }
 

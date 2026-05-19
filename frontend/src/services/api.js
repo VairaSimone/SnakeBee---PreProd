@@ -16,7 +16,7 @@ export const createCustomCalendarEvent = (event) =>
 export const deleteCustomCalendarEvent = (eventId) =>
     api.delete(`/calendar/custom/${eventId}`);
 export const hatchBreeding = async (breedingId, data) => {
-  const response = await api.post(`/api/breeding/${breedingId}/hatch`, data);
+  const response = await api.post(`/breeding/${breedingId}/hatch`, data);
   return response.data;
 };
 let currentLanguage = navigator.language.split('-')[0] || 'it';
