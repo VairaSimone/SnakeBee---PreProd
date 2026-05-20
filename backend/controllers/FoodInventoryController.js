@@ -182,21 +182,27 @@ export const getFeedingSuggestions = async (req, res) => {
         continue;
       }
 
+      // --- CALCOLO TOLLERANZA DINAMICA ---
+      // Tolleranza stretta: 10% del peso ideale, ma garantiamo un minimo di 2g
+      const strictTolerance = Math.max(2, idealWeight * 0.10);
+      // Tolleranza allargata: 20% del peso ideale, ma garantiamo un minimo di 3g
+      const wideTolerance = Math.max(3, idealWeight * 0.20);
+
       // Cerca nell'inventario preda esatta (± 10g)
-      let sameTypeFoods = tempInventory.filter(
+  let sameTypeFoods = tempInventory.filter(
         (i) =>
           i.foodType === idealType &&
           i.quantity > 0 &&
-          Math.abs(i.weightPerUnit - idealWeight) <= 10
+          Math.abs(i.weightPerUnit - idealWeight) <= strictTolerance
       );
 
-      // Se non trovata, allarga la ricerca (± 20g)
+      // Se non trovata, allarga la ricerca (Tolleranza allargata)
       if (sameTypeFoods.length === 0) {
         sameTypeFoods = tempInventory.filter(
           (i) =>
             i.foodType === idealType &&
             i.quantity > 0 &&
-            Math.abs(i.weightPerUnit - idealWeight) <= 20
+            Math.abs(i.weightPerUnit - idealWeight) <= wideTolerance
         );
       }
       

@@ -237,21 +237,6 @@ const InventoryPage = () => {
           </div>
         )}
 
-        {/* NUOVO: Banner Avvisi Scorte */}
-        {lowStockAlerts.length > 0 && (
-          <div className="bg-orange-50 border-l-4 border-orange-500 p-4 rounded-r-lg shadow-sm">
-            <div className="flex items-center">
-              <FaExclamationTriangle className="text-orange-500 text-2xl mr-3" />
-              <div>
-                <h3 className="text-orange-800 font-bold text-lg">Scorte in esaurimento</h3>
-                <p className="text-orange-700 text-sm mt-1">
-                  Hai {lowStockAlerts.length} tipolog{lowStockAlerts.length === 1 ? 'ia' : 'ie'} di cibo in esaurimento.
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* --- INSERISCI QUI I SUGGERIMENTI --- */}
         <div className="w-full">
           <FeedingSuggestions />
