@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import api from '../services/api';
 import { useSelector } from 'react-redux';
 import { selectUser } from '../features/userSlice';
 import { useTranslation } from "react-i18next";
 import { 
   FaPlus, FaPencilAlt, FaTrash, FaBoxOpen, FaLightbulb, 
-  FaUtensils, FaChartLine, FaShoppingCart, FaTimes // Aggiunta FaTimes per il pulsante chiudi modale
+  FaUtensils, FaChartLine, FaShoppingCart, FaTimes, 
+  FaExclamationTriangle, FaSort, FaSortUp, FaSortDown
 } from 'react-icons/fa';
 import FeedingSuggestions from '../components/FeedingSuggestions';
 
@@ -30,6 +31,9 @@ const InventoryPage = () => {
   const [recommendations, setRecommendations] = useState([]);
   const [analyticsError, setAnalyticsError] = useState('');
   const [isAnalyticsLoading, setIsAnalyticsLoading] = useState(true);
+
+  // NUOVO: Stato per l'ordinamento
+  const [sortConfig, setSortConfig] = useState({ key: 'weightPerUnit', direction: 'desc' });
 
   const resetForm = () => {
     setFormData({ foodType: '', quantity: '', weightPerUnit: '', weightUnit: 'g' });
@@ -136,17 +140,64 @@ const InventoryPage = () => {
     return grams >= 1000 ? `${(grams / 1000).toFixed(2)} kg` : `${grams} g`;
   };
 
-  // Classi Tailwind riutilizzabili per uno stile coerente (le ho raggruppate)
+  // NUOVO: Gestione dell'ordinamento
+  const requestSort = (key) => {
+    let direction = 'asc';
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const sortedInventory = useMemo(() => {
+    let sortableItems = [...inventory];
+    if (sortConfig !== null) {
+      sortableItems.sort((a, b) => {
+        let aValue = a[sortConfig.key];
+        let bValue = b[sortConfig.key];
+
+        if (sortConfig.key === 'foodType') {
+          aValue = translateFoodType(aValue, t);
+          bValue = translateFoodType(bValue, t);
+          return sortConfig.direction === 'asc' 
+            ? aValue.localeCompare(bValue) 
+            : bValue.localeCompare(aValue);
+        }
+
+        if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
+        if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
+    return sortableItems;
+  }, [inventory, sortConfig, t]);
+
+  const getSortIcon = (key) => {
+    if (sortConfig.key !== key) return <FaSort className="inline ml-1 text-slate-400" />;
+    return sortConfig.direction === 'asc' ? <FaSortUp className="inline ml-1 text-emerald-600" /> : <FaSortDown className="inline ml-1 text-emerald-600" />;
+  };
+
+  // NUOVO: Logica per definire lo status delle scorte
+  const getStockStatus = (item) => {
+    const forecastItem = forecast.find(f => f.foodType === item.foodType && f.weightPerUnit === item.weightPerUnit);
+    if (item.quantity === 0) return 'empty';
+    if (item.quantity <= 5) return 'critical';
+    if (forecastItem && forecastItem.daysLeft <= 14) return 'warning';
+    return 'ok';
+  };
+
+  const lowStockAlerts = useMemo(() => {
+    return inventory.filter(item => {
+      const status = getStockStatus(item);
+      return status === 'critical' || status === 'warning';
+    });
+  }, [inventory, forecast]);
+
   const inputClass = "w-full px-3 py-2 bg-slate-50 border text-black border-slate-300 rounded-md text-sm shadow-sm placeholder-slate-400 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition duration-200 ease-in-out";
   const buttonPrimaryClass = "w-full flex items-center justify-center gap-2 bg-emerald-600 text-white font-semibold py-2 px-4 rounded-md shadow-lg hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-all duration-300 transform hover:scale-105";
   const buttonSecondaryClass = "w-full bg-slate-500 text-white font-semibold py-2 px-4 rounded-md shadow-lg hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-400 transition-all duration-300 transform hover:scale-105";
-  const cardClass = "bg-white p-6 rounded-xl shadow-lg border border-slate-200 transition-shadow duration-300 hover:shadow-xl"; // Card con bordo e hover effect
-  const cardTitleClass = "text-2xl font-extrabold text-slate-800 mb-5 flex items-center gap-3 border-b pb-3 border-slate-200"; // Titolo più grande e separatore
-  const widgetLoadingPlaceholder = (
-    <div className="flex justify-center items-center h-24">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500"></div>
-    </div>
-  );
+  const cardClass = "bg-white p-6 rounded-xl shadow-lg border border-slate-200 transition-shadow duration-300 hover:shadow-xl";
+  const cardTitleClass = "text-2xl font-extrabold text-slate-800 mb-5 flex items-center gap-3 border-b pb-3 border-slate-200";
 
   if (isLoading) {
     return (
@@ -161,7 +212,7 @@ const InventoryPage = () => {
 
   return (
     <div className="min-h-screen p-4 sm:p-6 lg:p-8">
-      <div className="max-w-7xl mx-auto space-y-10"> {/* Aumento lo spazio tra le sezioni */}
+      <div className="max-w-7xl mx-auto space-y-10">
         <header className="text-center lg:text-left">
           <h1 className="text-5xl font-extrabold text-slate-900 tracking-tight leading-tight">
             {t('inventoryPage.title')}
@@ -171,10 +222,45 @@ const InventoryPage = () => {
           </p>
         </header>
 
+        {/* NUOVO: Banner Avvisi Scorte */}
+        {lowStockAlerts.length > 0 && (
+          <div className="bg-orange-50 border-l-4 border-orange-500 p-4 rounded-r-lg shadow-sm">
+            <div className="flex items-center">
+              <FaExclamationTriangle className="text-orange-500 text-2xl mr-3" />
+              <div>
+                <h3 className="text-orange-800 font-bold text-lg">Scorte in esaurimento</h3>
+                <p className="text-orange-700 text-sm mt-1">
+                  Hai {lowStockAlerts.length} tipolog{lowStockAlerts.length === 1 ? 'ia' : 'ie'} di cibo in esaurimento.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* NUOVO: Banner Avvisi Scorte */}
+        {lowStockAlerts.length > 0 && (
+          <div className="bg-orange-50 border-l-4 border-orange-500 p-4 rounded-r-lg shadow-sm">
+            <div className="flex items-center">
+              <FaExclamationTriangle className="text-orange-500 text-2xl mr-3" />
+              <div>
+                <h3 className="text-orange-800 font-bold text-lg">Scorte in esaurimento</h3>
+                <p className="text-orange-700 text-sm mt-1">
+                  Hai {lowStockAlerts.length} tipolog{lowStockAlerts.length === 1 ? 'ia' : 'ie'} di cibo in esaurimento.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* --- INSERISCI QUI I SUGGERIMENTI --- */}
+        <div className="w-full">
+          <FeedingSuggestions />
+        </div>
+
         {/* --- FORM CARD --- */}
         <div className={cardClass}>
           <h2 className={cardTitleClass}>
-            <FaUtensils className="text-emerald-500 text-3xl" /> {/* Icona più grande */}
+            <FaUtensils className="text-emerald-500 text-3xl" />
             {editingId ? t('inventoryPage.editItem') : t('inventoryPage.addItem')}
           </h2>
 
@@ -184,7 +270,7 @@ const InventoryPage = () => {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6"> {/* Aumento il gap */}
+          <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
             {/* Food Type */}
             <div className="flex flex-col lg:col-span-1">
               <label htmlFor="foodType" className="mb-2 text-sm font-medium text-slate-700">{t('inventoryPage.foodType')}</label>
@@ -214,7 +300,7 @@ const InventoryPage = () => {
               </div>
             </div>
             {/* Submit Button */}
-            <div className="flex items-end sm:col-span-2 lg:col-span-2 space-x-4 mt-2 lg:mt-0"> {/* Aumento lo spazio tra i bottoni */}
+            <div className="flex items-end sm:col-span-2 lg:col-span-2 space-x-4 mt-2 lg:mt-0">
               <button type="submit" className={buttonPrimaryClass}>
                 {editingId ? <FaPencilAlt /> : <FaPlus />}
                 {editingId ? t('inventoryPage.update') : t('inventoryPage.add')}
@@ -234,37 +320,59 @@ const InventoryPage = () => {
             <FaBoxOpen className="text-emerald-500 text-3xl" />
             {t('inventoryPage.currentInventory')}
           </h2>
-<div className="overflow-x-auto overflow-y-auto max-h-[400px] scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-slate-100 rounded-md">
+          <div className="overflow-x-auto overflow-y-auto max-h-[400px] scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-slate-100 rounded-md">
             <table className="w-full text-sm">
-              <thead className="bg-slate-100 text-left text-slate-700 uppercase tracking-wider text-xs">
+              <thead className="bg-slate-100 text-left text-slate-700 uppercase tracking-wider text-xs sticky top-0 z-10">
                 <tr>
-                  <th className="p-4 font-bold rounded-tl-lg">{t('inventoryPage.type')}</th>
-                  <th className="p-4 font-bold text-right">{t('inventoryPage.quantity')}</th>
-                  <th className="p-4 font-bold text-right">{t('inventoryPage.weightPerUnit')}</th>
+                  <th className="p-4 font-bold rounded-tl-lg cursor-pointer hover:bg-slate-200 transition" onClick={() => requestSort('foodType')}>
+                    {t('inventoryPage.type')} {getSortIcon('foodType')}
+                  </th>
+                  <th className="p-4 font-bold text-right cursor-pointer hover:bg-slate-200 transition" onClick={() => requestSort('quantity')}>
+                    {t('inventoryPage.quantity')} {getSortIcon('quantity')}
+                  </th>
+                  <th className="p-4 font-bold text-right cursor-pointer hover:bg-slate-200 transition" onClick={() => requestSort('weightPerUnit')}>
+                    {t('inventoryPage.weightPerUnit')} {getSortIcon('weightPerUnit')}
+                  </th>
                   <th className="p-4 font-bold text-right">{t('inventoryPage.totalWeight')}</th>
                   <th className="p-4 font-bold text-center rounded-tr-lg">{t('inventoryPage.actions')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200">
-                {inventory.length > 0 ? (
-                  inventory.sort((a, b) => (b.weightPerUnit || 0) - (a.weightPerUnit || 0)).map(item => (
-                    <tr key={item._id} className="hover:bg-slate-50 transition-colors duration-150 ease-in-out">
-                      <td className="p-4 whitespace-nowrap text-slate-800 font-medium">{translateFoodType(item.foodType, t)}</td>
-                      <td className="p-4 text-right font-mono text-slate-700">{item.quantity}</td>
+                {sortedInventory.length > 0 ? (
+                  sortedInventory.map(item => {
+                    const status = getStockStatus(item);
+                    // NUOVO: Stile dinamico della riga basato sullo stato delle scorte
+                    const rowClass = status === 'critical' 
+                      ? "bg-red-50 hover:bg-red-100 transition-colors duration-150" 
+                      : status === 'warning'
+                      ? "bg-orange-50 hover:bg-orange-100 transition-colors duration-150"
+                      : "hover:bg-slate-50 transition-colors duration-150";
+
+                    return (
+                    <tr key={item._id} className={rowClass}>
+                      <td className="p-4 whitespace-nowrap text-slate-800 font-medium">
+                        {translateFoodType(item.foodType, t)}
+                        {status !== 'ok' && (
+                          <FaExclamationTriangle className={`inline ml-2 text-xs ${status === 'critical' ? 'text-red-500' : 'text-orange-500'}`} title="Scorta in esaurimento"/>
+                        )}
+                      </td>
+                      <td className={`p-4 text-right font-mono font-bold ${status !== 'ok' ? 'text-red-600' : 'text-slate-700'}`}>
+                        {item.quantity}
+                      </td>
                       <td className="p-4 text-right font-mono text-slate-700">{formatWeight(item.weightPerUnit)}</td>
-                      <td className="p-4 text-right font-mono text-slate-900 font-extrabold">{formatWeight(item.weightPerUnit * item.quantity)}</td> {/* Reso più audace */}
+                      <td className="p-4 text-right font-mono text-slate-900 font-extrabold">{formatWeight(item.weightPerUnit * item.quantity)}</td>
                       <td className="p-4 text-center">
                         <div className="flex justify-center items-center space-x-3">
-                          <button onClick={() => handleEdit(item)} className="p-2 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded-full transition-all duration-200 ease-in-out" aria-label={`${t('inventoryPage.edit')} ${item.foodType}`}>
+                          <button onClick={() => handleEdit(item)} className="p-2 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded-full transition-all duration-200 ease-in-out">
                             <FaPencilAlt className="text-lg" />
                           </button>
-                          <button onClick={() => handleDelete(item._id)} className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full transition-all duration-200 ease-in-out" aria-label={`${t('inventoryPage.delete')} ${item.foodType}`}>
+                          <button onClick={() => handleDelete(item._id)} className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full transition-all duration-200 ease-in-out">
                             <FaTrash className="text-lg" />
                           </button>
                         </div>
                       </td>
                     </tr>
-                  ))
+                  )})
                 ) : (
                   <tr>
                     <td colSpan="5" className="text-center p-6 text-slate-500 italic">{t('inventoryPage.noItems')}</td>
@@ -275,12 +383,9 @@ const InventoryPage = () => {
           </div>
         </div>
 
-    
-        {/* --- WIDGET ANALITICI (in una griglia) --- */}
-
       </div>
 
-      {/* --- MODALE DELETE --- */}
+      {/* --- MODALE DELETE --- (Invariata) */}
       {isDeleteModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/60 backdrop-blur-sm animate-fade-in">
           <div className="bg-white rounded-xl p-8 w-11/12 max-w-lg shadow-2xl border border-slate-200 transform scale-95 animate-scale-in">
@@ -289,16 +394,10 @@ const InventoryPage = () => {
             </h3>
             <p className="text-slate-600 mb-8 leading-relaxed">{t('inventoryPage.deleteConfirmText')}</p>
             <div className="flex justify-end gap-4">
-              <button
-                onClick={cancelDelete}
-                className="px-6 py-2 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-all duration-200 ease-in-out font-medium"
-              >
+              <button onClick={cancelDelete} className="px-6 py-2 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-all duration-200 font-medium">
                 {t('inventoryPage.cancel')}
               </button>
-              <button
-                onClick={confirmDelete}
-                className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all duration-200 ease-in-out font-medium shadow-md"
-              >
+              <button onClick={confirmDelete} className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all duration-200 font-medium shadow-md">
                 {t('inventoryPage.delete')}
               </button>
             </div>

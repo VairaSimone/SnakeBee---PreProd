@@ -204,7 +204,7 @@ const [archivedReptiles, setArchivedReptiles] = useState([]);
   const [archivedError, setArchivedError] = useState(null);
   const [archivedFilterSpecies, setArchivedFilterSpecies] = useState('');
   const [archivedFilterStatus, setArchivedFilterStatus] = useState(''); // 'ceded' o 'deceased'
-
+const [isImportMenuOpen, setIsImportMenuOpen] = useState(false);
   const [showEventModal, setShowEventModal] = useState(false);
   const [selectedReptile, setSelectedReptile] = useState(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -492,25 +492,51 @@ const StatCard = ({ icon, title, value, unit, bgColor, children }) => (
           <div>
             <h1 className="text-4xl font-bold text-olive">{t('dashboard.title')}</h1>
             <p className="text-charcoal/70 mt-1">
-              {/* MODIFICA: Mostra il count del tab attivo */}
               {activeTab === 'active'
                 ? t('dashboard.manageReptiles', { count: totalResults })
-                : t('dashboard.manageArchived', { count: archivedTotalResults }) // Aggiungi questa traduzione
+                : t('dashboard.manageArchived', { count: archivedTotalResults })
               }
             </p>
           </div>
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="flex items-center gap-2 bg-forest text-white px-5 py-3 rounded-lg font-semibold hover:bg-olive transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-          >
-            <FaPlus />
-            {t('dashboard.addReptile')}
-          </button>
-          <label className="flex items-center gap-2 bg-blue-600 text-white px-4 py-3 rounded-lg font-semibold cursor-pointer hover:bg-blue-700 transition-all shadow-md">
-    <FaClipboardList />
-    Importa CSV/Excel
-    <input type="file" className="hidden" onChange={handleImport} accept=".csv, .xlsx, .xls" />
-</label>
+          
+          {/* GRUPPO PULSANTI: Aggiungi + Menu Importa */}
+          <div className="relative inline-flex shadow-lg rounded-lg transform hover:-translate-y-0.5 transition-all duration-300">
+            {/* Pulsante Principale (Aggiungi) */}
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="flex items-center gap-2 bg-forest text-white px-5 py-3 rounded-l-lg font-semibold hover:bg-olive transition-colors border-r border-white/20"
+            >
+              <FaPlus />
+              {t('dashboard.addReptile')}
+            </button>
+
+            {/* Freccina (Toggle Menu) */}
+            <button
+              onClick={() => setIsImportMenuOpen(!isImportMenuOpen)}
+              className="flex items-center justify-center bg-forest text-white px-3 py-3 rounded-r-lg hover:bg-olive transition-colors"
+            >
+              <span className="text-xs">{isImportMenuOpen ? '▲' : '▼'}</span>
+            </button>
+
+            {/* Dropdown Menu (Importa CSV) */}
+            {isImportMenuOpen && (
+              <div className="absolute right-0 top-full mt-2 z-50 w-56 animate-fade-in-down">
+                <label className="flex items-center gap-3 bg-white text-charcoal px-4 py-3 rounded-xl font-semibold cursor-pointer hover:bg-gray-50 transition-all shadow-xl border border-slate-100">
+                  <FaClipboardList className="text-blue-600 text-lg" />
+                  Importa CSV/Excel
+                  <input 
+                    type="file" 
+                    className="hidden" 
+                    accept=".csv, .xlsx, .xls"
+                    onChange={(e) => {
+                      handleImport(e);
+                      setIsImportMenuOpen(false); // Chiude la tendina dopo la selezione
+                    }} 
+                  />
+                </label>
+              </div>
+            )}
+          </div>
         </header>
 
         {/* === STATISTICS SECTION === */}

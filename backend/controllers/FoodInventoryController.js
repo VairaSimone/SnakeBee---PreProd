@@ -159,29 +159,30 @@ export const getFeedingSuggestions = async (req, res) => {
         continue;
       }
 
-      // --- LOGICA SUGGERIMENTO CIBO ---
+// --- LOGICA SUGGERIMENTO CIBO ---
       let idealType = reptile.foodType;
       let idealWeight = reptile.weightPerUnit;
 
-      // Fallback preferenze
+      // Fallback preferenze sull'ultimo pasto se mancano nella scheda
       if ((!idealType || !idealWeight) && lastFeeding) {
          idealType = idealType || lastFeeding.foodType;
          idealWeight = idealWeight || lastFeeding.weightPerUnit;
       }
 
-      if (!idealType) {
+      // Se ancora non abbiamo tipo e peso, chiediamo all'utente di impostarli
+      if (!idealType || !idealWeight) {
          suggestions.push({
           reptile: reptile.name?.trim() || reptile.morph,
           idealFood: "N/A",
           suggestion: null,
           available: 0,
-          message: 'Specifica il tipo di cibo nella scheda',
+          message: 'Imposta cibo e peso preferiti nella scheda',
           warning: 'no_preference_set'
         });
         continue;
       }
 
-      // Cerca nell'inventario
+      // Cerca nell'inventario preda esatta (± 10g)
       let sameTypeFoods = tempInventory.filter(
         (i) =>
           i.foodType === idealType &&
@@ -189,6 +190,7 @@ export const getFeedingSuggestions = async (req, res) => {
           Math.abs(i.weightPerUnit - idealWeight) <= 10
       );
 
+      // Se non trovata, allarga la ricerca (± 20g)
       if (sameTypeFoods.length === 0) {
         sameTypeFoods = tempInventory.filter(
           (i) =>
@@ -197,7 +199,7 @@ export const getFeedingSuggestions = async (req, res) => {
             Math.abs(i.weightPerUnit - idealWeight) <= 20
         );
       }
-
+      
       if (sameTypeFoods.length === 0) {
         suggestions.push({
           reptile: reptile.name?.trim() || reptile.morph,

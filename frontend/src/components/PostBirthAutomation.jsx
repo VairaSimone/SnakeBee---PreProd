@@ -4,22 +4,23 @@ import { hatchBreeding } from '../services/api';
 const PostBirthAutomation = ({ breedingId, onHatchSuccess }) => {
   const [numberOfBabies, setNumberOfBabies] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const handleHatching = async (e) => {
     e.preventDefault();
-    if (!window.confirm(`Sei sicuro di voler generare ${numberOfBabies} nuovi esemplari nel database?`)) return;
+    setErrorMessage(""); // Resetta eventuali errori precedenti
 
     try {
       setIsLoading(true);
       await hatchBreeding(breedingId, { numberOfBabies, hatchDate: new Date() });
       
-      alert(`Automazione completata: ${numberOfBabies} baby aggiunti alla Dashboard!`);
-      
+      // Chiama la funzione passata dal padre (che gestirà la chiusura del modale e il Toast di successo)
       if (onHatchSuccess) onHatchSuccess();
       
     } catch (error) {
       console.error(error);
-      alert(error.response?.data?.message || 'Errore durante la registrazione della nascita.');
+      // Mostra l'errore nella UI anziché usare window.alert
+      setErrorMessage(error.response?.data?.message || 'Errore durante la registrazione della nascita.');
     } finally {
       setIsLoading(false);
     }
@@ -31,25 +32,33 @@ const PostBirthAutomation = ({ breedingId, onHatchSuccess }) => {
       <p className="text-sm text-gray-600 mb-4">
         Le uova si sono schiuse? Inserisci il numero di piccoli. Verranno aggiunti automaticamente alla tua dashboard dei rettili.
       </p>
-      <form onSubmit={handleHatching} className="flex items-end gap-4">
-        <div className="flex flex-col">
-          <label className="text-sm font-semibold mb-1">Numero di nati:</label>
-          <input 
-            type="number" 
-            min="1"
-            className="border p-2 rounded"
-            value={numberOfBabies} 
-            onChange={(e) => setNumberOfBabies(Number(e.target.value))}
-            required
-          />
+      
+      <form onSubmit={handleHatching} className="flex flex-col gap-2">
+        <div className="flex items-end gap-4">
+          <div className="flex flex-col">
+            <label className="text-sm font-semibold mb-1">Numero di nati:</label>
+            <input 
+              type="number" 
+              min="1"
+              className="border p-2 rounded"
+              value={numberOfBabies} 
+              onChange={(e) => setNumberOfBabies(Number(e.target.value))}
+              required
+            />
+          </div>
+          <button 
+            type="submit" 
+            disabled={isLoading}
+            className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 disabled:opacity-50 transition-colors"
+          >
+            {isLoading ? 'Generazione in corso...' : 'Registra Nuovi Esemplari'}
+          </button>
         </div>
-        <button 
-          type="submit" 
-          disabled={isLoading}
-          className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 disabled:opacity-50"
-        >
-          {isLoading ? 'Generazione in corso...' : 'Registra Nuovi Esemplari'}
-        </button>
+        
+        {/* Messaggio di errore inline */}
+        {errorMessage && (
+          <p className="text-red-500 text-sm mt-2">{errorMessage}</p>
+        )}
       </form>
     </div>
   );
