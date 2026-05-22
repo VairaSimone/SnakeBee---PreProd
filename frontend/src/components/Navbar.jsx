@@ -95,7 +95,7 @@ const Navbar = () => {
         <div className="hidden lg:flex items-center gap-1 xl:gap-4">
           <NavItem to="/blog" icon={FaRegNewspaper} label="Blog" />
           <NavItem to="/shop" icon={FaBullhorn} label="Annunci" />
-          <NavItem to="/store" icon={FaShoppingBag} label="Market"/>
+      {/*  <NavItem to="/store" icon={FaShoppingBag} label="Market"/>*/}
 
           {user ? (
             <>
@@ -142,14 +142,14 @@ const Navbar = () => {
                   <div className="px-4 py-2 text-xs font-bold text-gray-400 uppercase tracking-wider">Il tuo Account</div>
                   <DropdownItem to="/profile" icon={FaUser} label="Profilo" onClick={() => setAvatarMenuOpen(false)} />
                   <DropdownItem to="/pricing" icon={FaCreditCard} label="Abbonamento" onClick={() => setAvatarMenuOpen(false)} />
-                  <DropdownItem to="/store/orders" icon={FaBox} label="I miei ordini" onClick={() => setAvatarMenuOpen(false)} />
+                 {/*  <DropdownItem to="/store/orders" icon={FaBox} label="I miei ordini" onClick={() => setAvatarMenuOpen(false)} />*/}
                   
                   {user?.role === 'admin' && (
                     <>
                       <div className="border-t my-2"></div>
                       <div className="px-4 py-2 text-xs font-bold text-gray-400 uppercase tracking-wider">Amministrazione</div>
                       <DropdownItem to="/admin/blog" icon={FaCogs} label="Pannello Admin" colorClass="text-red-700" onClick={() => setAvatarMenuOpen(false)} />
-                      <DropdownItem to="/admin/store" icon={FaStore} label="Gestione Negozio" colorClass="text-red-700" onClick={() => setAvatarMenuOpen(false)} />
+                    {/*   <DropdownItem to="/admin/store" icon={FaStore} label="Gestione Negozio" colorClass="text-red-700" onClick={() => setAvatarMenuOpen(false)} />*/}
                     </>
                   )}
 
@@ -167,10 +167,10 @@ const Navbar = () => {
           ) : (
             <div className="hidden lg:flex items-center gap-2">
               <Link to="/login" className="px-4 py-2 text-sm font-semibold hover:text-[#228B22] transition-colors flex items-center gap-2">
-                <FaSignInAlt /> Login
+                <FaSignInAlt /> Accedi
               </Link>
               <Link to="/register" className="px-4 py-2 text-sm font-bold bg-[#228B22] text-white rounded-md hover:bg-[#1a6b1a] transition-colors flex items-center gap-2">
-                <FaUserPlus /> Register
+                <FaUserPlus /> Registrati
               </Link>
             </div>
           )}
@@ -206,7 +206,7 @@ const Navbar = () => {
           <div className="flex-1 overflow-y-auto py-4">
             <MobileLink to="/blog" icon={FaRegNewspaper} label="Blog" onClick={() => setMobileMenuOpen(false)} />
             <MobileLink to="/shop" icon={FaBullhorn} label="Annunci" onClick={() => setMobileMenuOpen(false)} />
-            <MobileLink to="/store" icon={FaShoppingBag} label="Market" onClick={() => setMobileMenuOpen(false)} />
+            {/* <MobileLink to="/store" icon={FaShoppingBag} label="Market" onClick={() => setMobileMenuOpen(false)} />*/}
 
             {user ? (
               <>
@@ -225,7 +225,7 @@ const Navbar = () => {
                 <div className="px-6 mb-2 text-xs font-bold text-gray-500 uppercase">Utente</div>
                 <MobileLink to="/profile" icon={FaUser} label="Profilo" onClick={() => setMobileMenuOpen(false)} />
                 <MobileLink to="/pricing" icon={FaCreditCard} label="Abbonamento" onClick={() => setMobileMenuOpen(false)} />
-                <MobileLink to="/store/orders" icon={FaBox} label="I miei ordini" onClick={() => setMobileMenuOpen(false)} />
+              {/*   <MobileLink to="/store/orders" icon={FaBox} label="I miei ordini" onClick={() => setMobileMenuOpen(false)} />*/}
 
                 <div className="mt-8 px-4">
                   <button onClick={handleLogout} className="flex items-center gap-3 w-full px-4 py-3 bg-red-50 text-red-700 rounded-lg font-semibold">

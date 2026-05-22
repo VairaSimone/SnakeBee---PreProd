@@ -286,7 +286,7 @@
         "dashboard": {
             "alt": "Anteprima della dashboard di SnakeBee"
         },
-"features": {
+        "features": {
             "title": "Efficienza a portata di click",
             "subtitle": "Abbiamo eliminato il superfluo per darti solo gli strumenti che contano davvero per la tua crescita.",
             "biological": {
@@ -302,15 +302,16 @@
                 "desc": "Il tuo allevamento in tasca, ovunque."
             }
         },
-"about": {
+        "about": {
             "title": "Creato sul campo",
             "desc": "SnakeBee non è nato in un ufficio, ma tra i rack di un allevatore. È la risposta a chi vuole professionalità senza dover combattere con fogli Excel obsoleti."
         },
-"ctaEnd": {
+        "ctaEnd": {
             "title": "Sei pronto a fare il salto di qualità?",
             "desc": "Unisciti agli allevatori che hanno scelto il futuro.",
             "cta": "Inizia la prova gratuita"
-        },        "contact": {
+        },
+        "contact": {
             "title": "Restiamo in Contatto",
             "desc": "Per qualsiasi domanda, suggerimento o collaborazione, scrivici a",
             "or": "oppure seguici su",
@@ -338,7 +339,7 @@
         "email": "Indirizzo email",
         "submit": "Invia richiesta"
     },
-    "subscriptionPage": {
+"subscriptionPage": {
         "title": "Scegli il tuo Piano",
         "subtitle": "Dai primi passi fino alla gestione professionale: trova il piano perfetto per il tuo allevamento e semplifica il tuo lavoro 🐍🐢🐊",
         "yourSubscription": "Il tuo abbonamento",
@@ -359,30 +360,31 @@
             "neophyte": {
                 "title": "Neofita",
                 "price": "Gratis",
-                "description": "Perfetto per iniziare senza impegno: scopri le funzionalità essenziali e familiarizza con la piattaforma.",
+                "description": "Perfetto per iniziare senza impegno: traccia le abitudini dei tuoi animali senza limiti quotidiani.",
                 "features": [
                     "Gestione fino a 5 rettili",
-                    "1 immagine per rettile",
-                    "Fino a 5 eventi base per rettile (muta, peso, feci, visite)",
-                    "Puoi pubblicare massimo un rettile negli annunci",
-                    "Compilatore automatico di Cites"
+                    "Eventi base illimitati (muta, peso, feci, visite)",
+                    "3 immagini per rettile",
+                    "Compilatore automatico di CITES base",
+                    "Nessun annuncio Market"
                 ],
                 "button": {
                     "subscribeNow": "Prova Gratis",
                     "currentPlan": "Piano Attuale"
                 }
             },
-            "apprentice": {
-                "title": "Apprendista",
-                "price": "€3.99/mese",
-                "description": "Ideale per chi espande la propria collezione e vuole rimanere organizzato senza stress.",
+            "practitioner": {
+                "title": "Praticante",
+                "price": "€6.99/mese",
+                "description": "Ideale per chi ha una bella collezione casalinga, riproduzioni e vuole rimanere organizzato senza stress.",
                 "features": [
-                    "Gestione fino a 15 rettili",
-                    "3 immagini per rettile",
-                    "Fino a 15 eventi base per rettile",
-                    "Promemoria automatici via email per alimentazioni e attività",
-                    "Accesso al bot Telegram per impostare alimentazioni e eventi dal telefono",
-                    "Puoi pubblicare fino a 5 rettili negli annunci"
+                    "Gestione fino a 50 rettili",
+                    "Eventi base illimitati",
+                    "10 immagini per rettile",
+                    "Promemoria automatici via email ed esportazione in Excel",
+                    "Sezione riproduzioni base",
+                    "Accesso al bot Telegram per impostare eventi dal telefono",
+                    "Puoi pubblicare fino a 10 rettili nel Market"
                 ],
                 "button": {
                     "subscribeNow": "Sblocca il Piano",
@@ -390,38 +392,20 @@
                     "changePlan": "Cambia Piano"
                 }
             },
-            "practitioner": {
-                "title": "Praticante",
-                "price": "€8.99/mese",
-                "description": "La scelta migliore per allevatori seri: più strumenti, più controllo e maggiore efficienza nella gestione.",
-                "features": [
-                    "Gestione fino a 70 rettili",
-                    "5 immagini per rettile",
-                    "Eventi base illimitati",
-                    "Esportazione dati in Excel",
-                    "Sezione riproduzione con tracciamento accoppiamenti",
-                    "Puoi pubblicare fino a 10 rettili negli annunci"
-                ],
-                "button": {
-                    "subscribeNow": "Abbonati Ora",
-                    "currentPlan": "Piano Attuale",
-                    "changePlan": "Cambia Piano"
-                }
-            },
             "breeder": {
                 "title": "Allevatore",
                 "price": "€14.99/mese",
-                "description": "Il top per professionisti: gestione completa, strumenti esclusivi e controllo totale su ogni animale.",
+                "description": "Il top per i professionisti: gestione completa, strumenti esclusivi e controllo totale su ogni animale.",
                 "features": [
-                    "Rettile illimitati",
-                    "10 immagini per rettile",
-                    "Report PDF dettagliato per ogni animale",
-                    "Automazioni avanzate (alimentazione e calendario)",
-                    "QR Code e link pubblico per ogni animale",
-                    "Puoi pubblicare infiniti rettili negli annunci"
+                    "Rettili illimitati",
+                    "Eventi base e immagini illimitate",
+                    "Report PDF dettagliati per ogni animale (ottimi per i clienti)",
+                    "Automazioni avanzate (alimentazione e calendari)",
+                    "QR Code e link pubblico per le fiere di settore",
+                    "Annunci Market illimitati"
                 ],
                 "button": {
-                    "subscribeNow": "Passa al Piano Allevatore",
+                    "subscribeNow": "Passa a Pro",
                     "currentPlan": "Piano Attuale",
                     "changePlan": "Cambia Piano"
                 }
@@ -436,8 +420,8 @@
         "modal": {
             "successTitle": "Operazione completata ✅",
             "invalidTaxCode": "Codice fiscale invalido",
-            "taxCodeMessage": "inserisci il tuo Codice fiscale",
-            "taxCodeTitle": "Codice fiscale",
+            "taxCodeMessage": "Inserisci il tuo Codice Fiscale",
+            "taxCodeTitle": "Codice Fiscale",
             "errorTitle": "Errore",
             "errorMessage": "Si è verificato un errore. Riprova più tardi.",
             "accessRequired": {
@@ -457,8 +441,8 @@
             "questionText": "Scrivici e troveremo insieme la soluzione perfetta per la tua esperienza di allevamento.",
             "contactButton": "Contattaci a support@snakebee.it"
         }
-    },
-    "telegram": {
+    }  ,
+      "telegram": {
         "errors": {
             "missingLink": "Link Telegram mancante ❌",
             "notLoggedIn": "Devi essere loggato per collegare Telegram ❌",

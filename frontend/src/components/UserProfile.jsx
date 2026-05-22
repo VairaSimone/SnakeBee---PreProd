@@ -8,7 +8,7 @@ import i18n from '../i18n';
 import { 
   FiUser, FiShield, FiBell, FiUpload, FiDownload, FiTrash2, 
   FiAlertTriangle, FiCheckCircle, FiXCircle, FiGift, FiMail, 
-  FiEye, FiEyeOff, FiFacebook, FiInstagram 
+  FiEye, FiEyeOff, FiFacebook, FiInstagram, FiMessageCircle, FiSend
 } from 'react-icons/fi';
 import { Trans, useTranslation } from 'react-i18next';
 
@@ -35,7 +35,7 @@ const ConfirmModal = ({ show, title, message, onConfirm, onCancel }) => {
   if (!show) return null;
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-40 animate-fade-in">
-      <div className="bg-white rounded-xl shadow-2xl p-6 sm:p-8 max-w-md w-full mx-4 text-center space-y-4 transform transition-all duration-300 animate-scale-up">
+      <div className=" rounded-xl shadow-2xl p-6 sm:p-8 max-w-md w-full mx-4 text-center space-y-4 transform transition-all duration-300 animate-scale-up">
         <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
           <FiAlertTriangle className="h-6 w-6 text-red-600" aria-hidden="true" />
         </div>
@@ -55,7 +55,7 @@ const ConfirmModal = ({ show, title, message, onConfirm, onCancel }) => {
 };
 
 const SettingsCard = ({ title, icon, children }) => (
-  <div className="bg-white rounded-lg shadow-md overflow-hidden">
+  <div className=" rounded-lg shadow-md overflow-hidden">
     <div className="p-6 border-b border-slate-200">
       <div className="flex items-center gap-3">
         {icon}
@@ -78,14 +78,34 @@ const InputField = ({ id, label, type = "text", value, onChange, required = fals
       onChange={onChange}
       required={required}
       placeholder={placeholder}
-      className="w-full border-slate-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition-colors bg-white text-black"
+      className="w-full border-slate-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition-colors text-black"
     />
   </div>
 );
 
+const SocialInputField = ({ id, label, icon, value, onChange, placeholder, prefix }) => (
+  <div>
+    <label htmlFor={id} className="block text-sm font-medium text-slate-600 mb-1">{label}</label>
+    <div className="flex rounded-md shadow-sm">
+      <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-slate-300 bg-slate-50 text-slate-500 sm:text-sm">
+        {icon}
+        <span className="ml-1 hidden sm:inline">{prefix}</span>
+      </span>
+      <input
+        type="text"
+        id={id}
+        value={value}
+        onChange={onChange}
+        className="flex-1 min-w-0 block w-full px-3 py-2 rounded-none rounded-r-md border border-slate-300 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-black"
+        placeholder={placeholder}
+      />
+    </div>
+  </div>
+);
 
 const UserProfile = () => {
   const [user, setUser] = useState(null);
+  const [activeTab, setActiveTab] = useState('profilo');
   const [name, setName] = useState('');
   const [language, setLanguageLocal] = useState('');
   const [email, setEmail] = useState('');
@@ -121,11 +141,13 @@ const UserProfile = () => {
   const avatarInputRef = useRef(null);
   const [isPublic, setIsPublic] = useState(false);
   const loggedInUser = useSelector(selectUser);
-const [socialsFacebook, setSocialsFacebook] = useState('');
+  const [socialsFacebook, setSocialsFacebook] = useState('');
   const [socialsInstagram, setSocialsInstagram] = useState('');
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
   const nameRegex = /^[a-zA-Z0-9\s]{2,}$/;
+  const socialUsernameRegex = /^[a-zA-Z0-9_.-]+$/;
 
   const addToast = (message, type = 'success') => {
     const id = Date.now();
@@ -133,17 +155,15 @@ const [socialsFacebook, setSocialsFacebook] = useState('');
     setTimeout(() => removeToast(id), 4000);
   };
   const removeToast = (id) => setToasts((prev) => prev.filter((t) => t.id !== id));
+
   useEffect(() => {
     const hash = window.location.hash;
     if (hash === '#referral') {
-      const el = document.getElementById('referral');
-      if (el) el.scrollIntoView({ behavior: 'smooth' });
+      setActiveTab('inviti');
     }
   }, []);
 
   useEffect(() => {
-    console.log("Avatar dal backend:", avatar);
-
     if (avatar instanceof File) {
       const objectUrl = URL.createObjectURL(avatar);
       setAvatarPreview(objectUrl);
@@ -155,6 +175,7 @@ const [socialsFacebook, setSocialsFacebook] = useState('');
       setAvatarPreview('');
     }
   }, [avatar]);
+
   const handleSendBulkEmail = async (e) => {
     e.preventDefault();
     setSendingBulk(true);
@@ -177,7 +198,7 @@ const [socialsFacebook, setSocialsFacebook] = useState('');
     const emailsArray = bulkEmails
       .split(',')
       .map(e => e.trim())
-      .filter(e => emailRegex.test(e)); // valida email
+      .filter(e => emailRegex.test(e)); 
 
     if (bulkEmails && emailsArray.length === 0) {
       addToast("Formato email non valido", "error");
@@ -195,12 +216,12 @@ const [socialsFacebook, setSocialsFacebook] = useState('');
       setBulkResult(data);
       addToast(`Email inviate: ${data.sent}/${data.total}`, 'success');
     } catch (err) {
-      console.error(err);
       addToast(err.response?.data?.error || "Errore invio email", "error");
     } finally {
       setSendingBulk(false);
     }
   };
+
   useEffect(() => {
     const fetchUser = async () => {
       try {
@@ -245,9 +266,17 @@ const [socialsFacebook, setSocialsFacebook] = useState('');
       return;
     }
     const phoneRegex = /^\+?[0-9\s\-]{7,15}$/;
-
     if (phoneNumber && !phoneRegex.test(phoneNumber.trim())) {
       addToast(t('UserProfile.invalidPhone'), 'error');
+      return;
+    }
+
+    if (socialsFacebook && (!socialUsernameRegex.test(socialsFacebook) || socialsFacebook.includes('/'))) {
+      addToast(t('UserProfile.invalidFacebook', 'Inserisci solo lo username per Facebook'), 'error');
+      return;
+    }
+    if (socialsInstagram && (!socialUsernameRegex.test(socialsInstagram) || socialsInstagram.includes('/'))) {
+      addToast(t('UserProfile.invalidInstagram', 'Inserisci solo lo username per Instagram'), 'error');
       return;
     }
 
@@ -257,8 +286,8 @@ const [socialsFacebook, setSocialsFacebook] = useState('');
       formData.append('language', language);
       formData.append('address', address.trim());
       formData.append('phoneNumber', phoneNumber.trim());
-formData.append('isPublic', isPublic);
-formData.append('socialsFacebook', socialsFacebook.trim());
+      formData.append('isPublic', isPublic);
+      formData.append('socialsFacebook', socialsFacebook.trim());
       formData.append('socialsInstagram', socialsInstagram.trim());
       if (avatar instanceof File) {
         formData.append('avatar', avatar);
@@ -272,11 +301,13 @@ formData.append('socialsFacebook', socialsFacebook.trim());
 
       setUser(data);
       dispatch(setLanguage(data.language));
-      i18n.changeLanguage(data.language)
+      i18n.changeLanguage(data.language);
       addToast(t('UserProfile.successProfileUpdate'), 'success');
     } catch(err) {
-addToast(err.response?.data?.message || t('UserProfile.errorProfileUpdate'), 'error');    }
+      addToast(err.response?.data?.message || t('UserProfile.errorProfileUpdate'), 'error');    
+    }
   };
+
   const handleChangeEmail = async (e) => {
     e.preventDefault();
     setEmailError('');
@@ -310,6 +341,7 @@ addToast(err.response?.data?.message || t('UserProfile.errorProfileUpdate'), 'er
       addToast(t('UserProfile.errorEmailChange'), 'error');
     }
   };
+
   const handleChangePassword = async (e) => {
     e.preventDefault();
     setPasswordError('');
@@ -327,24 +359,24 @@ addToast(err.response?.data?.message || t('UserProfile.errorProfileUpdate'), 'er
       setOldPassword('');
       setNewPassword('');
       setConfirmPassword('');
-
     } catch (err) {
       setPasswordError(err.response?.data?.message || t('UserProfile.PasswordError'));
       addToast(t('UserProfile.errorPasswordChange'), 'error');
     }
   };
+
   const confirmDeleteAccount = async () => {
     try {
       await api.delete(`/user/${user._id}`);
       dispatch(logoutUser());
       localStorage.removeItem('token');
       localStorage.removeItem('refreshToken');
-
       navigate('/login');
     } catch {
       addToast(t('UserProfile.deleteUserError'), 'error');
     }
   };
+
   const handleNotificationSave = async () => {
     try {
       await api.patch(`/user/users/email-settings/${user._id}`, {
@@ -357,12 +389,12 @@ addToast(err.response?.data?.message || t('UserProfile.errorProfileUpdate'), 'er
       addToast(t('UserProfile.errorNotificationSave'), 'error');
     }
   };
+
   const handleExportExcel = async () => {
     try {
       const response = await api.get(`reptile/export/reptiles/${user._id}`, {
         responseType: 'blob',
       });
-
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
@@ -370,7 +402,6 @@ addToast(err.response?.data?.message || t('UserProfile.errorProfileUpdate'), 'er
       document.body.appendChild(link);
       link.click();
       link.remove();
-
       addToast(t('UserProfile.downloadSuccess'));
     } catch (err) {
       console.error(err);
@@ -382,7 +413,7 @@ addToast(err.response?.data?.message || t('UserProfile.errorProfileUpdate'), 'er
     if (!referralLink) return;
     navigator.clipboard.writeText(referralLink).then(() => {
       setIsCopied(true);
-      setTimeout(() => setIsCopied(false), 2500); // Resetta il messaggio dopo 2.5 secondi
+      setTimeout(() => setIsCopied(false), 2500); 
     }).catch(err => {
       console.error('Failed to copy text: ', err);
       addToast(t('UserProfile.copyError'), 'error');
@@ -390,9 +421,13 @@ addToast(err.response?.data?.message || t('UserProfile.errorProfileUpdate'), 'er
   };
 
   if (!user) return <div className="flex items-center justify-center h-screen text-slate-500">{t('UserProfile.loadingProfile')}</div>;
-const canBePublic = true
+  const canBePublic = true;
+  
+  const referralCount = user.referralCount || 0;
+  const progressPercentage = Math.min((referralCount / 3) * 100, 100);
+
   return (
-    <div className=" min-h-screen">
+    <div className="min-h-screen">
       <Toast toasts={toasts} removeToast={removeToast} />
       <ConfirmModal
         show={showDeleteModal}
@@ -405,17 +440,19 @@ const canBePublic = true
         onCancel={() => setShowDeleteModal(false)}
       />
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-slate-800">{t('UserProfile.userProfile')}</h1>
+          <h1 className="text-3xl font-bold text-slate-800">{t('UserProfile.userProfile', 'Gestione Profilo')}</h1>
           <Link to="/dashboard" className="text-sm font-medium text-indigo-600 hover:text-indigo-800 transition-colors">
             {t('UserProfile.backToDashboard')}
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <aside className="lg:col-span-1 space-y-8">
-<div className="bg-white rounded-lg shadow-md p-6 text-center">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+          
+          {/* Menu Laterale */}
+          <aside className="lg:col-span-1 space-y-4">
+            <div className=" rounded-lg shadow-md p-6 text-center mb-6">
               <div className="relative w-32 h-32 mx-auto group">
                 <img
                   src={avatarPreview || '/images/default_avatar.png'}
@@ -423,16 +460,14 @@ const canBePublic = true
                   className="w-full h-full rounded-full object-cover border-4 border-slate-200"
                 />
                 
-                {/* Overlay scuro su hover (opzionale, ma lo teniamo) */}
                 <div
                   className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
                   onClick={() => avatarInputRef.current?.click()}
-                  aria-hidden="true" // Nascosto agli screen reader (c'è già il bottone)
+                  aria-hidden="true" 
                 >
                   <FiUpload className="text-white h-8 w-8" />
                 </div>
 
-                {/* --- NUOVO PULSANTE SEMPRE VISIBILE --- */}
                 <button
                   type="button"
                   onClick={() => avatarInputRef.current?.click()}
@@ -441,8 +476,6 @@ const canBePublic = true
                 >
                   <FiUpload className="w-5 h-5" />
                 </button>
-                {/* --- FINE NUOVO PULSANTE --- */}
-
               </div>
               <input
                 ref={avatarInputRef}
@@ -451,207 +484,324 @@ const canBePublic = true
                 onChange={(e) => setAvatar(e.target.files[0])}
                 className="hidden"
               />
-              <h2 className="mt-4 text-2xl font-bold text-slate-800">{name}</h2>
+              <h2 className="mt-4 text-xl font-bold text-slate-800">{name}</h2>
               <p className="text-sm text-slate-500">{email}</p>
-            </div>            <SettingsCard title={t('UserProfile.exportData')} icon={<FiDownload className="text-indigo-500 w-6 h-6" />}>
-              <p className="text-sm text-slate-600 mb-4">
-                {t('UserProfile.downloadExcelInfo')}
-              </p>
+            </div>
+
+            <nav className="flex flex-col space-y-1">
+              {[
+                { id: 'profilo', label: t('UserProfile.profileInfo', 'Profilo'), icon: <FiUser /> },
+                { id: 'sicurezza', label: t('UserProfile.security', 'Sicurezza'), icon: <FiShield /> },
+                { id: 'notifiche', label: t('UserProfile.notifications', 'Notifiche'), icon: <FiBell /> },
+                { id: 'inviti', label: t('UserProfile.referralTitle', 'Programma Inviti'), icon: <FiGift /> },
+                ...(user.role === 'admin' ? [{ id: 'admin', label: 'Invia Email Bulk', icon: <FiMail /> }] : [])
+              ].map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveTab(item.id)}
+                  className={`flex items-center gap-3 px-4 py-3 text-left rounded-md transition-colors font-medium
+                    ${activeTab === item.id 
+                      ? 'bg-indigo-50 text-indigo-700 border-l-4 border-indigo-600' 
+                      : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 border-l-4 border-transparent'
+                    }`}
+                >
+                  {item.icon}
+                  {item.label}
+                </button>
+              ))}
+            </nav>
+            
+            {/* Esportazione separata dal menu principale */}
+            <div className="pt-6 border-t border-slate-200 mt-6">
               <button onClick={handleExportExcel} className="w-full bg-green-600 text-white py-2 px-4 rounded-md font-semibold hover:bg-green-700 transition-colors flex items-center justify-center gap-2">
                 <FiDownload />
-                {t('UserProfile.downloadExcel')}
+                {t('UserProfile.downloadExcel', 'Esporta Dati')}
               </button>
-            </SettingsCard>
+            </div>
           </aside>
 
-          <main className="lg:col-span-2 space-y-8">
-            <SettingsCard title={t('UserProfile.profileInfo')} icon={<FiUser className="text-indigo-500 w-6 h-6" />}>
-              <form onSubmit={handleUpdateProfile} className="space-y-4">
-                <InputField id="name" label={t('UserProfile.name')} value={name} onChange={(e) => setName(e.target.value)} required />
-                <InputField
-                  id="address"
-                  label={t('UserProfile.address')}
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                  placeholder={t('UserProfile.addressPlaceholder')}
-                />
-
-                <InputField
-                  id="phoneNumber"
-                  label={t('UserProfile.phoneNumber')}
-                  type="tel"
-                  value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(e.target.value)}
-                  placeholder="+39 333 1234567"
-                />
-                <InputField
-                  id="socialsFacebook"
-                  label="Facebook"
-                  value={socialsFacebook}
-                  onChange={(e) => setSocialsFacebook(e.target.value)}
-                  placeholder={t('UserProfile.facebookPlaceholder', 'es. https://facebook.com/tuonome')}
-                />
-                <InputField
-                  id="socialsInstagram"
-                  label="Instagram"
-                  value={socialsInstagram}
-                  onChange={(e) => setSocialsInstagram(e.target.value)}
-                  placeholder={t('UserProfile.instagramPlaceholder', 'es. https://instagram.com/tuonome')}
-                />
-
-<div className="p-4 bg-slate-100 rounded-lg border border-slate-200">
-  <Switch.Group as="div" className="flex items-center justify-between">
-    <span className="flex-grow flex flex-col pr-3">
-      <Switch.Label as="span" className={`text-sm font-medium ${!canBePublic ? 'text-slate-400' : 'text-slate-900'}`} passive>
-        {t('UserProfile.publicProfile')}
-        {isPublic 
-          ? <FiEye className="inline w-4 h-4 ml-1.5 text-indigo-600"/> 
-          : <FiEyeOff className="inline w-4 h-4 ml-1.5 text-slate-500"/>}
-      </Switch.Label>
-      <Switch.Description as="span" className={`text-xs ${!canBePublic ? 'text-slate-400' : 'text-slate-500'}`}>
-        {t('UserProfile.publicProfileDesc')}
-      </Switch.Description>
-    </span>
-    <Switch
-      checked={isPublic}
-      onChange={setIsPublic} // Passa direttamente il valore
-      disabled={!canBePublic}
-      className={`${
-        isPublic ? 'bg-indigo-600' : 'bg-gray-200'
-      } relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed`}
-    >
-      <span
-        aria-hidden="true"
-        className={`${
-          isPublic ? 'translate-x-5' : 'translate-x-0'
-        } pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`}
-      />
-    </Switch>
-  </Switch.Group>
-  
-  {/* Messaggio di avviso/info integrato */}
-  {!canBePublic && (
-    <p className="mt-3 text-xs text-red-600 border-t border-slate-300 pt-3">
-      <Trans
-        i18nKey="UserProfile.publicProfileDisabled"
-        components={[<Link to="/pricing" className="underline font-semibold" />]}
-        defaults="Funzione disponibile solo con un <0>piano di abbonamento</0> attivo (non Neofita)."
-      />
-    </p>
-  )}
-</div>
-                <div>
-                  <label htmlFor="language" className="block text-sm font-medium text-slate-600 mb-1">{t('UserProfile.language')}</label>
-                  <select id="language" value={language} onChange={(e) => setLanguageLocal(e.target.value)} required className="w-full border-slate-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition-colors bg-white text-black">
-                    <option value="it">Italiano</option>
-                    <option value="en">English</option>
-                  </select>
-                </div>
-                <button type="submit" className="w-full bg-green-600 text-white py-2 px-4 rounded-md font-semibold hover:bg-green-700 transition-colors">
-                  {t('UserProfile.updateProfile')}
-                </button>
-              </form>
-            </SettingsCard>
-
-            <SettingsCard title={t('UserProfile.security')} icon={<FiShield className="text-indigo-500 w-6 h-6" />}>
-              <form onSubmit={handleChangeEmail} className="space-y-4 border-b border-slate-200 pb-6">
-                <h4 className="font-semibold text-slate-700">{t('UserProfile.changeEmail')}</h4>
-                <InputField id="newEmail" label={t('UserProfile.newEmail')} type="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} />
-                <InputField id="confirmNewEmail" label={t('UserProfile.newEmail')} type="email" value={confirmNewEmail} onChange={(e) => setConfirmNewEmail(e.target.value)} />
-                <InputField id="passwordForEmail" label={t('UserProfile.confirmNewEmail')} type="password" value={passwordForEmail} onChange={(e) => setPasswordForEmail(e.target.value)} placeholder="••••••••" />
-                {emailError && <p className="text-sm text-red-600">{emailError}</p>}
-                <button type="submit" className="w-full bg-green-700 text-white py-2 px-4 rounded-md font-semibold hover:bg-green-800 transition-colors">{t('UserProfile.submitEmailChange')} </button>
-              </form>
-              <form onSubmit={handleChangePassword} className="space-y-4 pt-6">
-                <h4 className="font-semibold text-slate-700">{t('UserProfile.changePassword')}</h4>
-                <InputField id="oldPassword" label={t('UserProfile.currentPassword')} type="password" value={oldPassword} onChange={(e) => setOldPassword(e.target.value)} placeholder="••••••••" />
-                <InputField id="newPassword" label={t('UserProfile.newPassword')} type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="••••••••" />
-                <InputField id="confirmPassword" label={t('UserProfile.confirmPassword')} type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="••••••••" />
-                {passwordError && <p className="text-sm text-red-600">{passwordError}</p>}
-                <button type="submit" className="w-full bg-green-700 text-white py-2 px-4 rounded-md font-semibold hover:bg-green-800 transition-colors">{t('UserProfile.changePassword')}</button>
-              </form>
-            </SettingsCard>
-
-            <SettingsCard title={t('UserProfile.notifications')} icon={<FiBell className="text-indigo-500 w-6 h-6" />}>
-              <div className="flex items-center justify-between" id="referral">
-                <label htmlFor="emailFeedingToggle" className="text-sm font-medium text-slate-700">
-                  {t('UserProfile.feedingEmails')}
-                </label>
-                <input
-                  id="emailFeedingToggle"
-                  type="checkbox"
-                  checked={emailFeedingNotifications}
-                  onChange={(e) => {
-                    const allowedPlans = ['BREEDER', 'APPRENTICE', 'PRACTITIONER'];
-                    if (!allowedPlans.includes(user.subscription?.plan)) {
-                      addToast(t('UserProfile.premiumFeature2'), 'error');
-                      return;
-                    }
-                    setEmailFeedingNotifications(e.target.checked);
-                  }}
-                  disabled={!['BREEDER', 'APPRENTICE', 'PRACTITIONER'].includes(user.subscription?.plan)}
-                  className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                />
-
-              </div>
-              {user.subscription?.plan !== 'BREEDER' && user.subscription?.plan !== 'APPRENTICE' && user.subscription?.plan !== 'PRACTITIONER' && (
-                <p className="text-xs text-red-600 mt-1">
-                  <Trans
-                    i18nKey="UserProfile.premiumFeature"
-                    components={[<Link to="/pricing" className="underline font-semibold" />]}
+          {/* Area Contenuto */}
+          <main className="lg:col-span-3 space-y-8">
+            
+            {/* TAB PROFILO */}
+            {activeTab === 'profilo' && (
+              <SettingsCard title={t('UserProfile.profileInfo', 'Profilo')} icon={<FiUser className="text-indigo-500 w-6 h-6" />}>
+                <form onSubmit={handleUpdateProfile} className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <InputField id="name" label={t('UserProfile.name')} value={name} onChange={(e) => setName(e.target.value)} required />
+                    <InputField
+                      id="phoneNumber"
+                      label={t('UserProfile.phoneNumber')}
+                      type="tel"
+                      value={phoneNumber}
+                      onChange={(e) => setPhoneNumber(e.target.value)}
+                      placeholder="+39 333 1234567"
+                    />
+                  </div>
+                  
+                  <InputField
+                    id="address"
+                    label={t('UserProfile.address')}
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                    placeholder={t('UserProfile.addressPlaceholder')}
                   />
-                </p>
-              )}
 
-              <button onClick={handleNotificationSave} className="w-full bg-green-600 text-white py-2 px-4 rounded-md font-semibold hover:bg-green-700 transition-colors">
-                {t('UserProfile.savePreferences')}
-              </button>
-            </SettingsCard>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <SocialInputField
+                      id="socialsFacebook"
+                      label="Facebook"
+                      icon={<FiFacebook />}
+                      prefix="facebook.com/"
+                      value={socialsFacebook}
+                      onChange={(e) => setSocialsFacebook(e.target.value)}
+                      placeholder={t('UserProfile.facebookPlaceholder', 'tuonome')}
+                    />
+                    <SocialInputField
+                      id="socialsInstagram"
+                      label="Instagram"
+                      icon={<FiInstagram />}
+                      prefix="instagram.com/"
+                      value={socialsInstagram}
+                      onChange={(e) => setSocialsInstagram(e.target.value)}
+                      placeholder={t('UserProfile.instagramPlaceholder', 'tuonome')}
+                    />
+                  </div>
 
-<SettingsCard title={t('UserProfile.referralTitle')} icon={<FiGift className="text-indigo-500 w-6 h-6" />}>
-  <p className="text-sm text-slate-600">
-    {t('UserProfile.referralDesc')}
-  </p>
+                  <div className="p-4 bg-slate-100 rounded-lg border border-slate-200">
+                    <Switch.Group as="div" className="flex items-center justify-between">
+                      <span className="flex-grow flex flex-col pr-3">
+                        <Switch.Label as="span" className={`text-sm font-medium ${!canBePublic ? 'text-slate-400' : 'text-slate-900'}`} passive>
+                          {t('UserProfile.publicProfile')}
+                          {isPublic 
+                            ? <FiEye className="inline w-4 h-4 ml-1.5 text-indigo-600"/> 
+                            : <FiEyeOff className="inline w-4 h-4 ml-1.5 text-slate-500"/>}
+                        </Switch.Label>
+                        <Switch.Description as="span" className={`text-xs ${!canBePublic ? 'text-slate-400' : 'text-slate-500'}`}>
+                          {t('UserProfile.publicProfileDesc')}
+                        </Switch.Description>
+                      </span>
+                      <Switch
+                        checked={isPublic}
+                        onChange={setIsPublic}
+                        disabled={!canBePublic}
+                        className={`${
+                          isPublic ? 'bg-indigo-600' : 'bg-gray-200'
+                        } relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed`}
+                      >
+                        <span
+                          aria-hidden="true"
+                          className={`${
+                            isPublic ? 'translate-x-5' : 'translate-x-0'
+                          } pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`}
+                        />
+                      </Switch>
+                    </Switch.Group>
+                    
+                    {!canBePublic && (
+                      <p className="mt-3 text-xs text-red-600 border-t border-slate-300 pt-3">
+                        <Trans
+                          i18nKey="UserProfile.publicProfileDisabled"
+                          components={[<Link to="/pricing" className="underline font-semibold" />]}
+                          defaults="Funzione disponibile solo con un <0>piano di abbonamento</0> attivo (non Neofita)."
+                        />
+                      </p>
+                    )}
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="language" className="block text-sm font-medium text-slate-600 mb-1">{t('UserProfile.language')}</label>
+                    <select id="language" value={language} onChange={(e) => setLanguageLocal(e.target.value)} required className="w-full md:w-1/2 border-slate-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition-colors bg-white text-black">
+                      <option value="it">Italiano</option>
+                      <option value="en">English</option>
+                    </select>
+                  </div>
+                  
+                  <button type="submit" className="bg-green-600 text-white py-2 px-6 rounded-md font-semibold hover:bg-green-700 transition-colors">
+                    {t('UserProfile.updateProfile', 'Aggiorna Profilo')}
+                  </button>
+                </form>
+              </SettingsCard>
+            )}
 
-  {/* Visualizzazione Contatore Inviti */}
-  <div className="bg-slate-50 p-4 rounded-md border border-slate-200 flex justify-between items-center">
-    <span className="text-sm font-medium text-slate-700">{t('UserProfile.referralCount')}</span>
-    <span className="text-lg font-bold text-indigo-600">{user.referralCount || 0}</span>
-  </div>
+            {/* TAB SICUREZZA */}
+            {activeTab === 'sicurezza' && (
+              <>
+                <SettingsCard title={t('UserProfile.security', 'Sicurezza')} icon={<FiShield className="text-indigo-500 w-6 h-6" />}>
+                  <form onSubmit={handleChangeEmail} className="space-y-4 border-b border-slate-200 pb-6">
+                    <h4 className="font-semibold text-slate-700">{t('UserProfile.changeEmail')}</h4>
+                    <InputField id="newEmail" label={t('UserProfile.newEmail')} type="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} />
+                    <InputField id="confirmNewEmail" label={t('UserProfile.newEmail')} type="email" value={confirmNewEmail} onChange={(e) => setConfirmNewEmail(e.target.value)} />
+                    <InputField id="passwordForEmail" label={t('UserProfile.confirmNewEmail')} type="password" value={passwordForEmail} onChange={(e) => setPasswordForEmail(e.target.value)} placeholder="••••••••" />
+                    {emailError && <p className="text-sm text-red-600">{emailError}</p>}
+                    <button type="submit" className="w-full sm:w-auto bg-green-700 text-white py-2 px-4 rounded-md font-semibold hover:bg-green-800 transition-colors">{t('UserProfile.submitEmailChange')} </button>
+                  </form>
+                  <form onSubmit={handleChangePassword} className="space-y-4 pt-6">
+                    <h4 className="font-semibold text-slate-700">{t('UserProfile.changePassword')}</h4>
+                    <InputField id="oldPassword" label={t('UserProfile.currentPassword')} type="password" value={oldPassword} onChange={(e) => setOldPassword(e.target.value)} placeholder="••••••••" />
+                    <InputField id="newPassword" label={t('UserProfile.newPassword')} type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="••••••••" />
+                    <InputField id="confirmPassword" label={t('UserProfile.confirmPassword')} type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="••••••••" />
+                    {passwordError && <p className="text-sm text-red-600">{passwordError}</p>}
+                    <button type="submit" className="w-full sm:w-auto bg-green-700 text-white py-2 px-4 rounded-md font-semibold hover:bg-green-800 transition-colors">{t('UserProfile.changePassword')}</button>
+                  </form>
+                </SettingsCard>
 
-  {/* Link di Referral */}
-  {referralLink && (
-    <div className="flex items-stretch gap-2">
-      <input
-        type="text"
-        readOnly
-        value={referralLink}
-        className="w-full border-slate-300 rounded-md shadow-sm bg-white text-black select-all px-3"
-      />
-      <button
-        onClick={handleCopyLink}
-        className={`px-4 py-2 rounded-md font-semibold transition-colors text-white ${isCopied ? 'bg-green-500' : 'bg-indigo-600'}`}
-      >
-        {isCopied ? t('UserProfile.copied') : t('UserProfile.copy')}
-      </button>
-    </div>
-  )}
+                <div className="bg-white rounded-lg shadow-md border-2 border-red-200 mt-8">
+                  <div className="p-6 border-b border-red-200">
+                    <div className="flex items-center gap-3">
+                      <FiTrash2 className="text-red-500 w-6 h-6" />
+                      <h3 className="text-xl font-semibold text-red-700">{t('UserProfile.deleteAccount')}</h3>
+                    </div>
+                  </div>
+                  <div className="p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <p className="text-sm text-slate-600">
+                      {t('UserProfile.deleteAccountInfo')}
+                    </p>
+                    <button
+                      onClick={() => setShowDeleteModal(true)}
+                      className="w-full sm:w-auto whitespace-nowrap bg-red-600 text-white py-2 px-6 rounded-md font-semibold hover:bg-red-700 transition-colors"
+                    >
+                      {t('UserProfile.deleteMyAccount')}
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
 
-  {/* Stato del Premio */}
-  {user.hasReferred && (
-    <div className="flex items-center gap-2 text-green-600 text-sm font-bold bg-green-50 p-2 rounded-md border border-green-200">
-      <FiCheckCircle />
-      {t('UserProfile.rewardReceived')}
-    </div>
-  )}
+            {/* TAB NOTIFICHE */}
+            {activeTab === 'notifiche' && (
+              <SettingsCard title={t('UserProfile.notifications', 'Notifiche')} icon={<FiBell className="text-indigo-500 w-6 h-6" />}>
+                <div className="flex items-center justify-between">
+                  <label htmlFor="emailFeedingToggle" className="text-sm font-medium text-slate-700">
+                    {t('UserProfile.feedingEmails')}
+                  </label>
+                  <input
+                    id="emailFeedingToggle"
+                    type="checkbox"
+                    checked={emailFeedingNotifications}
+                    onChange={(e) => {
+                      const allowedPlans = ['BREEDER', 'APPRENTICE', 'PRACTITIONER'];
+                      if (!allowedPlans.includes(user.subscription?.plan)) {
+                        addToast(t('UserProfile.premiumFeature2'), 'error');
+                        return;
+                      }
+                      setEmailFeedingNotifications(e.target.checked);
+                    }}
+                    disabled={!['BREEDER', 'APPRENTICE', 'PRACTITIONER'].includes(user.subscription?.plan)}
+                    className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                  />
+                </div>
+                {user.subscription?.plan !== 'BREEDER' && user.subscription?.plan !== 'APPRENTICE' && user.subscription?.plan !== 'PRACTITIONER' && (
+                  <p className="text-xs text-red-600 mt-1">
+                    <Trans
+                      i18nKey="UserProfile.premiumFeature"
+                      components={[<Link to="/pricing" className="underline font-semibold" />]}
+                    />
+                  </p>
+                )}
+                <div className="pt-4 mt-4 border-t border-slate-100">
+                  <button onClick={handleNotificationSave} className="bg-green-600 text-white py-2 px-4 rounded-md font-semibold hover:bg-green-700 transition-colors">
+                    {t('UserProfile.savePreferences', 'Salva Preferenze')}
+                  </button>
+                </div>
+              </SettingsCard>
+            )}
 
-  {referralError && (
-    <div className="text-center p-3 bg-yellow-100 text-yellow-800 rounded-md text-sm">
-      {referralError}
-    </div>
-  )}
-</SettingsCard>
-            {user.role === 'admin' && (
+            {/* TAB INVITI */}
+            {activeTab === 'inviti' && (
+              <SettingsCard title={t('UserProfile.referralTitle', 'Programma Invita Amici')} icon={<FiGift className="text-indigo-500 w-6 h-6" />}>
+                <div className="space-y-6">
+                  <div className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white p-6 rounded-lg shadow-sm">
+                    <div className="flex items-center gap-4 mb-2">
+                      <FiGift className="w-8 h-8 opacity-80" />
+                      <h4 className="text-lg font-bold">Ottieni il tuo Sconto!</h4>
+                    </div>
+                    <p className="text-sm opacity-90 mb-4">
+                      Invita 3 amici a iscriversi con il tuo link. Al raggiungimento dell'obiettivo riceverai automaticamente un <strong>buono sconto sulla tua prossima mensilità</strong>.
+                    </p>
+                    
+                    {/* Progress Bar Premi */}
+                    <div className="bg-white/20 rounded-full h-4 w-full overflow-hidden mb-2 relative">
+                      <div 
+                        className="bg-green-400 h-full transition-all duration-500" 
+                        style={{ width: `${progressPercentage}%` }}
+                      ></div>
+                    </div>
+                    <div className="flex justify-between text-xs font-semibold">
+                      <span>{referralCount} invitati</span>
+                      <span>Obiettivo: 3</span>
+                    </div>
+                  </div>
+
+                  {referralLink && (
+                    <div className="space-y-3">
+                      <label className="text-sm font-medium text-slate-700">Il tuo link personale:</label>
+                      <div className="flex flex-col sm:flex-row items-stretch gap-2">
+                        <input
+                          type="text"
+                          readOnly
+                          value={referralLink}
+                          className="w-full border-slate-300 rounded-md shadow-sm bg-slate-50 text-slate-600 select-all px-3 py-2"
+                        />
+                        <div className="flex gap-2">
+                          <button
+                            onClick={handleCopyLink}
+                            className={`px-4 py-2 rounded-md font-semibold transition-colors flex-1 sm:flex-none text-white whitespace-nowrap ${isCopied ? 'bg-green-500' : 'bg-indigo-600 hover:bg-indigo-700'}`}
+                          >
+                            {isCopied ? t('UserProfile.copied', 'Copiato!') : t('UserProfile.copy', 'Copia Link')}
+                          </button>
+                          
+                          {/* Pulsanti Condivisione Rapida */}
+                          <a 
+                            href={`https://wa.me/?text=${encodeURIComponent('Iscriviti tramite il mio link: ' + referralLink)}`} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="flex items-center justify-center p-2 rounded-md bg-[#25D366] text-white hover:bg-[#1EBE5D] transition-colors"
+                            title="Condividi su WhatsApp"
+                          >
+                            <FiMessageCircle className="w-5 h-5" />
+                          </a>
+                          <a 
+                            href={`https://t.me/share/url?url=${encodeURIComponent(referralLink)}&text=${encodeURIComponent('Iscriviti tramite il mio link!')}`} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="flex items-center justify-center p-2 rounded-md bg-[#0088cc] text-white hover:bg-[#0077b5] transition-colors"
+                            title="Condividi su Telegram"
+                          >
+                            <FiSend className="w-5 h-5" />
+                          </a>
+                          <a 
+                            href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(referralLink)}`} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="flex items-center justify-center p-2 rounded-md bg-[#1877F2] text-white hover:bg-[#166FE5] transition-colors"
+                            title="Condividi su Facebook"
+                          >
+                            <FiFacebook className="w-5 h-5" />
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {user.hasReferred && (
+                    <div className="flex items-center gap-2 text-green-700 text-sm font-bold bg-green-50 p-4 rounded-md border border-green-200">
+                      <FiCheckCircle className="w-5 h-5" />
+                      {t('UserProfile.rewardReceived', 'Hai già riscattato il tuo premio per questa promozione!')}
+                    </div>
+                  )}
+
+                  {referralError && (
+                    <div className="p-3 bg-yellow-50 border border-yellow-200 text-yellow-800 rounded-md text-sm">
+                      {referralError}
+                    </div>
+                  )}
+                </div>
+              </SettingsCard>
+            )}
+
+            {/* TAB ADMIN BULK */}
+            {activeTab === 'admin' && user.role === 'admin' && (
               <SettingsCard title="Invio Email Bulk" icon={<FiMail className="text-indigo-500 w-6 h-6" />}>
                 <form onSubmit={handleSendBulkEmail} className="space-y-4">
                   <div>
@@ -670,7 +820,6 @@ const canBePublic = true
                     onChange={(e) => setBulkEmails(e.target.value)}
                     placeholder="esempio1@email.com, esempio2@email.com"
                   />
-
                   <InputField
                     id="bulkSubject"
                     label="Oggetto"
@@ -699,39 +848,19 @@ const canBePublic = true
                   </div>
                   <button
                     type="submit"
-                    className="w-full bg-indigo-600 text-white py-2 px-4 rounded-md font-semibold hover:bg-indigo-700 transition-colors"
+                    className="w-full sm:w-auto bg-indigo-600 text-white py-2 px-6 rounded-md font-semibold hover:bg-indigo-700 transition-colors"
                     disabled={sendingBulk}
                   >
                     {sendingBulk ? "Invio in corso..." : "Invia Email"}
                   </button>
                 </form>
                 {bulkResult && (
-                  <div className="mt-4 text-sm text-slate-700">
+                  <div className="mt-4 p-4 bg-slate-50 border border-slate-200 rounded-md text-sm text-slate-700">
                     Totale utenti: {bulkResult.total}, Inviate: {bulkResult.sent}, Fallite: {bulkResult.failed}
                   </div>
                 )}
               </SettingsCard>
             )}
-
-            <div className="bg-white rounded-lg shadow-md border-2 border-red-200">
-              <div className="p-6 border-b border-red-200">
-                <div className="flex items-center gap-3">
-                  <FiTrash2 className="text-red-500 w-6 h-6" />
-                  <h3 className="text-xl font-semibold text-red-700">{t('UserProfile.deleteAccount')}</h3>
-                </div>
-              </div>
-              <div className="p-6">
-                <p className="text-sm text-slate-600 mb-4">
-                  {t('UserProfile.deleteAccountInfo')}
-                </p>
-                <button
-                  onClick={() => setShowDeleteModal(true)}
-                  className="w-full bg-red-600 text-white py-2 px-4 rounded-md font-semibold hover:bg-red-700 transition-colors"
-                >
-                  {t('UserProfile.deleteMyAccount')}
-                </button>
-              </div>
-            </div>
 
           </main>
         </div>
