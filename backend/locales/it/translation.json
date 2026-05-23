@@ -330,6 +330,13 @@
     "activeStripe_subscription": "Il tuo abbonamento al piano {{subscription}} è stato attivato con successo."
   },
   "emails": {
+    "delegateInvite": {
+      "subject": "Nuovo invito a gestire un allevamento su SnakeBee",
+      "title": "Sei stato invitato come collaboratore!",
+      "body": "Ciao! L'allevatore <strong>{{name}}</strong> ti ha invitato a gestire il suo allevamento <strong>{{farm}}</strong> su SnakeBee. Ora puoi accedere e aiutarlo nella gestione delle attività.",
+      "cta": "Accedi ora",
+      "instructions": "Una volta effettuato il login, troverai il nuovo allevamento selezionabile dal menu 'Workspace' in alto a destra nella dashboard."
+    },
     "onboarding": {
       "day0": {
         "subject": "Benvenuto in SnakeBee! 🐝 Iniziamo col piede giusto?",
