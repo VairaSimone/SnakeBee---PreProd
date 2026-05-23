@@ -10,15 +10,22 @@ import { sendBroadcastEmailToUser, transporter } from '../config/mailer.config.j
 const userRouter = express.Router();
 
 userRouter.get('/referral-link', authenticateJWT, userController.generateReferralLink);
-
 userRouter.get('/', authenticateJWT, isAdmin, userController.GetAllUser);
+userRouter.get('/accessible-workspaces', authenticateJWT, userController.getAccessibleWorkspaces);
+userRouter.get('/delegates', authenticateJWT, userController.getMyDelegates);
 userRouter.get('/:userId', authenticateJWT, isOwnerOrAdmin(User, 'userId'), userController.GetIDUser);
+
+
 userRouter.put('/complete-onboarding', authenticateJWT, userController.completeOnboarding);
 userRouter.put("/:userId", authenticateJWT, isOwnerOrAdmin(User, "userId"), upload.single("avatar"), userController.PutUser);
+
 userRouter.delete('/:userId', authenticateJWT, isOwnerOrAdmin(User, "userId"), userController.DeleteUser);
+userRouter.delete('/delegates/:delegateId', authenticateJWT, userController.removeDelegate);
+
+userRouter.patch('/fiscalDetails', authenticateJWT, userController.updateFiscalDetails);
 userRouter.patch('/users/email-settings/:userId', authenticateJWT, isOwnerOrAdmin(User, 'userId'), userController.updateEmailPreferences);
 userRouter.patch('/admin/users/:userId/role', authenticateJWT, isAdmin, userController.UpdateUserRole);
-userRouter.patch('/fiscalDetails', authenticateJWT, userController.updateFiscalDetails);
+
 userRouter.post("/admin/maintenance", authenticateJWT, isAdmin, async (req, res) => {
   const { enable, whitelist } = req.body;
   let config = await SystemConfig.findOne();
@@ -31,9 +38,6 @@ userRouter.post("/admin/maintenance", authenticateJWT, isAdmin, async (req, res)
 });
 userRouter.post('/admin/migrate-feedings', authenticateJWT, isAdmin, userController.migrateAllReptilesFeedings);
 userRouter.post('/delegates', authenticateJWT, userController.addDelegate);
-userRouter.delete('/delegates/:delegateId', authenticateJWT, userController.removeDelegate);
-userRouter.get('/accessible-workspaces', authenticateJWT, userController.getAccessibleWorkspaces);
-userRouter.get('/delegates', authenticateJWT, userController.getMyDelegates);
 userRouter.post("/admin/send-bulk-email", authenticateJWT, isAdmin, async (req, res) => {
   try {
     const { filters = {}, emails = [], subject, html, text = "" } = req.body;
