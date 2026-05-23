@@ -295,6 +295,88 @@ export const UpdateUserRole = async (req, res) => {
   }
 };
 
+export const removeDelegate = async (req, res) => {
+    try {
+        const { delegateId } = req.params; // ID dell'utente da rimuovere
+        const masterUserId = req.user.userid;
+
+        const masterUser = await User.findById(masterUserId);
+        
+        masterUser.delegates = masterUser.delegates.filter(
+            d => d.user.toString() !== delegateId
+        );
+        
+        await masterUser.save();
+
+        res.status(200).json({ message: "Collaboratore rimosso con successo." });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+export const getAccessibleWorkspaces = async (req, res) => {
+    try {
+        const loggedInUserId = req.user.userid;
+
+        // Cerca tutti gli utenti che hanno il mio ID nel loro array 'delegates'
+        const workspaces = await User.find(
+            { "delegates.user": loggedInUserId },
+            "name email" // Modifica con i campi che usi per identificare l'allevamento (es. 'farmName' o 'firstName', 'lastName')
+        );
+
+        res.status(200).json(workspaces);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+export const getMyDelegates = async (req, res) => {
+    try {
+        const userId = req.user.userid;
+        // Popoliamo i dati dell'utente per avere nome/email del collaboratore
+        const user = await User.findById(userId).populate('delegates.user', 'firstName lastName email');
+        
+        if (!user) return res.status(404).json({ message: "Utente non trovato" });
+
+        res.status(200).json(user.delegates);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+export const addDelegate = async (req, res) => {
+    try {
+        const { email, role } = req.body; // email del collaboratore da aggiungere
+        const masterUserId = req.user.userid;
+
+        // 1. Trova l'utente da aggiungere
+        const delegateUser = await User.findOne({ email });
+        if (!delegateUser) {
+            return res.status(404).json({ message: "Utente non trovato con questa email." });
+        }
+
+        // 2. Evita che un utente aggiunga se stesso
+        if (delegateUser._id.toString() === masterUserId.toString()) {
+            return res.status(400).json({ message: "Non puoi aggiungere te stesso come collaboratore." });
+        }
+
+        // 3. Trova l'utente principale
+        const masterUser = await User.findById(masterUserId);
+
+        // 4. Controlla se è già un delegato
+        const alreadyExists = masterUser.delegates.some(
+            d => d.user.toString() === delegateUser._id.toString()
+        );
+        if (alreadyExists) {
+            return res.status(400).json({ message: "Questo utente è già un tuo collaboratore." });
+        }
+
+        // 5. Aggiungi il delegato
+        masterUser.delegates.push({ user: delegateUser._id, role: role || 'editor' });
+        await masterUser.save();
+
+        res.status(200).json({ message: "Collaboratore aggiunto con successo!", delegate: delegateUser });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
 export const updateFiscalDetails = async (req, res) => {
   try {
     const userId = req.user?.userid;

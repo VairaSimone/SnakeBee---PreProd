@@ -10,6 +10,7 @@ import { logoutUser, selectUser } from '../features/userSlice';
 import api from '../services/api';
 import { useTranslation } from 'react-i18next';
 import { MARKET_URL } from '../utils/marketData';
+import WorkspaceSelector from './WorkspaceSelector';
 
 // --- HELPERS ---
 const NavItem = ({ to, icon: Icon, label, onClick }) => (
@@ -126,6 +127,11 @@ const Navbar = () => {
         {/* --- USER ACTIONS --- */}
         <div className="flex items-center gap-2 md:gap-4">
           {user ? (
+            <>
+              {/* WORKSPACE SELECTOR - DESKTOP */}
+              <div className="hidden lg:block border-r border-[#E5DCC3] pr-4 mr-2">
+                <WorkspaceSelector className="ml-0" />
+              </div>
             <div className="hidden lg:block relative" ref={avatarMenuRef}>
               <button onClick={() => setAvatarMenuOpen(!avatarMenuOpen)} className="flex items-center">
                 {/* IMG CON MECCANISMO ONERROR DELLA VERSIONE 2 */}
@@ -164,6 +170,7 @@ const Navbar = () => {
                 </div>
               )}
             </div>
+            </>
           ) : (
             <div className="hidden lg:flex items-center gap-2">
               <Link to="/login" className="px-4 py-2 text-sm font-semibold hover:text-[#228B22] transition-colors flex items-center gap-2">
@@ -211,6 +218,9 @@ const Navbar = () => {
             {user ? (
               <>
                 <div className="h-px bg-gray-300 my-4 mx-4"></div>
+                <div className="px-6 mb-4">
+                  <WorkspaceSelector className="w-full bg-[#E5DCC3] p-2 rounded-lg" />
+                </div>
                 <div className="px-6 mb-2 text-xs font-bold text-gray-500 uppercase">Pannello</div>
                 <MobileLink to="/dashboard" icon={FaChartLine} label="Dashboard" onClick={() => setMobileMenuOpen(false)} />
                 

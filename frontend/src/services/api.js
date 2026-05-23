@@ -7,17 +7,21 @@ export const createStripeCheckout = (plan, userId) => api.post('/stripe/create-c
 export const manageStripeSubscription = (newPlan, userId) => api.post('/stripe/manage-subscription', { newPlan, userId });
 export const cancelStripeSubscription = (userId) => api.post('/stripe/cancel-subscription', { userId });
 export const createStripePortalSession = (userId) => api.post('/stripe/create-portal-session', { userId });
+export const getAccessibleWorkspaces = () => api.get('/user/accessible-workspaces');
+export const addDelegate = (email, role) => api.post('/user/delegates', { email, role });
+export const removeDelegate = (delegateId) => api.delete(`/user/delegates/${delegateId}`);
 export const getCalendarEvents = (reptileId) =>
     api.get(`/calendar${reptileId ? `?reptileId=${reptileId}` : ""}`);
-
+// Aggiungi insieme a addDelegate e removeDelegate
+export const getDelegates = () => api.get('/user/delegates');
 export const createCustomCalendarEvent = (event) =>
     api.post("/calendar/custom", event);
 
 export const deleteCustomCalendarEvent = (eventId) =>
     api.delete(`/calendar/custom/${eventId}`);
 export const hatchBreeding = async (breedingId, data) => {
-  const response = await api.post(`/breeding/${breedingId}/hatch`, data);
-  return response.data;
+    const response = await api.post(`/breeding/${breedingId}/hatch`, data);
+    return response.data;
 };
 let currentLanguage = navigator.language.split('-')[0] || 'it';
 let reduxStore;
@@ -34,7 +38,7 @@ export const setApiLanguage = (lang) => {
  * @param {object} params - Oggetto per i filtri, es: { page: 1, species: 'python', morph: 'piebald', zona: 'milano' }
  */
 export const getPublicReptiles = (params) => {
-  return api.get('/shop/reptiles', { params });
+    return api.get('/shop/reptiles', { params });
 };
 
 /**
@@ -42,7 +46,7 @@ export const getPublicReptiles = (params) => {
  * @param {object} params - Oggetto per i filtri, es: { page: 1 }
  */
 export const getPublicBreeders = (params) => {
-  return api.get('/shop/breeders', { params });
+    return api.get('/shop/breeders', { params });
 };
 
 /**
@@ -50,7 +54,7 @@ export const getPublicBreeders = (params) => {
  * @param {string} userId - L'ID dell'utente allevatore
  */
 export const getPublicBreederProfile = (userId) => {
-  return api.get(`/shop/breeders/${userId}`);
+    return api.get(`/shop/breeders/${userId}`);
 };
 
 
@@ -61,8 +65,9 @@ const api = axios.create({
 function forceLogout() {
     reduxStore?.dispatch?.(logoutUser());
     localStorage.removeItem('token');
+    localStorage.removeItem('operateAsId');
     reduxStore?.dispatch?.({ type: 'persist/PURGE' });
-        localStorage.removeItem('persist:root');
+    localStorage.removeItem('persist:root');
     localStorage.removeItem('persist:user');
     // niente più refreshToken in localStorage: vive nei cookie httpOnly
     const isOnLoginPage = window.location.pathname.startsWith('/login');
@@ -78,7 +83,10 @@ api.interceptors.request.use(
             config.headers['Authorization'] = `Bearer ${token}`;
         }
         config.headers['Accept-Language'] = currentLanguage;
-
+const operateAsId = localStorage.getItem('operateAsId');
+        if (operateAsId) {
+            config.headers['X-Operate-As'] = operateAsId;
+        }
         return config;
     },
     (error) => {

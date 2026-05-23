@@ -30,7 +30,10 @@ userRouter.post("/admin/maintenance", authenticateJWT, isAdmin, async (req, res)
   res.json({ message: "Updated configuration", config });
 });
 userRouter.post('/admin/migrate-feedings', authenticateJWT, isAdmin, userController.migrateAllReptilesFeedings);
-
+userRouter.post('/delegates', authenticateJWT, userController.addDelegate);
+userRouter.delete('/delegates/:delegateId', authenticateJWT, userController.removeDelegate);
+userRouter.get('/accessible-workspaces', authenticateJWT, userController.getAccessibleWorkspaces);
+userRouter.get('/delegates', authenticateJWT, userController.getMyDelegates);
 userRouter.post("/admin/send-bulk-email", authenticateJWT, isAdmin, async (req, res) => {
   try {
     const { filters = {}, emails = [], subject, html, text = "" } = req.body;

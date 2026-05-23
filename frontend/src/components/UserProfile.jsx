@@ -11,6 +11,7 @@ import {
   FiEye, FiEyeOff, FiFacebook, FiInstagram, FiMessageCircle, FiSend
 } from 'react-icons/fi';
 import { Trans, useTranslation } from 'react-i18next';
+import SettingsTeam from './SettingsTeam';
 
 const Toast = ({ toasts, removeToast }) => (
   <div className="fixed top-5 right-5 z-50 w-full max-w-sm space-y-3">
@@ -596,6 +597,7 @@ const UserProfile = () => {
                           } pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`}
                         />
                       </Switch>
+                      
                     </Switch.Group>
                     
                     {!canBePublic && (
@@ -621,7 +623,10 @@ const UserProfile = () => {
                     {t('UserProfile.updateProfile', 'Aggiorna Profilo')}
                   </button>
                 </form>
+                <SettingsTeam></SettingsTeam>
+
               </SettingsCard>
+              
             )}
 
             {/* TAB SICUREZZA */}
@@ -706,7 +711,6 @@ const UserProfile = () => {
                 </div>
               </SettingsCard>
             )}
-
             {/* TAB INVITI */}
             {activeTab === 'inviti' && (
               <SettingsCard title={t('UserProfile.referralTitle', 'Programma Invita Amici')} icon={<FiGift className="text-indigo-500 w-6 h-6" />}>
