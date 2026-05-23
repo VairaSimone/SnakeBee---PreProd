@@ -333,9 +333,9 @@
     "delegateInvite": {
       "subject": "Nuovo invito a gestire un allevamento su SnakeBee",
       "title": "Sei stato invitato come collaboratore!",
-      "body": "Ciao! L'allevatore <strong>{{name}}</strong> ti ha invitato a gestire il suo allevamento <strong>{{farm}}</strong> su SnakeBee. Ora puoi accedere e aiutarlo nella gestione delle attività.",
+      "body": "Ciao! L'allevatore <strong>{{name}}</strong> ti ha invitato a gestire il suo allevamento</strong> su SnakeBee. Ora puoi accedere e aiutarlo nella gestione delle attività.",
       "cta": "Accedi ora",
-      "instructions": "Una volta effettuato il login, troverai il nuovo allevamento selezionabile dal menu 'Workspace' in alto a destra nella dashboard."
+      "instructions": "Una volta effettuato il login, troverai il nuovo allevamento selezionabile dal menu 'Allevamento' in alto a destra nella dashboard."
     },
     "onboarding": {
       "day0": {

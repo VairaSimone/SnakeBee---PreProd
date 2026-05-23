@@ -73,7 +73,7 @@ const sendDelegateInvitationEmail = async (to, lng, masterName, masterFarm) => {
           ${t('emails.delegateInvite.cta', 'Accedi ora')}
         </a>
       </div>
-      <p>${t('emails.delegateInvite.instructions', 'Una volta effettuato il login, troverai il nuovo allevamento selezionabile nel menu Workspace in alto a destra.')}</p>
+      <p>${t('emails.delegateInvite.instructions', 'Una volta effettuato il login, troverai il nuovo allevamento selezionabile nel menu Allevamento in alto a destra.')}</p>
     `;
 
     const mailOptions = {
