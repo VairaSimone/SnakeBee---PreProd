@@ -144,7 +144,7 @@ const UserProfile = () => {
   const loggedInUser = useSelector(selectUser);
   const [socialsFacebook, setSocialsFacebook] = useState('');
   const [socialsInstagram, setSocialsInstagram] = useState('');
-  
+  const isDelegate = !!localStorage.getItem('operateAsId');
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
   const nameRegex = /^[a-zA-Z0-9\s]{2,}$/;
@@ -420,7 +420,25 @@ const UserProfile = () => {
       addToast(t('UserProfile.copyError'), 'error');
     });
   };
-
+if (isDelegate) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center p-8 bg-white rounded-lg shadow-xl border border-slate-200 max-w-md w-full mx-4">
+          <FiAlertTriangle className="mx-auto text-yellow-500 w-16 h-16 mb-4" />
+          <h2 className="text-2xl font-bold text-slate-800 mb-2">Accesso Limitato</h2>
+          <p className="text-slate-600 mb-6">
+            Non puoi visualizzare o modificare il profilo, la sicurezza e gli abbonamenti di un account mentre operi come delegato.
+          </p>
+          <Link 
+            to="/dashboard" 
+            className="inline-block bg-indigo-600 text-white py-2 px-6 rounded-md font-semibold hover:bg-indigo-700 transition-colors"
+          >
+            Torna alla Dashboard
+          </Link>
+        </div>
+      </div>
+    );
+  }
   if (!user) return <div className="flex items-center justify-center h-screen text-slate-500">{t('UserProfile.loadingProfile')}</div>;
   const canBePublic = true;
   
@@ -623,7 +641,11 @@ const UserProfile = () => {
                     {t('UserProfile.updateProfile', 'Aggiorna Profilo')}
                   </button>
                 </form>
-                <SettingsTeam></SettingsTeam>
+                {user?.subscription?.plan === 'BREEDER' && (
+                  <div className="mt-8 pt-6 border-t border-slate-200">
+                    <SettingsTeam />
+                  </div>
+                )}
 
               </SettingsCard>
               

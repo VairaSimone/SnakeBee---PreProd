@@ -8,6 +8,8 @@ import api, {
     createStripePortalSession
 } from '../services/api.js';
 import { selectUser, updateUserFiscalDetails } from '../features/userSlice.jsx';
+import { Link } from 'react-router-dom';
+import { FiAlertTriangle } from 'react-icons/fi';
 
 // --- Icon Components (Heroicons) ---
 const CheckCircleIcon = ({ className = "w-6 h-6" }) => (
@@ -149,6 +151,12 @@ const ComparisonTable = ({ plansData, onAction, loadingAction }) => {
         },
         {
             label: t('comparison.proTools', 'QR Code per ogni animale'),
+            neophyte: false,
+            practitioner: false,
+            breeder: true
+        },
+        {
+            label: t('comparison.proTools', 'Collaboratori/Team'),
             neophyte: false,
             practitioner: false,
             breeder: true
@@ -331,7 +339,7 @@ const SubscriptionPage = () => {
     const [showTaxCodeModal, setShowTaxCodeModal] = useState(false);
     const [pendingPlanKey, setPendingPlanKey] = useState(null);
     const dispatch = useDispatch();
-
+const isDelegate = !!localStorage.getItem('operateAsId');
     const requestTaxCode = (planKey) => {
         setPendingPlanKey(planKey);
         setShowTaxCodeModal(true);
@@ -481,7 +489,25 @@ const SubscriptionPage = () => {
 
         return now >= startDate && now < endDate;
     }, []); 
-
+if (isDelegate) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center p-8 bg-white rounded-lg shadow-xl border border-slate-200 max-w-md w-full mx-4">
+          <FiAlertTriangle className="mx-auto text-yellow-500 w-16 h-16 mb-4" />
+          <h2 className="text-2xl font-bold text-slate-800 mb-2">Accesso Limitato</h2>
+          <p className="text-slate-600 mb-6">
+            Non puoi visualizzare o modificare il profilo, la sicurezza e gli abbonamenti di un account mentre operi come delegato.
+          </p>
+          <Link 
+            to="/dashboard" 
+            className="inline-block bg-indigo-600 text-white py-2 px-6 rounded-md font-semibold hover:bg-indigo-700 transition-colors"
+          >
+            Torna alla Dashboard
+          </Link>
+        </div>
+      </div>
+    );
+  }
     // --- Preparazione dei dati per i Piani da passare alla Tabella ---
     const planKeys = ['neophyte', 'practitioner', 'breeder'];
     const plansData = planKeys.map(planKey => {

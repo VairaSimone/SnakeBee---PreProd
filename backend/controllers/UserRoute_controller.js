@@ -13,7 +13,7 @@ import { sendStripeNotificationEmail } from '../config/mailer.config.js';
 import { validateItalianTaxCode } from "../utils/checktaxCode.js";
 import crypto from 'crypto';
 import { syncReptileFeedingDates } from '../utils/syncReptileFeedings.js';
-
+import { sendDelegateInvitationEmail } from '../config/mailer.config.js'; // Importala qui
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 export const GetAllUser = async (req, res) => {
   try {
@@ -371,7 +371,12 @@ export const addDelegate = async (req, res) => {
         // 5. Aggiungi il delegato
         masterUser.delegates.push({ user: delegateUser._id, role: role || 'editor' });
         await masterUser.save();
-
+await sendDelegateInvitationEmail(
+            delegateUser.email, 
+            delegateUser.language || 'it', 
+            masterUser.name, 
+            masterUser.name // O usa il campo del nome allevamento se lo hai
+        );
         res.status(200).json({ message: "Collaboratore aggiunto con successo!", delegate: delegateUser });
     } catch (error) {
         res.status(500).json({ error: error.message });

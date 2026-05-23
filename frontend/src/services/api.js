@@ -84,7 +84,8 @@ api.interceptors.request.use(
         }
         config.headers['Accept-Language'] = currentLanguage;
 const operateAsId = localStorage.getItem('operateAsId');
-        if (operateAsId) {
+
+    if (operateAsId && !config.url.includes('/user/accessible-workspaces')) {
             config.headers['X-Operate-As'] = operateAsId;
         }
         return config;

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FaTrash, FaUserPlus, FaUserShield } from 'react-icons/fa';
+import { FaTrash, FaUserPlus, FaUserShield, FaExclamationTriangle } from 'react-icons/fa';
 import { getDelegates, addDelegate, removeDelegate } from '../services/api';
 
 const SettingsTeam = () => {
@@ -12,6 +12,10 @@ const SettingsTeam = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
+
+    // Nuovo stato per gestire il modale di conferma
+    const [delegateToRemove, setDelegateToRemove] = useState(null);
+    const [isRemoving, setIsRemoving] = useState(false);
 
     // Carica i collaboratori all'avvio
     useEffect(() => {
@@ -45,25 +49,67 @@ const SettingsTeam = () => {
         }
     };
 
-    const handleRemove = async (delegateId) => {
-        if (!window.confirm('Sei sicuro di voler rimuovere questo collaboratore?')) return;
+    // Apre il modale impostando l'ID del delegato da rimuovere
+    const openRemoveModal = (delegateId) => {
+        setDelegateToRemove(delegateId);
+    };
+
+    // Esegue effettivamente la rimozione
+    const confirmRemove = async () => {
+        if (!delegateToRemove) return;
         
+        setIsRemoving(true);
         setError('');
         setSuccess('');
         
         try {
-            await removeDelegate(delegateId);
+            await removeDelegate(delegateToRemove);
             setSuccess('Collaboratore rimosso.');
-            setDelegates(delegates.filter(d => d.user._id !== delegateId));
+            setDelegates(delegates.filter(d => d.user._id !== delegateToRemove));
         } catch (err) {
             setError(err.response?.data?.message || 'Errore durante la rimozione.');
+        } finally {
+            setIsRemoving(false);
+            setDelegateToRemove(null); // Chiude il modale
         }
     };
 
     return (
-        <div className="min-h-screen bg-[#FAF3E0] p-4 md:p-8">
-            <div className="max-w-3xl mx-auto space-y-6 animate-fade-in-up">
-                
+        <div className="p-4 md:p-8 relative">
+            {/* MODALE DI CONFERMA */}
+            {delegateToRemove && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm px-4 animate-fade-in">
+                    <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 animate-scale-up">
+                        <div className="flex items-center gap-4 mb-4 text-red-600">
+                            <div className="p-3 bg-red-100 rounded-full">
+                                <FaExclamationTriangle className="text-xl" />
+                            </div>
+                            <h3 className="text-xl font-bold text-gray-900">Conferma</h3>
+                        </div>
+                        <p className="text-gray-600 mb-6">
+                            Sei sicuro di voler rimuovere questo collaboratore? Non avrà più accesso al tuo account.
+                        </p>
+                        <div className="flex justify-end gap-3">
+                            <button
+                                onClick={() => setDelegateToRemove(null)}
+                                disabled={isRemoving}
+                                className="px-4 py-2 font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition"
+                            >
+                                Annulla
+                            </button>
+                            <button
+                                onClick={confirmRemove}
+                                disabled={isRemoving}
+                                className="px-4 py-2 font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition flex items-center gap-2"
+                            >
+                                {isRemoving ? <span className="loader w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span> : 'Rimuovi'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            <div className="max-w-3xl mx-auto space-y-6 animate-fade-in-up">                
                 {/* Header Pagina */}
                 <div>
                     <h1 className="text-3xl font-bold text-[#2B2B2B] flex items-center gap-3">
@@ -101,16 +147,6 @@ const SettingsTeam = () => {
                                 required
                             />
                         </div>
-                        <div className="w-full md:w-1/4">
-                            <select
-                                value={role}
-                                onChange={(e) => setRole(e.target.value)}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-md bg-white text-black focus:outline-none focus:ring-2 focus:ring-[#228B22]"
-                            >
-                                <option value="editor">Editor (Può modificare)</option>
-                                <option value="viewer">Viewer (Sola lettura)</option>
-                            </select>
-                        </div>
                         <button
                             type="submit"
                             disabled={isLoading || !email}
@@ -144,12 +180,9 @@ const SettingsTeam = () => {
                                         <span className="text-sm text-gray-500">
                                             {delegate.user?.email}
                                         </span>
-                                        <span className="text-xs font-semibold text-[#228B22] bg-green-50 w-fit px-2 py-0.5 rounded-full mt-1 uppercase">
-                                            {delegate.role}
-                                        </span>
                                     </div>
                                     <button
-                                        onClick={() => handleRemove(delegate.user._id)}
+                                        onClick={() => openRemoveModal(delegate.user._id)}
                                         className="p-2 text-red-500 hover:bg-red-50 rounded-full transition"
                                         title="Rimuovi collaboratore"
                                     >
