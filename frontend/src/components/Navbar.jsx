@@ -114,6 +114,8 @@ const Navbar = () => {
                     <DropdownItem to="/inventory" icon={FaBoxOpen} label="Inventario" onClick={() => setStrumentiOpen(false)} />
                     <DropdownItem to="/breeding" icon={FaDna} label="Riproduzione" onClick={() => setStrumentiOpen(false)} />
                     <DropdownItem to="/cites" icon={FaFileAlt} label="Generazione Cites" onClick={() => setStrumentiOpen(false)} />
+                    <DropdownItem to="/finance" icon={FaFileAlt} label="Calcolatore costi" onClick={() => setStrumentiOpen(false)} />
+
                   </div>
                 )}
               </div>
@@ -228,6 +230,8 @@ const Navbar = () => {
                 <MobileLink to="/inventory" icon={FaBoxOpen} label="Inventario" onClick={() => setMobileMenuOpen(false)} />
                 <MobileLink to="/breeding" icon={FaDna} label="Riproduzione" onClick={() => setMobileMenuOpen(false)} />
                 <MobileLink to="/cites" icon={FaFileAlt} label="Generazione Cites" onClick={() => setMobileMenuOpen(false)} />
+                                <MobileLink to="/finance" icon={FaFileAlt} label="Calcolatore Costi" onClick={() => setMobileMenuOpen(false)} />
+
 
                 <div className="h-px bg-gray-300 my-4 mx-4"></div>
                 <div className="px-6 mb-2 text-xs font-bold text-gray-500 uppercase">Utente</div>
