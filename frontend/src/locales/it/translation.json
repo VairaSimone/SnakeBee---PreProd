@@ -1204,6 +1204,28 @@
         "noEvent": "Nessun evento",
         "closed": "Chiudi"
     },
+    "systemEvents": {
+    "feces": {
+      "title": "Feci",
+      "description": "L'animale ha defecato"
+    },
+    "shed": {
+      "title": "Muta",
+      "description": "L'animale ha fatto la muta"
+    },
+    "vet": {
+      "title": "Visita Veterinaria",
+      "description": "Controllo veterinario"
+    },
+    "weight": {
+      "title": "Peso",
+      "description": "Registrazione del peso"
+    },
+    "feeding": {
+      "title": "Pasto",
+      "description": "L'animale ha mangiato"
+    }
+  },
     "ReptileTipBanner": {
         "tipTitle": "Reptile Tip",
         "quizTitle": "Quiz Reptiliano 🧠",

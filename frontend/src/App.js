@@ -29,7 +29,6 @@ import { ToastContainer } from 'react-toastify';
 import "react-toastify/dist/ReactToastify.css";
 import i18n from './i18n';
 import { useTranslation } from 'react-i18next';
-import CalendarPage from './components/CalendarModal';
 import PrivacyPolicyIT from './pages/PrivacyPolicyIT';
 import PrivacyPolicyEN from './pages/PrivacyPolicyEN';
 import TermsAndConditionsEN from './pages/TermsAndConditionsEN';
@@ -145,7 +144,6 @@ if (isLoadingAuth) {
 
         <Route path="/dashboard" element={<ProtectedRoute><ProtectedLayout><Dashboard /></ProtectedLayout></ProtectedRoute>} />
         <Route path="/breeding" element={<ProtectedRoute><ProtectedLayout><Breeding /></ProtectedLayout></ProtectedRoute>} />
-        <Route path="/calendar" element={<ProtectedRoute><ProtectedLayout><CalendarPage /></ProtectedLayout></ProtectedRoute>} />
         <Route path="/inventory" element={<ProtectedRoute><ProtectedLayout><InventoryPage /></ProtectedLayout></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><ProtectedLayout><UserProfile /></ProtectedLayout></ProtectedRoute>} />
         <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />

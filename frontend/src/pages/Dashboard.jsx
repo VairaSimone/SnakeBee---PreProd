@@ -480,7 +480,7 @@ const StatCard = ({ icon, title, value, unit, bgColor, children }) => (
           <button
             onClick={() => setCalendarOpen(true)}
             title={t('dashboard.calendar')}
-            className="fixed bottom-6 right-6 z-30 bg-purple-600 text-white p-4 rounded-full shadow-lg hover:bg-purple-700 transition-all duration-300 transform hover:scale-110"
+            className="fixed bottom-6 right-6 z-40 bg-purple-600 text-white p-4 rounded-full shadow-lg hover:bg-purple-700 transition-all duration-300 transform hover:scale-110"
           >
             <FaCalendarAlt size={24} />
           </button>
