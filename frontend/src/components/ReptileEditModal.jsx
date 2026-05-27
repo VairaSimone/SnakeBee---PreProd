@@ -84,6 +84,7 @@ const ReptileEditModal = ({ show, handleClose, reptile, setReptiles, onSuccess }
       cites: { number: '', issueDate: '', issuer: '', load: '', unload: '' },
       microchip: { code: '', implantDate: '' }
     },
+    purchasePrice: { amount: '', currency: 'EUR' },
     isPublic: false,
     price: { amount: '', currency: 'EUR' },
     foodType: '',
@@ -95,7 +96,7 @@ const ReptileEditModal = ({ show, handleClose, reptile, setReptiles, onSuccess }
     pcrTests: [], // AGGIUNGI QUESTO
     status: 'active',
   };
-const [citesFile, setCitesFile] = useState(null);
+  const [citesFile, setCitesFile] = useState(null);
   const [formData, setFormData] = useState(initialFormData);
   const [loading, setLoading] = useState(false);
   const [toastMsg, setToastMsg] = useState(null);
@@ -152,6 +153,10 @@ const [citesFile, setCitesFile] = useState(null);
         price: {
           amount: reptile.price?.amount || '',
           currency: reptile.price?.currency || 'EUR'
+        },
+        purchasePrice: {
+          amount: reptile.purchasePrice?.amount || '',
+          currency: reptile.purchasePrice?.currency || 'EUR'
         },
         foodType: reptile.foodType || '',
         weightPerUnit: reptile.weightPerUnit || '',
@@ -210,6 +215,16 @@ const [citesFile, setCitesFile] = useState(null);
       ...prev,
       price: {
         ...prev.price,
+        [field]: field === 'amount' ? value.replace(/[^0-9.]/g, '') : value
+      }
+    }));
+  };
+  const handlePurchasePriceChange = (e, field) => {
+    const { value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      purchasePrice: {
+        ...prev.purchasePrice,
         [field]: field === 'amount' ? value.replace(/[^0-9.]/g, '') : value
       }
     }));
@@ -423,7 +438,7 @@ const [citesFile, setCitesFile] = useState(null);
       const formDataToSubmit = new FormData();
       // MODIFICA: Aggiunti 'cededTo' e 'deceasedDetails' alla lista da saltare
       Object.entries(formData).forEach(([key, val]) => {
-        if (key === 'parents' || key === 'documents' || key === 'price' || key === 'cededTo' || key === 'deceasedDetails' || key === 'pcrTests') {          // skip: will append them in controlled way below
+        if (key === 'parents' || key === 'documents' || key === 'price' || key === 'purchasePrice' || key === 'cededTo' || key === 'deceasedDetails' || key === 'pcrTests') {          // skip: will append them in controlled way below
           return;
         }
         formDataToSubmit.append(key, val === undefined || val === null ? '' : String(val));
@@ -445,12 +460,18 @@ const [citesFile, setCitesFile] = useState(null);
         : { amount: parseFloat(String(rawAmount)) || 0, currency: formData.price?.currency || 'EUR' };
 
       formDataToSubmit.append('price', JSON.stringify(priceToSubmit));
+      // purchasePrice
+      const rawPurchaseAmount = formData.purchasePrice?.amount;
+      const purchasePriceToSubmit = (rawPurchaseAmount === '' || rawPurchaseAmount === null || rawPurchaseAmount === undefined)
+        ? null
+        : { amount: parseFloat(String(rawPurchaseAmount)) || 0, currency: formData.purchasePrice?.currency || 'EUR' };
 
+      formDataToSubmit.append('purchasePrice', JSON.stringify(purchasePriceToSubmit));
       // label
       formDataToSubmit.append('label', JSON.stringify(label || {}));
-if (citesFile) {
-    formDataToSubmit.append('citesFile', citesFile);
-  }
+      if (citesFile) {
+        formDataToSubmit.append('citesFile', citesFile);
+      }
       // images
       newImages.forEach(img => {
         formDataToSubmit.append('image', img);
@@ -489,7 +510,7 @@ if (citesFile) {
   const labelClasses = "block text-sm font-medium text-gray-600 mb-1";
   const sectionTitleClasses = "text-lg font-semibold text-gray-800 flex items-center gap-2";
   const sectionClasses = "bg-white p-6 rounded-lg shadow-sm border border-gray-200";
-const errorTextClasses = "flex items-center gap-1 mt-1 text-sm text-red-600";
+  const errorTextClasses = "flex items-center gap-1 mt-1 text-sm text-red-600";
   return (
     <>
       <ConfirmationModal
@@ -659,33 +680,54 @@ const errorTextClasses = "flex items-center gap-1 mt-1 text-sm text-red-600";
                       </div>                    </div>
 
                     {/* SEZIONE PREZZO */}
+{/* SEZIONE PREZZI (Aggiornata) */}
                     <div className={sectionClasses}>
                       <h3 className={sectionTitleClasses}>
                         <TagIcon className="w-6 h-6 text-emerald-600" /> {t('reptileEditModal.reptile.price')}
                       </h3>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4"> {/* Usato md:grid-cols-3 per allineare con altre sezioni */}
-                        <div>
-                          <label className={labelClasses}>{t('reptileEditModal.reptile.priceAmount')}</label>
-                          <input
-                            type="number" min="0" step="0.01" value={formData.price.amount}
-                            onChange={(e) => handlePriceChange(e, 'amount')} className={inputClasses}
-                          />
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-4">
+                        {/* Prezzo di Acquisto */}
+                        <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                          <label className={`${labelClasses} font-bold text-gray-700`}>Prezzo di Acquisto Iniziale</label>
+                          <div className="grid grid-cols-2 gap-4">
+                            <input
+                              type="number" min="0" step="0.01" value={formData.purchasePrice.amount}
+                              onChange={(e) => handlePurchasePriceChange(e, 'amount')} className={inputClasses}
+                              placeholder="0.00"
+                            />
+                            <select
+                              value={formData.purchasePrice.currency} onChange={(e) => handlePurchasePriceChange(e, 'currency')}
+                              className={inputClasses}
+                            >
+                              <option value="EUR">EUR</option>
+                              <option value="USD">USD</option>
+                              <option value="GBP">GBP</option>
+                              <option value="CHF">CHF</option>
+                            </select>
+                          </div>
                         </div>
-                        <div>
-                          <label className={labelClasses}>{t('reptileEditModal.reptile.priceCurrency')}</label>
-                          <select
-                            value={formData.price.currency} onChange={(e) => handlePriceChange(e, 'currency')}
-                            className={inputClasses}
-                          >
-                            <option value="EUR">EUR</option>
-                            <option value="USD">USD</option>
-                            <option value="GBP">GBP</option>
-                            <option value="JPY">JPY</option>
-                            <option value="CHF">CHF</option>
-                          </select>
+
+                        {/* Prezzo di Rivendita */}
+                        <div className="p-4 bg-emerald-50 rounded-lg border border-emerald-100">
+                          <label className={`${labelClasses} font-bold text-emerald-800`}>Prezzo di Rivendita (Target)</label>
+                          <div className="grid grid-cols-2 gap-4">
+                            <input
+                              type="number" min="0" step="0.01" value={formData.price.amount}
+                              onChange={(e) => handlePriceChange(e, 'amount')} className={inputClasses}
+                              placeholder="0.00"
+                            />
+                            <select
+                              value={formData.price.currency} onChange={(e) => handlePriceChange(e, 'currency')}
+                              className={inputClasses}
+                            >
+                              <option value="EUR">EUR</option>
+                              <option value="USD">USD</option>
+                              <option value="GBP">GBP</option>
+                              <option value="CHF">CHF</option>
+                            </select>
+                          </div>
                         </div>
-                        {/* Colonna vuota per mantenere layout a 3 */}
-                        <div></div>
                       </div>
                     </div>
 
@@ -889,48 +931,48 @@ const errorTextClasses = "flex items-center gap-1 mt-1 text-sm text-red-600";
                         </div>
                       </div>
                     </div>
-{/* SEZIONE TEST PCR */}
-<div className={sectionClasses}>
-  <h3 className={sectionTitleClasses}>
-    🧬 Test PCR
-  </h3>
-  <div className="mt-4">
-    {formData.pcrTests.map((test, index) => (
-      <div key={index} className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4 p-4 border border-gray-200 rounded-lg relative bg-gray-50">
-        <button type="button" onClick={() => removePcrTest(index)} className="absolute top-2 right-2 text-red-500 hover:text-red-700">
-          <XMarkIcon className="w-5 h-5" />
-        </button>
-        <div>
-          <label className={labelClasses}>Malattia / Patogeno <span className="text-red-500">*</span></label>
-          {/* CAMBIATO: errors invece di formErrors */}
-          <input type="text" value={test.disease} onChange={(e) => handlePcrChange(index, 'disease', e.target.value)} className={`${inputClasses} ${errors[`pcrDisease_${index}`] ? 'border-red-500' : ''}`} placeholder="Es. Nidovirus" />
-          {errors[`pcrDisease_${index}`] && <p className={errorTextClasses}>{errors[`pcrDisease_${index}`]}</p>}
-        </div>
-        <div>
-          <label className={labelClasses}>Data Test <span className="text-red-500">*</span></label>
-          {/* CAMBIATO: errors invece di formErrors */}
-          <input type="date" value={test.testDate} onChange={(e) => handlePcrChange(index, 'testDate', e.target.value)} className={`${inputClasses} ${errors[`pcrDate_${index}`] ? 'border-red-500' : ''}`} />
-          {errors[`pcrDate_${index}`] && <p className={errorTextClasses}>{errors[`pcrDate_${index}`]}</p>}
-        </div>
-        <div>
-          <label className={labelClasses}>Risultato</label>
-          <select value={test.result} onChange={(e) => handlePcrChange(index, 'result', e.target.value)} className={inputClasses}>
-            <option value="In attesa">In attesa</option>
-            <option value="Negativo">Negativo</option>
-            <option value="Positivo">Positivo</option>
-          </select>
-        </div>
-        <div>
-          <label className={labelClasses}>Note</label>
-          <input type="text" value={test.notes} onChange={(e) => handlePcrChange(index, 'notes', e.target.value)} className={inputClasses} placeholder="Note opzionali..." />
-        </div>
-      </div>
-    ))}
-    <button type="button" onClick={addPcrTest} className="mt-2 inline-flex items-center text-sm text-emerald-600 font-medium hover:text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-md border border-emerald-200">
-      + Aggiungi Test PCR
-    </button>
-  </div>
-</div>
+                    {/* SEZIONE TEST PCR */}
+                    <div className={sectionClasses}>
+                      <h3 className={sectionTitleClasses}>
+                        🧬 Test PCR
+                      </h3>
+                      <div className="mt-4">
+                        {formData.pcrTests.map((test, index) => (
+                          <div key={index} className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4 p-4 border border-gray-200 rounded-lg relative bg-gray-50">
+                            <button type="button" onClick={() => removePcrTest(index)} className="absolute top-2 right-2 text-red-500 hover:text-red-700">
+                              <XMarkIcon className="w-5 h-5" />
+                            </button>
+                            <div>
+                              <label className={labelClasses}>Malattia / Patogeno <span className="text-red-500">*</span></label>
+                              {/* CAMBIATO: errors invece di formErrors */}
+                              <input type="text" value={test.disease} onChange={(e) => handlePcrChange(index, 'disease', e.target.value)} className={`${inputClasses} ${errors[`pcrDisease_${index}`] ? 'border-red-500' : ''}`} placeholder="Es. Nidovirus" />
+                              {errors[`pcrDisease_${index}`] && <p className={errorTextClasses}>{errors[`pcrDisease_${index}`]}</p>}
+                            </div>
+                            <div>
+                              <label className={labelClasses}>Data Test <span className="text-red-500">*</span></label>
+                              {/* CAMBIATO: errors invece di formErrors */}
+                              <input type="date" value={test.testDate} onChange={(e) => handlePcrChange(index, 'testDate', e.target.value)} className={`${inputClasses} ${errors[`pcrDate_${index}`] ? 'border-red-500' : ''}`} />
+                              {errors[`pcrDate_${index}`] && <p className={errorTextClasses}>{errors[`pcrDate_${index}`]}</p>}
+                            </div>
+                            <div>
+                              <label className={labelClasses}>Risultato</label>
+                              <select value={test.result} onChange={(e) => handlePcrChange(index, 'result', e.target.value)} className={inputClasses}>
+                                <option value="In attesa">In attesa</option>
+                                <option value="Negativo">Negativo</option>
+                                <option value="Positivo">Positivo</option>
+                              </select>
+                            </div>
+                            <div>
+                              <label className={labelClasses}>Note</label>
+                              <input type="text" value={test.notes} onChange={(e) => handlePcrChange(index, 'notes', e.target.value)} className={inputClasses} placeholder="Note opzionali..." />
+                            </div>
+                          </div>
+                        ))}
+                        <button type="button" onClick={addPcrTest} className="mt-2 inline-flex items-center text-sm text-emerald-600 font-medium hover:text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-md border border-emerald-200">
+                          + Aggiungi Test PCR
+                        </button>
+                      </div>
+                    </div>
                     {/* SEZIONE NOTE */}
                     <div className={sectionClasses}>
                       <h3 className={sectionTitleClasses}>📝 {t('reptileEditModal.reptile.note')}</h3> {/* Icona + Titolo */}
@@ -999,8 +1041,8 @@ const errorTextClasses = "flex items-center gap-1 mt-1 text-sm text-red-600";
                     {toastMsg && (
                       <div
                         className={`w-full px-4 py-3 rounded-md text-sm font-medium shadow-lg mb-4 ${toastMsg.type === 'danger'
-                            ? 'bg-red-100 text-red-700 border border-red-300'
-                            : 'bg-green-100 text-green-700 border border-green-300'
+                          ? 'bg-red-100 text-red-700 border border-red-300'
+                          : 'bg-green-100 text-green-700 border border-green-300'
                           }`}
                       >
                         {toastMsg.text}

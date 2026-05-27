@@ -269,13 +269,16 @@ export const GetArchivedReptileByUser = async (req, res) => {
 export const PostReptile = async (req, res) => {
     try {
         // MODIFICA: Aggiunto previousOwner
-        const { name, species, morph, birthDate, sex, isBreeder, notes, parents, documents, foodType, weightPerUnit, nextMealDay, previousOwner, isPublic, pcrTests } = req.body;
+        const { name, species, morph, birthDate, sex, isBreeder, notes, parents, documents, foodType, weightPerUnit, nextMealDay, previousOwner, isPublic, pcrTests, purchasePrice } = req.body;
         const userId = req.user.userid;
 
         let parsedParents = typeof parents === 'string' ? JSON.parse(parents) : parents;
         let parsedDocuments = typeof documents === 'string' ? JSON.parse(documents) : documents;
         let parsedPcrTests = typeof pcrTests === 'string' ? JSON.parse(pcrTests) : (pcrTests || []);
-
+let parsedPurchasePrice = undefined;
+if (purchasePrice) {
+    parsedPurchasePrice = typeof purchasePrice === 'string' ? JSON.parse(purchasePrice) : purchasePrice;
+}
         const user = await User.findById(userId);
         const { plan: userPlan, limits } = getUserPlan(user);
         const reptileCount = await Reptile.countDocuments({ user: userId, status: 'active' });
@@ -332,6 +335,7 @@ if (req.files) {
             birthDate: birthDateObject,
             sex,
             isBreeder,
+            purchasePrice: parsedPurchasePrice, // Aggiunto
             notes,
             previousOwner, // MODIFICA: Aggiunto campo
             weightPerUnit,
@@ -478,6 +482,29 @@ export const PutReptile = async (req, res) => {
             }
         }
 
+if ('purchasePrice' in req.body) {
+    let parsedPurchasePrice = req.body.purchasePrice;
+    try {
+        if (typeof parsedPurchasePrice === 'string') {
+            parsedPurchasePrice = JSON.parse(parsedPurchasePrice);
+        }
+        if (parsedPurchasePrice === null) {
+            reptile.purchasePrice = undefined;
+        } else if (typeof parsedPurchasePrice === 'object' && parsedPurchasePrice.amount !== undefined) {
+            const amount = Number(parsedPurchasePrice.amount);
+            if (!isNaN(amount) && amount >= 0) {
+                reptile.purchasePrice = {
+                    amount,
+                    currency: parsedPurchasePrice.currency && ['EUR', 'USD', 'GBP', 'JPY', 'CHF'].includes(parsedPurchasePrice.currency)
+                        ? parsedPurchasePrice.currency
+                        : reptile.purchasePrice?.currency || 'EUR'
+                };
+            }
+        }
+    } catch (err) {
+        console.warn('Invalid purchasePrice format:', req.body.purchasePrice);
+    }
+}
         // MODIFICA 1: Usa parseDateOrNull per birthDate
         const birthDateObject = parseDateOrNull(birthDate);
         await logAction(req.user.userid, "Modify reptile");
@@ -747,5 +774,64 @@ export const ImportReptiles = async (req, res) => {
     } catch (error) {
         console.error("Import Error:", error);
         res.status(500).send({ message: "Errore durante l'importazione" });
+    }
+};
+
+
+export const GetReptileValuation = async (req, res) => {
+    try {
+        const reptileId = req.params.reptileId;
+        const reptile = await Reptile.findById(reptileId).lean();
+        
+        if (!reptile) {
+            return res.status(404).send({ message: req.t('reptile_notFound') });
+        }
+
+        // Cerca tutti gli eventi che hanno un costo associato maggiore di 0
+        const events = await Event.find({ 
+            reptile: reptileId, 
+            'cost.amount': { $exists: true, $gt: 0 } 
+        }).sort({ date: 1 }).lean();
+
+        let totalValue = reptile.purchasePrice?.amount || 0;
+        const currency = reptile.purchasePrice?.currency || 'EUR';
+        const history = [];
+
+        // 1. Voce iniziale: Acquisto
+        if (reptile.purchasePrice?.amount) {
+            history.push({
+                date: reptile.createdAt || new Date(),
+                type: 'purchase',
+                description: 'Costo Iniziale Acquisto',
+                addedValue: reptile.purchasePrice.amount,
+                totalAccumulated: totalValue,
+                currency: currency
+            });
+        }
+
+        // 2. Voci aggiunte: Eventi (Veterinario, ecc.)
+        for (const ev of events) {
+            totalValue += ev.cost.amount;
+            history.push({
+                date: ev.date,
+                type: 'event',
+                eventType: ev.type,
+                description: ev.cost.description || `Evento: ${ev.type}`,
+                addedValue: ev.cost.amount,
+                totalAccumulated: totalValue,
+                currency: ev.cost.currency || currency
+            });
+        }
+
+        res.send({
+            initialPrice: reptile.purchasePrice,
+            resalePrice: reptile.price, // Il vecchio campo "price" (prezzo di vendita)
+            currentEstimatedValue: { amount: totalValue, currency }, // Valore totale investito
+            history // Tabella storica da mostrare al frontend
+        });
+
+    } catch (err) {
+        console.error("Valuation Error:", err);
+        res.status(500).send({ message: req.t('server_error') });
     }
 };

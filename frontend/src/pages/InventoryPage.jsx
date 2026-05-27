@@ -4,9 +4,9 @@ import { useSelector } from 'react-redux';
 import { selectUser } from '../features/userSlice';
 import { useTranslation } from "react-i18next";
 import { 
-  FaPlus, FaPencilAlt, FaTrash, FaBoxOpen, FaLightbulb, 
-  FaUtensils, FaChartLine, FaShoppingCart, FaTimes, 
-  FaExclamationTriangle, FaSort, FaSortUp, FaSortDown
+  FaPlus, FaPencilAlt, FaTrash, FaBoxOpen, 
+  FaUtensils, FaTimes, FaExclamationTriangle, 
+  FaSort, FaSortUp, FaSortDown
 } from 'react-icons/fa';
 import FeedingSuggestions from '../components/FeedingSuggestions';
 
@@ -18,7 +18,8 @@ const InventoryPage = () => {
   const { t } = useTranslation();
   
   const [inventory, setInventory] = useState([]);
-  const [formData, setFormData] = useState({ foodType: '', quantity: '', weightPerUnit: '', weightUnit: 'g' });
+  // AGGIUNTO: costPerUnit allo stato iniziale
+  const [formData, setFormData] = useState({ foodType: '', quantity: '', weightPerUnit: '', weightUnit: 'g', costPerUnit: '' });
   const [editingId, setEditingId] = useState(null);
   const user = useSelector(selectUser);
   const [deleteId, setDeleteId] = useState(null); 
@@ -32,11 +33,11 @@ const InventoryPage = () => {
   const [analyticsError, setAnalyticsError] = useState('');
   const [isAnalyticsLoading, setIsAnalyticsLoading] = useState(true);
 
-  // NUOVO: Stato per l'ordinamento
   const [sortConfig, setSortConfig] = useState({ key: 'weightPerUnit', direction: 'desc' });
 
   const resetForm = () => {
-    setFormData({ foodType: '', quantity: '', weightPerUnit: '', weightUnit: 'g' });
+    // AGGIUNTO: reset di costPerUnit
+    setFormData({ foodType: '', quantity: '', weightPerUnit: '', weightUnit: 'g', costPerUnit: '' });
     setEditingId(null);
   };
 
@@ -83,7 +84,12 @@ const InventoryPage = () => {
     if (!user || !user._id) return;
 
     const weightInGrams = formData.weightUnit === 'kg' ? formData.weightPerUnit * 1000 : formData.weightPerUnit;
-    const payload = { ...formData, weightPerUnit: weightInGrams };
+    // AGGIUNTO: Parsing del costo come float
+    const payload = { 
+      ...formData, 
+      weightPerUnit: weightInGrams,
+      costPerUnit: parseFloat(formData.costPerUnit) || 0 
+    };
 
     try {
       if (editingId) {
@@ -107,6 +113,7 @@ const InventoryPage = () => {
       quantity: item.quantity,
       weightPerUnit: isKg ? (item.weightPerUnit / 1000) : item.weightPerUnit,
       weightUnit: isKg ? 'kg' : 'g',
+      costPerUnit: item.costPerUnit || '' // AGGIUNTO: Popola il costo in modifica
     });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -140,7 +147,12 @@ const InventoryPage = () => {
     return grams >= 1000 ? `${(grams / 1000).toFixed(2)} kg` : `${grams} g`;
   };
 
-  // NUOVO: Gestione dell'ordinamento
+  // NUOVO: Formattatore per la valuta
+  const formatCurrency = (amount) => {
+    if (amount === undefined || amount === null || isNaN(amount)) return '€ 0.00';
+    return `€ ${Number(amount).toFixed(2)}`;
+  };
+
   const requestSort = (key) => {
     let direction = 'asc';
     if (sortConfig.key === key && sortConfig.direction === 'asc') {
@@ -156,6 +168,12 @@ const InventoryPage = () => {
         let aValue = a[sortConfig.key];
         let bValue = b[sortConfig.key];
 
+        // AGGIUNTO: Ordinamento calcolato per il Costo Totale (costPerUnit * quantity)
+        if (sortConfig.key === 'totalCost') {
+          aValue = (a.costPerUnit || 0) * (a.quantity || 0);
+          bValue = (b.costPerUnit || 0) * (b.quantity || 0);
+        }
+
         if (sortConfig.key === 'foodType') {
           aValue = translateFoodType(aValue, t);
           bValue = translateFoodType(bValue, t);
@@ -163,6 +181,10 @@ const InventoryPage = () => {
             ? aValue.localeCompare(bValue) 
             : bValue.localeCompare(aValue);
         }
+
+        // Se i valori sono undefined (es. vecchi item senza costo), trattali come 0
+        if (aValue === undefined) aValue = 0;
+        if (bValue === undefined) bValue = 0;
 
         if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
         if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
@@ -177,7 +199,6 @@ const InventoryPage = () => {
     return sortConfig.direction === 'asc' ? <FaSortUp className="inline ml-1 text-emerald-600" /> : <FaSortDown className="inline ml-1 text-emerald-600" />;
   };
 
-  // NUOVO: Logica per definire lo status delle scorte
   const getStockStatus = (item) => {
     const forecastItem = forecast.find(f => f.foodType === item.foodType && f.weightPerUnit === item.weightPerUnit);
     if (item.quantity === 0) return 'empty';
@@ -194,8 +215,8 @@ const InventoryPage = () => {
   }, [inventory, forecast]);
 
   const inputClass = "w-full px-3 py-2 bg-slate-50 border text-black border-slate-300 rounded-md text-sm shadow-sm placeholder-slate-400 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition duration-200 ease-in-out";
-  const buttonPrimaryClass = "w-full flex items-center justify-center gap-2 bg-emerald-600 text-white font-semibold py-2 px-4 rounded-md shadow-lg hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-all duration-300 transform hover:scale-105";
-  const buttonSecondaryClass = "w-full bg-slate-500 text-white font-semibold py-2 px-4 rounded-md shadow-lg hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-400 transition-all duration-300 transform hover:scale-105";
+  const buttonPrimaryClass = "w-full h-full flex items-center justify-center gap-2 bg-emerald-600 text-white font-semibold py-2 px-4 rounded-md shadow-lg hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-all duration-300 transform hover:scale-105";
+  const buttonSecondaryClass = "w-full h-full bg-slate-500 text-white font-semibold py-2 px-4 rounded-md shadow-lg hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-400 transition-all duration-300 transform hover:scale-105";
   const cardClass = "bg-white p-6 rounded-xl shadow-lg border border-slate-200 transition-shadow duration-300 hover:shadow-xl";
   const cardTitleClass = "text-2xl font-extrabold text-slate-800 mb-5 flex items-center gap-3 border-b pb-3 border-slate-200";
 
@@ -204,7 +225,7 @@ const InventoryPage = () => {
       <div className="flex justify-center items-center h-screen">
         <div className="flex flex-col items-center text-xl font-semibold text-slate-600">
           <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-emerald-500 mb-4"></div>
-          {t('general.loading')}...
+          {t('general.loading', { defaultValue: 'Caricamento' })}...
         </div>
       </div>
     );
@@ -222,7 +243,6 @@ const InventoryPage = () => {
           </p>
         </header>
 
-        {/* NUOVO: Banner Avvisi Scorte */}
         {lowStockAlerts.length > 0 && (
           <div className="bg-orange-50 border-l-4 border-orange-500 p-4 rounded-r-lg shadow-sm">
             <div className="flex items-center">
@@ -237,7 +257,6 @@ const InventoryPage = () => {
           </div>
         )}
 
-        {/* --- INSERISCI QUI I SUGGERIMENTI --- */}
         <div className="w-full">
           <FeedingSuggestions />
         </div>
@@ -255,7 +274,8 @@ const InventoryPage = () => {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+          {/* AGGIUNTO: Layout griglia aggiornato per supportare un campo in più (6 colonne su lg) */}
+          <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-6 items-end">
             {/* Food Type */}
             <div className="flex flex-col lg:col-span-1">
               <label htmlFor="foodType" className="mb-2 text-sm font-medium text-slate-700">{t('inventoryPage.foodType')}</label>
@@ -274,18 +294,28 @@ const InventoryPage = () => {
               <input id="quantity" type="number" name="quantity" min="1" value={formData.quantity} onChange={(e) => setFormData({ ...formData, quantity: e.target.value })} required placeholder={t('inventoryPage.quantityPlaceholder')} className={inputClass} />
             </div>
             {/* Weight */}
-            <div className="flex flex-col sm:col-span-2 lg:col-span-1">
+            <div className="flex flex-col lg:col-span-1">
               <label htmlFor="weightPerUnit" className="mb-2 text-sm font-medium text-slate-700">{t('inventoryPage.weightPerUnit')}</label>
               <div className="flex shadow-sm rounded-md border border-slate-300 focus-within:border-emerald-600 focus-within:ring-1 focus-within:ring-emerald-600 transition">
-                <input id="weightPerUnit" type="number" name="weightPerUnit" min="0" step="0.01" value={formData.weightPerUnit} onChange={(e) => setFormData({ ...formData, weightPerUnit: e.target.value })} placeholder={t('inventoryPage.weightPlaceholder')} className={`${inputClass} !border-none !ring-0 !shadow-none rounded-r-none`} />
+                <input id="weightPerUnit" type="number" name="weightPerUnit" min="0" step="0.01" value={formData.weightPerUnit} onChange={(e) => setFormData({ ...formData, weightPerUnit: e.target.value })} placeholder="0" className={`${inputClass} !border-none !ring-0 !shadow-none rounded-r-none`} />
                 <select value={formData.weightUnit} onChange={(e) => setFormData({ ...formData, weightUnit: e.target.value })} className="px-3 border-l border-slate-300 rounded-r-md bg-slate-100 text-slate-700 text-sm focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition">
                   <option value="g">g</option>
                   <option value="kg">kg</option>
                 </select>
               </div>
             </div>
+            {/* AGGIUNTO: Costo per Unità */}
+            <div className="flex flex-col lg:col-span-1">
+              <label htmlFor="costPerUnit" className="mb-2 text-sm font-medium text-slate-700">{t('inventoryPage.costPerUnit', { defaultValue: 'Costo Unitario' })}</label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <span className="text-slate-500 sm:text-sm">€</span>
+                </div>
+                <input id="costPerUnit" type="number" name="costPerUnit" min="0" step="0.01" value={formData.costPerUnit} onChange={(e) => setFormData({ ...formData, costPerUnit: e.target.value })} placeholder="0.00" className={`${inputClass} pl-7`} />
+              </div>
+            </div>
             {/* Submit Button */}
-            <div className="flex items-end sm:col-span-2 lg:col-span-2 space-x-4 mt-2 lg:mt-0">
+            <div className="flex items-center sm:col-span-2 lg:col-span-2 space-x-4 h-10 mt-2 sm:mt-0">
               <button type="submit" className={buttonPrimaryClass}>
                 {editingId ? <FaPencilAlt /> : <FaPlus />}
                 {editingId ? t('inventoryPage.update') : t('inventoryPage.add')}
@@ -318,7 +348,13 @@ const InventoryPage = () => {
                   <th className="p-4 font-bold text-right cursor-pointer hover:bg-slate-200 transition" onClick={() => requestSort('weightPerUnit')}>
                     {t('inventoryPage.weightPerUnit')} {getSortIcon('weightPerUnit')}
                   </th>
-                  <th className="p-4 font-bold text-right">{t('inventoryPage.totalWeight')}</th>
+                  {/* AGGIUNTO: Headers per i costi */}
+                  <th className="p-4 font-bold text-right cursor-pointer hover:bg-slate-200 transition" onClick={() => requestSort('costPerUnit')}>
+                    {t('inventoryPage.costPerUnitTitle', { defaultValue: 'Costo U.' })} {getSortIcon('costPerUnit')}
+                  </th>
+                  <th className="p-4 font-bold text-right cursor-pointer hover:bg-slate-200 transition" onClick={() => requestSort('totalCost')}>
+                    {t('inventoryPage.totalCost', { defaultValue: 'Costo Tot.' })} {getSortIcon('totalCost')}
+                  </th>
                   <th className="p-4 font-bold text-center rounded-tr-lg">{t('inventoryPage.actions')}</th>
                 </tr>
               </thead>
@@ -326,7 +362,6 @@ const InventoryPage = () => {
                 {sortedInventory.length > 0 ? (
                   sortedInventory.map(item => {
                     const status = getStockStatus(item);
-                    // NUOVO: Stile dinamico della riga basato sullo stato delle scorte
                     const rowClass = status === 'critical' 
                       ? "bg-red-50 hover:bg-red-100 transition-colors duration-150" 
                       : status === 'warning'
@@ -345,7 +380,10 @@ const InventoryPage = () => {
                         {item.quantity}
                       </td>
                       <td className="p-4 text-right font-mono text-slate-700">{formatWeight(item.weightPerUnit)}</td>
-                      <td className="p-4 text-right font-mono text-slate-900 font-extrabold">{formatWeight(item.weightPerUnit * item.quantity)}</td>
+                      {/* AGGIUNTO: Celle per Costo Unitario e Totale */}
+                      <td className="p-4 text-right font-mono text-emerald-700">{formatCurrency(item.costPerUnit)}</td>
+                      <td className="p-4 text-right font-mono text-slate-900 font-extrabold">{formatCurrency((item.costPerUnit || 0) * item.quantity)}</td>
+                      
                       <td className="p-4 text-center">
                         <div className="flex justify-center items-center space-x-3">
                           <button onClick={() => handleEdit(item)} className="p-2 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded-full transition-all duration-200 ease-in-out">
@@ -360,7 +398,7 @@ const InventoryPage = () => {
                   )})
                 ) : (
                   <tr>
-                    <td colSpan="5" className="text-center p-6 text-slate-500 italic">{t('inventoryPage.noItems')}</td>
+                    <td colSpan="6" className="text-center p-6 text-slate-500 italic">{t('inventoryPage.noItems')}</td>
                   </tr>
                 )}
               </tbody>
@@ -370,7 +408,7 @@ const InventoryPage = () => {
 
       </div>
 
-      {/* --- MODALE DELETE --- (Invariata) */}
+      {/* --- MODALE DELETE --- */}
       {isDeleteModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/60 backdrop-blur-sm animate-fade-in">
           <div className="bg-white rounded-xl p-8 w-11/12 max-w-lg shadow-2xl border border-slate-200 transform scale-95 animate-scale-in">

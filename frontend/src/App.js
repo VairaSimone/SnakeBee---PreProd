@@ -54,6 +54,7 @@ import CheckoutPage from './pages/store/CheckoutPage';
 import StoreSuccessPage from './pages/store/StoreSuccessPage';
 import OrderHistoryPage from './pages/store/OrderHistoryPage';
 import AdminStoreDashboard from './pages/admin/store/AdminStoreDashboard';
+import FinancePage from './pages/FinancePage';
 const AuthLoadingSpinner = () => (
   <div className="flex justify-center items-center h-screen bg-[#FAF3E0]">
     <div className="w-12 h-12 border-4 border-gray-300 border-t-[#228B22] rounded-full animate-spin"></div>
@@ -141,7 +142,7 @@ if (isLoadingAuth) {
         <Route path="/admin/blog" element={<AdminProtectedRoute><ProtectedLayout><AdminBlogDashboard /></ProtectedLayout></AdminProtectedRoute>} />
         <Route path="/admin/blog/new" element={<AdminProtectedRoute><ProtectedLayout><ArticleEditor /></ProtectedLayout></AdminProtectedRoute>} />
         <Route path="/admin/blog/edit/:id" element={<AdminProtectedRoute><ProtectedLayout><ArticleEditor /></ProtectedLayout></AdminProtectedRoute>} />
-
+<Route path="/finance" element={<FinancePage />} />
         <Route path="/dashboard" element={<ProtectedRoute><ProtectedLayout><Dashboard /></ProtectedLayout></ProtectedRoute>} />
         <Route path="/breeding" element={<ProtectedRoute><ProtectedLayout><Breeding /></ProtectedLayout></ProtectedRoute>} />
         <Route path="/inventory" element={<ProtectedRoute><ProtectedLayout><InventoryPage /></ProtectedLayout></ProtectedRoute>} />
