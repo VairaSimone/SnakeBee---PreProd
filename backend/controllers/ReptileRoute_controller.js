@@ -693,6 +693,16 @@ export const GetReptilePublic = async (req, res) => {
 
 import XLSX from 'xlsx';
 
+const setNestedProperty = (obj, path, value) => {
+    const keys = path.split('.');
+    let current = obj;
+    for (let i = 0; i < keys.length - 1; i++) {
+        if (!current[keys[i]]) current[keys[i]] = {};
+        current = current[keys[i]];
+    }
+    current[keys[keys.length - 1]] = value;
+};
+
 export const ImportReptiles = async (req, res) => {
     try {
         if (!req.file) return res.status(400).send({ message: "Nessun file caricato" });
@@ -712,7 +722,7 @@ export const ImportReptiles = async (req, res) => {
         }
 
         // 2. Lettura File
-        const workbook = XLSX.readFile(req.file.path);
+        const workbook = XLSX.readFile(req.file.path, { cellDates: true });
         const sheetName = workbook.SheetNames[0];
         const rawData = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
 
@@ -722,29 +732,93 @@ export const ImportReptiles = async (req, res) => {
         const dataToImport = rawData.slice(0, remainingSlots);
         const skippedCount = rawData.length - dataToImport.length;
 
-        // 4. Mapping Dinamico
-        // Questa mappa associa i possibili nomi delle colonne dell'utente ai tuoi campi DB
+        // 4. Mapping Dinamico Esteso
         const fieldMapping = {
-            name: ['nome', 'name', 'identificativo'],
-            species: ['specie', 'species', 'scientific name'],
-            morph: ['morph', 'morfo', 'colorazione'],
-            sex: ['sesso', 'sex', 'gender'],
-            birthDate: ['nascita', 'birth', 'data nascita', 'dob'],
-            notes: ['note', 'notes', 'descrizione']
+            'name': ['nome', 'name', 'identificativo', 'id'],
+            'species': ['specie', 'species', 'scientific name', 'specie scientifica'],
+            'morph': ['morph', 'morfo', 'colorazione', 'mutazione'],
+            'sex': ['sesso', 'sex', 'gender'],
+            'birthDate': ['nascita', 'birth', 'data nascita', 'dob', 'birthdate'],
+            'notes': ['note', 'notes', 'descrizione', 'description'],
+            'status': ['stato', 'status', 'condizione'],
+            'isBreeder': ['riproduttore', 'breeder', 'isbreeder'],
+            'previousOwner': ['proprietario precedente', 'allevatore', 'previous owner'],
+            'foodType': ['tipo cibo', 'food type', 'alimentazione'],
+            'weightPerUnit': ['peso cibo', 'food weight', 'peso preda'],
+            'nextMealDay': ['giorno pasto', 'meal day', 'intervallo pasto'],
+            
+            // Nested Fields
+            'price.amount': ['prezzo', 'price', 'prezzo vendita', 'sale price'],
+            'price.currency': ['valuta prezzo', 'price currency', 'valuta vendita'],
+            'purchasePrice.amount': ['prezzo acquisto', 'purchase price', 'costo', 'costo iniziale'],
+            'purchasePrice.currency': ['valuta acquisto', 'purchase currency', 'valuta costo'],
+            'parents.father': ['padre', 'father', 'sire'],
+            'parents.mother': ['madre', 'mother', 'dam'],
+            'documents.cites.number': ['numero cites', 'cites', 'cites number'],
+            'documents.cites.issueDate': ['data cites', 'cites date', 'emissione cites'],
+            'documents.microchip.code': ['microchip', 'numero microchip', 'chip']
         };
 
-        const reptilesToInsert = dataToImport.map(row => {
-            const mappedReptile = { user: userId, status: 'active' };
+        // LA BLACKLIST: Campi che NON devono mai essere importati da Excel
+        const blacklist = [
+            'isPublic', 
+            'isSold', 
+            'lastFeedingDate', 
+            'nextFeedingDate', 
+            'qrCodeUrl', 
+            'label.text', 
+            'label.color'
+        ];
 
-            // Cerchiamo nel file dell'utente una colonna che corrisponda ai nostri alias
-            Object.keys(fieldMapping).forEach(dbField => {
-                const userHeader = Object.keys(row).find(key => 
-                    fieldMapping[dbField].includes(key.toLowerCase().trim())
-                );
-                if (userHeader) mappedReptile[dbField] = row[userHeader];
+        const validSchemaPaths = Object.keys(Reptile.schema.paths);
+
+        // Usiamo Promise.all perché all'interno del map ora c'è la generazione asincrona del QR
+        const reptilesToInsert = await Promise.all(dataToImport.map(async row => {
+            // Generiamo subito l'ID per poterlo usare nel QR Code!
+            const newId = new mongoose.Types.ObjectId();
+            const mappedReptile = { _id: newId, user: userId, status: 'active' };
+
+            Object.keys(row).forEach(userHeader => {
+                const cleanHeader = userHeader.toLowerCase().trim();
+                const cellValue = row[userHeader];
+
+                if (cellValue === undefined || cellValue === null || cellValue === '') return;
+
+                let targetField = null;
+
+                for (const [dbField, aliases] of Object.entries(fieldMapping)) {
+                    if (aliases.includes(cleanHeader)) {
+                        targetField = dbField;
+                        break;
+                    }
+                }
+
+                if (!targetField && validSchemaPaths.includes(userHeader)) {
+                    targetField = userHeader;
+                }
+
+                // CONTROLLO BLACKLIST: Se il campo è vietato, lo saltiamo completamente
+                if (targetField && blacklist.includes(targetField)) {
+                    return; 
+                }
+
+                if (targetField) {
+                    let finalValue = cellValue;
+
+                    if (['isBreeder'].includes(targetField)) {
+                        const strVal = String(cellValue).toLowerCase().trim();
+                        finalValue = ['si', 'sì', 'yes', 'true', '1', 'v', 'vero'].includes(strVal);
+                    }
+
+                    if ((targetField.toLowerCase().includes('date') || targetField === 'birthDate') && typeof cellValue === 'string') {
+                        finalValue = new Date(cellValue);
+                    }
+
+                    setNestedProperty(mappedReptile, targetField, finalValue);
+                }
             });
 
-            // Normalizzazione Sesso (M, F, Unknown)
+            // Normalizzazione Sesso
             if (mappedReptile.sex) {
                 const s = mappedReptile.sex.toString().toUpperCase();
                 if (s.startsWith('M')) mappedReptile.sex = 'M';
@@ -754,17 +828,27 @@ export const ImportReptiles = async (req, res) => {
                 mappedReptile.sex = 'Unknown';
             }
 
-            // Validazione campo obbligatorio Specie
             if (!mappedReptile.species) mappedReptile.species = "Sconosciuta";
 
+            // GENERAZIONE QR CODE (Stessa logica di PostReptile)
+            try {
+                const publicUrl = `${process.env.FRONTEND_URL}/public/reptile/${newId}`;
+                mappedReptile.qrCodeUrl = await QRCode.toDataURL(publicUrl);
+            } catch (err) {
+                console.error("Errore generazione QR Code durante import:", err);
+                mappedReptile.qrCodeUrl = null;
+            }
+
             return mappedReptile;
-        });
+        }));
 
         // 5. Inserimento Massive
         await Reptile.insertMany(reptilesToInsert);
         
-        // Pulizia file temporaneo
-        await deleteFileIfExists(req.file.path);
+        // Pulizia file
+        if (req.file.path) {
+            await deleteFileIfExists(req.file.path);
+        }
 
         res.status(201).send({
             message: `Importati con successo ${reptilesToInsert.length} animali.`,
@@ -773,11 +857,9 @@ export const ImportReptiles = async (req, res) => {
 
     } catch (error) {
         console.error("Import Error:", error);
-        res.status(500).send({ message: "Errore durante l'importazione" });
+        res.status(500).send({ message: "Errore durante l'importazione. Verifica il formato del file." });
     }
 };
-
-
 export const GetReptileValuation = async (req, res) => {
     try {
         const reptileId = req.params.reptileId;

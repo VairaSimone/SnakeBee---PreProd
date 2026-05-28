@@ -17,7 +17,7 @@ import {
 } from 'react-icons/fa';
 import CalendarModal from '../components/CalendarModal.jsx'
 import { useTranslation } from 'react-i18next';
-
+import ImportInfoModal from '../components/ImportInfoModal.jsx'; // Aggiusta il path se necessario
 // ... (hasPaidPlan, isDueOrOverdue, TabButton rimangono uguali) ...
 function hasPaidPlan(user) {
   if (!user?.subscription) return false;
@@ -233,7 +233,7 @@ const [isImportMenuOpen, setIsImportMenuOpen] = useState(false);
       node.scrollBy({ left: scrollAmount * direction, behavior: 'smooth' });
     }
   };
-
+const [showImportModal, setShowImportModal] = useState(false);
 const parseDateString = (dateStr) => {
 if (!dateStr || typeof dateStr !== 'string') {
     return 'N/A';
@@ -347,7 +347,8 @@ const showWizard = !loading && totalResults === 0 && !user?.onboarding?.hasSeenT
       // Qui dovresti anche aggiornare lo stato utente in Redux o forzare un refetch del profilo
       window.location.reload(); // Soluzione rapida per aggiornare tutto lo stato utente
   };
-const handleImport = async (e) => {
+
+  const handleImport = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
@@ -357,7 +358,8 @@ const handleImport = async (e) => {
     try {
         const response = await api.post('/reptile/import', formData);
         alert(response.data.message);
-        handleDataRefresh(); // Ricarica la lista dopo l'import
+        setShowImportModal(false); // <-- Chiude il modale dopo l'import!
+        handleDataRefresh(); 
     } catch (err) {
         alert(err.response?.data?.message || "Errore import");
     }
@@ -519,23 +521,20 @@ const StatCard = ({ icon, title, value, unit, bgColor, children }) => (
             </button>
 
             {/* Dropdown Menu (Importa CSV) */}
-            {isImportMenuOpen && (
-              <div className="absolute right-0 top-full mt-2 z-50 w-56 animate-fade-in-down">
-                <label className="flex items-center gap-3 bg-white text-charcoal px-4 py-3 rounded-xl font-semibold cursor-pointer hover:bg-gray-50 transition-all shadow-xl border border-slate-100">
-                  <FaClipboardList className="text-blue-600 text-lg" />
-                  Importa CSV/Excel
-                  <input 
-                    type="file" 
-                    className="hidden" 
-                    accept=".csv, .xlsx, .xls"
-                    onChange={(e) => {
-                      handleImport(e);
-                      setIsImportMenuOpen(false); // Chiude la tendina dopo la selezione
-                    }} 
-                  />
-                </label>
-              </div>
-            )}
+{isImportMenuOpen && (
+  <div className="absolute right-0 top-full mt-2 z-50 w-56 animate-fade-in-down">
+    <button 
+      onClick={() => {
+        setShowImportModal(true); // Apre il modale
+        setIsImportMenuOpen(false); // Chiude la tendina
+      }}
+      className="w-full flex items-center gap-3 bg-white text-charcoal px-4 py-3 rounded-xl font-semibold cursor-pointer hover:bg-gray-50 transition-all shadow-xl border border-slate-100"
+    >
+      <FaClipboardList className="text-blue-600 text-lg" />
+      Importa CSV/Excel
+    </button>
+  </div>
+)}
           </div>
         </header>
 
@@ -1010,7 +1009,11 @@ const StatCard = ({ icon, title, value, unit, bgColor, children }) => (
         isOpen={isCalendarOpen}
         onClose={() => setCalendarOpen(false)}
       />
-
+<ImportInfoModal 
+        show={showImportModal} 
+        onClose={() => setShowImportModal(false)} 
+        onImport={handleImport} 
+      />
       {/* MODIFICA: Aggiornati i callback onSuccess per refreshare entrambe le liste */}
       <ReptileCreateModal show={showCreateModal} handleClose={() => setShowCreateModal(false)} onSuccess={handleDataRefresh} setReptiles={setAllReptiles} />
       <ReptileEditModal show={showEditModal} handleClose={() => setShowEditModal(false)} reptile={selectedReptile} onSuccess={handleDataRefresh} setReptiles={setAllReptiles} />

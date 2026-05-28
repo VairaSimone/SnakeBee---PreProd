@@ -77,7 +77,7 @@ const FinancePage = () => {
       setIsReptileLoading(true);
       try {
         const [costRes, valRes] = await Promise.all([
-          api.get(`/feeding/${selectedReptileId}/cost`), // API: Costo del cibo
+          api.get(`/feedings/${selectedReptileId}/cost`), // API: Costo del cibo
           api.get(`/reptile/valuation/${selectedReptileId}`) // API: Valutazione / Investimento
         ]);
         
