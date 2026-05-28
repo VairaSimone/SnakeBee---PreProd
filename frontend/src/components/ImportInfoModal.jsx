@@ -26,7 +26,7 @@ const ImportInfoModal = ({ show, onClose, onImport }) => {
                     <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg">
                         <p className="flex items-start gap-2 text-sm text-blue-800">
                             <FaInfoCircle className="mt-0.5 shrink-0" />
-                            Prepara un file Excel (.xlsx) o CSV. La prima riga deve contenere le intestazioni delle colonne. Il sistema riconosce automaticamente molti nomi, ma ecco una guida per non sbagliaar.
+                            Prepara un file Excel (.xlsx) o CSV. La prima riga deve contenere le intestazioni delle colonne. Il sistema riconosce automaticamente molti nomi, ma ecco una guida per non sbagliare.
                         </p>
                     </div>
 

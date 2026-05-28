@@ -809,7 +809,18 @@ export const ImportReptiles = async (req, res) => {
                         const strVal = String(cellValue).toLowerCase().trim();
                         finalValue = ['si', 'sì', 'yes', 'true', '1', 'v', 'vero'].includes(strVal);
                     }
-
+if (targetField === 'status') {
+                        const strVal = String(cellValue).toLowerCase().trim();
+                        if (['attivo', 'active', 'vivo', 'in allevamento'].includes(strVal)) {
+                            finalValue = 'active';
+                        } else if (['ceduto', 'venduto', 'ceded', 'sold'].includes(strVal)) {
+                            finalValue = 'ceded';
+                        } else if (['deceduto', 'morto', 'deceased', 'dead'].includes(strVal)) {
+                            finalValue = 'deceased';
+                        } else {
+                            finalValue = 'other'; // Valore di fallback
+                        }
+                    }
                     if ((targetField.toLowerCase().includes('date') || targetField === 'birthDate') && typeof cellValue === 'string') {
                         finalValue = new Date(cellValue);
                     }
