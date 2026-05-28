@@ -759,7 +759,6 @@ export const ImportReptiles = async (req, res) => {
             'documents.microchip.code': ['microchip', 'numero microchip', 'chip']
         };
 
-        // LA BLACKLIST: Campi che NON devono mai essere importati da Excel
         const blacklist = [
             'isPublic', 
             'isSold', 
@@ -772,11 +771,13 @@ export const ImportReptiles = async (req, res) => {
 
         const validSchemaPaths = Object.keys(Reptile.schema.paths);
 
-        // Usiamo Promise.all perché all'interno del map ora c'è la generazione asincrona del QR
-        const reptilesToInsert = await Promise.all(dataToImport.map(async row => {
-            // Generiamo subito l'ID per poterlo usare nel QR Code!
+        // MODIFICA: Passiamo l'index per tracciare il numero di riga reale del file Excel
+        const reptilesToInsert = await Promise.all(dataToImport.map(async (row, index) => {
             const newId = new mongoose.Types.ObjectId();
             const mappedReptile = { _id: newId, user: userId, status: 'active' };
+            
+            // Calcolo riga Excel (index 0 corrisponde alla riga 2 del file, dato che la riga 1 ha i testi delle colonne)
+            const excelRowNumber = index + 2; 
 
             Object.keys(row).forEach(userHeader => {
                 const cleanHeader = userHeader.toLowerCase().trim();
@@ -797,7 +798,6 @@ export const ImportReptiles = async (req, res) => {
                     targetField = userHeader;
                 }
 
-                // CONTROLLO BLACKLIST: Se il campo è vietato, lo saltiamo completamente
                 if (targetField && blacklist.includes(targetField)) {
                     return; 
                 }
@@ -809,7 +809,7 @@ export const ImportReptiles = async (req, res) => {
                         const strVal = String(cellValue).toLowerCase().trim();
                         finalValue = ['si', 'sì', 'yes', 'true', '1', 'v', 'vero'].includes(strVal);
                     }
-if (targetField === 'status') {
+                    if (targetField === 'status') {
                         const strVal = String(cellValue).toLowerCase().trim();
                         if (['attivo', 'active', 'vivo', 'in allevamento'].includes(strVal)) {
                             finalValue = 'active';
@@ -818,41 +818,48 @@ if (targetField === 'status') {
                         } else if (['deceduto', 'morto', 'deceased', 'dead'].includes(strVal)) {
                             finalValue = 'deceased';
                         } else {
-                            finalValue = 'other'; // Valore di fallback
+                            finalValue = 'other';
                         }
                     }
-// Gestione e Normalizzazione Date Robustissima
-if (targetField.toLowerCase().includes('date') || targetField === 'birthDate' || targetField.endsWith('.issueDate')) {
-    if (cellValue instanceof Date) {
-        // Se Excel ha già estratto una data nativa, controlliamo sia valida
-        if (isNaN(cellValue.getTime())) {
-            finalValue = null;
-        } else {
-            finalValue = cellValue;
-        }
-    } else {
-        // Se è una stringa testuale (es. "15/05/2022"), usiamo la tua utility del progetto
-        finalValue = parseDateOrNull(cellValue);
-    }
-}
+
+                    // MODIFICA CRITICA: Gestione e Blocco immediato su Date Invalide
+                    if (targetField.toLowerCase().includes('date') || targetField === 'birthDate' || targetField.endsWith('.issueDate')) {
+                        if (cellValue instanceof Date) {
+                            if (isNaN(cellValue.getTime())) {
+                                throw new Error(`Riga ${excelRowNumber}: Il valore nel campo "${userHeader}" è una data non valida.`);
+                            }
+                            finalValue = cellValue;
+                        } else {
+                            finalValue = parseDateOrNull(cellValue);
+                            // Se l'utente ha scritto qualcosa ma parseDateOrNull restituisce null, la data non è valida
+                            if (!finalValue) {
+                                throw new Error(`Riga ${excelRowNumber}: Formato data non valido nel campo "${userHeader}" ("${cellValue}"). Usa il formato corretto (es. GG/MM/AAAA).`);
+                            }
+                        }
+                    }
 
                     setNestedProperty(mappedReptile, targetField, finalValue);
                 }
             });
 
-            // Normalizzazione Sesso
-            if (mappedReptile.sex) {
-                const s = mappedReptile.sex.toString().toUpperCase();
-                if (s.startsWith('M')) mappedReptile.sex = 'M';
-                else if (s.startsWith('F')) mappedReptile.sex = 'F';
-                else mappedReptile.sex = 'Unknown';
-            } else {
-                mappedReptile.sex = 'Unknown';
+            // MODIFICA CRITICA: Validazione rigida dei dati obbligatori
+            if (!mappedReptile.species || mappedReptile.species.trim() === '') {
+                throw new Error(`Riga ${excelRowNumber}: Il campo 'Specie' è obbligatorio e manca nel file.`);
             }
 
-            if (!mappedReptile.species) mappedReptile.species = "Sconosciuta";
+            if (!mappedReptile.sex) {
+                throw new Error(`Riga ${excelRowNumber}: Il campo 'Sesso' è obbligatorio.`);
+            } else {
+                const s = mappedReptile.sex.toString().toUpperCase().trim();
+                if (s.startsWith('M')) mappedReptile.sex = 'M';
+                else if (s.startsWith('F')) mappedReptile.sex = 'F';
+                else if (['UNKNOWN', 'SCONOSCIUTO', 'U'].includes(s)) mappedReptile.sex = 'Unknown';
+                else {
+                    throw new Error(`Riga ${excelRowNumber}: Il sesso inserito ("${mappedReptile.sex}") non è valido. Usa M, F o Unknown.`);
+                }
+            }
 
-            // GENERAZIONE QR CODE (Stessa logica di PostReptile)
+            // GENERAZIONE QR CODE
             try {
                 const publicUrl = `${process.env.FRONTEND_URL}/public/reptile/${newId}`;
                 mappedReptile.qrCodeUrl = await QRCode.toDataURL(publicUrl);
@@ -864,10 +871,10 @@ if (targetField.toLowerCase().includes('date') || targetField === 'birthDate' ||
             return mappedReptile;
         }));
 
-        // 5. Inserimento Massive
+        // 5. Inserimento Massivo
         await Reptile.insertMany(reptilesToInsert);
         
-        // Pulizia file
+        // Pulizia file temporaneo
         if (req.file.path) {
             await deleteFileIfExists(req.file.path);
         }
@@ -879,9 +886,20 @@ if (targetField.toLowerCase().includes('date') || targetField === 'birthDate' ||
 
     } catch (error) {
         console.error("Import Error:", error);
-        res.status(500).send({ message: "Errore durante l'importazione. Verifica il formato del file." });
+        
+        // Pulizia file temporaneo anche in caso di errore
+        if (req?.file?.path) {
+            await deleteFileIfExists(req.file.path).catch(() => {});
+        }
+
+        // MODIFICA: Rispondiamo con un 400 Bad Request inviando l'esatto messaggio di errore calcolato sopra
+        res.status(400).send({ 
+            message: error.message || "Errore imprevisto durante l'importazione. Verifica il formato del file." 
+            // Includi lo stack trace solo in development se necessario
+        });
     }
 };
+
 export const GetReptileValuation = async (req, res) => {
     try {
         const reptileId = req.params.reptileId;
