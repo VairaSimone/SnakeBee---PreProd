@@ -55,6 +55,7 @@ import StoreSuccessPage from './pages/store/StoreSuccessPage';
 import OrderHistoryPage from './pages/store/OrderHistoryPage';
 import AdminStoreDashboard from './pages/admin/store/AdminStoreDashboard';
 import FinancePage from './pages/FinancePage';
+import ManualCitesPage from './pages/ManualCitesPage';
 const AuthLoadingSpinner = () => (
   <div className="flex justify-center items-center h-screen bg-[#FAF3E0]">
     <div className="w-12 h-12 border-4 border-gray-300 border-t-[#228B22] rounded-full animate-spin"></div>
@@ -149,6 +150,8 @@ if (isLoadingAuth) {
         <Route path="/profile" element={<ProtectedRoute><ProtectedLayout><UserProfile /></ProtectedLayout></ProtectedRoute>} />
         <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
         <Route path="/reptiles/:reptileId" element={<ProtectedRoute><ReptileDetails /></ProtectedRoute>} />
+                <Route path="/cites" element={<ProtectedRoute><ManualCitesPage /></ProtectedRoute>} />
+
         <Route path="*" element={<NotFound />} />
 
         <Route path="/pricing" element={<SubscriptionPage />} />

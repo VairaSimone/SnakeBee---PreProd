@@ -6,7 +6,7 @@ import  upload  from '../config/MulterConfig.js';
 import Reptile from '../models/Reptile.js';
 import { GetEvents, CreateEvent, DeleteEvent, averageShedInterval } from '../controllers/EventController.js';
 import { exportReptileData, generateReptilePDF } from '../controllers/ExportReptileData.js';
-import { generateCustomCitesDocument } from '../controllers/DocumentController.js';
+import { generateCustomCitesDocument, generateManualCitesDocument } from '../controllers/DocumentController.js';
 
 const reptileRouter = express.Router();
 const cpUpload = upload.fields([
@@ -33,6 +33,7 @@ reptileRouter.delete('/:reptileId/image/:imageIndex', authenticateJWT, isOwnerOr
 reptileRouter.post('/', authenticateJWT, cpUpload, reptileController.PostReptile);
 reptileRouter.post('/events', authenticateJWT,   CreateEvent);
 reptileRouter.post('/import', authenticateJWT, upload.single('file'), reptileController.ImportReptiles);
+reptileRouter.post('/download-cites-manual', authenticateJWT, generateManualCitesDocument);
 reptileRouter.post('/download-cites/:reptileId', authenticateJWT, generateCustomCitesDocument);
 
 reptileRouter.put('/:reptileId', authenticateJWT, cpUpload, isOwnerOrAdmin(Reptile, 'reptileId'), reptileController.PutReptile);

@@ -106,7 +106,7 @@ export const GetReptileByUser = async (req, res) => {
         const sortOrder = req.query.sortOrder === 'desc' ? -1 : 1;
 
         const matchQuery = { user: userId, status: 'active' };
-        
+
         if (filterName) matchQuery.name = { $regex: filterName, $options: 'i' };
         if (filterMorph) matchQuery.morph = { $regex: filterMorph, $options: 'i' };
         if (filterSpecies) matchQuery.species = { $regex: filterSpecies, $options: 'i' };
@@ -117,8 +117,8 @@ export const GetReptileByUser = async (req, res) => {
         if (String(filterFeedingSoon) === 'true') {
             const today = new Date();
             // Impostiamo alla fine della giornata per includere chi deve mangiare oggi
-            today.setHours(23, 59, 59, 999); 
-            
+            today.setHours(23, 59, 59, 999);
+
             // Filtro: data prossima alimentazione <= oggi (scaduti o oggi)
             // Usiamo $lte (less than or equal)
             matchQuery.nextFeedingDate = { $ne: null, $lte: today };
@@ -275,10 +275,10 @@ export const PostReptile = async (req, res) => {
         let parsedParents = typeof parents === 'string' ? JSON.parse(parents) : parents;
         let parsedDocuments = typeof documents === 'string' ? JSON.parse(documents) : documents;
         let parsedPcrTests = typeof pcrTests === 'string' ? JSON.parse(pcrTests) : (pcrTests || []);
-let parsedPurchasePrice = undefined;
-if (purchasePrice) {
-    parsedPurchasePrice = typeof purchasePrice === 'string' ? JSON.parse(purchasePrice) : purchasePrice;
-}
+        let parsedPurchasePrice = undefined;
+        if (purchasePrice) {
+            parsedPurchasePrice = typeof purchasePrice === 'string' ? JSON.parse(purchasePrice) : purchasePrice;
+        }
         const user = await User.findById(userId);
         const { plan: userPlan, limits } = getUserPlan(user);
         const reptileCount = await Reptile.countDocuments({ user: userId, status: 'active' });
@@ -302,7 +302,7 @@ if (purchasePrice) {
         let imageUrls = [];
         let citesFileUrl = null;
 
-if (req.files) {
+        if (req.files) {
             // Gestione Immagini
             if (req.files['image'] && req.files['image'].length > 0) {
                 if (req.files['image'].length > limits.imagesPerReptile) {
@@ -324,7 +324,7 @@ if (req.files) {
             if (!parsedDocuments.cites) parsedDocuments.cites = {};
             parsedDocuments.cites.fileUrl = citesFileUrl;
         }
-                const birthDateObject = parseDateOrNull(birthDate);
+        const birthDateObject = parseDateOrNull(birthDate);
         const newReptile = new Reptile({
             _id: new mongoose.Types.ObjectId(),
             name,
@@ -482,29 +482,29 @@ export const PutReptile = async (req, res) => {
             }
         }
 
-if ('purchasePrice' in req.body) {
-    let parsedPurchasePrice = req.body.purchasePrice;
-    try {
-        if (typeof parsedPurchasePrice === 'string') {
-            parsedPurchasePrice = JSON.parse(parsedPurchasePrice);
-        }
-        if (parsedPurchasePrice === null) {
-            reptile.purchasePrice = undefined;
-        } else if (typeof parsedPurchasePrice === 'object' && parsedPurchasePrice.amount !== undefined) {
-            const amount = Number(parsedPurchasePrice.amount);
-            if (!isNaN(amount) && amount >= 0) {
-                reptile.purchasePrice = {
-                    amount,
-                    currency: parsedPurchasePrice.currency && ['EUR', 'USD', 'GBP', 'JPY', 'CHF'].includes(parsedPurchasePrice.currency)
-                        ? parsedPurchasePrice.currency
-                        : reptile.purchasePrice?.currency || 'EUR'
-                };
+        if ('purchasePrice' in req.body) {
+            let parsedPurchasePrice = req.body.purchasePrice;
+            try {
+                if (typeof parsedPurchasePrice === 'string') {
+                    parsedPurchasePrice = JSON.parse(parsedPurchasePrice);
+                }
+                if (parsedPurchasePrice === null) {
+                    reptile.purchasePrice = undefined;
+                } else if (typeof parsedPurchasePrice === 'object' && parsedPurchasePrice.amount !== undefined) {
+                    const amount = Number(parsedPurchasePrice.amount);
+                    if (!isNaN(amount) && amount >= 0) {
+                        reptile.purchasePrice = {
+                            amount,
+                            currency: parsedPurchasePrice.currency && ['EUR', 'USD', 'GBP', 'JPY', 'CHF'].includes(parsedPurchasePrice.currency)
+                                ? parsedPurchasePrice.currency
+                                : reptile.purchasePrice?.currency || 'EUR'
+                        };
+                    }
+                }
+            } catch (err) {
+                console.warn('Invalid purchasePrice format:', req.body.purchasePrice);
             }
         }
-    } catch (err) {
-        console.warn('Invalid purchasePrice format:', req.body.purchasePrice);
-    }
-}
         // MODIFICA 1: Usa parseDateOrNull per birthDate
         const birthDateObject = parseDateOrNull(birthDate);
         await logAction(req.user.userid, "Modify reptile");
@@ -516,7 +516,7 @@ if ('purchasePrice' in req.body) {
         // (Altrimenti birthDateObject sarebbe null e cancellerebbe la data esistente)
         if ('birthDate' in req.body) {
             reptile.birthDate = birthDateObject;
-        } 
+        }
 
         reptile.image = imageUrls;
         reptile.sex = sex || reptile.sex;
@@ -716,8 +716,8 @@ export const ImportReptiles = async (req, res) => {
         const remainingSlots = limits.reptiles - currentCount;
 
         if (remainingSlots <= 0) {
-            return res.status(400).json({ 
-                message: req.t('reptile_limit', { reptiles: limits.reptiles, plan: userPlan }) 
+            return res.status(400).json({
+                message: req.t('reptile_limit', { reptiles: limits.reptiles, plan: userPlan })
             });
         }
 
@@ -746,7 +746,7 @@ export const ImportReptiles = async (req, res) => {
             'foodType': ['tipo cibo', 'food type', 'alimentazione'],
             'weightPerUnit': ['peso cibo', 'food weight', 'peso preda'],
             'nextMealDay': ['giorno pasto', 'meal day', 'intervallo pasto'],
-            
+
             // Nested Fields
             'price.amount': ['prezzo', 'price', 'prezzo vendita', 'sale price'],
             'price.currency': ['valuta prezzo', 'price currency', 'valuta vendita'],
@@ -760,12 +760,12 @@ export const ImportReptiles = async (req, res) => {
         };
 
         const blacklist = [
-            'isPublic', 
-            'isSold', 
-            'lastFeedingDate', 
-            'nextFeedingDate', 
-            'qrCodeUrl', 
-            'label.text', 
+            'isPublic',
+            'isSold',
+            'lastFeedingDate',
+            'nextFeedingDate',
+            'qrCodeUrl',
+            'label.text',
             'label.color'
         ];
 
@@ -775,9 +775,9 @@ export const ImportReptiles = async (req, res) => {
         const reptilesToInsert = await Promise.all(dataToImport.map(async (row, index) => {
             const newId = new mongoose.Types.ObjectId();
             const mappedReptile = { _id: newId, user: userId, status: 'active' };
-            
+
             // Calcolo riga Excel (index 0 corrisponde alla riga 2 del file, dato che la riga 1 ha i testi delle colonne)
-            const excelRowNumber = index + 2; 
+            const excelRowNumber = index + 2;
 
             Object.keys(row).forEach(userHeader => {
                 const cleanHeader = userHeader.toLowerCase().trim();
@@ -799,7 +799,7 @@ export const ImportReptiles = async (req, res) => {
                 }
 
                 if (targetField && blacklist.includes(targetField)) {
-                    return; 
+                    return;
                 }
 
                 if (targetField) {
@@ -873,7 +873,7 @@ export const ImportReptiles = async (req, res) => {
 
         // 5. Inserimento Massivo
         await Reptile.insertMany(reptilesToInsert);
-        
+
         // Pulizia file temporaneo
         if (req.file.path) {
             await deleteFileIfExists(req.file.path);
@@ -886,15 +886,15 @@ export const ImportReptiles = async (req, res) => {
 
     } catch (error) {
         console.error("Import Error:", error);
-        
+
         // Pulizia file temporaneo anche in caso di errore
         if (req?.file?.path) {
-            await deleteFileIfExists(req.file.path).catch(() => {});
+            await deleteFileIfExists(req.file.path).catch(() => { });
         }
 
         // MODIFICA: Rispondiamo con un 400 Bad Request inviando l'esatto messaggio di errore calcolato sopra
-        res.status(400).send({ 
-            message: error.message || "Errore imprevisto durante l'importazione. Verifica il formato del file." 
+        res.status(400).send({
+            message: error.message || "Errore imprevisto durante l'importazione. Verifica il formato del file."
             // Includi lo stack trace solo in development se necessario
         });
     }
@@ -904,15 +904,15 @@ export const GetReptileValuation = async (req, res) => {
     try {
         const reptileId = req.params.reptileId;
         const reptile = await Reptile.findById(reptileId).lean();
-        
+
         if (!reptile) {
             return res.status(404).send({ message: req.t('reptile_notFound') });
         }
 
         // Cerca tutti gli eventi che hanno un costo associato maggiore di 0
-        const events = await Event.find({ 
-            reptile: reptileId, 
-            'cost.amount': { $exists: true, $gt: 0 } 
+        const events = await Event.find({
+            reptile: reptileId,
+            'cost.amount': { $exists: true, $gt: 0 }
         }).sort({ date: 1 }).lean();
 
         let totalValue = reptile.purchasePrice?.amount || 0;
