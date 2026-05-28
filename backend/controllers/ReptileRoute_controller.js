@@ -821,9 +821,20 @@ if (targetField === 'status') {
                             finalValue = 'other'; // Valore di fallback
                         }
                     }
-                    if ((targetField.toLowerCase().includes('date') || targetField === 'birthDate') && typeof cellValue === 'string') {
-                        finalValue = new Date(cellValue);
-                    }
+// Gestione e Normalizzazione Date Robustissima
+if (targetField.toLowerCase().includes('date') || targetField === 'birthDate' || targetField.endsWith('.issueDate')) {
+    if (cellValue instanceof Date) {
+        // Se Excel ha già estratto una data nativa, controlliamo sia valida
+        if (isNaN(cellValue.getTime())) {
+            finalValue = null;
+        } else {
+            finalValue = cellValue;
+        }
+    } else {
+        // Se è una stringa testuale (es. "15/05/2022"), usiamo la tua utility del progetto
+        finalValue = parseDateOrNull(cellValue);
+    }
+}
 
                     setNestedProperty(mappedReptile, targetField, finalValue);
                 }
