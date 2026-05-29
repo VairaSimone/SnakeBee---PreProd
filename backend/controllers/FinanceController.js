@@ -40,11 +40,13 @@ export const deleteTransaction = async (req, res) => {
 
 // --- RIEPILOGO FINANZIARIO GLOBALE ---
 
+
 export const getFinancialSummary = async (req, res) => {
   try {
-    const userId = req.user.userid;
+    // 1. LA MAGIA È QUI: Convertiamo esplicitamente l'ID in ObjectId
+    const userId = new mongoose.Types.ObjectId(req.user.userid);
 
-    // 1. Trova tutti i rettili dell'utente per poter filtrare Eventi e Feedings
+    // 2. Trova tutti i rettili dell'utente per poter filtrare Eventi e Feedings
     const userReptiles = await Reptile.find({ user: userId }).select('_id');
     const reptileIds = userReptiles.map(r => r._id);
 
@@ -109,7 +111,7 @@ export const getFinancialSummary = async (req, res) => {
     const totalExpense = totalAnimalsBought + totalVet + totalFood + manualExpense;
     const netProfit = totalIncome - totalExpense;
 
-    // Strutturiamo la risposta per renderla perfetta per un grafico lato Frontend
+    // Strutturiamo la risposta
     res.json({
       overview: {
         totalIncome: Number(totalIncome.toFixed(2)),
