@@ -2,7 +2,7 @@ import Transaction from '../models/Transaction.js';
 import Reptile from '../models/Reptile.js';
 import Feeding from '../models/Feeding.js';
 import Event from '../models/Event.js';
-
+import mongoose from 'mongoose';
 // --- CRUD PER TRANSAZIONI MANUALI ---
 
 export const createTransaction = async (req, res) => {
