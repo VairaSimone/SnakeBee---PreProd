@@ -3,8 +3,12 @@ import { loginUser, logoutUser, selectLanguage } from '../features/userSlice';
 export const getEvents = (reptileId) => api.get(`/reptile/events/${reptileId}`);
 export const postEvent = (event) => api.post('/reptile/events', event);
 export const deleteEvent = (eventId) => api.delete(`/reptile/events/${eventId}`);
-export const createStripeCheckout = (plan, userId) => api.post('/stripe/create-checkout-session', { plan, userId });
-export const manageStripeSubscription = (newPlan, userId) => api.post('/stripe/manage-subscription', { newPlan, userId });
+export const createStripeCheckout = (plan, userId, interval = 'monthly') => {
+    return api.post('/stripe/create-checkout-session', { plan, interval });
+};
+export const manageStripeSubscription = (newPlan, userId, interval = 'monthly') => {
+    return api.post('/stripe/manage-subscription', { newPlan, interval });
+};
 export const cancelStripeSubscription = (userId) => api.post('/stripe/cancel-subscription', { userId });
 export const createStripePortalSession = (userId) => api.post('/stripe/create-portal-session', { userId });
 export const getAccessibleWorkspaces = () => api.get('/user/accessible-workspaces');

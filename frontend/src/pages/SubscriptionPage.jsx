@@ -161,6 +161,12 @@ const ComparisonTable = ({ plansData, onAction, loadingAction }) => {
             practitioner: false,
             breeder: true
         },
+        {
+            label: t('comparison.proTools', 'Gestione finanziaria'),
+            neophyte: false,
+            practitioner: false,
+            breeder: true
+        },
 
     ];
 
@@ -339,6 +345,7 @@ const SubscriptionPage = () => {
     const [showTaxCodeModal, setShowTaxCodeModal] = useState(false);
     const [pendingPlanKey, setPendingPlanKey] = useState(null);
     const dispatch = useDispatch();
+    const [billingInterval, setBillingInterval] = useState('monthly');
 const isDelegate = !!localStorage.getItem('operateAsId');
     const requestTaxCode = (planKey) => {
         setPendingPlanKey(planKey);
@@ -398,10 +405,10 @@ const isDelegate = !!localStorage.getItem('operateAsId');
 
         try {
             if ((user.subscription?.status === 'active' || user.subscription?.status === 'processing') && user.subscription.plan !== planKeyUpper) {
-                await manageStripeSubscription(planKeyUpper, user._id);
+await manageStripeSubscription(planKeyUpper, user._id, billingInterval);
                 onSuccess(t('subscriptionPage.plans.changeSuccess'));
             } else {
-                const response = await createStripeCheckout(planKeyUpper, user._id);
+const response = await createStripeCheckout(planKeyUpper, user._id, billingInterval);
                 if (response.data.url) {
                     window.location.href = response.data.url;
                 } else {
@@ -414,6 +421,8 @@ const isDelegate = !!localStorage.getItem('operateAsId');
         }
     };
     
+
+
     const handleCancelSubscription = () => {
         setModal({
             type: 'warning',
@@ -517,17 +526,24 @@ if (isDelegate) {
         const originalPriceString = plan.price;
         const priceSuffix = originalPriceString.includes('/') ? `/${originalPriceString.split('/')[1]}` : null;
         const originalPriceValue = originalPriceString.split('/')[0];
-
-        let discountedPrice = null;
-        if (isBlackFridayPeriod && originalPriceString.includes('€')) {
+if (billingInterval === 'yearly' && originalPriceString.includes('€')) {
             const priceMatch = originalPriceString.match(/[\d,.]+/);
             if (priceMatch) {
                 const priceNumber = parseFloat(priceMatch[0].replace(',', '.'));
-                const discountedNumber = priceNumber * 0.5;
+                const yearlyNumber = priceNumber * 10; // Moltiplico per 10 invece che 12
+                originalPriceValue = `€${yearlyNumber.toFixed(2)}`;
+                priceSuffix = '/anno';
+            }
+        }
+        let discountedPrice = null;
+if (isBlackFridayPeriod && originalPriceValue.includes('€')) {
+            const priceMatch = originalPriceValue.match(/[\d,.]+/);
+            if (priceMatch) {
+                const priceNumber = parseFloat(priceMatch[0].replace(',', '.'));
+                const discountedNumber = priceNumber * 0.5; // Sconto ulteriore del 50%
                 discountedPrice = `€${discountedNumber.toFixed(2)}`;
             }
         }
-
         return {
             key: planKey,
             title: plan.title,
@@ -617,7 +633,28 @@ if (isDelegate) {
                         </div>
                     </div>
                 )}
-
+<div className="flex flex-col items-center justify-center mb-8 mt-12">
+                    <div className="flex items-center gap-4 bg-gray-100 p-2 rounded-full shadow-inner border border-gray-200">
+                        <span className={`text-md px-4 py-2 rounded-full transition-all duration-300 font-semibold cursor-pointer ${billingInterval === 'monthly' ? 'bg-white shadow-md text-gray-900' : 'text-gray-500 hover:text-gray-700'}`} onClick={() => setBillingInterval('monthly')}>
+                            Mensile
+                        </span>
+                        
+                        <button
+                            onClick={() => setBillingInterval(prev => prev === 'monthly' ? 'yearly' : 'monthly')}
+                            className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors focus:outline-none ${billingInterval === 'yearly' ? 'bg-green-500' : 'bg-gray-300'}`}
+                        >
+                            <span className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform shadow-md ${billingInterval === 'yearly' ? 'translate-x-7' : 'translate-x-1'}`} />
+                        </button>
+                        
+                        <span className={`flex items-center text-md px-4 py-2 rounded-full transition-all duration-300 font-semibold cursor-pointer ${billingInterval === 'yearly' ? 'bg-white shadow-md text-gray-900' : 'text-gray-500 hover:text-gray-700'}`} onClick={() => setBillingInterval('yearly')}>
+                            Annuale 
+                            <span className="ml-2 text-xs font-bold text-white bg-red-500 px-2 py-0.5 rounded-md animate-pulse">
+                                -16%
+                            </span>
+                        </span>
+                    </div>
+                    <p className="text-sm text-gray-500 mt-3 font-medium">Con il piano annuale ricevi 2 mesi in regalo!</p>
+                </div>
                 {/* Tabella Comparativa con Prezzi e Pulsanti integrati */}
                 <ComparisonTable 
                     plansData={plansData} 

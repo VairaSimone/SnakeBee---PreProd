@@ -55,7 +55,6 @@ const Footer = () => {
           <div className="flex flex-col items-center md:items-start">
             <h5 className="font-bold text-sm uppercase tracking-wider mb-5">Esplora</h5>
             <ul className="space-y-4">
-              <FooterLink to="/store" icon={FaShoppingCart} label="SnakeBee Market" />
               <FooterLink to="/shop" icon={FaBullhorn} label="Annunci" />
               <FooterLink to="/blog" icon={FaRegNewspaper} label="Blog" />
               <FooterLink to="/dashboard" icon={FaChartLine} label="Dashboard" />

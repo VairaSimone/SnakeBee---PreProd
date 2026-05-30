@@ -4,7 +4,7 @@ import { selectUser } from '../features/userSlice.jsx';
 import api from '../services/api';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-
+import { FiLock, FiFileText } from 'react-icons/fi'; // Importate icone per il paywall delle CITES
 const ManualCitesPage = () => {
     const { t } = useTranslation();
     const user = useSelector(selectUser);

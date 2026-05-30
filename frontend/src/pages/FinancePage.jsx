@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import api from '../services/api'; // Assicurati che il percorso sia corretto
+import { useSelector } from 'react-redux'; // Importato per leggere lo stato dell'utente
+import { selectUser } from '../features/userSlice'; 
 import { 
   FaChartPie, FaPlus, FaTrash, FaArrowUp, FaArrowDown, 
-  FaWallet, FaSearchDollar, FaListUl 
+  FaWallet, FaSearchDollar, FaListUl, FaExclamationTriangle,
+  FaInfoCircle, FaStethoscope, FaAppleAlt, FaExchangeAlt,
+  FaLock
 } from 'react-icons/fa';
-
+import { Link } from 'react-router-dom';
 const formatCurrency = (amount, currency = 'EUR') => {
   if (amount === undefined || amount === null) return '€ 0.00';
   return new Intl.NumberFormat('it-IT', { style: 'currency', currency }).format(amount);
@@ -13,17 +17,20 @@ const formatCurrency = (amount, currency = 'EUR') => {
 
 const FinancePage = () => {
   const { t } = useTranslation();
-
+const user = useSelector(selectUser);
   // Stati per Overview e Transazioni Globali
   const [summary, setSummary] = useState(null);
   const [transactions, setTransactions] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
 
+  // Stato per la gestione del modale di eliminazione controllata
+  const [txToDelete, setTxToDelete] = useState(null);
+
   // Stati per form nuova transazione
   const [formData, setFormData] = useState({
     type: 'expense',
-    category: 'equipment',
+    category: 'Attrezzatura',
     amount: '',
     description: '',
     date: new Date().toISOString().split('T')[0]
@@ -36,10 +43,12 @@ const FinancePage = () => {
   const [isReptileLoading, setIsReptileLoading] = useState(false);
 
   // 1. Caricamento dati globali all'avvio
-  useEffect(() => {
-    fetchGlobalData();
-    fetchReptiles();
-  }, []);
+useEffect(() => {
+    if (user && user.subscription?.plan === 'BREEDER') {
+      fetchGlobalData();
+      fetchReptiles();
+    }
+  }, [user]);
 
   const fetchGlobalData = async () => {
     setIsLoading(true);
@@ -110,17 +119,19 @@ const FinancePage = () => {
     }
   };
 
-  const handleTxDelete = async (id) => {
-    if (!window.confirm('Sicuro di voler eliminare questa transazione?')) return;
+  // Conferma ed effettiva eliminazione dal modale custom
+  const confirmTxDelete = async () => {
+    if (!txToDelete) return;
     try {
-      await api.delete(`/finance/transactions/${id}`);
+      await api.delete(`/finance/transactions/${txToDelete}`);
+      setTxToDelete(null); // Chiude il modale liberando lo stato
       fetchGlobalData();
     } catch (err) {
       console.error('Errore eliminazione transazione', err);
     }
   };
-
-  if (isLoading) {
+// Se Redux sta ancora caricando l'utente, mostra lo spinner di caricamento
+  if (!user && isLoading) {
     return (
       <div className="flex justify-center items-center h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-emerald-500"></div>
@@ -128,6 +139,47 @@ const FinancePage = () => {
     );
   }
 
+  // Se l'utente non ha il piano BREEDER, blocca la visualizzazione e mostra il Paywall
+  if (!user || user.subscription?.plan !== 'BREEDER') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
+        <div className="text-center p-8 bg-white rounded-xl shadow-xl border border-slate-200 max-w-md w-full mx-4 space-y-6">
+          <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-50 text-red-500">
+            <FaLock className="w-8 h-8" />
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-2xl font-bold text-slate-800">Funzionalità Premium</h2>
+            <p className="text-slate-600 text-sm leading-relaxed">
+              La sezione <strong>Finance</strong> è uno strumento avanzato dedicato esclusivamente agli utenti con un abbonamento <strong>Allevatore (BREEDER)</strong> attivo.
+            </p>
+          </div>
+          <div className="pt-2 flex flex-col gap-3">
+            <Link 
+              to="/pricing" 
+              className="w-full inline-block bg-emerald-600 text-white py-2.5 px-6 rounded-lg font-semibold hover:bg-emerald-700 transition-colors shadow-md shadow-emerald-100"
+            >
+              Scopri i Piani di Abbonamento
+            </Link>
+            <Link 
+              to="/dashboard" 
+              className="text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors"
+            >
+              Torna alla Dashboard
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Se passa i controlli, mostra il resto della pagina originale...
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-emerald-500"></div>
+      </div>
+    );
+  }
   return (
     <div className="min-h-screen p-4 sm:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto space-y-8">
@@ -139,6 +191,43 @@ const FinancePage = () => {
           </h1>
           <p className="text-slate-600 mt-2 text-lg">Monitora i costi, i ricavi e l'investimento totale del tuo allevamento.</p>
         </header>
+
+        {/* --- NUOVO PARAGRAFO / BOX INFORMATIVO GUIDA AUTOMATIZZAZIONI --- */}
+        <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 shadow-sm space-y-3">
+          <div className="flex items-center gap-2 text-slate-800 font-bold text-lg border-b pb-2 border-slate-200">
+            <FaInfoCircle className="text-emerald-600 text-xl flex-shrink-0" />
+            <span>Guida al funzionamento dei bilanci automatizzati</span>
+          </div>
+          <p className="text-sm text-slate-600 leading-relaxed">
+            Questa dashboard integra e calcola in tempo reale i dati provenienti da diverse sezioni dell'applicazione. Per far sì che i valori non manuali si aggiornino correttamente, segui queste indicazioni:
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs pt-1">
+            <div className="bg-white p-3 rounded-lg border border-slate-100 space-y-1">
+              <span className="font-bold text-emerald-700 uppercase flex items-center gap-1">
+                <FaExchangeAlt /> Compravendita Animali
+              </span>
+              <p className="text-slate-500">
+                Se vendi un animale registrato sulla piattaforma, recati nella dashboard principale, clicca su modifica ed inserisci il <strong>Prezzo di Acquisto Iniziale</strong> e il <strong>Prezzo di Rivendita (Target)</strong>. Cambia poi lo stato dell'animale in <strong>Ceduto</strong>: il ricavo e la spesa d'acquisto verranno conteggiati immediatamente qui.
+              </p>
+            </div>
+            <div className="bg-white p-3 rounded-lg border border-slate-100 space-y-1">
+              <span className="font-bold text-blue-700 uppercase flex items-center gap-1">
+                <FaAppleAlt /> Cibo e Alimentazione
+              </span>
+              <p className="text-slate-500">
+                Gli elementi inseriti nell'inventario dei feed possiedono un campo prezzo dedicato. Ogni volta che registri un pasto per uno dei tuoi animali, la piattaforma calcolerà automaticamente il valore e aggiornerà la somma del <strong>Cibo Consumato</strong>.
+              </p>
+            </div>
+            <div className="bg-white p-3 rounded-lg border border-slate-100 space-y-1">
+              <span className="font-bold text-red-700 uppercase flex items-center gap-1">
+                <FaStethoscope /> Spese Veterinarie
+              </span>
+              <p className="text-slate-500">
+                I costi dei controlli medici non vanno messi tra le transazioni manuali. Utilizza l'apposito modulo nella scheda del rettile creando un nuovo <strong>Evento</strong>, seleziona la tipologia <strong>Veterinario</strong> e compila l'importo economico della visita.
+              </p>
+            </div>
+          </div>
+        </div>
 
         {error && <div className="p-4 bg-red-100 text-red-700 rounded-lg">{error}</div>}
 
@@ -207,30 +296,31 @@ const FinancePage = () => {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">Tipo</label>
-                    <select value={formData.type} onChange={(e) => setFormData({...formData, type: e.target.value})} className="w-full p-2 border rounded bg-slate-50">
+                    <select value={formData.type} onChange={(e) => setFormData({...formData, type: e.target.value})} className="w-full p-2 border rounded bg-slate-50 text-black">
                       <option value="expense">Uscita (Spesa)</option>
                       <option value="income">Entrata (Ricavo)</option>
                     </select>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">Categoria</label>
-                    <select value={formData.category} onChange={(e) => setFormData({...formData, category: e.target.value})} className="w-full p-2 border rounded bg-slate-50">
-                      <option value="equipment">Attrezzatura (Terrari, Rack)</option>
-                      <option value="supplies">Materiali (Substrato, Accessori)</option>
-                      <option value="expo">Fiere / Expo</option>
-                      <option value="other">Altro</option>
+                    <select value={formData.category} onChange={(e) => setFormData({...formData, category: e.target.value})} className="w-full p-2 border rounded bg-slate-50 text-black">
+                      <option value="Attrezzatura">Attrezzatura (Terrari, Rack)</option>
+                      <option value="Materiali">Materiali (Substrato, Accessori)</option>
+                      <option value="Fiere">Fiere / Expo</option>
+                      <option value="Animali Esterni">Animali (Non in Piattaforma)</option>
+                      <option value="Altro">Altro</option>
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Importo (€)</label>
-                    <input type="number" step="0.01" min="0" required value={formData.amount} onChange={(e) => setFormData({...formData, amount: e.target.value})} className="w-full p-2 border rounded bg-slate-50" placeholder="0.00" />
+                    <label className="block text-sm font-medium text-slate-700 mb-1 text-black">Importo (€)</label>
+                    <input type="number" step="0.01" min="0" required value={formData.amount} onChange={(e) => setFormData({...formData, amount: e.target.value})} className="w-full p-2 border rounded bg-slate-50 text-black" placeholder="0.00" />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">Data</label>
-                    <input type="date" required value={formData.date} onChange={(e) => setFormData({...formData, date: e.target.value})} className="w-full p-2 border rounded bg-slate-50" />
+                    <input type="date" required value={formData.date} onChange={(e) => setFormData({...formData, date: e.target.value})} className="w-full p-2 border rounded bg-slate-50 text-black" />
                   </div>
-                  <div className="col-span-2">
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Descrizione</label>
+                  <div className="col-span-2 text-black">
+                    <label className="block text-sm font-medium  text-black mb-1">Descrizione</label>
                     <input type="text" required value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} className="w-full p-2 border rounded bg-slate-50" placeholder="Es. Acquisto terrario in PVC" />
                   </div>
                 </div>
@@ -252,14 +342,14 @@ const FinancePage = () => {
                   </thead>
                   <tbody className="divide-y">
                     {transactions.map(tx => (
-                      <tr key={tx._id} className="hover:bg-slate-50">
+                      <tr key={tx._id} className="hover:bg-slate-50 text-black">
                         <td className="p-2">{new Date(tx.date).toLocaleDateString()}</td>
                         <td className="p-2">{tx.description} <span className="text-xs text-slate-400 block">{tx.category}</span></td>
                         <td className={`p-2 text-right font-mono font-bold ${tx.type === 'income' ? 'text-emerald-600' : 'text-red-600'}`}>
                           {tx.type === 'income' ? '+' : '-'}{formatCurrency(tx.amount, tx.currency)}
                         </td>
                         <td className="p-2 text-center">
-                          <button onClick={() => handleTxDelete(tx._id)} className="text-red-400 hover:text-red-600"><FaTrash /></button>
+                          <button onClick={() => setTxToDelete(tx._id)} className="text-red-400 hover:text-red-600"><FaTrash /></button>
                         </td>
                       </tr>
                     ))}
@@ -280,6 +370,7 @@ const FinancePage = () => {
               <label className="block text-sm font-medium text-slate-700 mb-2">Seleziona un animale per vedere quanto ti è costato fino ad oggi:</label>
               <select 
                 value={selectedReptileId} 
+                value={selectedReptileId}
                 onChange={(e) => setSelectedReptileId(e.target.value)} 
                 className="w-full p-3 border border-blue-200 rounded-lg bg-blue-50 font-medium text-slate-700 focus:ring-2 focus:ring-blue-500"
               >
@@ -331,7 +422,7 @@ const FinancePage = () => {
                   <h4 className="text-sm font-bold text-slate-700 mb-2">Cronologia Spese Animale</h4>
                   <div className="max-h-48 overflow-y-auto border border-slate-200 rounded-lg">
                     <table className="w-full text-sm text-left">
-                      <thead className="bg-slate-100 sticky top-0">
+                      <thead className="bg-slate-100 sticky top-0 text-black">
                         <tr>
                           <th className="p-2">Data</th>
                           <th className="p-2">Tipo</th>
@@ -364,6 +455,39 @@ const FinancePage = () => {
           
         </div>
       </div>
+
+      {/* --- MODALE DI CONFERMA CANCELLAZIONE --- */}
+      {txToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full border border-slate-100 overflow-hidden transform scale-100 transition-all">
+            <div className="p-6 space-y-4">
+              <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center text-red-600 mx-auto">
+                <FaExclamationTriangle className="text-xl" />
+              </div>
+              <div className="text-center">
+                <h3 className="text-xl font-bold text-slate-800">Conferma Eliminazione</h3>
+                <p className="text-sm text-slate-500 mt-2">
+                  Sei sicuro di voler eliminare definitivamente questa transazione? L'operazione ricalcolerà istantaneamente il bilancio e non potrà essere annullata.
+                </p>
+              </div>
+            </div>
+            <div className="bg-slate-50 px-6 py-4 flex items-center justify-end gap-3 border-t border-slate-100">
+              <button 
+                onClick={() => setTxToDelete(null)} 
+                className="px-4 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition"
+              >
+                Annulla
+              </button>
+              <button 
+                onClick={confirmTxDelete} 
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 shadow-md shadow-red-200 transition"
+              >
+                Sì, elimina
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
