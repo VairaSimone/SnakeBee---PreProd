@@ -67,7 +67,7 @@ const Footer = () => {
             <h5 className="font-bold text-sm uppercase tracking-wider mb-5">Supporto & Risorse</h5>
             <ul className="space-y-4">
               <FooterLink to="/home#contatti" icon={FaEnvelope} label="Contatti" />
-              <FooterLink to="/faq" icon={FaQuestionCircle} label="FAQ (Domande Frequenti)" />
+              <FooterLink to="/home#faq" icon={FaQuestionCircle} label="FAQ (Domande Frequenti)" />
               <FooterLink to="/home#chi-siamo" icon={FaInfoCircle} label="Chi Siamo" />
             </ul>
           </div>

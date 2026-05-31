@@ -523,10 +523,10 @@ if (isDelegate) {
         const plan = t(`subscriptionPage.plans.${planKey}`, { returnObjects: true });
         const { text: buttonText, disabled: isDisabled } = getButtonProps(planKey);
 
-        const originalPriceString = plan.price;
-        const priceSuffix = originalPriceString.includes('/') ? `/${originalPriceString.split('/')[1]}` : null;
-        const originalPriceValue = originalPriceString.split('/')[0];
-if (billingInterval === 'yearly' && originalPriceString.includes('€')) {
+let originalPriceString = plan.price;
+        let priceSuffix = originalPriceString.includes('/') ? `/${originalPriceString.split('/')[1]}` : null;
+        let originalPriceValue = originalPriceString.split('/')[0];
+        if (billingInterval === 'yearly' && originalPriceString.includes('€')) {
             const priceMatch = originalPriceString.match(/[\d,.]+/);
             if (priceMatch) {
                 const priceNumber = parseFloat(priceMatch[0].replace(',', '.'));

@@ -68,7 +68,7 @@ useEffect(() => {
 
   const fetchReptiles = async () => {
     try {
-      const res = await api.get('/reptile'); // Endpoint standard per ottenere i propri rettili
+      const res = await api.get('/reptile/user/AllReptileUser');// Endpoint standard per ottenere i propri rettili
       setReptiles(res.data.dati || res.data);
     } catch (err) {
       console.error('Errore caricamento rettili:', err);

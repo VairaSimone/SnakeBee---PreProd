@@ -3,7 +3,7 @@ import {
     ChevronRight,
     Trophy, Users, Activity, Crown, Star,
     ShieldCheck, Zap, Heart, CheckCircle2, Quote, Mail, Instagram, MessageCircle, ExternalLink,
-    ShoppingCart, HelpCircle
+    ShoppingCart, HelpCircle, ChevronDown
 } from "lucide-react";
 import MarketPromoSection from "../components/MarketPromoSection";
 import axios from 'axios';
@@ -27,13 +27,12 @@ const FeatureGroup = ({ title, description, features, videoSrc, reverse }) => (
             </ul>
         </div>
         <div className="flex-1 w-full max-w-2xl bg-slate-900 rounded-3xl overflow-hidden shadow-2xl border-8 border-slate-800">
-            <video 
+            <img 
                 autoPlay loop muted playsInline 
                 className="w-full h-full object-cover opacity-90"
-                poster="https://placehold.co/600x400/1e293b/white?text=Anteprima+Dashboard"
+            src={videoSrc}
             >
-                <source src={videoSrc} type="video/mp4" />
-            </video>
+            </img>
         </div>
     </div>
 );
@@ -42,10 +41,9 @@ const FeatureGroup = ({ title, description, features, videoSrc, reverse }) => (
 const CommunityStats = () => {
     // In futuro puoi sostituire questi dati statici con una chiamata axios (es. /api/stats)
     const stats = [
-        { label: "Rettili Registrati", value: "5.200+" },
-        { label: "Pasti Tracciati", value: "18.500+" },
-        { label: "Documenti CITES", value: "3.400+" },
-        { label: "Allevatori Attivi", value: "850+" }
+        { label: "Rettili Registrati", value: "300+" },
+        { label: "Pasti Tracciati", value: "2.500+" },
+        { label: "Documenti CITES generati", value: "60+" },
     ];
 
     return (
@@ -81,7 +79,7 @@ const CompactLeaderboard = () => {
     if (!data) return null;
 
     const Board = ({ title, items, icon: Icon, unit, color }) => (
-        <div className="flex-1 min-w-[300px] rounded-2xl p-5 shadow-md border border-slate-100 bg-white">
+        <div className="flex-1 min-w-[300px] rounded-2xl p-5 shadow-md border">
             <div className="flex items-center gap-2 mb-4">
                 <Icon size={20} className={color} />
                 <h4 className="font-bold text-slate-800 uppercase text-xs tracking-widest">{title}</h4>
@@ -103,13 +101,13 @@ const CompactLeaderboard = () => {
     );
 
     return (
-        <section className="py-12 bg-slate-50 border-y border-slate-200">
+        <section className="py-12 border-y ">
             <div className="container mx-auto px-6">
-                <h2 className="text-2xl font-black text-center mb-8">Community Highlights</h2>
+                <h2 className="text-2xl font-black text-center mb-8">La nostra Community</h2>
                 <div className="flex flex-wrap gap-6 justify-center">
                     <Board title="Top Allevatori" items={data.topKeepers} icon={Trophy} unit="🐍" color="text-amber-500" />
                     <Board title="Più Attivi" items={data.topActive} icon={Activity} unit="🔥" color="text-blue-500" />
-                    <Board title="Helpers" items={data.topReferrers} icon={Star} unit="✨" color="text-purple-500" />
+                    <Board title="Aiutanti" items={data.topReferrers} icon={Star} unit="✨" color="text-purple-500" />
                 </div>
             </div>
         </section>
@@ -154,7 +152,7 @@ const PricingSection = () => {
     // Sostituisci questi dati con i testi esatti della tua immagine
     const plans = [
         {
-            name: "Free",
+            name: "Neofita",
             price: "0€",
             period: "/ mese",
             description: "L'essenziale per iniziare a tracciare i tuoi primi animali.",
@@ -199,7 +197,7 @@ const PricingSection = () => {
     ];
 
     return (
-        <section id="pricing" className="py-24 bg-slate-50 border-t border-slate-200">
+        <section id="pricing" className="py-24  border-t">
             <div className="container mx-auto px-6 max-w-6xl text-center">
                 <h2 className="text-4xl font-black text-slate-900 mb-4">Scegli il piano giusto per te</h2>
                 <p className="text-slate-600 mb-12 max-w-2xl mx-auto text-lg">
@@ -262,42 +260,141 @@ const PricingSection = () => {
 
 // --- SEZIONE FAQ ---
 const FAQSection = () => {
-    const faqs = [
-        { q: "I miei dati sono al sicuro?", a: "Assolutamente sì. I tuoi dati sono crittografati, salvati su server protetti e visibili unicamente a te. Nessun altro utente avrà accesso alle tue statistiche." },
-        { q: "Come funziona esattamente il bot Telegram?", a: "Dopo la registrazione potrai collegare il tuo account Telegram. Il bot diventerà il tuo assistente: potrai inviargli messaggi testuali o comandi per registrare i pasti, le mute e il peso direttamente mentre sei nella stanza dei rettili, senza toccare il PC." },
-        { q: "Posso annullare l'abbonamento quando voglio?", a: "Sì, l'abbonamento è senza vincoli. Puoi disdirlo in qualsiasi momento direttamente dalla tua dashboard. I tuoi dati resteranno esportabili." },
-        { q: "Serve installare un'applicazione?", a: "No, SnakeBee è una piattaforma web in Cloud. Puoi accedervi da PC, Tablet o Smartphone semplicemente usando il tuo browser preferito." }
-    ];
+        const [openIndex, setOpenIndex] = useState(null);
 
-    return (
-        <section className="py-24 bg-white">
+const faqs = [
+    {
+        q: "Quanti rettili posso aggiungere sul mio account?",
+        a: "Il numero massimo dipende dal piano attivo. Neofita: fino a 5 rettili. Praticante: fino a 50 rettili. Allevatore: rettili illimitati. Una volta raggiunto il limite, SnakeBee ti inviterà a effettuare l'upgrade."
+    },
+    {
+        q: "Posso caricare più immagini per lo stesso rettile?",
+        a: "Sì. Con il piano Neofita puoi caricare 1 immagine. Con il piano Praticante fino a 3 immagini. Con il piano Allevatore fino a 10 immagini per creare una vera e propria galleria fotografica."
+    },
+    {
+        q: "Come funziona la compilazione automatica e manuale del documento CITES?",
+        a: "SnakeBee genera PDF precompilati utilizzando i dati salvati nella scheda del rettile. Se possiedi documenti personalizzati, puoi caricarli dalla sezione 'Aggiorna File CITES' presente nella modifica del rettile."
+    },
+    {
+        q: "Che cos'è l'Automazione Post-Nascita?",
+        a: "Dopo aver registrato una schiusa o una nascita nella sezione Accoppiamenti, SnakeBee crea automaticamente le schede dei nuovi nati compilando i dati principali."
+    },
+    {
+        q: "Posso registrare un pasto contemporaneamente per più rettili?",
+        a: "Sì. Ti basta selezionare gli animali interessati e utilizzare il pulsante 'Alimenta selezionati'. Il sistema aggiornerà automaticamente i diari alimentari di tutti gli esemplari scelti."
+    },
+    {
+        q: "In cosa consiste l'Inventario del Cibo?",
+        a: "È un magazzino virtuale per gestire le tue scorte alimentari. Quando registri un pasto, SnakeBee scala automaticamente la quantità consumata e ti avvisa quando le scorte stanno terminando."
+    },
+    {
+        q: "Il sistema può suggerirmi quando e quanto dare da mangiare al mio rettile?",
+        a: "Sì. Grazie alla funzione Suggerimenti Alimentari, SnakeBee analizza lo storico delle alimentazioni e suggerisce la taglia ideale della preda disponibile nel tuo inventario."
+    },
+    {
+        q: "Posso registrarmi o accedere tramite Google?",
+        a: "Sì. Puoi utilizzare il pulsante 'Accedi con Google' per registrarti o effettuare il login senza dover creare una password dedicata."
+    },
+    {
+        q: "Ho dimenticato la password, come posso recuperarla?",
+        a: "Dalla schermata di login clicca su 'Password dimenticata?'. Riceverai via email un codice temporaneo che ti consentirà di impostare una nuova password."
+    },
+    {
+        q: "Posso condividere la gestione del mio allevamento con un collaboratore?",
+        a: "Sì, tramite la funzione Team disponibile nel piano Allevatore. Potrai invitare collaboratori o soci e assegnare loro l'accesso al tuo workspace."
+    },
+    {
+        q: "Come posso cancellare o modificare il mio abbonamento premium?",
+        a: "Tutti gli abbonamenti sono gestiti tramite Stripe. Dalla sezione Abbonamento del profilo potrai modificare il piano, aggiornare il metodo di pagamento o disattivare il rinnovo automatico."
+    },
+    {
+        q: "A cosa serve l'integrazione con Telegram e come si attiva?",
+        a: "Cerca il bot @snakebee_bot su Telegram e segui la procedura guidata di collegamento. Riceverai notifiche e potrai registrare pasti, mute e pesate direttamente dalla chat."
+    },
+    {
+        q: "Come funziona il sistema dei promemoria?",
+        a: "Quando pianifichi un evento nel calendario, SnakeBee invia notifiche automatiche via email per ricordarti attività importanti come pulizie, visite veterinarie o integrazioni."
+    },
+    {
+        q: "Posso tenere traccia delle spese e dei guadagni del mio allevamento?",
+        a: "Sì. La sezione Gestione Finanziaria ti permette di registrare costi, entrate e vendite, fornendo una panoramica completa dell'andamento economico."
+    },
+    {
+        q: "I miei dati sono al sicuro?",
+        a: "Assolutamente sì. I tuoi dati sono crittografati, conservati su server protetti e accessibili esclusivamente al proprietario dell'account."
+    },
+    {
+        q: "Serve installare un'applicazione?",
+        a: "No. SnakeBee è una piattaforma cloud accessibile da PC, tablet e smartphone direttamente dal browser."
+    }
+];
+
+   return (
+        <section className="py-24">
             <div className="container mx-auto px-6 max-w-4xl">
                 <div className="text-center mb-16">
-                    <h2 className="text-4xl font-black text-slate-900 mb-4">Domande Frequenti</h2>
-                    <p className="text-slate-600 text-lg">Hai dubbi? Ecco le risposte alle domande più comuni della nostra community.</p>
+                    <h2 className="text-4xl font-black text-slate-900 mb-4">
+                        Domande Frequenti
+                    </h2>
+                    <p className="text-slate-600 text-lg">
+                        Hai dubbi? Ecco le risposte alle domande più comuni della nostra community.
+                    </p>
                 </div>
-                <div className="grid gap-6 md:grid-cols-2">
-                    {faqs.map((faq, i) => (
-                        <div key={i} className="p-8 bg-slate-50 rounded-3xl border border-slate-100 hover:border-amber-200 transition-colors">
-                            <h4 className="text-lg font-bold text-slate-900 mb-3 flex items-start gap-3">
-                                <HelpCircle className="text-amber-500 shrink-0 mt-1" size={20} />
-                                {faq.q}
-                            </h4>
-                            <p className="text-slate-600 leading-relaxed ml-8">{faq.a}</p>
-                        </div>
-                    ))}
+
+                <div className="space-y-4">
+                    {faqs.map((faq, i) => {
+                        const isOpen = openIndex === i;
+
+                        return (
+                            <div
+                                key={i}
+                                className="bg-white rounded-2xl border border-slate-200 overflow-hidden"
+                            >
+                                <button
+                                    onClick={() =>
+                                        setOpenIndex(isOpen ? null : i)
+                                    }
+                                    className="w-full p-6 flex items-center justify-between text-left hover:bg-slate-50 transition"
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <HelpCircle
+                                            size={20}
+                                            className="text-amber-500 shrink-0"
+                                        />
+                                        <span className="font-bold text-slate-900">
+                                            {faq.q}
+                                        </span>
+                                    </div>
+
+                                    <ChevronDown
+                                        size={20}
+                                        className={`transition-transform ${
+                                            isOpen ? "rotate-180" : ""
+                                        }`}
+                                    />
+                                </button>
+
+                                {isOpen && (
+                                    <div className="px-6 pb-6 pl-14">
+                                        <p className="text-slate-600 leading-relaxed">
+                                            {faq.a}
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    })}
                 </div>
             </div>
         </section>
     );
 };
-
 // --- FINAL CTA BANNER ---
 const FinalCTA = () => {
     const { t } = useTranslation();
     
     return (
-        <section className="py-24 bg-gradient-to-br from-slate-900 to-slate-800 text-center px-6 relative overflow-hidden">
+        <section className="py-24 bg-gradient-to-br  text-center px-6 relative overflow-hidden">
             {/* Decorazioni di background */}
             <div className="absolute top-0 left-0 w-full h-full overflow-hidden opacity-10 pointer-events-none">
                 <div className="absolute -top-20 -left-20 w-64 h-64 bg-amber-500 rounded-full blur-3xl"></div>
@@ -305,14 +402,14 @@ const FinalCTA = () => {
             </div>
             
             <div className="container mx-auto max-w-3xl relative z-10">
-                <h2 className="text-4xl md:text-5xl font-black text-white mb-6">
+                <h2 className="text-4xl md:text-5xl font-black text-black mb-6">
                     {t('home.ctaEnd.title', 'Sei pronto a fare il salto di qualità?')}
                 </h2>
-                <p className="text-xl text-slate-300 mb-10 max-w-2xl mx-auto">
-                    {t('home.ctaEnd.desc', 'Unisciti agli allevatori che hanno scelto il futuro.')}
+                <p className="text-xl mb-10 max-w-2xl mx-auto">
+                    {t('home.ctaEnd.desc', 'Unisciti agli allevatori che hanno scelto SnakeBee.')}
                 </p>
                 <a href="/register" className="inline-flex items-center gap-2 bg-amber-500 text-slate-900 px-10 py-5 rounded-full font-black text-lg hover:bg-amber-400 transition-all hover:scale-105 shadow-2xl">
-                    {t('home.ctaEnd.cta', 'Inizia la prova gratuita')}
+                    {t('home.ctaEnd.cta', 'Inizia con il piano gratuito')}
                     <ChevronRight size={24} />
                 </a>
             </div>
@@ -324,7 +421,7 @@ const Home = () => {
     const { t } = useTranslation();
 
     return (
-        <div className="min-h-screen text-slate-800 font-sans bg-white">
+        <div className="min-h-screen text-slate-800 font-sans">
             {/* HERO SECTION */}
             <section className="relative bg-gradient-to-br from-amber-50 via-yellow-100 to-white overflow-hidden">
                 <div className="container mx-auto px-6 pt-24 pb-20 text-center">
@@ -346,7 +443,7 @@ const Home = () => {
                             <span className="flex -space-x-2">
                                 {[1,2,3,4].map(i => <div key={i} className="w-8 h-8 rounded-full border-2 border-white bg-slate-200 flex items-center justify-center text-[10px] font-bold overflow-hidden"><img src={`https://i.pravatar.cc/100?img=${i+10}`} alt="user"/></div>)}
                             </span>
-                            +100 Allevatori attivi
+                            +150 Allevatori attivi
                         </div>
                     </div>
                 </div>
@@ -366,16 +463,16 @@ const Home = () => {
                     <FeatureGroup 
                         title={t('home.features.biological.title', 'Gestione Biologica & Allevamento')}
                         description={t('home.features.biological.desc', "Monitora ogni aspetto vitale dei tuoi animali con una precisione chirurgica. Genetica, crescita e benessere in un'unica vista.")}
-                        features={["Schede Rettili Dettagliate", "Pianificazione Breeding", "Inventario Pasti Auto-aggiornante", "Analisi Tassi di Successo"]}
-                        videoSrc="/videos/biological-demo.mp4" 
+                        features={["Schede Rettili Dettagliate", "Pianificazione riproduzioni", "Inventario Pasti Auto-aggiornante", "Analisi Tassi di Successo"]}
+                        videoSrc="/snakebeedashboard.png" 
                         reverse={false}
                     />
 
                     <FeatureGroup 
                         title={t('home.features.admin.title', 'Amministrazione & CITES')}
                         description={t('home.features.admin.desc', "Dimentica la burocrazia manuale. Genera documenti legali e traccia la genealogia con un click.")}
-                        features={["Generatore CITES PDF", "Registri Carico/Scarico", "Archivio Documenti Digitali", "QR Code Professionali"]}
-                        videoSrc="/videos/admin-demo.mp4"
+                        features={["Generatore CITES PDF", "Gestione finanza dell'allevamento", "Archivio Documenti Digitali", "QR Code Professionali"]}
+                        videoSrc="/snakebeefinance.png"
                         reverse={true}
                     />
 
@@ -383,7 +480,7 @@ const Home = () => {
                         title={t('home.features.automation.title', 'Automazioni & Smart Tools')}
                         description={t('home.features.automation.desc', "Il software lavora per te. Gestisci l'allevamento mentre sei fuori casa o direttamente dalla tua chat preferita.")}
                         features={["Bot Telegram Dedicato", "Calendario Eventi Intelligente", "Notifiche Real-time", "Accesso Multi-dispositivo"]}
-                        videoSrc="/videos/automation-demo.mp4"
+                        videoSrc="/SnakeBeeTelegram.jpg"
                         reverse={false}
                     />
                 </div>
@@ -393,6 +490,7 @@ const Home = () => {
 
             {/* LEADERBOARD COMPATTA */}
             <CompactLeaderboard />
+
 
             {/* PIANI E PREZZI */}
             <PricingSection />
@@ -414,13 +512,16 @@ const Home = () => {
             </section>
 
             {/* FAQ */}
-            <FAQSection />
+            <section id="faq" >
+                <FAQSection />
+            </section>
+            
 
             {/* FINAL CTA BANNER */}
             <FinalCTA />
 
             {/* SEZIONE CONTATTI */}
-            <section id="contatti" className="py-24 bg-slate-50">
+            <section id="contatti" className="py-24 ">
                 <div className="container mx-auto px-6">
                     <div className="max-w-4xl mx-auto text-center">
                         <h2 className="text-3xl md:text-4xl font-black text-slate-900 mb-4">

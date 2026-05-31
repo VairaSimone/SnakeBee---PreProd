@@ -460,13 +460,14 @@ const adminBody = `
       }
 
       case 'customer.subscription.updated': {
+        console.log("DEBUG: Webhook updated ricevuto. PriceID:", dataObject.items.data[0].price.id);
         const user = await User.findOne({ 'subscription.stripeSubscriptionId': dataObject.id });
         if (user) {
           const t = i18next.getFixedT(user.language || 'it');
 
           const newPlanId = dataObject.items.data[0].price.id;
           const newPlanName = getPlanNameByPriceId(newPlanId);
-
+console.log("DEBUG: PlanName calcolato:", newPlanName);
           user.subscription.status = dataObject.status;
           if (newPlanName) user.subscription.plan = newPlanName;
 
