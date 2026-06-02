@@ -57,55 +57,78 @@ export const calculateBreedingOutputs = async (req, res) => {
 
     // 3. Conteggio e raggruppamento delle frequenze
     const totalCombinations = combinations.length;
-    let resultsMap = {};
 
     combinations.forEach(combo => {
-      // Traduciamo la combinazione di alleli in fenotipo testuale (Morph visibile)
       let morphNameParts = [];
       let hetParts = [];
-      let belGroup = []; // Per tracciare i complessi allelici
+      let belGroup = []; // Per tracciare i geni del complesso BEL
 
-      for (let geneId in combo => {
+      for (let geneId in combo) {
         const allele = combo[geneId];
         const geneInfo = BALL_PYTHON_GENES[geneId];
+        if (!geneInfo) continue;
 
         if (geneInfo.type === 'recessive') {
-          if (allele === 'MM') morphNameParts.push(geneInfo.name);
-          if (allele === 'MN') hetParts.push(`100% Het ${geneInfo.name}`);
+          // Un gene recessivo si vede SOLO se omozigote (MM)
+          if (allele === 'MM') {
+            morphNameParts.push(geneInfo.name);
+          } 
+          // Se è eterozigote (MN), diventa un portatore (Het)
+          else if (allele === 'MN') {
+            hetParts.push(`100% Het ${geneInfo.name}`);
+          }
         } 
         else if (geneInfo.type === 'co-dominant') {
+          // Se fa parte del complesso Blue Eyed Lucy (Mojave, Lesser, ecc.)
           if (geneInfo.complex === 'bel') {
             if (allele === 'MM' || allele === 'MN') {
-              // Se fa parte del complesso BEL, lo isoliamo temporaneamente
               belGroup.push({ geneId, allele });
             }
           } else {
-            if (allele === 'MM') morphNameParts.push(geneInfo.superName || `Super ${geneInfo.name}`);
-            if (allele === 'MN') morphNameParts.push(geneInfo.name);
-          }
-        }
-      });
-
-      // Gestione del complesso allelico BEL (Mojave, Lesser, ecc.)
-      if (belGroup.length > 0) {
-        if (belGroup.length === 1 && belGroup[0].allele === 'MN') {
-          morphNameParts.push(BALL_PYTHON_GENES[belGroup[0].geneId].name);
-        } else {
-          // Ordiniamo le chiavi per matchare il dizionario COMPLEX_COMBOS
-          const comboKey = belGroup.map(b => b.geneId).sort().join('+');
-          const specialComboName = COMPLEX_COMBOS.bel[comboKey];
-          if (specialComboName) {
-            morphNameParts.push(specialComboName);
-          } else {
-            // Fallback se è una combo non censita
-            belGroup.forEach(b => morphNameParts.push(BALL_PYTHON_GENES[b.geneId].name));
+            // Altri co-dominanti (es: Pastel)
+            if (allele === 'MM') {
+              morphNameParts.push(geneInfo.superName || `Super ${geneInfo.name}`);
+            } else if (allele === 'MN') {
+              morphNameParts.push(geneInfo.name);
+            }
           }
         }
       }
 
-      // Componiamo il nome finale del fenotipo (es: "Pastel Clown 100% Het Piebald")
-      if (morphNameParts.length === 0) morphNameParts.push('Normal (Wildtype)');
-      const finalPhenotype = [...morphNameParts, ...hetParts].join(' ');
+      // Elaborazione del complesso allelico BEL (Mojave / Lesser / ecc.)
+      if (belGroup.length > 0) {
+        // Caso 1: C'è solo un gene del complesso ed è in singola copia (es. un singolo Mojave 'MN')
+        if (belGroup.length === 1 && belGroup[0].allele === 'MN') {
+          morphNameParts.push(BALL_PYTHON_GENES[belGroup[0].geneId].name);
+        } 
+        // Caso 2: C'è una doppia copia o una combinazione (es. Mojave 'MM' oppure Mojave + Lesser)
+        else {
+          // Creiamo la chiave di ricerca (es: 'mojave+mojave')
+          const comboKey = belGroup.map(b => b.geneId).sort().join('+');
+          const specialComboName = COMPLEX_COMBOS.bel[comboKey];
+          
+          if (specialComboName) {
+            morphNameParts.push(specialComboName);
+          } else {
+            // Fallback: se non trova la combo nel dizionario, scrive i nomi singoli
+            belGroup.forEach(b => {
+              if (b.allele === 'MM') morphNameParts.push(`Super ${BALL_PYTHON_GENES[b.geneId].name}`);
+              else morphNameParts.push(BALL_PYTHON_GENES[b.geneId].name);
+            });
+          }
+        }
+      }
+
+      // Costruzione della stringa finale del Morph
+      let finalPhenotype = "";
+      
+      if (morphNameParts.length === 0) {
+        // Se non ci sono morph visivi (né co-dom né recessivi omozigoti) il serpente di base è Normal
+        finalPhenotype = hetParts.length > 0 ? `Normal ${hetParts.join(' ')}` : 'Normal (Wildtype)';
+      } else {
+        // Se ci sono morph visivi, li uniamo e appendiamo gli eventuali Het alla fine
+        finalPhenotype = hetParts.length > 0 ? `${morphNameParts.join(' ')} ${hetParts.join(' ')}` : morphNameParts.join(' ');
+      }
 
       resultsMap[finalPhenotype] = (resultsMap[finalPhenotype] || 0) + 1;
     });

@@ -40,7 +40,7 @@ export default function GeneticCalculator() {
   const handleCalculate = async () => {
     setLoading(true);
     try {
-      const response = await api.post('/api/breeding/genetic', {
+      const response = await api.post('/breeding/genetic', {
         fatherGenes,
         motherGenes
       });
