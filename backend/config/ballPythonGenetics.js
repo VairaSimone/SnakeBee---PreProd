@@ -15,13 +15,13 @@ export const BALL_PYTHON_GENES = {
   sunset: { name: 'Sunset', type: 'recessive' },
   ultramel: { name: 'Ultramel', type: 'recessive' },
 
-  // --- DOMINANTI (Nel tuo codice elaborali come co-dominanti senza Super visivamente diverso, o aggiungi la logica per 'dominant') ---
-  pinstripe: { name: 'Pinstripe', type: 'co-dominant', superName: 'Pinstripe' }, 
-  spider: { name: 'Spider', type: 'co-dominant', superName: 'Spider' }, 
+  // --- DOMINANTI PURI (Nessuna differenza visiva in omozigosi) ---
+  pinstripe: { name: 'Pinstripe', type: 'dominant' }, 
+  spider: { name: 'Spider', type: 'dominant', lethal: true }, // Super Spider è letale
 
   // --- CO-DOMINANTI / INCOMPLETE DOMINANTI (Singoli) ---
   banana: { name: 'Banana (Coral Glow)', type: 'co-dominant', superName: 'Super Banana' },
-  champagne: { name: 'Champagne', type: 'co-dominant', superName: 'Super Champagne' },
+  champagne: { name: 'Champagne', type: 'co-dominant', superName: 'Super Champagne', lethal: true }, // Super Champagne è letale
   cypress: { name: 'Cypress', type: 'co-dominant', superName: 'Super Cypress' },
   enchi: { name: 'Enchi', type: 'co-dominant', superName: 'Super Enchi' },
   leopard: { name: 'Leopard', type: 'co-dominant', superName: 'Super Leopard' },
@@ -57,11 +57,8 @@ export const BALL_PYTHON_GENES = {
   cinnamon: { name: 'Cinnamon', type: 'co-dominant', complex: 'eight_ball' },
 };
 
-// Mappatura delle combo alleliche speciali
-// ATTENZIONE: Le chiavi devono essere in ORDINE ALFABETICO rigoroso!
 export const COMPLEX_COMBOS = {
   bel: {
-    // Omozigoti (Super)
     'bamboo+bamboo': 'Super Bamboo (Blue Eyed Lucy)',
     'butter+butter': 'Super Butter (Blue Eyed Lucy)',
     'lesser+lesser': 'Super Lesser (Blue Eyed Lucy)',
@@ -70,8 +67,6 @@ export const COMPLEX_COMBOS = {
     'phantom+phantom': 'Super Phantom',
     'russo+russo': 'White Diamond (Super Russo)',
     'special+special': 'Super Special',
-
-    // Eterozigoti Complessi (Combinazioni BEL)
     'bamboo+mojave': 'Bamboo Mojave (Blue Eyed Lucy)',
     'butter+mojave': 'Butter Mojave (Blue Eyed Lucy)',
     'lesser+mojave': 'Mojave Lesser (Blue Eyed Lucy)',
@@ -79,30 +74,23 @@ export const COMPLEX_COMBOS = {
     'mojave+phantom': 'Purple Passion',
     'lesser+phantom': 'Karma',
     'mojave+special': 'Crystal',
-    // ...puoi aggiungerne altre seguendo sempre l'ordine alfabetico!
   },
-
   yellow_belly: {
-    // Omozigoti
     'yellow_belly+yellow_belly': 'Ivory',
     'asphalt+asphalt': 'Super Asphalt',
     'gravel+gravel': 'Super Gravel',
     'specter+specter': 'Super Specter',
     'spark+spark': 'Puma',
-
-    // Eterozigoti Complessi
     'asphalt+yellow_belly': 'Freeway',
     'gravel+yellow_belly': 'Highway',
     'spark+yellow_belly': 'Puma (Spark YB)',
     'specter+yellow_belly': 'Super Stripe',
   },
-
   eight_ball: {
     'black_pastel+black_pastel': 'Super Black Pastel',
     'cinnamon+cinnamon': 'Super Cinnamon',
     'black_pastel+cinnamon': '8-Ball',
   },
-
   black_eyed_lucy: {
     'fire+fire': 'Black Eyed Lucy (Super Fire)',
     'vanilla+vanilla': 'Super Vanilla',

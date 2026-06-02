@@ -1,37 +1,45 @@
 // backend/controllers/GeneticCalculatorController.js
 import { BALL_PYTHON_GENES, COMPLEX_COMBOS } from "../config/ballPythonGenetics.js";
 
+const getAlleles = (geneStatus, geneType) => {
+  if (geneStatus === 'super') return ['M', 'M'];
+  if (geneStatus === 'het') return ['M', 'N'];
+  
+  if (geneStatus === 'visual') {
+    if (geneType === 'recessive') return ['M', 'M'];
+    return ['M', 'N']; 
+  }
+  return ['N', 'N'];
+};
+
 export const calculateBreedingOutputs = async (req, res) => {
   try {
     const { fatherGenes, motherGenes } = req.body; 
 
-    // Controllo di sicurezza sugli input
     if (!fatherGenes || !motherGenes) {
       return res.status(400).json({ success: false, message: "Dati dei genitori mancanti." });
     }
 
-    // 1. Inizializziamo l'array dei loci genetici da analizzare
+    const MAX_GENES = 6;
+    if (fatherGenes.length > MAX_GENES || motherGenes.length > MAX_GENES) {
+      return res.status(400).json({ 
+        success: false, 
+        message: `Limite massimo superato: puoi selezionare fino a ${MAX_GENES} geni per genitore.` 
+      });
+    }
+
     const allActiveGenes = Array.from(new Set([...fatherGenes.map(g => g.geneId), ...motherGenes.map(g => g.geneId)]));
-    
     let genePools = {};
 
     allActiveGenes.forEach(geneId => {
       const geneInfo = BALL_PYTHON_GENES[geneId];
       if (!geneInfo) return;
 
-      let fatherAlleles = ['N', 'N'];
       const fGene = fatherGenes.find(g => g.geneId === geneId);
-      if (fGene) {
-        if (fGene.status === 'visual' || fGene.status === 'super') fatherAlleles = ['M', 'M'];
-        if (fGene.status === 'het') fatherAlleles = ['M', 'N'];
-      }
+      const fatherAlleles = fGene ? getAlleles(fGene.status, geneInfo.type) : ['N', 'N'];
 
-      let motherAlleles = ['N', 'N'];
       const mGene = motherGenes.find(g => g.geneId === geneId);
-      if (mGene) {
-        if (mGene.status === 'visual' || mGene.status === 'super') motherAlleles = ['M', 'M'];
-        if (mGene.status === 'het') motherAlleles = ['M', 'N'];
-      }
+      const motherAlleles = mGene ? getAlleles(mGene.status, geneInfo.type) : ['N', 'N'];
 
       let outcomes = [];
       for (let f of fatherAlleles) {
@@ -42,7 +50,6 @@ export const calculateBreedingOutputs = async (req, res) => {
       genePools[geneId] = outcomes;
     });
 
-    // 2. Combinazione di tutti i geni (Prodotto Cartesiano)
     let combinations = [{}];
     for (let geneId in genePools) {
       let nextCombinations = [];
@@ -54,57 +61,56 @@ export const calculateBreedingOutputs = async (req, res) => {
       combinations = nextCombinations;
     }
 
-    // 3. Conteggio e raggruppamento delle frequenze
     const totalCombinations = combinations.length;
-    const resultsMap = {}; 
+    
+    // Raggruppamento per Fenotipo Visivo
+    const visualGroups = {}; 
 
     combinations.forEach(combo => {
       let morphNameParts = [];
-      let hetParts = [];
-      
-      // NUOVA LOGICA: Un oggetto per tracciare i complessi multipli (es. un serpente che ha sia Mojave che Yellow Belly)
+      let hiddenGenes = []; // Portatori eterozigoti (es. Het Albino)
       let activeComplexes = {}; 
+      let isLethal = false;
 
       for (let geneId in combo) {
         const allele = combo[geneId];
         const geneInfo = BALL_PYTHON_GENES[geneId];
         if (!geneInfo) continue;
 
+        // Controllo letalità in omozigosi
+        if (allele === 'MM' && geneInfo.lethal) {
+          isLethal = true;
+        }
+
         if (geneInfo.type === 'recessive') {
-          if (allele === 'MM') {
-            morphNameParts.push(geneInfo.name);
-          } else if (allele === 'MN') {
-            hetParts.push(`100% Het ${geneInfo.name}`);
-          }
+          if (allele === 'MM') morphNameParts.push(geneInfo.name);
+          else if (allele === 'MN') hiddenGenes.push(geneInfo.name);
         } 
+        else if (geneInfo.type === 'dominant') {
+          // I dominanti puri mostrano lo stesso fenotipo sia singoli che super
+          if (allele === 'MM' || allele === 'MN') {
+            morphNameParts.push(geneInfo.name);
+          }
+        }
         else if (geneInfo.type === 'co-dominant') {
           if (geneInfo.complex) {
-            // Se il gene appartiene a un complesso, lo aggiungiamo al suo gruppo specifico
             if (allele === 'MM' || allele === 'MN') {
               if (!activeComplexes[geneInfo.complex]) activeComplexes[geneInfo.complex] = [];
               activeComplexes[geneInfo.complex].push({ geneId, allele });
             }
           } else {
-            // Co-dominanti normali
-            if (allele === 'MM') {
-              morphNameParts.push(geneInfo.superName || `Super ${geneInfo.name}`);
-            } else if (allele === 'MN') {
-              morphNameParts.push(geneInfo.name);
-            }
+            if (allele === 'MM') morphNameParts.push(geneInfo.superName || `Super ${geneInfo.name}`);
+            else if (allele === 'MN') morphNameParts.push(geneInfo.name);
           }
         }
       }
 
-      // Elaborazione DINAMICA di tutti i complessi allelici trovati
+      // Elaborazione complessi
       for (let complexId in activeComplexes) {
         const complexGroup = activeComplexes[complexId];
-
-        // Caso 1: Singola copia di un gene del complesso
         if (complexGroup.length === 1 && complexGroup[0].allele === 'MN') {
           morphNameParts.push(BALL_PYTHON_GENES[complexGroup[0].geneId].name);
-        } 
-        // Caso 2: Combinazione di geni o forma Super
-        else {
+        } else {
           let complexKeys = [];
           complexGroup.forEach(b => {
             complexKeys.push(b.geneId);
@@ -112,14 +118,10 @@ export const calculateBreedingOutputs = async (req, res) => {
           });
 
           const comboKey = complexKeys.sort().join('+');
-          
-          // Cerca nel dizionario corretto in base all'ID del complesso (es. COMPLEX_COMBOS['yellow_belly'])
           const specialComboName = COMPLEX_COMBOS[complexId] && COMPLEX_COMBOS[complexId][comboKey];
           
-          if (specialComboName) {
-            morphNameParts.push(specialComboName);
-          } else {
-            // Fallback
+          if (specialComboName) morphNameParts.push(specialComboName);
+          else {
             complexGroup.forEach(b => {
               if (b.allele === 'MM') morphNameParts.push(`Super ${BALL_PYTHON_GENES[b.geneId].name}`);
               else morphNameParts.push(BALL_PYTHON_GENES[b.geneId].name);
@@ -128,22 +130,58 @@ export const calculateBreedingOutputs = async (req, res) => {
         }
       }
 
-      let finalPhenotype = "";
+      // Creazione della chiave visiva (ignora i geni nascosti)
+      let visualPhenotype = morphNameParts.length === 0 ? 'Normal (Wildtype)' : morphNameParts.sort().join(' ');
       
-      if (morphNameParts.length === 0) {
-        finalPhenotype = hetParts.length > 0 ? `Normal ${hetParts.join(' ')}` : 'Normal (Wildtype)';
-      } else {
-        finalPhenotype = hetParts.length > 0 ? `${morphNameParts.join(' ')} ${hetParts.join(' ')}` : morphNameParts.join(' ');
+      if (!visualGroups[visualPhenotype]) {
+        visualGroups[visualPhenotype] = { count: 0, hiddenCounts: {}, isLethal: false };
       }
-
-      resultsMap[finalPhenotype] = (resultsMap[finalPhenotype] || 0) + 1;
+      
+      visualGroups[visualPhenotype].count++;
+      if (isLethal) visualGroups[visualPhenotype].isLethal = true; // Se almeno un set è letale, marca il gruppo
+      
+      // Conta quante volte compare il gene nascosto all'interno di questo specifico fenotipo
+      hiddenGenes.forEach(hg => {
+        visualGroups[visualPhenotype].hiddenCounts[hg] = (visualGroups[visualPhenotype].hiddenCounts[hg] || 0) + 1;
+      });
     });
 
-    // 4. Formattazione dell'output
-    const finalCalculatedResults = Object.keys(resultsMap).map(phenotype => ({
-      phenotype,
-      probability: ((resultsMap[phenotype] / totalCombinations) * 100).toFixed(2) + '%'
-    })).sort((a, b) => parseFloat(b.probability) - parseFloat(a.probability));
+    // Costruzione risultati finali calcolando i "Possible Hets"
+    const finalCalculatedResults = [];
+
+    for (let vp in visualGroups) {
+      const group = visualGroups[vp];
+      const prob = (group.count / totalCombinations) * 100;
+      
+      let formattedHets = [];
+      for (let hg in group.hiddenCounts) {
+        let pct = Math.round((group.hiddenCounts[hg] / group.count) * 100);
+        // Standardizzazione per il gergo da allevatori
+        if (pct === 67) pct = 66; 
+        
+        if (pct > 0) {
+          formattedHets.push(`${pct}% Het ${hg}`);
+        }
+      }
+
+      let finalName = vp;
+      if (formattedHets.length > 0) {
+        if (finalName === 'Normal (Wildtype)') finalName = 'Normal';
+        finalName += ` ${formattedHets.join(', ')}`;
+      }
+      
+      if (group.isLethal) {
+        finalName += ' ☠️ (Omozigosi Letale)';
+      }
+
+      finalCalculatedResults.push({
+        phenotype: finalName,
+        probability: prob.toFixed(2) + '%',
+        isLethal: group.isLethal
+      });
+    }
+
+    finalCalculatedResults.sort((a, b) => parseFloat(b.probability) - parseFloat(a.probability));
 
     return res.status(200).json({ success: true, results: finalCalculatedResults });
 
