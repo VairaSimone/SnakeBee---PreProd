@@ -56,14 +56,14 @@ export const calculateBreedingOutputs = async (req, res) => {
 
     // 3. Conteggio e raggruppamento delle frequenze
     const totalCombinations = combinations.length;
-    
-    // FIX FATALE: Inizializza la mappa dei risultati qui
     const resultsMap = {}; 
 
     combinations.forEach(combo => {
       let morphNameParts = [];
       let hetParts = [];
-      let belGroup = []; 
+      
+      // NUOVA LOGICA: Un oggetto per tracciare i complessi multipli (es. un serpente che ha sia Mojave che Yellow Belly)
+      let activeComplexes = {}; 
 
       for (let geneId in combo) {
         const allele = combo[geneId];
@@ -78,11 +78,14 @@ export const calculateBreedingOutputs = async (req, res) => {
           }
         } 
         else if (geneInfo.type === 'co-dominant') {
-          if (geneInfo.complex === 'bel') {
+          if (geneInfo.complex) {
+            // Se il gene appartiene a un complesso, lo aggiungiamo al suo gruppo specifico
             if (allele === 'MM' || allele === 'MN') {
-              belGroup.push({ geneId, allele });
+              if (!activeComplexes[geneInfo.complex]) activeComplexes[geneInfo.complex] = [];
+              activeComplexes[geneInfo.complex].push({ geneId, allele });
             }
           } else {
+            // Co-dominanti normali
             if (allele === 'MM') {
               morphNameParts.push(geneInfo.superName || `Super ${geneInfo.name}`);
             } else if (allele === 'MN') {
@@ -92,28 +95,32 @@ export const calculateBreedingOutputs = async (req, res) => {
         }
       }
 
-      // Elaborazione del complesso allelico BEL corretto
-      if (belGroup.length > 0) {
-        if (belGroup.length === 1 && belGroup[0].allele === 'MN') {
-          morphNameParts.push(BALL_PYTHON_GENES[belGroup[0].geneId].name);
+      // Elaborazione DINAMICA di tutti i complessi allelici trovati
+      for (let complexId in activeComplexes) {
+        const complexGroup = activeComplexes[complexId];
+
+        // Caso 1: Singola copia di un gene del complesso
+        if (complexGroup.length === 1 && complexGroup[0].allele === 'MN') {
+          morphNameParts.push(BALL_PYTHON_GENES[complexGroup[0].geneId].name);
         } 
+        // Caso 2: Combinazione di geni o forma Super
         else {
-          // FIX LOGICO: Costruiamo un array di chiavi replicando i geni in caso di 'MM' (Super)
-          let belKeys = [];
-          belGroup.forEach(b => {
-            belKeys.push(b.geneId);
-            // Se è omozigote, lo aggiungiamo due volte per formare 'mojave+mojave'
-            if (b.allele === 'MM') belKeys.push(b.geneId); 
+          let complexKeys = [];
+          complexGroup.forEach(b => {
+            complexKeys.push(b.geneId);
+            if (b.allele === 'MM') complexKeys.push(b.geneId); 
           });
 
-          // Uniamo ordinando alfabeticamente
-          const comboKey = belKeys.sort().join('+');
-          const specialComboName = COMPLEX_COMBOS.bel[comboKey];
+          const comboKey = complexKeys.sort().join('+');
+          
+          // Cerca nel dizionario corretto in base all'ID del complesso (es. COMPLEX_COMBOS['yellow_belly'])
+          const specialComboName = COMPLEX_COMBOS[complexId] && COMPLEX_COMBOS[complexId][comboKey];
           
           if (specialComboName) {
             morphNameParts.push(specialComboName);
           } else {
-            belGroup.forEach(b => {
+            // Fallback
+            complexGroup.forEach(b => {
               if (b.allele === 'MM') morphNameParts.push(`Super ${BALL_PYTHON_GENES[b.geneId].name}`);
               else morphNameParts.push(BALL_PYTHON_GENES[b.geneId].name);
             });
@@ -129,7 +136,6 @@ export const calculateBreedingOutputs = async (req, res) => {
         finalPhenotype = hetParts.length > 0 ? `${morphNameParts.join(' ')} ${hetParts.join(' ')}` : morphNameParts.join(' ');
       }
 
-      // Ora resultsMap esiste e questo funzionerà
       resultsMap[finalPhenotype] = (resultsMap[finalPhenotype] || 0) + 1;
     });
 

@@ -4,13 +4,60 @@ import api from '../services/api'; // Il tuo modulo Axios configurato
 
 // Estraiamo la lista dei geni dal nostro dizionario per i menu a tendina
 const GENE_OPTIONS = [
-  { id: 'clown', name: 'Clown', type: 'recessive' },
-  { id: 'piebald', name: 'Piebald', type: 'recessive' },
+  // Recessivi
   { id: 'albino', name: 'Albino', type: 'recessive' },
-  { id: 'pastel', name: 'Pastel', type: 'co-dominant' },
+  { id: 'axanthic', name: 'Axanthic (VPI)', type: 'recessive' },
+  { id: 'clown', name: 'Clown', type: 'recessive' },
+  { id: 'desert_ghost', name: 'Desert Ghost', type: 'recessive' },
+  { id: 'genetic_stripe', name: 'Genetic Stripe', type: 'recessive' },
+  { id: 'ghost', name: 'Ghost (Hypo)', type: 'recessive' },
+  { id: 'lavender_albino', name: 'Lavender Albino', type: 'recessive' },
+  { id: 'monarch', name: 'Monarch', type: 'recessive' },
+  { id: 'piebald', name: 'Piebald', type: 'recessive' },
+  { id: 'puzzle', name: 'Puzzle', type: 'recessive' },
+  { id: 'sunset', name: 'Sunset', type: 'recessive' },
+  { id: 'ultramel', name: 'Ultramel', type: 'recessive' },
+
+  // Dominanti (Trattati come co-dom senza super visivo)
+  { id: 'pinstripe', name: 'Pinstripe', type: 'co-dominant' },
+  { id: 'spider', name: 'Spider', type: 'co-dominant' },
+
+  // Co-Dominanti
+  { id: 'banana', name: 'Banana / Coral Glow', type: 'co-dominant' },
+  { id: 'champagne', name: 'Champagne', type: 'co-dominant' },
+  { id: 'cypress', name: 'Cypress', type: 'co-dominant' },
   { id: 'enchi', name: 'Enchi', type: 'co-dominant' },
-  { id: 'mojave', name: 'Mojave', type: 'co-dominant' },
+  { id: 'leopard', name: 'Leopard', type: 'co-dominant' },
+  { id: 'mahogany', name: 'Mahogany', type: 'co-dominant' },
+  { id: 'orange_dream', name: 'Orange Dream', type: 'co-dominant' },
+  { id: 'pastel', name: 'Pastel', type: 'co-dominant' },
+  { id: 'spotnose', name: 'Spotnose', type: 'co-dominant' },
+
+  // Complesso Fire (Black Eyed Lucy)
+  { id: 'disco', name: 'Disco', type: 'co-dominant' },
+  { id: 'fire', name: 'Fire', type: 'co-dominant' },
+  { id: 'vanilla', name: 'Vanilla', type: 'co-dominant' },
+
+  // Complesso BEL
+  { id: 'bamboo', name: 'Bamboo', type: 'co-dominant' },
+  { id: 'butter', name: 'Butter', type: 'co-dominant' },
   { id: 'lesser', name: 'Lesser', type: 'co-dominant' },
+  { id: 'mojave', name: 'Mojave', type: 'co-dominant' },
+  { id: 'mystic', name: 'Mystic', type: 'co-dominant' },
+  { id: 'phantom', name: 'Phantom', type: 'co-dominant' },
+  { id: 'russo', name: 'Russo', type: 'co-dominant' },
+  { id: 'special', name: 'Special', type: 'co-dominant' },
+
+  // Complesso Yellow Belly
+  { id: 'asphalt', name: 'Asphalt', type: 'co-dominant' },
+  { id: 'gravel', name: 'Gravel', type: 'co-dominant' },
+  { id: 'spark', name: 'Spark', type: 'co-dominant' },
+  { id: 'specter', name: 'Specter', type: 'co-dominant' },
+  { id: 'yellow_belly', name: 'Yellow Belly', type: 'co-dominant' },
+
+  // Complesso 8-Ball
+  { id: 'black_pastel', name: 'Black Pastel', type: 'co-dominant' },
+  { id: 'cinnamon', name: 'Cinnamon', type: 'co-dominant' },
 ];
 
 export default function GeneticCalculator() {
