@@ -823,20 +823,40 @@ export const ImportReptiles = async (req, res) => {
                     }
 
                     // MODIFICA CRITICA: Gestione e Blocco immediato su Date Invalide
-                    if (targetField.toLowerCase().includes('date') || targetField === 'birthDate' || targetField.endsWith('.issueDate')) {
-                        if (cellValue instanceof Date) {
-                            if (isNaN(cellValue.getTime())) {
-                                throw new Error(`Riga ${excelRowNumber}: Il valore nel campo "${userHeader}" è una data non valida.`);
-                            }
-                            finalValue = cellValue;
-                        } else {
-                            finalValue = parseDateOrNull(cellValue);
-                            // Se l'utente ha scritto qualcosa ma parseDateOrNull restituisce null, la data non è valida
-                            if (!finalValue) {
-                                throw new Error(`Riga ${excelRowNumber}: Formato data non valido nel campo "${userHeader}" ("${cellValue}"). Usa il formato corretto (es. GG/MM/AAAA).`);
-                            }
-                        }
-                    }
+// GESTIONE E VALIDAZIONE RIGIDA DELLE DATE
+if (targetField.toLowerCase().includes('date') || targetField === 'birthDate' || targetField.endsWith('.issueDate')) {
+    let validatedDate = null;
+
+    if (cellValue instanceof Date) {
+        validatedDate = cellValue;
+    } else {
+        // Se è una stringa (es. "15/05/2023"), proviamo a fare il parsing manuale standard italiano
+        const dateStr = String(cellValue).trim();
+        
+        // Verifica formato GG/MM/AAAA o GG-MM-AAAA
+        const parts = dateStr.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})$/);
+        if (parts) {
+            const day = parseInt(parts[1], 10);
+            const month = parseInt(parts[2], 10) - 1; // I mesi in JS vanno da 0 a 11
+            const year = parseInt(parts[3], 10);
+            const d = new Date(year, month, day, 12, 0, 0); // impostiamo a mezzogiorno per evitare problemi di fuso orario
+            
+            if (!isNaN(d.getTime()) && d.getDate() === day && d.getMonth() === month) {
+                validatedDate = d;
+            }
+        } else {
+            // Se non corrisponde al pattern italiano, prova il parser di fallback del tuo sistema
+            validatedDate = typeof parseDateOrNull === 'function' ? parseDateOrNull(cellValue) : new Date(cellValue);
+        }
+    }
+
+    // Controllo finale: se la data è invalida o l'oggetto Date non è corretto, blocca prima di Mongoose
+    if (!validatedDate || isNaN(validatedDate.getTime()) || validatedDate.toString() === "Invalid Date") {
+        throw new Error(`Riga ${excelRowNumber}: Il formato o il valore della data nel campo "${userHeader}" ("${cellValue}") non è valido. Usa il formato GG/MM/AAAA.`);
+    }
+
+    finalValue = validatedDate;
+}
 
                     setNestedProperty(mappedReptile, targetField, finalValue);
                 }

@@ -273,24 +273,25 @@ const ReptileEditModal = ({ show, handleClose, reptile, setReptiles, onSuccess }
       return { ...prev, pcrTests: newTests };
     });
   };
-  const validateForm = () => {
+ const validateForm = () => {
     const errors = {};
     const today = new Date();
     const minDate = new Date();
     minDate.setFullYear(today.getFullYear() - 100);
 
-    // ... (validazioni esistenti da 'name' a 'microchipDate')
+    // --- VALIDAZIONI OBBLIGATORIE ---
     if (!formData.species.trim()) errors.species = t('reptileEditModal.validation.speciesRequired');
-    if (!formData.morph.trim()) errors.morph = t('reptileEditModal.validation.morphRequired');
     if (!formData.sex) errors.sex = t('reptileEditModal.validation.sexRequired');
-    if (!formData.birthDate) {
-      errors.birthDate = t('reptileEditModal.validation.birthRequired');
-    } else {
+
+    // --- VALIDAZIONI CONDIZIONALI / FACOLTATIVE ---
+    if (formData.birthDate) {
       const birth = new Date(formData.birthDate);
       if (birth > today) errors.birthDate = t('reptileEditModal.validation.birthFuture');
       else if (birth < minDate) errors.birthDate = t('reptileEditModal.validation.birthTooOld');
     }
+    
     if (formData.notes.length > 500) errors.notes = t('reptileEditModal.validation.notesTooLong');
+    
     const namePattern = /^[a-zA-Zàèéìòù' -]+$/;
     if (formData.parents.father && !namePattern.test(formData.parents.father)) {
       errors.father = t('reptileEditModal.validation.fatherInvalid');
@@ -315,6 +316,7 @@ const ReptileEditModal = ({ show, handleClose, reptile, setReptiles, onSuccess }
         }
       });
     }
+    
     const { cites, microchip } = formData.documents;
     if (cites.number && cites.number.length > 50) errors.citesNumber = t('reptileEditModal.validation.citesNumberTooLong');
     if (cites.issueDate) {
@@ -327,12 +329,12 @@ const ReptileEditModal = ({ show, handleClose, reptile, setReptiles, onSuccess }
       const implantDate = new Date(microchip.implantDate);
       if (implantDate > today) errors.microchipDate = t('reptileEditModal.validation.microchipDateFuture');
     }
-    // --- FINE VALIDAZIONI ESISTENTI ---
+    
     if (formData.previousOwner && formData.previousOwner.length > 100) errors.previousOwner = t('reptileEditModal.validation.previousOwnerTooLong');
     if (cites.load && cites.load.length > 50) errors.citesLoad = t('reptileEditModal.validation.citesLoadTooLong');
     if (cites.unload && cites.unload.length > 50) errors.citesUnload = t('reptileEditModal.validation.citesUnloadTooLong');
 
-    // NUOVO: Validazioni per campi Archivio
+    // Validazioni per campi Archivio
     if (formData.status === 'ceded') {
       if (!formData.cededTo.date) {
         errors.cededDate = t('reptileEditModal.validation.cededDateRequired');
@@ -350,10 +352,12 @@ const ReptileEditModal = ({ show, handleClose, reptile, setReptiles, onSuccess }
         if (deceasedDate > today) errors.deceasedDate = t('reptileEditModal.validation.deceasedDateFuture');
       }
     }
+    
     formData.pcrTests.forEach((test, idx) => {
       if (!test.disease.trim()) errors[`pcrDisease_${idx}`] = "Campo obbligatorio";
       if (!test.testDate) errors[`pcrDate_${idx}`] = "Campo obbligatorio";
     });
+    
     return errors;
   };
 

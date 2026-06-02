@@ -1,5 +1,5 @@
 import React from 'react';
-import { FaTimes, FaInfoCircle, FaFileExcel, FaUpload } from 'react-icons/fa';
+import { FaTimes, FaInfoCircle, FaFileExcel, FaUpload, FaClipboardList } from 'react-icons/fa';
 import { useTranslation } from 'react-i18next';
 
 const ImportInfoModal = ({ show, onClose, onImport }) => {
@@ -84,7 +84,13 @@ const ImportInfoModal = ({ show, onClose, onImport }) => {
                         </p>
                     </div>
                 </div>
-
+<a 
+  href="/template_importazione_rettili.xlsx" 
+  download="Template_Importazione_Rettili.xlsx"
+  className="text-blue-600 hover:text-blue-800 underline text-sm font-medium flex items-center gap-1"
+>
+  <FaClipboardList /> Scarica il Template Excel di esempio
+</a>
                 {/* Footer (Azione di caricamento) */}
                 <div className="p-6 border-t border-sand bg-gray-50 flex justify-end items-center">
                     <label className="flex items-center gap-2 bg-forest text-white px-6 py-3 rounded-xl font-bold cursor-pointer hover:bg-olive transition-colors shadow-lg hover:-translate-y-0.5">

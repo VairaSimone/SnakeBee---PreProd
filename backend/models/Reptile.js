@@ -11,7 +11,8 @@ const reptileSchema = new Schema(
     },
     morph: {
       type: String
-    }, sex: {
+    }, 
+    sex: {
       type: String,
       enum: ['M', 'F', 'Unknown'],
       required: true,
@@ -40,7 +41,8 @@ const reptileSchema = new Schema(
     nextFeedingDate: {
       type: Date,
       default: null
-    }, pcrTests: [{
+    }, 
+    pcrTests: [{
       disease: { type: String, required: true }, // es. 'Nidovirus', 'Arenavirus'
       testDate: { type: Date, required: true },
       result: {
