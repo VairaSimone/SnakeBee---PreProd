@@ -26,15 +26,45 @@ export default function GeneticCalculator() {
     fetchGeneticOptions();
   }, []);
 
-  const addGene = (sex, geneId, status) => {
-    if (!geneId || !status) return;
-    const newGene = { geneId, status };
-    if (sex === 'male') {
-      if (!fatherGenes.some(g => g.geneId === geneId)) setFatherGenes([...fatherGenes, newGene]);
-    } else {
-      if (!motherGenes.some(g => g.geneId === geneId)) setMotherGenes([...motherGenes, newGene]);
+const addGene = (sex, geneId, status) => {
+  if (!geneId || !status) return;
+
+  const currentGene = geneOptions.find(g => g.id === geneId);
+  const currentGenesList = sex === 'male' ? fatherGenes : motherGenes;
+
+  // 1. Controllo duplicati standard
+  if (currentGenesList.some(g => g.geneId === geneId)) return;
+
+  // 2. Controllo del Locus (Massimo 2 alleli per complesso sullo stesso animale)
+  if (currentGene?.complex) {
+    let allelicCount = 0;
+
+    // Conta gli alleli già occupati dai geni di questo complesso su questo genitore
+    currentGenesList.forEach(g => {
+      const existingGeneInfo = geneOptions.find(opt => opt.id === g.geneId);
+      if (existingGeneInfo?.complex === currentGene.complex) {
+        // Se è "super" occupa 2 alleli, altrimenti 1
+        allelicCount += g.status === 'super' ? 2 : 1;
+      }
+    });
+
+    // Aggiungi il peso del gene che l'utente sta cercando di inserire ora
+    const newGeneWeight = status === 'super' ? 2 : 1;
+
+    if (allelicCount + newGeneWeight > 2) {
+      alert(`⚠️ Errore Locus: Non puoi aggiungere questo gene. Il riproduttore ha già saturato i 2 alleli disponibili per il complesso "${currentGene.complex.replace('_', ' ').toUpperCase()}". Un serpente non può avere 3 alleli sullo stesso locus!`);
+      return; // Blocca l'inserimento
     }
-  };
+  }
+
+  // 3. Se supera i controlli, aggiungi il gene
+  const newGene = { geneId, status };
+  if (sex === 'male') {
+    setFatherGenes([...fatherGenes, newGene]);
+  } else {
+    setMotherGenes([...motherGenes, newGene]);
+  }
+};
 
   const removeGene = (sex, geneId) => {
     if (sex === 'male') {
@@ -75,7 +105,7 @@ export default function GeneticCalculator() {
   return (
     <div className="p-4 md:p-8 max-w-6xl mx-auto bg-slate-50/50 rounded-2xl shadow-xl border border-slate-100 mt-6 backdrop-blur-sm">
       <div className="text-center mb-8">
-        <span className="bg-amber-100 text-amber-800 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">Mendelian Genetics v2.0</span>
+        <span className="bg-amber-100 text-black text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">Calcolatore Morph v1.0</span>
         <h1 className="text-3xl font-extrabold text-slate-900 mt-2 tracking-tight">🧮 Calcolatore Genetico Pitoni Reali</h1>
         <p className="text-slate-500 mt-2 max-w-md mx-auto text-sm">Configura il corredo genetico dei riproduttori per generare l'esatta combinazione della linea di sangue.</p>
       </div>
@@ -87,7 +117,7 @@ export default function GeneticCalculator() {
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-bold text-blue-800 flex items-center gap-2">♂️ Esemplare Maschio</h2>
               <span className={`text-xs font-bold px-2 py-1 rounded-md ${fatherGenes.length >= MAX_GENES ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}`}>
-                {fatherGenes.length} / {MAX_GENES} loci occupati
+                {fatherGenes.length} / {MAX_GENES} geni occupati
               </span>
             </div>
             <GeneSelectorForm 
@@ -105,7 +135,7 @@ export default function GeneticCalculator() {
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-bold text-pink-800 flex items-center gap-2">♀️ Esemplare Femmina</h2>
               <span className={`text-xs font-bold px-2 py-1 rounded-md ${motherGenes.length >= MAX_GENES ? 'bg-red-100 text-red-700' : 'bg-pink-100 text-pink-700'}`}>
-                {motherGenes.length} / {MAX_GENES} loci occupati
+                {motherGenes.length} / {MAX_GENES} geni occupati
               </span>
             </div>
             <GeneSelectorForm 
@@ -201,7 +231,7 @@ function GeneSelectorForm({ geneOptions, onAdd, disabled }) {
     <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 mb-4">
       <div className="sm:col-span-6">
         <select 
-          className="w-full border border-slate-200 p-2.5 rounded-xl bg-white text-sm focus:ring-2 focus:ring-slate-400 focus:outline-none transition disabled:bg-slate-100 disabled:text-slate-400 shadow-sm"
+          className="w-full border border-slate-200 p-2.5 rounded-xl bg-white text-black text-sm focus:ring-2 focus:ring-slate-400 focus:outline-none transition disabled:bg-slate-100 disabled:text-slate-400 shadow-sm"
           value={selectedGene} 
           onChange={e => { setSelectedGene(e.target.value); setStatus('visual'); }}
           disabled={disabled}
@@ -272,7 +302,7 @@ function GeneSelectorForm({ geneOptions, onAdd, disabled }) {
 
       <div className="sm:col-span-4">
         <select 
-          className="w-full border border-slate-200 p-2.5 rounded-xl bg-white text-sm focus:ring-2 focus:ring-slate-400 focus:outline-none transition disabled:bg-slate-100 disabled:text-slate-400 shadow-sm"
+          className="w-full border border-slate-200 p-2.5 rounded-xl bg-white text-black text-sm focus:ring-2 focus:ring-slate-400 focus:outline-none transition disabled:bg-slate-100 disabled:text-slate-400 shadow-sm"
           value={status} 
           onChange={e => setStatus(e.target.value)}
           disabled={disabled || !selectedGene}

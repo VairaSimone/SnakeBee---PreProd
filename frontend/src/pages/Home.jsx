@@ -463,7 +463,7 @@ const Home = () => {
                     <FeatureGroup 
                         title={t('home.features.biological.title', 'Gestione Biologica & Allevamento')}
                         description={t('home.features.biological.desc', "Monitora ogni aspetto vitale dei tuoi animali con una precisione chirurgica. Genetica, crescita e benessere in un'unica vista.")}
-                        features={["Schede Rettili Dettagliate", "Pianificazione riproduzioni", "Inventario Pasti Auto-aggiornante", "Analisi Tassi di Successo"]}
+                        features={["Schede Rettili Dettagliate", "Pianificazione riproduzioni", "Inventario Pasti Auto-aggiornante", "Calcolatore morph"]}
                         videoSrc="/snakebeeDashboard.png" 
                         reverse={false}
                     />

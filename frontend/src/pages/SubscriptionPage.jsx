@@ -81,11 +81,12 @@ const ComparisonTable = ({ plansData, onAction, loadingAction }) => {
             label: t('comparison.animals', 'Numero Animali Registrabili'),
             neophyte: 'Max 5',
             practitioner: 'Max 50',
-            breeder: t('comparison.unlimited', 'Illimitati')
+            breeder: t('comparison.unlimited', 'Illimitati'),
+            key: 'neophyte' // aggiunto per facilitare il mapping su mobile
         },
         {
             label: t('comparison.events', 'Eventi Base'),
-            neophyte: t('comparison.unlimited', '300'),
+            neophyte: '300',
             practitioner: t('comparison.unlimited', 'Illimitati'),
             breeder: t('comparison.unlimited', 'Illimitati')
         },
@@ -93,7 +94,7 @@ const ComparisonTable = ({ plansData, onAction, loadingAction }) => {
             label: t('comparison.images', 'Immagini per Animale'),
             neophyte: '1',
             practitioner: '3',
-            breeder: t('comparison.unlimited', '10')
+            breeder: '10'
         },
         {
             label: t('comparison.marketAds', 'Annunci Market'),
@@ -103,6 +104,12 @@ const ComparisonTable = ({ plansData, onAction, loadingAction }) => {
         },
         {
             label: t('comparison.proTools', 'Creazione Cites automatici'),
+            neophyte: true,
+            practitioner: true,
+            breeder: true
+        },
+        {
+            label: t('comparison.proTools', 'Calcolatore morph Pitoni reali'),
             neophyte: true,
             practitioner: true,
             breeder: true
@@ -167,13 +174,12 @@ const ComparisonTable = ({ plansData, onAction, loadingAction }) => {
             practitioner: false,
             breeder: true
         },
-
     ];
 
-    const renderCell = (value) => {
+    const renderCell = (value, isLeftAligned = false) => {
         if (typeof value === 'boolean') {
             return value ? (
-                <CheckCircleIcon className="w-6 h-6 text-green-500 mx-auto" />
+                <CheckCircleIcon className={`w-6 h-6 text-green-500 ${isLeftAligned ? '' : 'mx-auto'}`} />
             ) : (
                 <span className="text-gray-300 font-bold">-</span>
             );
@@ -182,11 +188,79 @@ const ComparisonTable = ({ plansData, onAction, loadingAction }) => {
     };
 
     return (
-        <section className="mt-10 max-w-5xl mx-auto">
+        <section className="mt-10 max-w-5xl mx-auto px-2 sm:px-4">
             <h3 className="text-2xl md:text-3xl font-extrabold text-center text-gray-900 mb-8">
                 {t('comparison.title', 'Confronta nel dettaglio i piani')}
             </h3>
-            <div className="overflow-x-auto rounded-2xl shadow-sm border border-gray-200">
+
+            {/* 1. VISTA MOBILE: Cards Verticali (Visibile solo sotto i 768px) */}
+            <div className="block md:hidden space-y-8">
+                {plansData.map((plan) => (
+                    <div 
+                        key={plan.key} 
+                        className={`bg-white rounded-2xl shadow-md border overflow-hidden transition-all ${
+                            plan.isRecommended ? 'border-green-500 ring-2 ring-green-500/20 shadow-lg' : 'border-gray-200'
+                        }`}
+                    >
+                        {/* Header della Card */}
+                        <div className={`p-5 text-center border-b border-gray-100 ${plan.isRecommended ? 'bg-green-50/50' : 'bg-gray-50/50'}`}>
+                            <div className={`text-xl font-extrabold mb-2 ${plan.isRecommended ? 'text-green-700' : 'text-gray-900'}`}>
+                                {plan.title} {plan.isRecommended && '⭐'}
+                            </div>
+                            
+                            <div className="flex justify-center items-center h-12 my-2">
+                                {plan.discountedPrice ? (
+                                    <div className="flex items-baseline gap-1">
+                                        <span className="text-2xl font-extrabold text-red-600">{plan.discountedPrice}</span>
+                                        <span className="text-sm text-gray-400 line-through">{plan.originalPriceValue}</span>
+                                        {plan.priceSuffix && <span className="text-gray-500 text-xs">{plan.priceSuffix}</span>}
+                                    </div>
+                                ) : (
+                                    <div className="flex items-baseline gap-1">
+                                        <span className="text-2xl font-extrabold text-gray-900">{plan.originalPriceValue}</span>
+                                        {plan.priceSuffix && <span className="text-gray-500 text-xs">{plan.priceSuffix}</span>}
+                                    </div>
+                                )}
+                            </div>
+
+                            {!plan.hideButton && (
+                                <button
+                                    onClick={() => onAction(plan.key)}
+                                    disabled={loadingAction === plan.key || plan.isDisabled}
+                                    className={`w-full mt-2 py-2.5 px-4 rounded-xl font-semibold text-sm transition-all ${
+                                        plan.isDisabled
+                                            ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                            : plan.isRecommended
+                                                ? 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white shadow-sm'
+                                                : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm'
+                                    } ${loadingAction === plan.key ? 'opacity-70 cursor-wait' : ''}`}
+                                >
+                                    {loadingAction === plan.key ? t('subscriptionPage.loading') : plan.buttonText}
+                                </button>
+                            )}
+                        </div>
+
+                        {/* Lista Caratteristiche del Piano */}
+                        <div className="p-5 bg-white divide-y divide-gray-100 text-sm">
+                            {features.map((feature, idx) => {
+                                const val = feature[plan.key];
+                                // Mostriamo la riga mobile solo se la feature non è un booleano falso (opzionale, pulisce la vista)
+                                return (
+                                    <div key={idx} className="py-3 flex justify-between items-center gap-4">
+                                        <span className="text-gray-600 font-medium">{feature.label}</span>
+                                        <div className="text-right shrink-0">
+                                            {renderCell(val, true)}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                ))}
+            </div>
+
+            {/* 2. VISTA DESKTOP: Tabella classica (Nascosta su mobile, visibile da md in su) */}
+            <div className="hidden md:block overflow-x-auto rounded-2xl shadow-sm border border-gray-200">
                 <table className="w-full text-left bg-white border-collapse min-w-[700px]">
                     <thead>
                         <tr className="bg-gray-50 border-b border-gray-200">
@@ -198,13 +272,10 @@ const ComparisonTable = ({ plansData, onAction, loadingAction }) => {
                             {plansData.map((plan) => (
                                 <th key={plan.key} className={`p-4 md:p-6 text-center w-1/4 align-top ${plan.isRecommended ? 'bg-green-50 border-x-2 border-t-2 border-green-500' : ''}`}>
                                     <div className="flex flex-col h-full items-center justify-between">
-                                        
-                                        {/* Titolo Piano */}
                                         <div className={`text-xl font-extrabold mb-4 ${plan.isRecommended ? 'text-green-700' : 'text-gray-900'}`}>
                                             {plan.title} {plan.isRecommended && '⭐'}
                                         </div>
 
-                                        {/* Prezzo */}
                                         <div className="mb-6 flex flex-col justify-center items-center h-16">
                                             {plan.discountedPrice ? (
                                                 <>
@@ -232,7 +303,6 @@ const ComparisonTable = ({ plansData, onAction, loadingAction }) => {
                                             )}
                                         </div>
 
-                                        {/* Pulsante */}
                                         {!plan.hideButton ? (
                                             <button
                                                 onClick={() => onAction(plan.key)}
@@ -248,7 +318,7 @@ const ComparisonTable = ({ plansData, onAction, loadingAction }) => {
                                                 {loadingAction === plan.key ? t('subscriptionPage.loading') : plan.buttonText}
                                             </button>
                                         ) : (
-                                            <div className="h-[44px]"></div> /* Spaziatura per allineare */
+                                            <div className="h-[44px]"></div>
                                         )}
                                     </div>
                                 </th>
