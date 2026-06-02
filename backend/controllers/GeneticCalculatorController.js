@@ -116,12 +116,21 @@ export const calculateBreedingOutputs = async (req, res) => {
             complexKeys.push(b.geneId);
             if (b.allele === 'MM') complexKeys.push(b.geneId); 
           });
-
+if (complexKeys.length > 2) {
+  // In natura impossibile: significa che i genitori avevano alleli impossibili 
+  // o l'utente ha inserito troppi geni dello stesso complesso per un singolo genitore.
+  morphNameParts.push(`⚠️ Errore Locus: Troppi alleli nel complesso ${complexId}`);
+}
           const comboKey = complexKeys.sort().join('+');
           const specialComboName = COMPLEX_COMBOS[complexId] && COMPLEX_COMBOS[complexId][comboKey];
           
-          if (specialComboName) morphNameParts.push(specialComboName);
-          else {
+          if (specialComboName) {
+            morphNameParts.push(specialComboName);
+
+            if (specialComboName.includes('Letale')) {
+    isLethal = true;
+  }
+           } else {
             complexGroup.forEach(b => {
               if (b.allele === 'MM') morphNameParts.push(`Super ${BALL_PYTHON_GENES[b.geneId].name}`);
               else morphNameParts.push(BALL_PYTHON_GENES[b.geneId].name);
