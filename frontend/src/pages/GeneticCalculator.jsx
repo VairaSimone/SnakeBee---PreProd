@@ -1,70 +1,32 @@
 // frontend/src/pages/GeneticCalculator.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import api from '../services/api'; 
 
-const GENE_OPTIONS = [
-  // Recessivi
-  { id: 'albino', name: 'Albino', type: 'recessive' },
-  { id: 'axanthic', name: 'Axanthic (VPI)', type: 'recessive' },
-  { id: 'clown', name: 'Clown', type: 'recessive' },
-  { id: 'desert_ghost', name: 'Desert Ghost', type: 'recessive' },
-  { id: 'genetic_stripe', name: 'Genetic Stripe', type: 'recessive' },
-  { id: 'ghost', name: 'Ghost (Hypo)', type: 'recessive' },
-  { id: 'lavender_albino', name: 'Lavender Albino', type: 'recessive' },
-  { id: 'monarch', name: 'Monarch', type: 'recessive' },
-  { id: 'piebald', name: 'Piebald', type: 'recessive' },
-  { id: 'puzzle', name: 'Puzzle', type: 'recessive' },
-  { id: 'sunset', name: 'Sunset', type: 'recessive' },
-  { id: 'ultramel', name: 'Ultramel', type: 'recessive' },
-
-  // Dominanti Puri
-  { id: 'pinstripe', name: 'Pinstripe', type: 'dominant' },
-  { id: 'spider', name: 'Spider', type: 'dominant' },
-
-  // Co-Dominanti
-  { id: 'banana', name: 'Banana / Coral Glow', type: 'co-dominant' },
-  { id: 'champagne', name: 'Champagne', type: 'co-dominant' },
-  { id: 'cypress', name: 'Cypress', type: 'co-dominant' },
-  { id: 'enchi', name: 'Enchi', type: 'co-dominant' },
-  { id: 'leopard', name: 'Leopard', type: 'co-dominant' },
-  { id: 'mahogany', name: 'Mahogany', type: 'co-dominant' },
-  { id: 'orange_dream', name: 'Orange Dream', type: 'co-dominant' },
-  { id: 'pastel', name: 'Pastel', type: 'co-dominant' },
-  { id: 'spotnose', name: 'Spotnose', type: 'co-dominant' },
-
-  // Complesso Fire
-  { id: 'disco', name: 'Disco', type: 'co-dominant' },
-  { id: 'fire', name: 'Fire', type: 'co-dominant' },
-  { id: 'vanilla', name: 'Vanilla', type: 'co-dominant' },
-
-  // Complesso BEL
-  { id: 'bamboo', name: 'Bamboo', type: 'co-dominant' },
-  { id: 'butter', name: 'Butter', type: 'co-dominant' },
-  { id: 'lesser', name: 'Lesser', type: 'co-dominant' },
-  { id: 'mojave', name: 'Mojave', type: 'co-dominant' },
-  { id: 'mystic', name: 'Mystic', type: 'co-dominant' },
-  { id: 'phantom', name: 'Phantom', type: 'co-dominant' },
-  { id: 'russo', name: 'Russo', type: 'co-dominant' },
-  { id: 'special', name: 'Special', type: 'co-dominant' },
-
-  // Complesso Yellow Belly
-  { id: 'asphalt', name: 'Asphalt', type: 'co-dominant' },
-  { id: 'gravel', name: 'Gravel', type: 'co-dominant' },
-  { id: 'spark', name: 'Spark', type: 'co-dominant' },
-  { id: 'specter', name: 'Specter', type: 'co-dominant' },
-  { id: 'yellow_belly', name: 'Yellow Belly', type: 'co-dominant' },
-
-  // Complesso 8-Ball
-  { id: 'black_pastel', name: 'Black Pastel', type: 'co-dominant' },
-  { id: 'cinnamon', name: 'Cinnamon', type: 'co-dominant' },
-];
-
 export default function GeneticCalculator() {
+  const [geneOptions, setGeneOptions] = useState([]);
   const [fatherGenes, setFatherGenes] = useState([]);
   const [motherGenes, setMotherGenes] = useState([]);
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [loadingOptions, setLoadingOptions] = useState(true);
   const MAX_GENES = 6;
+
+  // Carica le opzioni genetiche dal backend all'avvio
+  useEffect(() => {
+    const fetchGeneticOptions = async () => {
+      try {
+        const response = await api.get('/breeding/genetic/options');
+        if (response.data.success) {
+          setGeneOptions(response.data.options);
+        }
+      } catch (error) {
+        console.error("Errore nel caricamento delle opzioni genetiche", error);
+      } finally {
+        setLoadingOptions(false);
+      }
+    };
+    fetchGeneticOptions();
+  }, []);
 
   const addGene = (sex, geneId, status) => {
     if (!geneId || !status) return;
@@ -103,12 +65,21 @@ export default function GeneticCalculator() {
 
   const hasLethals = results.some(r => r.isLethal);
 
+  if (loadingOptions) {
+    return (
+      <div className="p-6 text-center text-gray-500">
+        <p className="animate-pulse">Caricamento varianti genetiche dal database...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6 max-w-6xl mx-auto bg-white rounded-xl shadow-md mt-6">
       <h1 className="text-2xl font-bold text-slate-800 mb-2 text-center">🧮 Calcolatore Genetico Pitoni Reali</h1>
       <p className="text-gray-500 text-center mb-8">Seleziona i tratti genetici dei riproduttori per calcolare le probabilità della covata.</p>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+        {/* PADRE */}
         <div className="p-4 bg-blue-50/50 rounded-xl border border-blue-100">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-bold text-blue-700 flex items-center gap-2">♂️ Padre</h2>
@@ -117,12 +88,14 @@ export default function GeneticCalculator() {
             </span>
           </div>
           <GeneSelectorForm 
+            geneOptions={geneOptions}
             onAdd={(id, status) => addGene('male', id, status)} 
             disabled={fatherGenes.length >= MAX_GENES} 
           />
-          <SelectedGenesList genes={fatherGenes} onRemove={(id) => removeGene('male', id)} />
+          <SelectedGenesList geneOptions={geneOptions} genes={fatherGenes} onRemove={(id) => removeGene('male', id)} />
         </div>
 
+        {/* MADRE */}
         <div className="p-4 bg-pink-50/50 rounded-xl border border-pink-100">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-bold text-pink-700 flex items-center gap-2">♀️ Madre</h2>
@@ -131,10 +104,11 @@ export default function GeneticCalculator() {
             </span>
           </div>
           <GeneSelectorForm 
+            geneOptions={geneOptions}
             onAdd={(id, status) => addGene('female', id, status)} 
             disabled={motherGenes.length >= MAX_GENES} 
           />
-          <SelectedGenesList genes={motherGenes} onRemove={(id) => removeGene('female', id)} />
+          <SelectedGenesList geneOptions={geneOptions} genes={motherGenes} onRemove={(id) => removeGene('female', id)} />
         </div>
       </div>
 
@@ -187,56 +161,58 @@ export default function GeneticCalculator() {
   );
 }
 
-function GeneSelectorForm({ onAdd, disabled }) {
+function GeneSelectorForm({ geneOptions, onAdd, disabled }) {
   const [selectedGene, setSelectedGene] = useState('');
   const [status, setStatus] = useState('visual');
+
+  // Trova le info del gene selezionato per controllarne il tipo
+  const currentGeneInfo = geneOptions.find(g => g.id === selectedGene);
 
   return (
     <div className="flex flex-wrap gap-2 mb-4">
       <select 
         className="border p-2 rounded-lg flex-1 bg-white text-sm disabled:bg-gray-100 disabled:text-gray-400"
         value={selectedGene} 
-        onChange={e => setSelectedGene(e.target.value)}
+        onChange={e => { setSelectedGene(e.target.value); setStatus('visual'); }}
         disabled={disabled}
       >
         <option value="">-- Seleziona Gene --</option>
         
         <optgroup label="Recessivi">
-          {GENE_OPTIONS.filter(g => g.type === 'recessive').map(g => (
+          {geneOptions.filter(g => g.type === 'recessive').map(g => (
             <option key={g.id} value={g.id}>{g.name}</option>
           ))}
         </optgroup>
 
         <optgroup label="Dominanti / Co-Dominanti (Singoli)">
-          {GENE_OPTIONS.filter(g => (g.type === 'co-dominant' || g.type === 'dominant') && !g.complex).map(g => (
+          {geneOptions.filter(g => (g.type === 'co-dominant' || g.type === 'dominant') && !g.complex).map(g => (
              <option key={g.id} value={g.id}>{g.name}</option>
           ))}
         </optgroup>
 
         <optgroup label="Complesso Fire (BEL a occhi neri)">
-          {GENE_OPTIONS.filter(g => ['disco', 'fire', 'vanilla'].includes(g.id)).map(g => (
+          {geneOptions.filter(g => g.complex === 'black_eyed_lucy').map(g => (
              <option key={g.id} value={g.id}>{g.name}</option>
           ))}
         </optgroup>
 
         <optgroup label="Complesso BEL (Blue Eyed Lucy)">
-          {GENE_OPTIONS.filter(g => ['bamboo', 'butter', 'lesser', 'mojave', 'mystic', 'phantom', 'russo', 'special'].includes(g.id)).map(g => (
+          {geneOptions.filter(g => g.complex === 'bel').map(g => (
              <option key={g.id} value={g.id}>{g.name}</option>
           ))}
         </optgroup>
 
         <optgroup label="Complesso Yellow Belly">
-          {GENE_OPTIONS.filter(g => ['asphalt', 'gravel', 'spark', 'specter', 'yellow_belly'].includes(g.id)).map(g => (
+          {geneOptions.filter(g => g.complex === 'yellow_belly').map(g => (
              <option key={g.id} value={g.id}>{g.name}</option>
           ))}
         </optgroup>
 
         <optgroup label="Complesso 8-Ball">
-          {GENE_OPTIONS.filter(g => ['black_pastel', 'cinnamon'].includes(g.id)).map(g => (
+          {geneOptions.filter(g => g.complex === 'eight_ball').map(g => (
              <option key={g.id} value={g.id}>{g.name}</option>
           ))}
         </optgroup>
-
       </select>
 
       <select 
@@ -246,14 +222,14 @@ function GeneSelectorForm({ onAdd, disabled }) {
         disabled={disabled || !selectedGene}
       >
         <option value="visual">Visual</option>
-        {selectedGene && ['co-dominant', 'dominant'].includes(GENE_OPTIONS.find(g => g.id === selectedGene)?.type) && (
+        {selectedGene && ['co-dominant', 'dominant'].includes(currentGeneInfo?.type) && (
           <option value="super">Super (Omozigote)</option>
         )}
         <option value="het">Het</option>
       </select>
 
       <button 
-        onClick={() => { onAdd(selectedGene, status); setSelectedGene(''); }}
+        onClick={() => { onAdd(selectedGene, status); setSelectedGene(''); setStatus('visual'); }}
         disabled={disabled || !selectedGene}
         className="bg-slate-700 hover:bg-slate-800 disabled:bg-slate-300 text-white px-4 rounded-lg text-sm font-bold transition"
       >
@@ -263,11 +239,11 @@ function GeneSelectorForm({ onAdd, disabled }) {
   );
 }
 
-function SelectedGenesList({ genes, onRemove }) {
+function SelectedGenesList({ geneOptions, genes, onRemove }) {
   return (
     <div className="flex flex-wrap gap-2 mt-2">
       {genes.map(g => {
-        const name = GENE_OPTIONS.find(opt => opt.id === g.geneId)?.name || g.geneId;
+        const name = geneOptions.find(opt => opt.id === g.geneId)?.name || g.geneId;
         return (
           <span key={g.geneId} className="inline-flex items-center gap-1 bg-white border px-3 py-1 rounded-full text-xs font-semibold shadow-sm">
             <span className="text-slate-700">{name}</span> 

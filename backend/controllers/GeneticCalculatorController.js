@@ -189,3 +189,18 @@ export const calculateBreedingOutputs = async (req, res) => {
     return res.status(500).json({ success: false, message: error.message });
   }
 };
+
+// Aggiungi questo controller per restituire la lista dei geni al frontend
+export const getGeneticOptions = async (req, res) => {
+  try {
+    // Trasformiamo l'oggetto BALL_PYTHON_GENES in un array compatibile con il frontend
+    const options = Object.keys(BALL_PYTHON_GENES).map(id => ({
+      id,
+      ...BALL_PYTHON_GENES[id]
+    }));
+    
+    return res.status(200).json({ success: true, options });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
