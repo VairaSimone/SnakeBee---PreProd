@@ -1,5 +1,5 @@
 // backend/controllers/GeneticCalculatorController.js
-import { BALL_PYTHON_GENES, COMPLEX_COMBOS } from "../config/ballPythonGenetics"; // Usato per misurare l'attività
+import { BALL_PYTHON_GENES, COMPLEX_COMBOS } from "../config/ballPythonGenetics.js"; // Usato per misurare l'attività
 export const calculateBreedingOutputs = async (req, res) => {
   try {
     const { fatherGenes, motherGenes } = req.body; 
