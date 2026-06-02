@@ -24,8 +24,8 @@ export const COMPLEX_COMBOS = {
   bel: {
     'mojave+mojave': 'Super Mojave (Blue Eyed Lucy)',
     'lesser+lesser': 'Super Lesser (Blue Eyed Lucy)',
-    'mojave+lesser': 'Mojave Lesser (Blue Eyed Lucy)',
-    'butter+mojave': 'Butter Mojave (Blue Eyed Lucy)',
+    'lesser+mojave': 'Mojave Lesser (Blue Eyed Lucy)',
+    'butter+mojave': 'Butter Mojave (Blue Eyed Lucy)', 
   }
 };
 
