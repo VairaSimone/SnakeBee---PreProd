@@ -357,12 +357,10 @@ const showWizard = !loading && totalResults === 0 && !user?.onboarding?.hasSeenT
 
     try {
         const response = await api.post('/reptile/import', formData);
-        alert(response.data.message);
-        setShowImportModal(false); // <-- Chiude il modale dopo l'import!
         handleDataRefresh(); 
+        setShowImportModal(false); // <-- Chiude il modale dopo l'import!
     } catch (err) {
-        alert(err.response?.data?.message || "Errore import");
-    }
+throw err;    }
 };
   const handleReptileSelect = (reptileId) => {
     setSelectedReptileIds(prevSet => {
@@ -1017,7 +1015,7 @@ const StatCard = ({ icon, title, value, unit, bgColor, children }) => (
       {/* MODIFICA: Aggiornati i callback onSuccess per refreshare entrambe le liste */}
       <ReptileCreateModal show={showCreateModal} handleClose={() => setShowCreateModal(false)} onSuccess={handleDataRefresh} setReptiles={setAllReptiles} />
       <ReptileEditModal show={showEditModal} handleClose={() => setShowEditModal(false)} reptile={selectedReptile} onSuccess={handleDataRefresh} setReptiles={setAllReptiles} />
-      <FeedingModal show={showFeedingModal} handleClose={() => setShowFeedingModal(false)} reptileId={selectedReptile?._id} onSuccess={handleDataRefresh} setReptiles={setAllReptiles} />
+      <FeedingModal show={showFeedingModal} handleClose={() => setShowFeedingModal(false)} reptileId={selectedReptile?._id} reptileName={selectedReptile?.name} onSuccess={handleDataRefresh} setReptiles={setAllReptiles} />
       <MultipleFeedingModal
         show={showMultipleFeedingModal}
         handleClose={() => setShowMultipleFeedingModal(false)}

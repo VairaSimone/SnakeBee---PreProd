@@ -1,105 +1,210 @@
-import React from 'react';
-import { FaTimes, FaInfoCircle, FaFileExcel, FaUpload, FaClipboardList } from 'react-icons/fa';
+import React, { useState } from 'react';
+import { 
+    FaTimes, FaInfoCircle, FaFileExcel, FaUpload, 
+    FaClipboardList, FaCheckCircle, FaExclamationTriangle, FaSpinner 
+} from 'react-icons/fa';
 import { useTranslation } from 'react-i18next';
 
 const ImportInfoModal = ({ show, onClose, onImport }) => {
     const { t } = useTranslation();
+    const [error, setError] = useState(null);
+    const [isUploading, setIsUploading] = useState(false);
 
     if (!show) return null;
 
+    // Intercettiamo il cambio file per gestire feedback e intercettare errori senza alert di sistema
+    const handleFileChange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        setError(null);
+        setIsUploading(true);
+        
+        try {
+            // Chiamiamo la funzione passata come prop
+            await onImport(e);
+            // Se va a buon fine, ripuliamo gli stati locali prima della chiusura automatica
+            setError(null);
+        } catch (err) {
+            // Gestione dell'errore centralizzata (stringa o fallback dell'oggetto errore dell'API)
+            const errorMessage = err.response?.data?.message || err.message || "Errore durante l'importazione del file.";
+            setError(errorMessage);
+        } finally {
+            setIsUploading(false);
+            // Resettiamo il valore dell'input per permettere lo stesso file in caso di correzione rapida
+            e.target.value = "";
+        }
+    };
+
+    const handleModalClose = () => {
+        setError(null);
+        setIsUploading(false);
+        onClose();
+    };
+
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-charcoal/40 backdrop-blur-sm animate-fade-in">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden relative">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden relative border border-sand">
                 
                 {/* Header */}
                 <div className="p-6 bg-forest text-white flex justify-between items-center">
-                    <h2 className="text-2xl font-bold flex items-center gap-2">
-                        <FaFileExcel /> Importazione Massiva
+                    <h2 className="text-xl font-bold flex items-center gap-2.5">
+                        <FaFileExcel className="text-emerald-300" /> Importazione Massiva Rettili
                     </h2>
-                    <button onClick={onClose} className="text-white/80 hover:text-white transition-colors">
-                        <FaTimes size={24} />
+                    <button 
+                        onClick={handleModalClose} 
+                        className="text-white/80 hover:text-white p-1 rounded-lg hover:bg-white/10 transition-all"
+                        disabled={isUploading}
+                    >
+                        <FaTimes size={20} />
                     </button>
                 </div>
 
                 {/* Body (Scrollabile) */}
                 <div className="p-6 overflow-y-auto text-charcoal space-y-6">
-                    <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg">
-                        <p className="flex items-start gap-2 text-sm text-blue-800">
-                            <FaInfoCircle className="mt-0.5 shrink-0" />
-                            Prepara un file Excel (.xlsx) o CSV. La prima riga deve contenere le intestazioni delle colonne. Il sistema riconosce automaticamente molti nomi, ma ecco una guida per non sbagliare.
+                    
+                    {/* BANNER NOTIFICA ERRORE (Sostituisce l'alert di sistema) */}
+                    {error && (
+                        <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-r-xl animate-fade-in flex gap-3 items-start">
+                            <FaExclamationTriangle className="text-red-500 shrink-0 mt-0.5" size={18} />
+                            <div className="text-sm">
+                                <h4 className="font-bold text-red-800 mb-0.5">Impossibile completare l'importazione</h4>
+                                <p className="text-red-700 font-medium leading-relaxed">{error}</p>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Info Alert */}
+                    <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-xl flex gap-3 items-start">
+                        <FaInfoCircle className="text-blue-500 shrink-0 mt-0.5" size={18} />
+                        <p className="text-sm text-blue-800 leading-relaxed">
+                            Prepara un file Excel (<span className="font-semibold">.xlsx</span>) o <span className="font-semibold">CSV</span>. La prima riga deve contenere le intestazioni delle colonne. Il sistema mappa i campi in modo intelligente, ma ti consigliamo di seguire lo schema sottostante.
                         </p>
                     </div>
 
-                    <div>
-                        <h3 className="font-bold text-lg mb-2 text-olive">1. Campi Principali</h3>
-                        <ul className="list-disc pl-5 text-sm space-y-1 text-charcoal/80">
-                            <li><strong>specie</strong> <span className="text-red-500">*Obbligatorio</span></li>
-                            <li><strong>nome</strong></li>
-                            <li><strong>sesso</strong> (usa M, F, o Unknown)</li>
-                            <li><strong>morph</strong></li>
-                            <li><strong>nascita</strong> (formato data, es. DD/MM/YYYY)</li>
-                            <li><strong>peso cibo</strong> (numero) e <strong>tipo cibo</strong></li>
-                        </ul>
+                    {/* Card Download Template */}
+                    <div className="bg-sand/40 border border-sand p-4 rounded-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        <div className="space-y-0.5">
+                            <h4 className="font-bold text-sm text-charcoal">Hai bisogno di una base di partenza?</h4>
+                            <p className="text-xs text-charcoal/60">Scarica il file pre-compilato con le intestazioni corrette e i dati di esempio.</p>
+                        </div>
+                        <a 
+                            href="/template_importazione_rettili.xlsx" 
+                            download="Template_Importazione_Rettili.xlsx"
+                            className="inline-flex items-center gap-2 bg-white hover:bg-gray-50 border border-gray-300 rounded-xl px-4 py-2.5 text-xs font-bold text-forest shadow-sm hover:shadow transition-all no-underline shrink-0"
+                        >
+                            <FaClipboardList className="text-emerald-600" /> Scarica Modello Excel
+                        </a>
                     </div>
 
-                    <div>
-                        <h3 className="font-bold text-lg mb-2 text-olive">2. Campi Specifici (Annidati)</h3>
-                        <p className="text-sm mb-2 text-charcoal/80">Per i dati più complessi, usa esattamente queste intestazioni:</p>
-                        <table className="w-full text-sm text-left border-collapse">
-                            <thead>
-                                <tr className="bg-sand text-charcoal">
-                                    <th className="p-2 border border-white">Intestazione Excel</th>
-                                    <th className="p-2 border border-white">Cosa inserisce</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td className="p-2 border border-sand font-mono bg-gray-50">prezzo acquisto</td>
-                                    <td className="p-2 border border-sand">Costo d'acquisto iniziale</td>
-                                </tr>
-                                <tr>
-                                    <td className="p-2 border border-sand font-mono bg-gray-50">prezzo</td>
-                                    <td className="p-2 border border-sand">Prezzo di vendita dell'animale</td>
-                                </tr>
-                                <tr>
-                                    <td className="p-2 border border-sand font-mono bg-gray-50">padre / madre</td>
-                                    <td className="p-2 border border-sand">ID o nome dei genitori</td>
-                                </tr>
-                                <tr>
-                                    <td className="p-2 border border-sand font-mono bg-gray-50">numero cites</td>
-                                    <td className="p-2 border border-sand">Codice CITES</td>
-                                </tr>
-                                <tr>
-                                    <td className="p-2 border border-sand font-mono bg-gray-50">microchip</td>
-                                    <td className="p-2 border border-sand">Numero del microchip</td>
-                                </tr>
-                            </tbody>
-                        </table>
+                    {/* Campi Principali */}
+                    <div className="space-y-3">
+                        <h3 className="font-bold text-md text-olive flex items-center gap-2">
+                            <span className="bg-olive/10 text-olive text-xs h-5 w-5 rounded-full inline-flex items-center justify-center font-bold">1</span>
+                            Campi Principali
+                        </h3>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm bg-gray-50 p-4 rounded-xl border border-gray-100">
+                            <div className="flex items-center gap-2">
+                                <FaCheckCircle className="text-red-500 shrink-0" size={14} />
+                                <span><strong className="font-mono bg-white px-1.5 py-0.5 rounded border border-gray-200">specie</strong> <span className="text-xs text-red-500 font-semibold">(Obbligatorio)</span></span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <FaCheckCircle className="text-red-500 shrink-0" size={14} />
+                                <span><strong className="font-mono bg-white px-1.5 py-0.5 rounded border border-gray-200">sesso</strong> <span className="text-xs text-red-500 font-semibold">(Obbligatorio: M, F, Unknown)</span></span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <FaCheckCircle className="text-gray-400 shrink-0" size={14} />
+                                <span><strong className="font-mono bg-white px-1.5 py-0.5 rounded border border-gray-200">nome</strong> <span className="text-xs text-charcoal/40">(Opzionale)</span></span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <FaCheckCircle className="text-gray-400 shrink-0" size={14} />
+                                <span><strong className="font-mono bg-white px-1.5 py-0.5 rounded border border-gray-200">morph</strong> <span className="text-xs text-charcoal/40">(Opzionale)</span></span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <FaCheckCircle className="text-gray-400 shrink-0" size={14} />
+                                <span><strong className="font-mono bg-white px-1.5 py-0.5 rounded border border-gray-200">nascita</strong> <span className="text-xs text-charcoal/40">(Formato data: GG/MM/AAAA)</span></span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <FaCheckCircle className="text-gray-400 shrink-0" size={14} />
+                                <span><strong className="font-mono bg-white px-1.5 py-0.5 rounded border border-gray-200">tipo cibo</strong> / <strong className="font-mono bg-white px-1.5 py-0.5 rounded border border-gray-200">peso cibo</strong></span>
+                            </div>
+                        </div>
                     </div>
 
-                    <div>
-                        <h3 className="font-bold text-lg mb-2 text-red-600">3. Campi Ignorati</h3>
-                        <p className="text-sm text-charcoal/80">
-                            Alcuni campi vengono generati automaticamente dal sistema e <strong>verranno ignorati</strong> se presenti nel file, come: <span className="font-mono bg-gray-100 px-1 rounded">isPublic</span>, <span className="font-mono bg-gray-100 px-1 rounded">qrCodeUrl</span>, <span className="font-mono bg-gray-100 px-1 rounded">lastFeedingDate</span>, <span className="font-mono bg-gray-100 px-1 rounded">nextFeedingDate</span>.
-                        </p>
+                    {/* Campi Specifici (Tabella) */}
+                    <div className="space-y-3">
+                        <h3 className="font-bold text-md text-olive flex items-center gap-2">
+                            <span className="bg-olive/10 text-olive text-xs h-5 w-5 rounded-full inline-flex items-center justify-center font-bold">2</span>
+                            Campi Avanzati e Annidati
+                        </h3>
+                        <p className="text-xs text-charcoal/60">Per associare dati contabili, genealogici o sanitari usa queste esatte intestazioni:</p>
+                        
+                        <div className="overflow-hidden border border-gray-200 rounded-xl shadow-sm">
+                            <table className="w-full text-xs text-left border-collapse">
+                                <thead>
+                                    <tr className="bg-sand text-charcoal font-bold border-b border-gray-200">
+                                        <th className="p-3 w-5/12">Intestazione Excel</th>
+                                        <th className="p-3 w-7/12">Proprietà Database Assegnata</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-100">
+                                    <tr className="hover:bg-gray-50 transition-colors">
+                                        <td className="p-3 font-mono font-bold text-forest bg-gray-50/50">prezzo acquisto</td>
+                                        <td className="p-3 text-charcoal/80">Costo d'acquisto iniziale dell'animale</td>
+                                    </tr>
+                                    <tr className="hover:bg-gray-50 transition-colors">
+                                        <td className="p-3 font-mono font-bold text-forest bg-gray-50/50">prezzo</td>
+                                        <td className="p-3 text-charcoal/80">Prezzo o valore stimato per la vendita</td>
+                                    </tr>
+                                    <tr className="hover:bg-gray-50 transition-colors">
+                                        <td className="p-3 font-mono font-bold text-forest bg-gray-50/50">padre / madre</td>
+                                        <td className="p-3 text-charcoal/80">Identificativo dei genitori per l'albero genealogico</td>
+                                    </tr>
+                                    <tr className="hover:bg-gray-50 transition-colors">
+                                        <td className="p-3 font-mono font-bold text-forest bg-gray-50/50">numero cites</td>
+                                        <td className="p-3 text-charcoal/80">Codice del documento CITES o di protocollo</td>
+                                    </tr>
+                                    <tr className="hover:bg-gray-50 transition-colors">
+                                        <td className="p-3 font-mono font-bold text-forest bg-gray-50/50">microchip</td>
+                                        <td className="p-3 text-charcoal/80">Codice identificativo del transponder/chip</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
+
                 </div>
-<a 
-  href="/template_importazione_rettili.xlsx" 
-  download="Template_Importazione_Rettili.xlsx"
-  className="text-blue-600 hover:text-blue-800 underline text-sm font-medium flex items-center gap-1"
->
-  <FaClipboardList /> Scarica il Template Excel di esempio
-</a>
+
                 {/* Footer (Azione di caricamento) */}
-                <div className="p-6 border-t border-sand bg-gray-50 flex justify-end items-center">
-                    <label className="flex items-center gap-2 bg-forest text-white px-6 py-3 rounded-xl font-bold cursor-pointer hover:bg-olive transition-colors shadow-lg hover:-translate-y-0.5">
-                        <FaUpload /> Scegli File e Importa
+                <div className="p-4 border-t border-sand bg-gray-50 flex justify-end items-center gap-3">
+                    <button 
+                        onClick={handleModalClose}
+                        className="px-5 py-2.5 rounded-xl font-semibold text-sm bg-white border border-gray-300 hover:bg-gray-50 text-charcoal transition-all"
+                        disabled={isUploading}
+                    >
+                        Annulla
+                    </button>
+                    
+                    <label className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold shadow-md transform transition-all select-none ${
+                        isUploading 
+                            ? 'bg-forest/50 text-white/70 cursor-not-allowed' 
+                            : 'bg-forest text-white cursor-pointer hover:bg-olive hover:-translate-y-0.5'
+                    }`}>
+                        {isUploading ? (
+                            <>
+                                <FaSpinner className="animate-spin" /> Elaborazione file...
+                            </>
+                        ) : (
+                            <>
+                                <FaUpload /> Scegli File e Importa
+                            </>
+                        )}
                         <input 
                             type="file" 
                             className="hidden" 
                             accept=".csv, .xlsx, .xls"
-                            onChange={onImport} 
+                            onChange={handleFileChange} 
+                            disabled={isUploading}
                         />
                     </label>
                 </div>
