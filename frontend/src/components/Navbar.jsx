@@ -163,6 +163,8 @@ const Navbar = () => {
                     <DropdownItem to="/breeding" icon={FaDna} label="Riproduzione" isLocked={!canAccessPractitioner} onClick={() => setStrumentiOpen(false)} />
                     <DropdownItem to="/cites" icon={FaFileAlt} label="Generazione Cites" isLocked={false} onClick={() => setStrumentiOpen(false)} />
                     <DropdownItem to="/finance" icon={FaFileAlt} label="Calcolatore costi" isLocked={!canAccessBreeder} onClick={() => setStrumentiOpen(false)} />
+                    <DropdownItem to="/genetic" icon={FaFileAlt} label="Calcolatore morph" isLocked={!canAccessBreeder} onClick={() => setStrumentiOpen(false)} />
+
                   </div>
                 )}
               </div>
@@ -273,6 +275,7 @@ const Navbar = () => {
                 <MobileLink to="/breeding" icon={FaDna} label="Riproduzione" isLocked={!canAccessPractitioner} onClick={() => setMobileMenuOpen(false)} />
                 <MobileLink to="/cites" icon={FaFileAlt} label="Generazione Cites" isLocked={false} onClick={() => setMobileMenuOpen(false)} />
                 <MobileLink to="/finance" icon={FaFileAlt} label="Calcolatore Costi" isLocked={!canAccessBreeder} onClick={() => setMobileMenuOpen(false)} />
+                <MobileLink to="/genetic" icon={FaFileAlt} label="Calcolatore morph" isLocked={!canAccessBreeder} onClick={() => setMobileMenuOpen(false)} />
 
                 <div className="h-px bg-gray-300 my-4 mx-4"></div>
                 <div className="px-6 mb-2 text-xs font-bold text-gray-500 uppercase">Utente</div>

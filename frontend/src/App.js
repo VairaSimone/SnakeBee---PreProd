@@ -56,6 +56,7 @@ import OrderHistoryPage from './pages/store/OrderHistoryPage';
 import AdminStoreDashboard from './pages/admin/store/AdminStoreDashboard';
 import FinancePage from './pages/FinancePage';
 import ManualCitesPage from './pages/ManualCitesPage';
+import GeneticCalculator from './pages/GeneticCalculator';
 const AuthLoadingSpinner = () => (
   <div className="flex justify-center items-center h-screen bg-[#FAF3E0]">
     <div className="w-12 h-12 border-4 border-gray-300 border-t-[#228B22] rounded-full animate-spin"></div>
@@ -151,6 +152,7 @@ if (isLoadingAuth) {
         <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
         <Route path="/reptiles/:reptileId" element={<ProtectedRoute><ReptileDetails /></ProtectedRoute>} />
                 <Route path="/cites" element={<ProtectedRoute><ManualCitesPage /></ProtectedRoute>} />
+        <Route path="/genetic" element={<ProtectedRoute><GeneticCalculator /></ProtectedRoute>} />
 
         <Route path="*" element={<NotFound />} />
 
