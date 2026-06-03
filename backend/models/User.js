@@ -92,7 +92,7 @@ const userSchema = new Schema(
         language: {
             type: String,
             default: 'it',
-            enum: ['en', 'it']
+            enum: ['en', 'it', 'fr', 'de']
         },
         isBanned: {
             type: Boolean,

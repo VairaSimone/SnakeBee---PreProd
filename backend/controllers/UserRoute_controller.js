@@ -78,7 +78,7 @@ export const PutUser = async (req, res) => {
     await logAction(req.user.userid, "Moodify User");
 
     const fieldsAllowed = ['name', 'avatar', 'language', 'address', 'phoneNumber', 'isPublic', 'social'];
-    if (userData.language && !['en', 'it'].includes(userData.language)) {
+    if (userData.language && !['en', 'it', 'fr', 'de'].includes(userData.language)) {
       return res.status(400).json({ message: req.t('invalid_language') });
     }
     if ('isPublic' in userData) {

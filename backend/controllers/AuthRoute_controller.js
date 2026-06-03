@@ -164,7 +164,7 @@ if (referralCode) {
         referrer = null; 
     }
 }
-    const lang = req.body.language && ['it', 'en'].includes(req.body.language)
+    const lang = req.body.language && ['it', 'en', 'fr', 'de'].includes(req.body.language)
       ? req.body.language
       : 'it';
     const pwd = await bcrypt.hash(req.body.password, 12);
