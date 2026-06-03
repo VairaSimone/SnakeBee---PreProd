@@ -276,6 +276,270 @@
             "note": "⚠️ Nota bene: Il buono è valido solamente per un ordine nel mese corrente e non è cumulabile con i mesi successivi. Usalo o lo perdi!"
         }
     },
+    "importAnimals": {
+        "title": "Importazione di rettili in blocco",
+        "infoAlert": "Prepara un file Excel (.xlsx) o CSV. La prima riga deve contenere le intestazioni di colonna. Il sistema mappa i campi in modo intelligente, ma consigliamo di seguire il layout riportato di seguito.",
+        "errors": {
+            "title": "Impossibile completare l'importazione",
+            "default": "Si è verificato un errore durante l'importazione del file."
+        },
+        "templateCard": {
+            "title": "Hai bisogno di un punto di partenza?",
+            "subtitle": "Scarica il file precompilato con le intestazioni corrette e i dati di esempio.",
+            "button": "Scarica il modello Excel"
+        },
+        "sections": {
+            "mainFields": "Campi principali",
+            "advancedFields": "Campi avanzati e nidificati",
+            "advancedFieldsDesc": "Per collegare dati contabili, genealogici o sanitari, utilizzare esattamente queste intestazioni:"
+        },
+        "fields": {
+            "required": "Obbligatorio",
+            "sexRequired": "Obbligatorio: M, F, Sconosciuto",
+            "optional": "Facoltativo",
+            "dateFormat": "Formato data: GG/MM/AAAA",
+            "foodType": "tipo di alimento",
+            "foodWeight": "peso dell'alimento"
+        },
+        "table": {
+            "headerExcel": "Intestazione Excel",
+            "headerDb": "Proprietà del database assegnata",
+            "headers": {
+                "purchasePrice": "prezzo di acquisto",
+                "price": "prezzo",
+                "parents": "padre/madre",
+                "cites": "numero CITES",
+                "microchip": "microchip"
+            },
+            "descriptions": {
+                "purchasePrice": "Costo iniziale di acquisto dell'animale",
+                "price": "Prezzo o valore stimato di vendita",
+                "parents": "Identificativi dei genitori per l'albero genealogico/di lignaggio",
+                "cites": "Codice del documento o del protocollo CITES",
+                "microchip": "Codice di identificazione del transponder/chip"
+            }
+        },
+        "buttons": {
+            "cancel": "Annulla",
+            "upload": "Scegli file e importa",
+            "processing": "Elaborazione del file..."
+        }
+    },
+    "SettingsTeam": {
+  "fetchError": "Errore nel recupero delegati",
+  "addSuccess": "Collaboratore aggiunto con successo!",
+  "addError": "Errore durante l'aggiunta del collaboratore.",
+  "removeSuccess": "Collaboratore rimosso.",
+  "removeError": "Errore durante la rimozione.",
+  "modalTitle": "Conferma",
+  "modalBody": "Sei sicuro di voler rimuovere questo collaboratore? Non avrà più accesso al tuo account.",
+  "cancel": "Annulla",
+  "remove": "Rimuovi",
+  "pageTitle": "Gestione Team",
+  "pageDesc": "Invita altri utenti a gestire il tuo allevamento. I collaboratori dovranno fare il login con il proprio account e selezionare il tuo allevamento dal menu.",
+  "formTitle": "Invita un Collaboratore",
+  "emailPlaceholder": "Email dell'utente (es. marco@email.com)",
+  "invite": "Invita",
+  "userMustBeRegistered": "*L'utente deve già essere registrato su SnakeBee con questa email.",
+  "teamMembers": "Membri del Team",
+  "noCollaborators": "Non hai ancora invitato nessun collaboratore.",
+  "removeCollaborator": "Rimuovi collaboratore"
+},
+"Finance": {
+  "errors": {
+    "fetchGlobal": "Errore nel caricamento dei dati finanziari.",
+    "fetchReptiles": "Errore caricamento rettili:",
+    "fetchStats": "Errore caricamento statistiche rettile",
+    "saveTx": "Errore salvataggio transazione",
+    "deleteTx": "Errore eliminazione transazione"
+  },
+  "paywall": {
+    "title": "Funzionalità Premium",
+    "description": "La sezione <0>Finance</0> è uno strumento avanzato dedicato esclusivamente agli utenti con un abbonamento <1>Allevatore (BREEDER)</1> attivo.",
+    "button": "Scopri i Piani di Abbonamento",
+    "backLink": "Torna alla Dashboard"
+  },
+  "header": {
+    "title": "Dashboard Finanziaria",
+    "subtitle": "Monitora i costi, i ricavi e l'investimento totale del tuo allevamento."
+  },
+  "guide": {
+    "title": "Guida al funzionamento dei bilanci automatizzati",
+    "subtitle": "Questa dashboard integra e calcola in tempo reale i dati provenienti da diverse sezioni dell'applicazione. Per far sì che i valori non manuali si aggiornino correttamente, segui queste indicazioni:",
+    "tradeTitle": "Compravendita Animali",
+    "tradeDesc": "Se vendi un animale registrato sulla piattaforma, recati nella dashboard principale, clicca su modifica ed inserisci il <0>Prezzo di Acquisto Iniziale</0> e il <1>Prezzo di Rivendita (Target)</1>. Cambia poi lo stato dell'animale in <2>Ceduto</2>: il ricavo e la spesa d'acquisto verranno conteggiati immediatamente qui.",
+    "foodTitle": "Cibo e Alimentazione",
+    "foodDesc": "Gli elementi inseriti nell'inventario dei feed possiedono un campo prezzo dedicato. Ogni volta che registri un pasto per uno dei tuoi animali, la piattaforma calcolerà automaticamente il valore e aggiornerà la somma del <0>Cibo Consumato</0>.",
+    "vetTitle": "Spese Veterinarie",
+    "vetDesc": "I costi dei controlli medici non vanno messi tra le transazioni manuali. Utilizza l'apposito modulo nella scheda del rettile creando un nuovo <0>Evento</0>, seleziona la tipologia <1>Veterinario</1> e compila l'importo economico della visita."
+  },
+  "overview": {
+    "totalIncome": "Entrate Totali",
+    "totalExpense": "Uscite Totali",
+    "netProfit": "Profitto Netto"
+  },
+  "breakdown": {
+    "title": "Dettaglio Voci",
+    "incomes": "Entrate",
+    "animalsSold": "Vendita Animali:",
+    "otherIncomes": "Altre Entrate:",
+    "expenses": "Uscite",
+    "animalsBought": "Acquisto Animali:",
+    "foodConsumed": "Cibo Consumato:",
+    "vetExpenses": "Spese Veterinarie:",
+    "otherExpenses": "Altre Spese:"
+  },
+  "form": {
+    "title": "Aggiungi Transazione Manuale",
+    "type": "Tipo",
+    "expense": "Uscita (Spesa)",
+    "income": "Entrata (Ricavo)",
+    "category": "Categoria",
+    "amount": "Importo (€)",
+    "date": "Data",
+    "description": "Descrizione",
+    "descPlaceholder": "Es. Acquisto terrario in PVC",
+    "submit": "Aggiungi"
+  },
+  "categories": {
+    "equipment": "Attrezzatura (Terrari, Rack)",
+    "materials": "Materiali (Substrato, Accessori)",
+    "expo": "Fiere / Expo",
+    "externalAnimals": "Animali (Non in Piattaforma)",
+    "other": "Altro"
+  },
+  "list": {
+    "date": "Data",
+    "description": "Descrizione",
+    "amount": "Importo",
+    "empty": "Nessuna transazione registrata"
+  },
+  "analysis": {
+    "title": "Analisi Investimento Animale",
+    "selectPrompt": "Seleziona un animale per vedere quanto ti è costato fino ad oggi:",
+    "selectDefault": "-- Seleziona Animale --",
+    "unknown": "Sconosciuto",
+    "initialCost": "Costo d'Acquisto Iniziale",
+    "estimatedValue": "Valore di Vendita Stimato",
+    "totalInvested": "Totale Investito ad Oggi (Acquisto + Vet)",
+    "foodExcluded": "*Escluso il costo del cibo",
+    "foodCost": "Costo Totale Cibo Consumato",
+    "mealsRegistered": "Pasti registrati:",
+    "estimatedMeals": "*{{count}} pasti stimati sui prezzi attuali",
+    "historyTitle": "Cronologia Spese Animale",
+    "historyType": "Tipo",
+    "historyCost": "Costo",
+    "historyEmpty": "Nessuna storia finanziaria",
+    "placeholder": "Seleziona un rettile dal menu a tendina per analizzare i suoi costi."
+  },
+  "modal": {
+    "title": "Conferma Eliminazione",
+    "body": "Sei sicuro di voler eliminare definitivamente questa transazione? L'operazione ricalcolerà istantaneamente il bilancio e non potrà essere annullata.",
+    "cancel": "Annulla",
+    "confirm": "Sì, elimina"
+  }
+},"ManualCites": {
+  "backToDashboard": "Torna alla Dashboard",
+  "title": "Generazione CITES Manuale",
+  "subtitle": "Compila tutti i campi sottostanti per generare un documento PDF di cessione personalizzato senza salvare l'animale a sistema.",
+  "note": "",
+  "errorGenerate": "Impossibile generare il PDF. Controlla i dati inseriti.",
+  "section1Title": "1. Dati del Cedente (I tuoi dati)",
+  "section2Title": "2. Dati del Cessionario (Acquirente)",
+  "section3Title": "3. Dati dell'Esemplare",
+  "name": "Nome",
+  "surname": "Cognome",
+  "email": "Email",
+  "phone": "Telefono",
+  "address": "Via/Piazza e N.",
+  "addressPlaceholder": "Es. Via Roma 12",
+  "city": "Città",
+  "cityPlaceholder": "Milano",
+  "province": "Provincia",
+  "provincePlaceholder": "MI",
+  "species": "Specie (Nome Scientifico)",
+  "speciesPlaceholder": "Es. Python regius",
+  "morph": "Morph / Mutazione",
+  "morphPlaceholder": "Es. Black Pastel",
+  "sex": "Sesso",
+  "sexM": "Maschio (M)",
+  "sexF": "Femmina (F)",
+  "sexND": "Non Determinato (N/D)",
+  "birthDate": "Data di Nascita",
+  "originCountry": "Paese di Origine",
+  "originCountryPlaceholder": "Es. Italia",
+  "microchip": "Codice Microchip (Se presente)",
+  "protocolNumber": "Numero Protocollo CITES",
+  "protocolNumberPlaceholder": "Es. IT/CE/2026/0001/A",
+  "documentDate": "Data del Documento",
+  "includeProfilePic": "Includi foto profilo nell'intestazione",
+  "loadingPdf": "Generazione PDF in corso...",
+  "downloadBtn": "Scarica CITES Document",
+  "fileNamePrefix": "CITES_Manuale_",
+  "animalFallback": "Animale"
+}, "CitesModal": {
+  "title": "Genera Documento CITES",
+  "subtitle": "Compila i dettagli necessari per il certificato di cessione.",
+  "note": "",
+  "fileNamePrefix": "CITES_",
+  "errorDownload": "Errore durante la generazione del PDF",
+  "senderSection": "Dati Cedente (Tu)",
+  "receiverSection": "Dati Ricevente",
+  "name": "Nome",
+  "surname": "Cognome",
+  "address": "Indirizzo",
+  "fullAddress": "Indirizzo Completo",
+  "city": "Città",
+  "province": "Provincia",
+  "phone": "Telefono",
+  "email": "Email",
+  "namePlaceholderSender": "Il tuo nome",
+  "surnamePlaceholderSender": "Il tuo cognome",
+  "namePlaceholderReceiver": "Nome ricevente",
+  "surnamePlaceholderReceiver": "Cognome ricevente",
+  "addressPlaceholder": "Via, Numero Civico",
+  "cityPlaceholder": "Comune",
+  "provincePlaceholder": "Es. MI",
+  "includeProfilePic": "Includi la mia foto profilo nel documento",
+  "cancel": "Annulla",
+  "generating": "Generazione in corso...",
+  "downloadBtn": "Scarica PDF"
+},
+"GeneticCalculator": {
+  "errorLoadingOptions": "Errore nel caricamento delle opzioni genetiche",
+  "locusErrorAlert": "⚠️ Errore Locus: Non puoi aggiungere questo gene. Il riproduttore ha già saturato i 2 alleli disponibili per il complesso \"{{complex}}\". Un serpente non può avere 3 alleli sullo stesso locus!",
+  "errorCalculation": "Errore nel calcolo genetico",
+  "loadingDatabase": "Caricamento varianti genetiche dal database...",
+  "versionBadge": "Calcolatore Morph v1.0",
+  "mainTitle": "🧮 Calcolatore Genetico Pitoni Reali",
+  "mainDescription": "Configura il corredo genetico dei riproduttori per generare l'esatta combinazione della linea di sangue.",
+  "maleSpecimen": "♂️ Esemplare Maschio",
+  "genesOccupied": "{{count}} / {{max}} geni occupati",
+  "femaleSpecimen": "♀️ Esemplare Femmina",
+  "processing": "Elaborazione tabelle di Punnett...",
+  "generateButton": "Genera Previsioni Progenie 🐍",
+  "outcomesTitle": "🧬 Outcome Probabilistici Calcolati:",
+  "lethalRiskTitle": "Rilevato Rischio Accoppiamento Letale",
+  "lethalRiskDesc": "Questa combinazione genetica può generare varianti omozigoti letali (es. Super Spider, Super Champagne o alleli combo incompatibili). C'è un'alta probabilità di morte embrionale nell'uovo o di nascite con gravi difetti neurologici (Wobble letale).",
+  "frequencyTable": "Frequenza",
+  "phenotypeTable": "Fenotipo Espresso ed Ereditarietà",
+  "selectTrait": "-- Seleziona Tratto --",
+  "groupRecessive": "Recessivi Puri / Allelici",
+  "groupDominant": "Dominanti / Co-Dominanti Singoli",
+  "groupSpider": "Complesso Spider / Champagne / Woma",
+  "groupLeopard": "Complesso Leopard / Black Head",
+  "groupMahogany": "Complesso Mahogany / Cinder",
+  "groupAcid": "Complesso Acid / Red Stripe",
+  "groupFire": "Complesso Fire (Black Eyed Lucy)",
+  "groupBEL": "Complesso BEL (Blue Eyed Lucy)",
+  "groupYellowBelly": "Complesso Yellow Belly",
+  "groupEightBall": "Complesso 8-Ball",
+  "statusVisual": "Visual",
+  "statusSuper": "Super (Omozigote)",
+  "statusHet": "Het (Portatore)",
+  "insertButton": "Inserisci",
+  "noGenesSelected": "Nessun gene selezionato per questo riproduttore"
+},
     "home": {
         "hero": {
             "badge": "Il tuo aiutante personale è qui",
@@ -339,7 +603,7 @@
         "email": "Indirizzo email",
         "submit": "Invia richiesta"
     },
-"subscriptionPage": {
+    "subscriptionPage": {
         "title": "Scegli il tuo Piano",
         "subtitle": "Dai primi passi fino alla gestione professionale: trova il piano perfetto per il tuo allevamento e semplifica il tuo lavoro 🐍🐢🐊",
         "yourSubscription": "Il tuo abbonamento",
@@ -441,8 +705,8 @@
             "questionText": "Scrivici e troveremo insieme la soluzione perfetta per la tua esperienza di allevamento.",
             "contactButton": "Contattaci a support@snakebee.it"
         }
-    }  ,
-      "telegram": {
+    },
+    "telegram": {
         "errors": {
             "missingLink": "Link Telegram mancante ❌",
             "notLoggedIn": "Devi essere loggato per collegare Telegram ❌",
@@ -1205,27 +1469,27 @@
         "closed": "Chiudi"
     },
     "systemEvents": {
-    "feces": {
-      "title": "Feci",
-      "description": "L'animale ha defecato"
+        "feces": {
+            "title": "Feci",
+            "description": "L'animale ha defecato"
+        },
+        "shed": {
+            "title": "Muta",
+            "description": "L'animale ha fatto la muta"
+        },
+        "vet": {
+            "title": "Visita Veterinaria",
+            "description": "Controllo veterinario"
+        },
+        "weight": {
+            "title": "Peso",
+            "description": "Registrazione del peso"
+        },
+        "feeding": {
+            "title": "Pasto",
+            "description": "L'animale ha mangiato"
+        }
     },
-    "shed": {
-      "title": "Muta",
-      "description": "L'animale ha fatto la muta"
-    },
-    "vet": {
-      "title": "Visita Veterinaria",
-      "description": "Controllo veterinario"
-    },
-    "weight": {
-      "title": "Peso",
-      "description": "Registrazione del peso"
-    },
-    "feeding": {
-      "title": "Pasto",
-      "description": "L'animale ha mangiato"
-    }
-  },
     "ReptileTipBanner": {
         "tipTitle": "Reptile Tip",
         "quizTitle": "Quiz Reptiliano 🧠",

@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import api from '../services/api'; 
 
 export default function GeneticCalculator() {
+  const { t } = useTranslation();
   const [geneOptions, setGeneOptions] = useState([]);
   const [fatherGenes, setFatherGenes] = useState([]);
   const [motherGenes, setMotherGenes] = useState([]);
@@ -18,53 +20,53 @@ export default function GeneticCalculator() {
           setGeneOptions(response.data.options);
         }
       } catch (error) {
-        console.error("Errore nel caricamento delle opzioni genetiche", error);
+        console.error(t('GeneticCalculator.errorLoadingOptions'), error);
       } finally {
         setLoadingOptions(false);
       }
     };
     fetchGeneticOptions();
-  }, []);
+  }, [t]);
 
-const addGene = (sex, geneId, status) => {
-  if (!geneId || !status) return;
+  const addGene = (sex, geneId, status) => {
+    if (!geneId || !status) return;
 
-  const currentGene = geneOptions.find(g => g.id === geneId);
-  const currentGenesList = sex === 'male' ? fatherGenes : motherGenes;
+    const currentGene = geneOptions.find(g => g.id === geneId);
+    const currentGenesList = sex === 'male' ? fatherGenes : motherGenes;
 
-  // 1. Controllo duplicati standard
-  if (currentGenesList.some(g => g.geneId === geneId)) return;
+    // 1. Controllo duplicati standard
+    if (currentGenesList.some(g => g.geneId === geneId)) return;
 
-  // 2. Controllo del Locus (Massimo 2 alleli per complesso sullo stesso animale)
-  if (currentGene?.complex) {
-    let allelicCount = 0;
+    // 2. Controllo del Locus (Massimo 2 alleli per complesso sullo stesso animale)
+    if (currentGene?.complex) {
+      let allelicCount = 0;
 
-    // Conta gli alleli già occupati dai geni di questo complesso su questo genitore
-    currentGenesList.forEach(g => {
-      const existingGeneInfo = geneOptions.find(opt => opt.id === g.geneId);
-      if (existingGeneInfo?.complex === currentGene.complex) {
-        // Se è "super" occupa 2 alleli, altrimenti 1
-        allelicCount += g.status === 'super' ? 2 : 1;
+      // Conta gli alleli già occupati dai geni di questo complesso su questo genitore
+      currentGenesList.forEach(g => {
+        const existingGeneInfo = geneOptions.find(opt => opt.id === g.geneId);
+        if (existingGeneInfo?.complex === currentGene.complex) {
+          // Se è "super" occupa 2 alleli, altrimenti 1
+          allelicCount += g.status === 'super' ? 2 : 1;
+        }
+      });
+
+      // Aggiungi il peso del gene che l'utente sta cercando di inserire ora
+      const newGeneWeight = status === 'super' ? 2 : 1;
+
+      if (allelicCount + newGeneWeight > 2) {
+        alert(t('GeneticCalculator.locusErrorAlert', { complex: currentGene.complex.replace('_', ' ').toUpperCase() }));
+        return; // Blocca l'inserimento
       }
-    });
-
-    // Aggiungi il peso del gene che l'utente sta cercando di inserire ora
-    const newGeneWeight = status === 'super' ? 2 : 1;
-
-    if (allelicCount + newGeneWeight > 2) {
-      alert(`⚠️ Errore Locus: Non puoi aggiungere questo gene. Il riproduttore ha già saturato i 2 alleli disponibili per il complesso "${currentGene.complex.replace('_', ' ').toUpperCase()}". Un serpente non può avere 3 alleli sullo stesso locus!`);
-      return; // Blocca l'inserimento
     }
-  }
 
-  // 3. Se supera i controlli, aggiungi il gene
-  const newGene = { geneId, status };
-  if (sex === 'male') {
-    setFatherGenes([...fatherGenes, newGene]);
-  } else {
-    setMotherGenes([...motherGenes, newGene]);
-  }
-};
+    // 3. Se supera i controlli, aggiungi il gene
+    const newGene = { geneId, status };
+    if (sex === 'male') {
+      setFatherGenes([...fatherGenes, newGene]);
+    } else {
+      setMotherGenes([...motherGenes, newGene]);
+    }
+  };
 
   const removeGene = (sex, geneId) => {
     if (sex === 'male') {
@@ -85,7 +87,7 @@ const addGene = (sex, geneId, status) => {
         setResults(response.data.results);
       }
     } catch (error) {
-      console.error("Errore nel calcolo genetico", error);
+      console.error(t('GeneticCalculator.errorCalculation'), error);
     } finally {
       setLoading(false);
     }
@@ -97,7 +99,7 @@ const addGene = (sex, geneId, status) => {
     return (
       <div className="p-12 text-center max-w-xl mx-auto dynamic-pulse">
         <div className="w-16 h-16 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-        <p className="text-slate-600 font-medium">Caricamento varianti genetiche dal database...</p>
+        <p className="text-slate-600 font-medium">{t('GeneticCalculator.loadingDatabase')}</p>
       </div>
     );
   }
@@ -105,9 +107,9 @@ const addGene = (sex, geneId, status) => {
   return (
     <div className="p-4 md:p-8 max-w-6xl mx-auto bg-slate-50/50 rounded-2xl shadow-xl border border-slate-100 mt-6 backdrop-blur-sm">
       <div className="text-center mb-8">
-        <span className="bg-amber-100 text-black text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">Calcolatore Morph v1.0</span>
-        <h1 className="text-3xl font-extrabold text-slate-900 mt-2 tracking-tight">🧮 Calcolatore Genetico Pitoni Reali</h1>
-        <p className="text-slate-500 mt-2 max-w-md mx-auto text-sm">Configura il corredo genetico dei riproduttori per generare l'esatta combinazione della linea di sangue.</p>
+        <span className="bg-amber-100 text-black text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">{t('GeneticCalculator.versionBadge')}</span>
+        <h1 className="text-3xl font-extrabold text-slate-900 mt-2 tracking-tight">{t('GeneticCalculator.mainTitle')}</h1>
+        <p className="text-slate-500 mt-2 max-w-md mx-auto text-sm">{t('GeneticCalculator.mainDescription')}</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
@@ -115,9 +117,9 @@ const addGene = (sex, geneId, status) => {
         <div className="p-5 bg-gradient-to-br from-blue-50/70 to-indigo-50/30 rounded-2xl border border-blue-100 shadow-sm flex flex-col justify-between">
           <div>
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-bold text-blue-800 flex items-center gap-2">♂️ Esemplare Maschio</h2>
+              <h2 className="text-lg font-bold text-blue-800 flex items-center gap-2">{t('GeneticCalculator.maleSpecimen')}</h2>
               <span className={`text-xs font-bold px-2 py-1 rounded-md ${fatherGenes.length >= MAX_GENES ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}`}>
-                {fatherGenes.length} / {MAX_GENES} geni occupati
+                {t('GeneticCalculator.genesOccupied', { count: fatherGenes.length, max: MAX_GENES })}
               </span>
             </div>
             <GeneSelectorForm 
@@ -133,9 +135,9 @@ const addGene = (sex, geneId, status) => {
         <div className="p-5 bg-gradient-to-br from-pink-50/70 to-rose-50/30 rounded-2xl border border-pink-100 shadow-sm flex flex-col justify-between">
           <div>
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-bold text-pink-800 flex items-center gap-2">♀️ Esemplare Femmina</h2>
+              <h2 className="text-lg font-bold text-pink-800 flex items-center gap-2">{t('GeneticCalculator.femaleSpecimen')}</h2>
               <span className={`text-xs font-bold px-2 py-1 rounded-md ${motherGenes.length >= MAX_GENES ? 'bg-red-100 text-red-700' : 'bg-pink-100 text-pink-700'}`}>
-                {motherGenes.length} / {MAX_GENES} geni occupati
+                {t('GeneticCalculator.genesOccupied', { count: motherGenes.length, max: MAX_GENES })}
               </span>
             </div>
             <GeneSelectorForm 
@@ -154,21 +156,21 @@ const addGene = (sex, geneId, status) => {
           disabled={loading || (fatherGenes.length === 0 && motherGenes.length === 0)}
           className="bg-slate-900 hover:bg-slate-800 text-white font-bold py-3.5 px-10 rounded-xl shadow-lg hover:shadow-xl transition-all duration-150 transform hover:-translate-y-0.5 disabled:opacity-40 disabled:pointer-events-none text-sm tracking-wide"
         >
-          {loading ? 'Elaborazione tabelle di Punnett...' : 'Genera Previsioni Progenie 🐍'}
+          {loading ? t('GeneticCalculator.processing') : t('GeneticCalculator.generateButton')}
         </button>
       </div>
 
       {results.length > 0 && (
         <div className="mt-8 border-t border-slate-200 pt-8 animate-fadeIn">
-          <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">🧬 Outcome Probabilistici Calcolati:</h3>
+          <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">{t('GeneticCalculator.outcomesTitle')}</h3>
           
           {hasLethals && (
             <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-r-xl shadow-sm">
               <div className="flex gap-2">
                 <span className="text-xl">⚠️</span>
                 <div>
-                  <p className="font-bold text-red-800 text-sm">Rilevato Rischio Accoppiamento Letale</p>
-                  <p className="text-xs text-red-700 mt-1 leading-relaxed">Questa combinazione genetica può generare varianti omozigoti letali (es. Super Spider, Super Champagne o alleli combo incompatibili). C'è un'alta probabilità di morte embrionale nell'uovo o di nascite con gravi difetti neurologici (Wobble letale).</p>
+                  <p className="font-bold text-red-800 text-sm">{t('GeneticCalculator.lethalRiskTitle')}</p>
+                  <p className="text-xs text-red-700 mt-1 leading-relaxed">{t('GeneticCalculator.lethalRiskDesc')}</p>
                 </div>
               </div>
             </div>
@@ -178,8 +180,8 @@ const addGene = (sex, geneId, status) => {
             <table className="min-w-full divide-y divide-slate-200 text-sm">
               <thead className="bg-slate-100">
                 <tr>
-                  <th className="px-6 py-3 text-left font-bold text-slate-600 uppercase tracking-wider text-xs w-1/4">Frequenza</th>
-                  <th className="px-6 py-3 text-left font-bold text-slate-600 uppercase tracking-wider text-xs">Fenotipo Espresso ed Ereditarietà</th>
+                  <th className="px-6 py-3 text-left font-bold text-slate-600 uppercase tracking-wider text-xs w-1/4">{t('GeneticCalculator.frequencyTable')}</th>
+                  <th className="px-6 py-3 text-left font-bold text-slate-600 uppercase tracking-wider text-xs">{t('GeneticCalculator.phenotypeTable')}</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-slate-200">
@@ -215,6 +217,7 @@ const addGene = (sex, geneId, status) => {
 }
 
 function GeneSelectorForm({ geneOptions, onAdd, disabled }) {
+  const { t } = useTranslation();
   const [selectedGene, setSelectedGene] = useState('');
   const [status, setStatus] = useState('visual');
 
@@ -236,63 +239,63 @@ function GeneSelectorForm({ geneOptions, onAdd, disabled }) {
           onChange={e => { setSelectedGene(e.target.value); setStatus('visual'); }}
           disabled={disabled}
         >
-          <option value="">-- Seleziona Tratto --</option>
+          <option value="">{t('GeneticCalculator.selectTrait')}</option>
           
-          <optgroup label="Recessivi Puri / Allelici">
+          <optgroup label={t('GeneticCalculator.groupRecessive')}>
             {geneOptions.filter(g => g.type === 'recessive').map(g => (
               <option key={g.id} value={g.id}>{g.name}</option>
             ))}
           </optgroup>
 
-          <optgroup label="Dominanti / Co-Dominanti Singoli">
+          <optgroup label={t('GeneticCalculator.groupDominant')}>
             {geneOptions.filter(g => (g.type === 'co-dominant' || g.type === 'dominant') && !g.complex).map(g => (
               <option key={g.id} value={g.id}>{g.name}</option>
             ))}
           </optgroup>
 
-          <optgroup label="Complesso Spider / Champagne / Woma">
+          <optgroup label={t('GeneticCalculator.groupSpider')}>
             {geneOptions.filter(g => g.complex === 'spider_complex').map(g => (
               <option key={g.id} value={g.id}>{g.name}</option>
             ))}
           </optgroup>
 
-          <optgroup label="Complesso Leopard / Black Head">
+          <optgroup label={t('GeneticCalculator.groupLeopard')}>
             {geneOptions.filter(g => g.complex === 'leopard_blackhead').map(g => (
               <option key={g.id} value={g.id}>{g.name}</option>
             ))}
           </optgroup>
 
-          <optgroup label="Complesso Mahogany / Cinder">
+          <optgroup label={t('GeneticCalculator.groupMahogany')}>
             {geneOptions.filter(g => g.complex === 'mahogany_complex').map(g => (
               <option key={g.id} value={g.id}>{g.name}</option>
             ))}
           </optgroup>
 
-          <optgroup label="Complesso Acid / Red Stripe">
+          <optgroup label={t('GeneticCalculator.groupAcid')}>
             {geneOptions.filter(g => g.complex === 'acid_red_stripe').map(g => (
               <option key={g.id} value={g.id}>{g.name}</option>
             ))}
           </optgroup>
 
-          <optgroup label="Complesso Fire (Black Eyed Lucy)">
+          <optgroup label={t('GeneticCalculator.groupFire')}>
             {geneOptions.filter(g => g.complex === 'black_eyed_lucy').map(g => (
               <option key={g.id} value={g.id}>{g.name}</option>
             ))}
           </optgroup>
 
-          <optgroup label="Complesso BEL (Blue Eyed Lucy)">
+          <optgroup label={t('GeneticCalculator.groupBEL')}>
             {geneOptions.filter(g => g.complex === 'bel').map(g => (
               <option key={g.id} value={g.id}>{g.name}</option>
             ))}
           </optgroup>
 
-          <optgroup label="Complesso Yellow Belly">
+          <optgroup label={t('GeneticCalculator.groupYellowBelly')}>
             {geneOptions.filter(g => g.complex === 'yellow_belly').map(g => (
               <option key={g.id} value={g.id}>{g.name}</option>
             ))}
           </optgroup>
 
-          <optgroup label="Complesso 8-Ball">
+          <optgroup label={t('GeneticCalculator.groupEightBall')}>
             {geneOptions.filter(g => g.complex === 'eight_ball').map(g => (
               <option key={g.id} value={g.id}>{g.name}</option>
             ))}
@@ -307,12 +310,12 @@ function GeneSelectorForm({ geneOptions, onAdd, disabled }) {
           onChange={e => setStatus(e.target.value)}
           disabled={disabled || !selectedGene}
         >
-          <option value="visual">Visual</option>
+          <option value="visual">{t('GeneticCalculator.statusVisual')}</option>
           {selectedGene && ['co-dominant', 'dominant'].includes(currentGeneInfo?.type) && (
-            <option value="super">Super (Omozigote)</option>
+            <option value="super">{t('GeneticCalculator.statusSuper')}</option>
           )}
           {selectedGene && currentGeneInfo?.type === 'recessive' && (
-            <option value="het">Het (Portatore)</option>
+            <option value="het">{t('GeneticCalculator.statusHet')}</option>
           )}
         </select>
       </div>
@@ -323,7 +326,7 @@ function GeneSelectorForm({ geneOptions, onAdd, disabled }) {
           disabled={disabled || !selectedGene}
           className="w-full h-full bg-slate-800 hover:bg-slate-900 disabled:bg-slate-200 disabled:text-slate-400 text-white p-2.5 rounded-xl text-sm font-bold transition shadow-sm"
         >
-          Inserisci
+          {t('GeneticCalculator.insertButton')}
         </button>
       </div>
     </div>
@@ -331,10 +334,12 @@ function GeneSelectorForm({ geneOptions, onAdd, disabled }) {
 }
 
 function SelectedGenesList({ geneOptions, genes, onRemove }) {
+  const { t } = useTranslation();
+
   if (genes.length === 0) {
     return (
       <div className="text-center py-6 border-2 border-dashed border-slate-200 rounded-xl mt-2">
-        <p className="text-xs text-slate-400 italic">Nessun gene selezionato per questo riproduttore</p>
+        <p className="text-xs text-slate-400 italic">{t('GeneticCalculator.noGenesSelected')}</p>
       </div>
     );
   }

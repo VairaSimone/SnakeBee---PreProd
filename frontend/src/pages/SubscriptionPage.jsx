@@ -48,7 +48,7 @@ const Modal = ({ type = 'info', title, message, onClose, onConfirm }) => {
                     </div>
                     <div className="flex-grow">
                         <h3 className="text-xl font-bold text-gray-800">{title}</h3>
-                        <p className="mt-2 text-gray-600">{message}</p>
+                        <div className="mt-2 text-gray-600">{message}</div>
                     </div>
                 </div>
                 <div className="flex justify-end gap-3 mt-6">
@@ -82,19 +82,21 @@ const ComparisonTable = ({ plansData, onAction, loadingAction }) => {
             neophyte: 'Max 5',
             practitioner: 'Max 50',
             breeder: t('comparison.unlimited', 'Illimitati'),
-            key: 'neophyte' // aggiunto per facilitare il mapping su mobile
+            key: 'neophyte'
         },
         {
             label: t('comparison.events', 'Eventi Base'),
             neophyte: '300',
             practitioner: t('comparison.unlimited', 'Illimitati'),
-            breeder: t('comparison.unlimited', 'Illimitati')
+            breeder: t('comparison.unlimited', 'Illimitati'),
+            key: 'practitioner'
         },
         {
             label: t('comparison.images', 'Immagini per Animale'),
             neophyte: '1',
             practitioner: '3',
-            breeder: '10'
+            breeder: '10',
+            key: 'breeder'
         },
         {
             label: t('comparison.marketAds', 'Annunci Market'),
@@ -103,13 +105,13 @@ const ComparisonTable = ({ plansData, onAction, loadingAction }) => {
             breeder: t('comparison.unlimited', 'Illimitati')
         },
         {
-            label: t('comparison.proTools', 'Creazione Cites automatici'),
+            label: t('comparison.citesGen', 'Creazione Cites automatici'),
             neophyte: true,
             practitioner: true,
             breeder: true
         },
         {
-            label: t('comparison.proTools', 'Calcolatore morph Pitoni reali'),
+            label: t('comparison.morphCalc', 'Calcolatore morph Pitoni reali'),
             neophyte: true,
             practitioner: true,
             breeder: true
@@ -139,37 +141,37 @@ const ComparisonTable = ({ plansData, onAction, loadingAction }) => {
             breeder: true
         },
         {
-            label: t('comparison.reproduction', 'Inventario cibo'),
+            label: t('comparison.foodInventory', 'Inventario cibo'),
             neophyte: false,
             practitioner: false,
             breeder: true
         },
         {
-            label: t('comparison.reproduction', 'Calendario eventi'),
+            label: t('comparison.eventCalendar', 'Calendario eventi'),
             neophyte: false,
             practitioner: false,
             breeder: true
         },
         {
-            label: t('comparison.proTools', 'Report PDF'),
+            label: t('comparison.pdfReports', 'Report PDF'),
             neophyte: false,
             practitioner: false,
             breeder: true
         },
         {
-            label: t('comparison.proTools', 'QR Code per ogni animale'),
+            label: t('comparison.qrCode', 'QR Code per ogni animale'),
             neophyte: false,
             practitioner: false,
             breeder: true
         },
         {
-            label: t('comparison.proTools', 'Collaboratori/Team'),
+            label: t('comparison.team', 'Collaboratori/Team'),
             neophyte: false,
             practitioner: false,
             breeder: true
         },
         {
-            label: t('comparison.proTools', 'Gestione finanziaria'),
+            label: t('comparison.finance', 'Gestione finanziaria'),
             neophyte: false,
             practitioner: false,
             breeder: true
@@ -193,7 +195,7 @@ const ComparisonTable = ({ plansData, onAction, loadingAction }) => {
                 {t('comparison.title', 'Confronta nel dettaglio i piani')}
             </h3>
 
-            {/* 1. VISTA MOBILE: Cards Verticali (Visibile solo sotto i 768px) */}
+            {/* 1. VISTA MOBILE: Cards Verticali */}
             <div className="block md:hidden space-y-8">
                 {plansData.map((plan) => (
                     <div 
@@ -243,8 +245,7 @@ const ComparisonTable = ({ plansData, onAction, loadingAction }) => {
                         {/* Lista Caratteristiche del Piano */}
                         <div className="p-5 bg-white divide-y divide-gray-100 text-sm">
                             {features.map((feature, idx) => {
-                                const val = feature[plan.key];
-                                // Mostriamo la riga mobile solo se la feature non è un booleano falso (opzionale, pulisce la vista)
+                                const val = feature[plan.key === 'practitioner' ? 'practitioner' : plan.key];
                                 return (
                                     <div key={idx} className="py-3 flex justify-between items-center gap-4">
                                         <span className="text-gray-600 font-medium">{feature.label}</span>
@@ -259,7 +260,7 @@ const ComparisonTable = ({ plansData, onAction, loadingAction }) => {
                 ))}
             </div>
 
-            {/* 2. VISTA DESKTOP: Tabella classica (Nascosta su mobile, visibile da md in su) */}
+            {/* 2. VISTA DESKTOP: Tabella classica */}
             <div className="hidden md:block overflow-x-auto rounded-2xl shadow-sm border border-gray-200">
                 <table className="w-full text-left bg-white border-collapse min-w-[700px]">
                     <thead>
@@ -364,10 +365,10 @@ const MarketExplanationSection = () => {
                         Snakebee Market
                     </span>
                     <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-4">
-                        {t('market.explanation.title')}
+                        {t('market.explanation.title', 'Vendi e acquista in totale sicurezza')}
                     </h2>
                     <p className="text-lg text-gray-600 mb-12 max-w-2xl mx-auto">
-                        {t('market.explanation.subtitle')}
+                        {t('market.explanation.subtitle', 'Il market integrato pensato esclusivamente per erpetofili professionisti e amatoriali.')}
                     </p>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -375,27 +376,27 @@ const MarketExplanationSection = () => {
                             <div className="w-16 h-16 bg-white rounded-2xl shadow-md flex items-center justify-center text-3xl mb-4 border border-gray-100">
                                 🔄
                             </div>
-                            <h3 className="text-xl font-bold text-gray-800 mb-2">{t('market.explanation.step1_title')}</h3>
+                            <h3 className="text-xl font-bold text-gray-800 mb-2">{t('market.explanation.step1_title', 'Sincronizzazione Totale')}</h3>
                             <p className="text-gray-600 text-sm leading-relaxed">
-                                {t('market.explanation.step1_desc')}
+                                {t('market.explanation.step1_desc', 'Pubblica un animale sul market direttamente dalla sua scheda di allevamento in un secondo.')}
                             </p>
                         </div>
                         <div className="flex flex-col items-center">
                             <div className="w-16 h-16 bg-white rounded-2xl shadow-md flex items-center justify-center text-3xl mb-4 border border-gray-100">
                                 📩
                             </div>
-                            <h3 className="text-xl font-bold text-gray-800 mb-2">{t('market.explanation.step2_title')}</h3>
+                            <h3 className="text-xl font-bold text-gray-800 mb-2">{t('market.explanation.step2_title', 'Contatti Diretti')}</h3>
                             <p className="text-gray-600 text-sm leading-relaxed">
-                                {t('market.explanation.step2_desc')}
+                                {t('market.explanation.step2_desc', 'Gli utenti interessati ti contatteranno direttamente tramite i tuoi canali preferiti o social.')}
                             </p>
                         </div>
                         <div className="flex flex-col items-center">
                             <div className="w-16 h-16 bg-white rounded-2xl shadow-md flex items-center justify-center text-3xl mb-4 border border-gray-100">
                                 🛍️
                             </div>
-                            <h3 className="text-xl font-bold text-gray-800 mb-2">{t('market.explanation.step3_title')}</h3>
+                            <h3 className="text-xl font-bold text-gray-800 mb-2">{t('market.explanation.step3_title', 'Vetrina Professionale')}</h3>
                             <p className="text-gray-600 text-sm leading-relaxed">
-                                {t('market.explanation.step3_desc')}
+                                {t('market.explanation.step3_desc', 'Mostra la genealogia, i QR code e la storia dellanimale incrementando il valore percepito.')}
                             </p>
                         </div>
                     </div>
@@ -416,7 +417,8 @@ const SubscriptionPage = () => {
     const [pendingPlanKey, setPendingPlanKey] = useState(null);
     const dispatch = useDispatch();
     const [billingInterval, setBillingInterval] = useState('monthly');
-const isDelegate = !!localStorage.getItem('operateAsId');
+    const isDelegate = !!localStorage.getItem('operateAsId');
+
     const requestTaxCode = (planKey) => {
         setPendingPlanKey(planKey);
         setShowTaxCodeModal(true);
@@ -448,9 +450,6 @@ const isDelegate = !!localStorage.getItem('operateAsId');
     });
 
     const handlePlanAction = async (planKey) => {
-        const userCountry = user?.billingDetails?.address?.country || user.language;
-        const userTaxCode = user?.fiscalDetails?.taxCode;
-
         if (!user || !user._id) {
             setModal({
                 type: 'error',
@@ -461,7 +460,7 @@ const isDelegate = !!localStorage.getItem('operateAsId');
             return;
         }
 
-        const planKeyUpper = planKey.toUpperCase();
+        const planKeyUpper = planKey === 'practitioner' ? 'PRACTITIONER' : planKey.toUpperCase();
 
         if (
             (user.subscription?.status === 'active' || user.subscription?.status === 'processing') &&
@@ -475,14 +474,14 @@ const isDelegate = !!localStorage.getItem('operateAsId');
 
         try {
             if ((user.subscription?.status === 'active' || user.subscription?.status === 'processing') && user.subscription.plan !== planKeyUpper) {
-await manageStripeSubscription(planKeyUpper, user._id, billingInterval);
+                await manageStripeSubscription(planKeyUpper, user._id, billingInterval);
                 onSuccess(t('subscriptionPage.plans.changeSuccess'));
             } else {
-const response = await createStripeCheckout(planKeyUpper, user._id, billingInterval);
+                const response = await createStripeCheckout(planKeyUpper, user._id, billingInterval);
                 if (response.data.url) {
                     window.location.href = response.data.url;
                 } else {
-                    throw new Error("URL di checkout non ricevuto.");
+                    throw new Error("Checkout URL not received.");
                 }
             }
         } catch (err) {
@@ -490,8 +489,6 @@ const response = await createStripeCheckout(planKeyUpper, user._id, billingInter
             onFinally();
         }
     };
-    
-
 
     const handleCancelSubscription = () => {
         setModal({
@@ -521,7 +518,7 @@ const response = await createStripeCheckout(planKeyUpper, user._id, billingInter
         try {
             const response = await createStripePortalSession(user._id);
             if (response.data.url) window.location.href = response.data.url;
-            else throw new Error("URL del portale non ricevuto.");
+            else throw new Error("Portal URL not received.");
         } catch (err) {
             onError(err);
             onFinally();
@@ -531,22 +528,25 @@ const response = await createStripeCheckout(planKeyUpper, user._id, billingInter
     const subscriptionStatus = user?.subscription?.status;
     const currentPlan = user?.subscription?.plan?.toUpperCase();
     const isSubscribed = subscriptionStatus === 'active' || subscriptionStatus === 'pending_cancellation' || subscriptionStatus === 'processing';
-    const planWeights = { NEOPHYTE: 0, practitioner: 1, BREEDER: 2 };
+    const planWeights = { NEOPHYTE: 0, PRACTITIONER: 1, BREEDER: 2 };
     
     const getTranslatedPlanName = (planKey) => {
-        return t(`subscriptionPage.plans.${planKey}.title`);
+        const mappedKey = planKey === 'practitioner' ? 'practitioner' : planKey;
+        return t(`subscriptionPage.plans.${mappedKey}.title`);
     };
 
     const getButtonProps = (planKey) => {
+        const mappedKey = planKey === 'practitioner' ? 'practitioner' : planKey;
         if (!isSubscribed) {
-            return { text: t(`subscriptionPage.plans.${planKey}.button.subscribeNow`), disabled: false };
+            return { text: t(`subscriptionPage.plans.${mappedKey}.button.subscribeNow`), disabled: false };
         }
 
-        if (currentPlan === planKey.toUpperCase()) {
-            return { text: t(`subscriptionPage.plans.${planKey}.button.currentPlan`), disabled: true };
+        const planKeyUpper = planKey === 'practitioner' ? 'PRACTITIONER' : planKey.toUpperCase();
+        if (currentPlan === planKeyUpper) {
+            return { text: t(`subscriptionPage.plans.${mappedKey}.button.currentPlan`), disabled: true };
         }
 
-        const isUpgrade = planWeights[planKey.toUpperCase()] > (planWeights[currentPlan] || 0);
+        const isUpgrade = planWeights[planKeyUpper] > (planWeights[currentPlan] || 0);
         return {
             text: isUpgrade ? t('subscriptionPage.plans.upgrade') : t('subscriptionPage.plans.changePlan'),
             disabled: false
@@ -555,7 +555,7 @@ const response = await createStripeCheckout(planKeyUpper, user._id, billingInter
 
     const renewalDate = useMemo(() => {
         if (user?.subscription?.currentPeriodEnd) {
-            return new Date(user.subscription.currentPeriodEnd).toLocaleDateString('it-IT', { day: '2-digit', month: 'long', year: 'numeric' });
+            return new Date(user.subscription.currentPeriodEnd).toLocaleDateString(user?.language || 'it-IT', { day: '2-digit', month: 'long', year: 'numeric' });
         }
         return null;
     }, [user]);
@@ -565,55 +565,58 @@ const response = await createStripeCheckout(planKeyUpper, user._id, billingInter
         const currentYear = now.getFullYear();
         const startDate = new Date(currentYear, 10, 24);
         const endDate = new Date(currentYear, 11, 2);
-
         return now >= startDate && now < endDate;
     }, []); 
-if (isDelegate) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center p-8 bg-white rounded-lg shadow-xl border border-slate-200 max-w-md w-full mx-4">
-          <FiAlertTriangle className="mx-auto text-yellow-500 w-16 h-16 mb-4" />
-          <h2 className="text-2xl font-bold text-slate-800 mb-2">Accesso Limitato</h2>
-          <p className="text-slate-600 mb-6">
-            Non puoi visualizzare o modificare il profilo, la sicurezza e gli abbonamenti di un account mentre operi come delegato.
-          </p>
-          <Link 
-            to="/dashboard" 
-            className="inline-block bg-indigo-600 text-white py-2 px-6 rounded-md font-semibold hover:bg-indigo-700 transition-colors"
-          >
-            Torna alla Dashboard
-          </Link>
-        </div>
-      </div>
-    );
-  }
-    // --- Preparazione dei dati per i Piani da passare alla Tabella ---
+
+    if (isDelegate) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="text-center p-8 bg-white rounded-lg shadow-xl border border-slate-200 max-w-md w-full mx-4">
+                    <FiAlertTriangle className="mx-auto text-yellow-500 w-16 h-16 mb-4" />
+                    <h2 className="text-2xl font-bold text-slate-800 mb-2">{t('subscriptionPage.delegate.title', 'Accesso Limitato')}</h2>
+                    <p className="text-slate-600 mb-6">
+                        {t('subscriptionPage.delegate.message', 'Non puoi visualizzare o modificare il profilo, la sicurezza e gli abbonamenti di un account mentre operi come delegato.')}
+                    </p>
+                    <Link 
+                        to="/dashboard" 
+                        className="inline-block bg-indigo-600 text-white py-2 px-6 rounded-md font-semibold hover:bg-indigo-700 transition-colors"
+                    >
+                        {t('subscriptionPage.delegate.backBtn', 'Torna alla Dashboard')}
+                    </Link>
+                </div>
+            </div>
+        );
+    }
+
     const planKeys = ['neophyte', 'practitioner', 'breeder'];
     const plansData = planKeys.map(planKey => {
         const plan = t(`subscriptionPage.plans.${planKey}`, { returnObjects: true });
         const { text: buttonText, disabled: isDisabled } = getButtonProps(planKey);
 
-let originalPriceString = plan.price;
+        let originalPriceString = plan.price;
         let priceSuffix = originalPriceString.includes('/') ? `/${originalPriceString.split('/')[1]}` : null;
         let originalPriceValue = originalPriceString.split('/')[0];
+        
         if (billingInterval === 'yearly' && originalPriceString.includes('€')) {
             const priceMatch = originalPriceString.match(/[\d,.]+/);
             if (priceMatch) {
                 const priceNumber = parseFloat(priceMatch[0].replace(',', '.'));
-                const yearlyNumber = priceNumber * 10; // Moltiplico per 10 invece che 12
+                const yearlyNumber = priceNumber * 10; 
                 originalPriceValue = `€${yearlyNumber.toFixed(2)}`;
-                priceSuffix = '/anno';
+                priceSuffix = t('subscriptionPage.interval.yearlySuffix', '/anno');
             }
         }
+        
         let discountedPrice = null;
-if (isBlackFridayPeriod && originalPriceValue.includes('€')) {
+        if (isBlackFridayPeriod && originalPriceValue.includes('€')) {
             const priceMatch = originalPriceValue.match(/[\d,.]+/);
             if (priceMatch) {
                 const priceNumber = parseFloat(priceMatch[0].replace(',', '.'));
-                const discountedNumber = priceNumber * 0.5; // Sconto ulteriore del 50%
+                const discountedNumber = priceNumber * 0.5; 
                 discountedPrice = `€${discountedNumber.toFixed(2)}`;
             }
         }
+        
         return {
             key: planKey,
             title: plan.title,
@@ -688,7 +691,7 @@ if (isBlackFridayPeriod && originalPriceValue.includes('€')) {
                                 disabled={loadingAction === 'portal'} 
                                 className="w-full sm:w-auto bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white font-bold py-3 px-8 rounded-xl shadow-lg transition-transform hover:scale-105 disabled:opacity-50"
                             >
-                                {loadingAction === 'portal' ? t('subscriptionPage.loading') : t('subscriptionPage.manageBilling', 'Gestisci Pagamenti')}
+                                {loadingAction === 'portal' ? t('subscriptionPage.loading') : t('subscriptionPage.manageBilling')}
                             </button>
                             
                             {subscriptionStatus !== 'pending_cancellation' && (
@@ -697,16 +700,20 @@ if (isBlackFridayPeriod && originalPriceValue.includes('€')) {
                                     disabled={loadingAction === 'cancel'} 
                                     className="text-gray-400 hover:text-red-500 underline text-sm transition-colors font-medium disabled:opacity-50"
                                 >
-                                    {loadingAction === 'cancel' ? t('subscriptionPage.cancelling') : t('subscriptionPage.cancelSubscription', 'Annulla abbonamento')}
+                                    {loadingAction === 'cancel' ? t('subscriptionPage.cancelling') : t('subscriptionPage.cancelSubscription')}
                                 </button>
                             )}
                         </div>
                     </div>
                 )}
-<div className="flex flex-col items-center justify-center mb-8 mt-12">
+
+                <div className="flex flex-col items-center justify-center mb-8 mt-12">
                     <div className="flex items-center gap-4 bg-gray-100 p-2 rounded-full shadow-inner border border-gray-200">
-                        <span className={`text-md px-4 py-2 rounded-full transition-all duration-300 font-semibold cursor-pointer ${billingInterval === 'monthly' ? 'bg-white shadow-md text-gray-900' : 'text-gray-500 hover:text-gray-700'}`} onClick={() => setBillingInterval('monthly')}>
-                            Mensile
+                        <span 
+                            className={`text-md px-4 py-2 rounded-full transition-all duration-300 font-semibold cursor-pointer ${billingInterval === 'monthly' ? 'bg-white shadow-md text-gray-900' : 'text-gray-500 hover:text-gray-700'}`} 
+                            onClick={() => setBillingInterval('monthly')}
+                        >
+                            {t('subscriptionPage.interval.monthly', 'Mensile')}
                         </span>
                         
                         <button
@@ -716,22 +723,26 @@ if (isBlackFridayPeriod && originalPriceValue.includes('€')) {
                             <span className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform shadow-md ${billingInterval === 'yearly' ? 'translate-x-7' : 'translate-x-1'}`} />
                         </button>
                         
-                        <span className={`flex items-center text-md px-4 py-2 rounded-full transition-all duration-300 font-semibold cursor-pointer ${billingInterval === 'yearly' ? 'bg-white shadow-md text-gray-900' : 'text-gray-500 hover:text-gray-700'}`} onClick={() => setBillingInterval('yearly')}>
-                            Annuale 
+                        <span 
+                            className={`flex items-center text-md px-4 py-2 rounded-full transition-all duration-300 font-semibold cursor-pointer ${billingInterval === 'yearly' ? 'bg-white shadow-md text-gray-900' : 'text-gray-500 hover:text-gray-700'}`} 
+                            onClick={() => setBillingInterval('yearly')}
+                        >
+                            {t('subscriptionPage.interval.yearly', 'Annuale')}
                             <span className="ml-2 text-xs font-bold text-white bg-red-500 px-2 py-0.5 rounded-md animate-pulse">
                                 -16%
                             </span>
                         </span>
                     </div>
-                    <p className="text-sm text-gray-500 mt-3 font-medium">Con il piano annuale ricevi 2 mesi in regalo!</p>
+                    <p className="text-sm text-gray-500 mt-3 font-medium">{t('subscriptionPage.interval.yearlyBenefit', 'Con il piano annuale ricevi 2 mesi in regalo!')}</p>
                 </div>
-                {/* Tabella Comparativa con Prezzi e Pulsanti integrati */}
+
                 <ComparisonTable 
                     plansData={plansData} 
                     onAction={handlePlanAction} 
                     loadingAction={loadingAction} 
                 />
 
+                <MarketExplanationSection />
 
                 <footer className="mt-20 text-center">
                     <div className="bg-white rounded-2xl shadow-lg p-8 lg:p-12 max-w-4xl mx-auto">
@@ -755,7 +766,7 @@ if (isBlackFridayPeriod && originalPriceValue.includes('€')) {
                                 type="text"
                                 value={taxCode}
                                 onChange={(e) => setTaxCode(e.target.value.toUpperCase())}
-                                className="border rounded p-2 w-full mt-2"
+                                className="border rounded p-2 w-full mt-2 text-black"
                             />
                         </div>
                     }

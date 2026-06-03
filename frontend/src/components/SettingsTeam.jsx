@@ -27,7 +27,7 @@ const SettingsTeam = () => {
             const res = await getDelegates();
             setDelegates(res.data);
         } catch (err) {
-            console.error("Errore nel recupero delegati", err);
+            console.error(t('SettingsTeam.fetchError'), err);
         }
     };
 
@@ -39,11 +39,11 @@ const SettingsTeam = () => {
 
         try {
             await addDelegate(email, role);
-            setSuccess('Collaboratore aggiunto con successo!');
+            setSuccess(t('SettingsTeam.addSuccess'));
             setEmail(''); // Svuota il campo
             fetchDelegates(); // Ricarica la lista
         } catch (err) {
-            setError(err.response?.data?.message || 'Errore durante l\'aggiunta del collaboratore.');
+            setError(err.response?.data?.message || t('SettingsTeam.addError'));
         } finally {
             setIsLoading(false);
         }
@@ -64,10 +64,10 @@ const SettingsTeam = () => {
         
         try {
             await removeDelegate(delegateToRemove);
-            setSuccess('Collaboratore rimosso.');
+            setSuccess(t('SettingsTeam.removeSuccess'));
             setDelegates(delegates.filter(d => d.user._id !== delegateToRemove));
         } catch (err) {
-            setError(err.response?.data?.message || 'Errore durante la rimozione.');
+            setError(err.response?.data?.message || t('SettingsTeam.removeError'));
         } finally {
             setIsRemoving(false);
             setDelegateToRemove(null); // Chiude il modale
@@ -84,10 +84,10 @@ const SettingsTeam = () => {
                             <div className="p-3 bg-red-100 rounded-full">
                                 <FaExclamationTriangle className="text-xl" />
                             </div>
-                            <h3 className="text-xl font-bold text-gray-900">Conferma</h3>
+                            <h3 className="text-xl font-bold text-gray-900">{t('SettingsTeam.modalTitle')}</h3>
                         </div>
                         <p className="text-gray-600 mb-6">
-                            Sei sicuro di voler rimuovere questo collaboratore? Non avrà più accesso al tuo account.
+                            {t('SettingsTeam.modalBody')}
                         </p>
                         <div className="flex justify-end gap-3">
                             <button
@@ -95,14 +95,14 @@ const SettingsTeam = () => {
                                 disabled={isRemoving}
                                 className="px-4 py-2 font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition"
                             >
-                                Annulla
+                                {t('SettingsTeam.cancel')}
                             </button>
                             <button
                                 onClick={confirmRemove}
                                 disabled={isRemoving}
                                 className="px-4 py-2 font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition flex items-center gap-2"
                             >
-                                {isRemoving ? <span className="loader w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span> : 'Rimuovi'}
+                                {isRemoving ? <span className="loader w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span> : t('SettingsTeam.remove')}
                             </button>
                         </div>
                     </div>
@@ -114,10 +114,10 @@ const SettingsTeam = () => {
                 <div>
                     <h1 className="text-3xl font-bold text-[#2B2B2B] flex items-center gap-3">
                         <FaUserShield className="text-[#228B22]" /> 
-                        Gestione Team
+                        {t('SettingsTeam.pageTitle')}
                     </h1>
                     <p className="text-gray-600 mt-2">
-                        Invita altri utenti a gestire il tuo allevamento. I collaboratori dovranno fare il login con il proprio account e selezionare il tuo allevamento dal menu.
+                        {t('SettingsTeam.pageDesc')}
                     </p>
                 </div>
 
@@ -135,12 +135,12 @@ const SettingsTeam = () => {
 
                 {/* Form Aggiunta Collaboratore */}
                 <div className="bg-white rounded-2xl shadow-md p-6">
-                    <h2 className="text-xl font-semibold text-[#2B2B2B] mb-4">Invita un Collaboratore</h2>
+                    <h2 className="text-xl font-semibold text-[#2B2B2B] mb-4">{t('SettingsTeam.formTitle')}</h2>
                     <form onSubmit={handleAdd} className="flex flex-col md:flex-row gap-4">
                         <div className="flex-1">
                             <input
                                 type="email"
-                                placeholder="Email dell'utente (es. marco@email.com)"
+                                placeholder={t('SettingsTeam.emailPlaceholder')}
                                 className="w-full px-4 py-2 border border-gray-300 rounded-md bg-white text-black focus:outline-none focus:ring-2 focus:ring-[#228B22]"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
@@ -155,20 +155,20 @@ const SettingsTeam = () => {
                             }`}
                         >
                             {isLoading ? <span className="loader text-sm"></span> : <FaUserPlus />}
-                            Invita
+                            {t('SettingsTeam.invite')}
                         </button>
                     </form>
                     <p className="text-xs text-gray-500 mt-2">
-                        *L'utente deve già essere registrato su SnakeBee con questa email.
+                        {t('SettingsTeam.userMustBeRegistered')}
                     </p>
                 </div>
 
                 {/* Lista Collaboratori */}
                 <div className="bg-white rounded-2xl shadow-md p-6">
-                    <h2 className="text-xl font-semibold text-[#2B2B2B] mb-4">Membri del Team</h2>
+                    <h2 className="text-xl font-semibold text-[#2B2B2B] mb-4">{t('SettingsTeam.teamMembers')}</h2>
                     
                     {delegates.length === 0 ? (
-                        <p className="text-gray-500 text-center py-4">Non hai ancora invitato nessun collaboratore.</p>
+                        <p className="text-gray-500 text-center py-4">{t('SettingsTeam.noCollaborators')}</p>
                     ) : (
                         <ul className="divide-y divide-gray-100">
                             {delegates.map((delegate) => (
@@ -184,7 +184,7 @@ const SettingsTeam = () => {
                                     <button
                                         onClick={() => openRemoveModal(delegate.user._id)}
                                         className="p-2 text-red-500 hover:bg-red-50 rounded-full transition"
-                                        title="Rimuovi collaboratore"
+                                        title={t('SettingsTeam.removeCollaborator')}
                                     >
                                         <FaTrash />
                                     </button>

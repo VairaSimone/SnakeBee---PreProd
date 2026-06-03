@@ -5,48 +5,57 @@ import { useDispatch, useSelector } from 'react-redux';
 import { logoutUser, selectUser, setLanguage } from '../features/userSlice';
 import { Link, useNavigate } from 'react-router-dom';
 import i18n from '../i18n';
-import { 
+import {
   FiUser, FiShield, FiBell, FiUpload, FiDownload, FiTrash2, 
   FiAlertTriangle, FiCheckCircle, FiXCircle, FiGift, FiMail, 
   FiEye, FiEyeOff, FiFacebook, FiInstagram, FiMessageCircle, FiSend
 } from 'react-icons/fi';
 import { Trans, useTranslation } from 'react-i18next';
 import SettingsTeam from './SettingsTeam';
-
+ 
 const Toast = ({ toasts, removeToast }) => (
   <div className="fixed top-5 right-5 z-50 w-full max-w-sm space-y-3">
     {toasts.map((t) => (
       <div
         key={t.id}
-        className={`relative flex items-center gap-4 w-full px-4 py-3 rounded-lg shadow-lg text-white transform transition-all duration-300 animate-slide-in-right
-          ${t.type === 'error' ? 'bg-red-500' : 'bg-green-500'}
-        `}
-      >
+        className={`relative flex items-center gap-4 w-full px-4 py-3 rounded-lg shadow-lg text-white transform transition-all duration-300 animate-slide-in-right ${t.type === 'error' ? 'bg-red-500' : 'bg-green-500'}`}
+      > 
         {t.type === 'error' ? <FiXCircle size={20} /> : <FiCheckCircle size={20} />}
         <span>{t.message}</span>
-        <button onClick={() => removeToast(t.id)} className="absolute top-1 right-2 text-white/80 hover:text-white font-bold text-xl">&times;</button>
+        <button
+          onClick={() => removeToast(t.id)} 
+          className="absolute top-1 right-2 text-white/80 hover:text-white font-bold text-xl"
+        >
+          &times;
+        </button>
       </div>
     ))}
   </div>
 );
-
+ 
 const ConfirmModal = ({ show, title, message, onConfirm, onCancel }) => {
   const { t } = useTranslation();
-
+ 
   if (!show) return null;
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-40 animate-fade-in">
-      <div className=" rounded-xl shadow-2xl p-6 sm:p-8 max-w-md w-full mx-4 text-center space-y-4 transform transition-all duration-300 animate-scale-up">
+      <div className="rounded-xl shadow-2xl p-6 sm:p-8 max-w-md w-full mx-4 text-center space-y-4 transform transition-all duration-300 animate-scale-up">
         <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
           <FiAlertTriangle className="h-6 w-6 text-red-600" aria-hidden="true" />
         </div>
         <h3 className="text-xl font-semibold text-slate-800">{title}</h3>
         <p className="text-sm text-slate-500">{message}</p>
         <div className="flex justify-center gap-4 pt-4">
-          <button onClick={onCancel} className="px-6 py-2 bg-slate-200 text-slate-700 rounded-md font-semibold hover:bg-slate-300 transition-colors">
+          <button
+            onClick={onCancel} 
+            className="px-6 py-2 bg-slate-200 text-slate-700 rounded-md font-semibold hover:bg-slate-300 transition-colors"
+          >
             {t('UserProfile.cancel')}
           </button>
-          <button onClick={onConfirm} className="px-6 py-2 bg-red-600 text-white rounded-md font-semibold hover:bg-red-700 transition-colors">
+          <button
+            onClick={onConfirm} 
+            className="px-6 py-2 bg-red-600 text-white rounded-md font-semibold hover:bg-red-700 transition-colors"
+          >
             {t('UserProfile.confirm')}
           </button>
         </div>
@@ -54,9 +63,9 @@ const ConfirmModal = ({ show, title, message, onConfirm, onCancel }) => {
     </div>
   );
 };
-
+ 
 const SettingsCard = ({ title, icon, children }) => (
-  <div className=" rounded-lg shadow-md overflow-hidden">
+  <div className="rounded-lg shadow-md overflow-hidden">
     <div className="p-6 border-b border-slate-200">
       <div className="flex items-center gap-3">
         {icon}
@@ -68,7 +77,7 @@ const SettingsCard = ({ title, icon, children }) => (
     </div>
   </div>
 );
-
+ 
 const InputField = ({ id, label, type = "text", value, onChange, required = false, placeholder = "" }) => (
   <div>
     <label htmlFor={id} className="block text-sm font-medium text-slate-600 mb-1">{label}</label>
@@ -83,7 +92,7 @@ const InputField = ({ id, label, type = "text", value, onChange, required = fals
     />
   </div>
 );
-
+ 
 const SocialInputField = ({ id, label, icon, value, onChange, placeholder, prefix }) => (
   <div>
     <label htmlFor={id} className="block text-sm font-medium text-slate-600 mb-1">{label}</label>
@@ -103,7 +112,7 @@ const SocialInputField = ({ id, label, icon, value, onChange, placeholder, prefi
     </div>
   </div>
 );
-
+ 
 const UserProfile = () => {
   const [user, setUser] = useState(null);
   const [activeTab, setActiveTab] = useState('profilo');
@@ -149,21 +158,21 @@ const UserProfile = () => {
   const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
   const nameRegex = /^[a-zA-Z0-9\s]{2,}$/;
   const socialUsernameRegex = /^[a-zA-Z0-9_.-]+$/;
-
+ 
   const addToast = (message, type = 'success') => {
     const id = Date.now();
     setToasts((prev) => [...prev, { id, message, type }]);
     setTimeout(() => removeToast(id), 4000);
   };
   const removeToast = (id) => setToasts((prev) => prev.filter((t) => t.id !== id));
-
+ 
   useEffect(() => {
     const hash = window.location.hash;
     if (hash === '#referral') {
       setActiveTab('inviti');
     }
   }, []);
-
+ 
   useEffect(() => {
     if (avatar instanceof File) {
       const objectUrl = URL.createObjectURL(avatar);
@@ -176,23 +185,23 @@ const UserProfile = () => {
       setAvatarPreview('');
     }
   }, [avatar]);
-
+ 
   const handleSendBulkEmail = async (e) => {
     e.preventDefault();
     setSendingBulk(true);
     setBulkResult(null);
-
+ 
     let filtersObj = {};
     try {
       filtersObj = JSON.parse(bulkFilters);
     } catch {
-      addToast("JSON filtri non valido", "error");
+      addToast(t('UserProfile.invalidJsonFilters'), "error");
       setSendingBulk(false);
       return;
     }
-
+ 
     if (!bulkSubject || !bulkHtml) {
-      addToast("Oggetto e contenuto HTML sono obbligatori", "error");
+      addToast(t('UserProfile.subjectHtmlRequired'), "error");
       setSendingBulk(false);
       return;
     }
@@ -200,9 +209,9 @@ const UserProfile = () => {
       .split(',')
       .map(e => e.trim())
       .filter(e => emailRegex.test(e)); 
-
+ 
     if (bulkEmails && emailsArray.length === 0) {
-      addToast("Formato email non valido", "error");
+      addToast(t('UserProfile.invalidEmailFormat'), "error");
       setSendingBulk(false);
       return;
     }
@@ -215,14 +224,14 @@ const UserProfile = () => {
         text: bulkText
       });
       setBulkResult(data);
-      addToast(`Email inviate: ${data.sent}/${data.total}`, 'success');
+      addToast(t('UserProfile.emailsSent', { sent: data.sent, total: data.total }), 'success');
     } catch (err) {
-      addToast(err.response?.data?.error || "Errore invio email", "error");
+      addToast(err.response?.data?.error || t('UserProfile.bulkEmailError'), "error");
     } finally {
       setSendingBulk(false);
     }
   };
-
+ 
   useEffect(() => {
     const fetchUser = async () => {
       try {
@@ -253,10 +262,10 @@ const UserProfile = () => {
     fetchUser();
     fetchReferralLink();
   }, []);
-
+ 
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
-
+ 
     const trimmedName = name.trim();
     if (!nameRegex.test(trimmedName)) {
       addToast(t('UserProfile.nameNumbers'), 'error');
@@ -271,16 +280,23 @@ const UserProfile = () => {
       addToast(t('UserProfile.invalidPhone'), 'error');
       return;
     }
-
-    if (socialsFacebook && (!socialUsernameRegex.test(socialsFacebook) || socialsFacebook.includes('/'))) {
-      addToast(t('UserProfile.invalidFacebook', 'Inserisci solo lo username per Facebook'), 'error');
-      return;
+ 
+    if (socialsFacebook) {
+      const cleanFB = socialsFacebook.trim().replace(/^(https?:\/\/)?(www\.)?facebook\.com\//i, '').replace(/\/$/, '');
+      if (!socialUsernameRegex.test(cleanFB)) {
+        addToast(t('UserProfile.invalidFacebook'), 'error');
+        return;
+      }
     }
-    if (socialsInstagram && (!socialUsernameRegex.test(socialsInstagram) || socialsInstagram.includes('/'))) {
-      addToast(t('UserProfile.invalidInstagram', 'Inserisci solo lo username per Instagram'), 'error');
-      return;
+ 
+    if (socialsInstagram) {
+      const cleanIG = socialsInstagram.trim().replace(/^(https?:\/\/)?(www\.)?instagram\.com\//i, '').replace(/\/$/, '');
+      if (!socialUsernameRegex.test(cleanIG)) {
+        addToast(t('UserProfile.invalidInstagram'), 'error');
+        return;
+      }
     }
-
+ 
     try {
       const formData = new FormData();
       formData.append('name', trimmedName);
@@ -293,22 +309,20 @@ const UserProfile = () => {
       if (avatar instanceof File) {
         formData.append('avatar', avatar);
       }
-
+ 
       const { data } = await api.put(`/user/${user._id}`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
+        headers: { 'Content-Type': 'multipart/form-data' },
       });
-
+ 
       setUser(data);
       dispatch(setLanguage(data.language));
       i18n.changeLanguage(data.language);
       addToast(t('UserProfile.successProfileUpdate'), 'success');
     } catch(err) {
-      addToast(err.response?.data?.message || t('UserProfile.errorProfileUpdate'), 'error');    
+      addToast(err.response?.data?.message || t('UserProfile.errorProfileUpdate'), 'error'); 
     }
   };
-
+ 
   const handleChangeEmail = async (e) => {
     e.preventDefault();
     setEmailError('');
@@ -321,10 +335,7 @@ const UserProfile = () => {
       return;
     }
     try {
-      const { data } = await api.post('/v1/change-email', {
-        newEmail,
-        password: passwordForEmail,
-      });
+      const { data } = await api.post('/v1/change-email', { newEmail, password: passwordForEmail });
       setEmail(data.newEmail);
       addToast(t('UserProfile.successEmailChange'), 'success');
       setNewEmail('');
@@ -342,7 +353,7 @@ const UserProfile = () => {
       addToast(t('UserProfile.errorEmailChange'), 'error');
     }
   };
-
+ 
   const handleChangePassword = async (e) => {
     e.preventDefault();
     setPasswordError('');
@@ -365,7 +376,7 @@ const UserProfile = () => {
       addToast(t('UserProfile.errorPasswordChange'), 'error');
     }
   };
-
+ 
   const confirmDeleteAccount = async () => {
     try {
       await api.delete(`/user/${user._id}`);
@@ -377,12 +388,10 @@ const UserProfile = () => {
       addToast(t('UserProfile.deleteUserError'), 'error');
     }
   };
-
+ 
   const handleNotificationSave = async () => {
     try {
-      await api.patch(`/user/users/email-settings/${user._id}`, {
-        receiveFeedingEmails: emailFeedingNotifications,
-      });
+      await api.patch(`/user/users/email-settings/${user._id}`, { receiveFeedingEmails: emailFeedingNotifications });
       setNotificationMsg(t('UserProfile.successNotification'));
       addToast(t('UserProfile.successNotificationSave'), 'success');
     } catch {
@@ -390,12 +399,10 @@ const UserProfile = () => {
       addToast(t('UserProfile.errorNotificationSave'), 'error');
     }
   };
-
+ 
   const handleExportExcel = async () => {
     try {
-      const response = await api.get(`reptile/export/reptiles/${user._id}`, {
-        responseType: 'blob',
-      });
+      const response = await api.get(`reptile/export/reptiles/${user._id}`, { responseType: 'blob' });
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
@@ -409,7 +416,7 @@ const UserProfile = () => {
       addToast(t('UserProfile.downloadError'), 'error');
     }
   };
-
+ 
   const handleCopyLink = () => {
     if (!referralLink) return;
     navigator.clipboard.writeText(referralLink).then(() => {
@@ -420,31 +427,33 @@ const UserProfile = () => {
       addToast(t('UserProfile.copyError'), 'error');
     });
   };
-if (isDelegate) {
+
+  if (isDelegate) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center p-8 bg-white rounded-lg shadow-xl border border-slate-200 max-w-md w-full mx-4">
           <FiAlertTriangle className="mx-auto text-yellow-500 w-16 h-16 mb-4" />
-          <h2 className="text-2xl font-bold text-slate-800 mb-2">Accesso Limitato</h2>
+          <h2 className="text-2xl font-bold text-slate-800 mb-2">{t('UserProfile.limitedAccess')}</h2>
           <p className="text-slate-600 mb-6">
-            Non puoi visualizzare o modificare il profilo, la sicurezza e gli abbonamenti di un account mentre operi come delegato.
+            {t('UserProfile.delegateAccessWarning')}
           </p>
-          <Link 
-            to="/dashboard" 
+          <Link
+            to="/dashboard"
             className="inline-block bg-indigo-600 text-white py-2 px-6 rounded-md font-semibold hover:bg-indigo-700 transition-colors"
-          >
-            Torna alla Dashboard
+          > 
+            {t('UserProfile.backToDashboard')}
           </Link>
         </div>
       </div>
     );
   }
+
   if (!user) return <div className="flex items-center justify-center h-screen text-slate-500">{t('UserProfile.loadingProfile')}</div>;
-  const canBePublic = true;
   
+  const canBePublic = true;
   const referralCount = user.referralCount || 0;
   const progressPercentage = Math.min((referralCount / 3) * 100, 100);
-
+ 
   return (
     <div className="min-h-screen">
       <Toast toasts={toasts} removeToast={removeToast} />
@@ -458,41 +467,39 @@ if (isDelegate) {
         }}
         onCancel={() => setShowDeleteModal(false)}
       />
-
+ 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-slate-800">{t('UserProfile.userProfile', 'Gestione Profilo')}</h1>
+          <h1 className="text-3xl font-bold text-slate-800">{t('UserProfile.userProfile')}</h1>
           <Link to="/dashboard" className="text-sm font-medium text-indigo-600 hover:text-indigo-800 transition-colors">
             {t('UserProfile.backToDashboard')}
           </Link>
         </div>
-
+ 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          
           {/* Menu Laterale */}
           <aside className="lg:col-span-1 space-y-4">
-            <div className=" rounded-lg shadow-md p-6 text-center mb-6">
+            <div className="rounded-lg shadow-md p-6 text-center mb-6">
               <div className="relative w-32 h-32 mx-auto group">
                 <img
                   src={avatarPreview || '/images/default_avatar.png'}
                   alt="Avatar"
                   className="w-full h-full rounded-full object-cover border-4 border-slate-200"
                 />
-                
                 <div
                   className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
                   onClick={() => avatarInputRef.current?.click()}
-                  aria-hidden="true" 
-                >
+                  aria-hidden="true"
+                > 
                   <FiUpload className="text-white h-8 w-8" />
                 </div>
-
+ 
                 <button
                   type="button"
                   onClick={() => avatarInputRef.current?.click()}
                   className="absolute bottom-0 right-0 w-9 h-9 bg-indigo-600 rounded-full flex items-center justify-center text-white shadow-md hover:bg-indigo-700 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                  aria-label={t('UserProfile.changeAvatar', 'Cambia foto profilo')}
-                >
+                  aria-label={t('UserProfile.changeAvatar')}
+                > 
                   <FiUpload className="w-5 h-5" />
                 </button>
               </div>
@@ -506,45 +513,39 @@ if (isDelegate) {
               <h2 className="mt-4 text-xl font-bold text-slate-800">{name}</h2>
               <p className="text-sm text-slate-500">{email}</p>
             </div>
-
+ 
             <nav className="flex flex-col space-y-1">
               {[
-                { id: 'profilo', label: t('UserProfile.profileInfo', 'Profilo'), icon: <FiUser /> },
-                { id: 'sicurezza', label: t('UserProfile.security', 'Sicurezza'), icon: <FiShield /> },
-                { id: 'notifiche', label: t('UserProfile.notifications', 'Notifiche'), icon: <FiBell /> },
-                { id: 'inviti', label: t('UserProfile.referralTitle', 'Programma Inviti'), icon: <FiGift /> },
-                ...(user.role === 'admin' ? [{ id: 'admin', label: 'Invia Email Bulk', icon: <FiMail /> }] : [])
+                { id: 'profilo', label: t('UserProfile.profileInfo'), icon: <FiUser /> },
+                { id: 'sicurezza', label: t('UserProfile.security'), icon: <FiShield /> },
+                { id: 'notifiche', label: t('UserProfile.notifications'), icon: <FiBell /> },
+                { id: 'inviti', label: t('UserProfile.referralTitle'), icon: <FiGift /> },
+                ...(user.role === 'admin' ? [{ id: 'admin', label: t('UserProfile.adminBulkEmail'), icon: <FiMail /> }] : [])
               ].map((item) => (
                 <button
                   key={item.id}
                   onClick={() => setActiveTab(item.id)}
-                  className={`flex items-center gap-3 px-4 py-3 text-left rounded-md transition-colors font-medium
-                    ${activeTab === item.id 
-                      ? 'bg-indigo-50 text-indigo-700 border-l-4 border-indigo-600' 
-                      : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 border-l-4 border-transparent'
-                    }`}
-                >
+                  className={`flex items-center gap-3 px-4 py-3 text-left rounded-md transition-colors font-medium ${activeTab === item.id ? 'bg-indigo-50 text-indigo-700 border-l-4 border-indigo-600' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 border-l-4 border-transparent'}`}
+                > 
                   {item.icon}
                   {item.label}
                 </button>
               ))}
             </nav>
-            
             {/* Esportazione separata dal menu principale */}
             <div className="pt-6 border-t border-slate-200 mt-6">
               <button onClick={handleExportExcel} className="w-full bg-green-600 text-white py-2 px-4 rounded-md font-semibold hover:bg-green-700 transition-colors flex items-center justify-center gap-2">
                 <FiDownload />
-                {t('UserProfile.downloadExcel', 'Esporta Dati')}
+                {t('UserProfile.downloadExcel')}
               </button>
             </div>
           </aside>
-
+ 
           {/* Area Contenuto */}
           <main className="lg:col-span-3 space-y-8">
-            
             {/* TAB PROFILO */}
             {activeTab === 'profilo' && (
-              <SettingsCard title={t('UserProfile.profileInfo', 'Profilo')} icon={<FiUser className="text-indigo-500 w-6 h-6" />}>
+              <SettingsCard title={t('UserProfile.profileInfo')} icon={<FiUser className="text-indigo-500 w-6 h-6" />}>
                 <form onSubmit={handleUpdateProfile} className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <InputField id="name" label={t('UserProfile.name')} value={name} onChange={(e) => setName(e.target.value)} required />
@@ -557,7 +558,6 @@ if (isDelegate) {
                       placeholder="+39 333 1234567"
                     />
                   </div>
-                  
                   <InputField
                     id="address"
                     label={t('UserProfile.address')}
@@ -565,7 +565,7 @@ if (isDelegate) {
                     onChange={(e) => setAddress(e.target.value)}
                     placeholder={t('UserProfile.addressPlaceholder')}
                   />
-
+ 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <SocialInputField
                       id="socialsFacebook"
@@ -574,7 +574,7 @@ if (isDelegate) {
                       prefix="facebook.com/"
                       value={socialsFacebook}
                       onChange={(e) => setSocialsFacebook(e.target.value)}
-                      placeholder={t('UserProfile.facebookPlaceholder', 'tuonome')}
+                      placeholder="username"
                     />
                     <SocialInputField
                       id="socialsInstagram"
@@ -583,18 +583,16 @@ if (isDelegate) {
                       prefix="instagram.com/"
                       value={socialsInstagram}
                       onChange={(e) => setSocialsInstagram(e.target.value)}
-                      placeholder={t('UserProfile.instagramPlaceholder', 'tuonome')}
+                      placeholder="username"
                     />
                   </div>
-
+ 
                   <div className="p-4 bg-slate-100 rounded-lg border border-slate-200">
                     <Switch.Group as="div" className="flex items-center justify-between">
                       <span className="flex-grow flex flex-col pr-3">
                         <Switch.Label as="span" className={`text-sm font-medium ${!canBePublic ? 'text-slate-400' : 'text-slate-900'}`} passive>
                           {t('UserProfile.publicProfile')}
-                          {isPublic 
-                            ? <FiEye className="inline w-4 h-4 ml-1.5 text-indigo-600"/> 
-                            : <FiEyeOff className="inline w-4 h-4 ml-1.5 text-slate-500"/>}
+                          {isPublic ? <FiEye className="inline w-4 h-4 ml-1.5 text-indigo-600"/> : <FiEyeOff className="inline w-4 h-4 ml-1.5 text-slate-500"/>}
                         </Switch.Label>
                         <Switch.Description as="span" className={`text-xs ${!canBePublic ? 'text-slate-400' : 'text-slate-500'}`}>
                           {t('UserProfile.publicProfileDesc')}
@@ -604,31 +602,17 @@ if (isDelegate) {
                         checked={isPublic}
                         onChange={setIsPublic}
                         disabled={!canBePublic}
-                        className={`${
-                          isPublic ? 'bg-indigo-600' : 'bg-gray-200'
-                        } relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed`}
-                      >
-                        <span
-                          aria-hidden="true"
-                          className={`${
-                            isPublic ? 'translate-x-5' : 'translate-x-0'
-                          } pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`}
-                        />
+                        className={`${isPublic ? 'bg-indigo-600' : 'bg-gray-200'} relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed`}
+                      > 
+                        <span aria-hidden="true" className={`${isPublic ? 'translate-x-5' : 'translate-x-0'} pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`} />
                       </Switch>
-                      
                     </Switch.Group>
-                    
                     {!canBePublic && (
                       <p className="mt-3 text-xs text-red-600 border-t border-slate-300 pt-3">
-                        <Trans
-                          i18nKey="UserProfile.publicProfileDisabled"
-                          components={[<Link to="/pricing" className="underline font-semibold" />]}
-                          defaults="Funzione disponibile solo con un <0>piano di abbonamento</0> attivo (non Neofita)."
-                        />
+                        <Trans i18nKey="UserProfile.publicProfileDisabled" components={[<Link to="/pricing" className="underline font-semibold" key="1"/>]} />
                       </p>
                     )}
                   </div>
-                  
                   <div>
                     <label htmlFor="language" className="block text-sm font-medium text-slate-600 mb-1">{t('UserProfile.language')}</label>
                     <select id="language" value={language} onChange={(e) => setLanguageLocal(e.target.value)} required className="w-full md:w-1/2 border-slate-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition-colors bg-white text-black">
@@ -636,9 +620,8 @@ if (isDelegate) {
                       <option value="en">English</option>
                     </select>
                   </div>
-                  
                   <button type="submit" className="bg-green-600 text-white py-2 px-6 rounded-md font-semibold hover:bg-green-700 transition-colors">
-                    {t('UserProfile.updateProfile', 'Aggiorna Profilo')}
+                    {t('UserProfile.updateProfile')}
                   </button>
                 </form>
                 {user?.subscription?.plan === 'BREEDER' && (
@@ -646,15 +629,13 @@ if (isDelegate) {
                     <SettingsTeam />
                   </div>
                 )}
-
               </SettingsCard>
-              
             )}
-
+ 
             {/* TAB SICUREZZA */}
             {activeTab === 'sicurezza' && (
-              <>
-                <SettingsCard title={t('UserProfile.security', 'Sicurezza')} icon={<FiShield className="text-indigo-500 w-6 h-6" />}>
+              <> 
+                <SettingsCard title={t('UserProfile.security')} icon={<FiShield className="text-indigo-500 w-6 h-6" />}>
                   <form onSubmit={handleChangeEmail} className="space-y-4 border-b border-slate-200 pb-6">
                     <h4 className="font-semibold text-slate-700">{t('UserProfile.changeEmail')}</h4>
                     <InputField id="newEmail" label={t('UserProfile.newEmail')} type="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} />
@@ -672,7 +653,7 @@ if (isDelegate) {
                     <button type="submit" className="w-full sm:w-auto bg-green-700 text-white py-2 px-4 rounded-md font-semibold hover:bg-green-800 transition-colors">{t('UserProfile.changePassword')}</button>
                   </form>
                 </SettingsCard>
-
+ 
                 <div className="bg-white rounded-lg shadow-md border-2 border-red-200 mt-8">
                   <div className="p-6 border-b border-red-200">
                     <div className="flex items-center gap-3">
@@ -687,17 +668,17 @@ if (isDelegate) {
                     <button
                       onClick={() => setShowDeleteModal(true)}
                       className="w-full sm:w-auto whitespace-nowrap bg-red-600 text-white py-2 px-6 rounded-md font-semibold hover:bg-red-700 transition-colors"
-                    >
+                    > 
                       {t('UserProfile.deleteMyAccount')}
                     </button>
                   </div>
                 </div>
               </>
             )}
-
+ 
             {/* TAB NOTIFICHE */}
             {activeTab === 'notifiche' && (
-              <SettingsCard title={t('UserProfile.notifications', 'Notifiche')} icon={<FiBell className="text-indigo-500 w-6 h-6" />}>
+              <SettingsCard title={t('UserProfile.notifications')} icon={<FiBell className="text-indigo-500 w-6 h-6" />}>
                 <div className="flex items-center justify-between">
                   <label htmlFor="emailFeedingToggle" className="text-sm font-medium text-slate-700">
                     {t('UserProfile.feedingEmails')}
@@ -720,32 +701,28 @@ if (isDelegate) {
                 </div>
                 {user.subscription?.plan !== 'BREEDER' && user.subscription?.plan !== 'APPRENTICE' && user.subscription?.plan !== 'PRACTITIONER' && (
                   <p className="text-xs text-red-600 mt-1">
-                    <Trans
-                      i18nKey="UserProfile.premiumFeature"
-                      components={[<Link to="/pricing" className="underline font-semibold" />]}
-                    />
+                    <Trans i18nKey="UserProfile.premiumFeature" components={[<Link to="/pricing" className="underline font-semibold" key="1" />]} />
                   </p>
                 )}
                 <div className="pt-4 mt-4 border-t border-slate-100">
                   <button onClick={handleNotificationSave} className="bg-green-600 text-white py-2 px-4 rounded-md font-semibold hover:bg-green-700 transition-colors">
-                    {t('UserProfile.savePreferences', 'Salva Preferenze')}
+                    {t('UserProfile.savePreferences')}
                   </button>
                 </div>
               </SettingsCard>
             )}
             {/* TAB INVITI */}
             {activeTab === 'inviti' && (
-              <SettingsCard title={t('UserProfile.referralTitle', 'Programma Invita Amici')} icon={<FiGift className="text-indigo-500 w-6 h-6" />}>
+              <SettingsCard title={t('UserProfile.referralTitle')} icon={<FiGift className="text-indigo-500 w-6 h-6" />}>
                 <div className="space-y-6">
                   <div className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white p-6 rounded-lg shadow-sm">
                     <div className="flex items-center gap-4 mb-2">
                       <FiGift className="w-8 h-8 opacity-80" />
-                      <h4 className="text-lg font-bold">Ottieni il tuo Sconto!</h4>
+                      <h4 className="text-lg font-bold">{t('UserProfile.getDiscount')}</h4>
                     </div>
                     <p className="text-sm opacity-90 mb-4">
-                      Invita 3 amici a iscriversi con il tuo link. Al raggiungimento dell'obiettivo riceverai automaticamente un <strong>buono sconto sulla tua prossima mensilità</strong>.
+                      <Trans i18nKey="UserProfile.referralPromoDesc" components={[<strong key="1" />]} />
                     </p>
-                    
                     {/* Progress Bar Premi */}
                     <div className="bg-white/20 rounded-full h-4 w-full overflow-hidden mb-2 relative">
                       <div 
@@ -754,14 +731,14 @@ if (isDelegate) {
                       ></div>
                     </div>
                     <div className="flex justify-between text-xs font-semibold">
-                      <span>{referralCount} invitati</span>
-                      <span>Obiettivo: 3</span>
+                      <span>{t('UserProfile.referralsCount', { count: referralCount })}</span>
+                      <span>{t('UserProfile.referralGoal')}</span>
                     </div>
                   </div>
-
+ 
                   {referralLink && (
                     <div className="space-y-3">
-                      <label className="text-sm font-medium text-slate-700">Il tuo link personale:</label>
+                      <label className="text-sm font-medium text-slate-700">{t('UserProfile.yourPersonalLink')}</label>
                       <div className="flex flex-col sm:flex-row items-stretch gap-2">
                         <input
                           type="text"
@@ -773,50 +750,49 @@ if (isDelegate) {
                           <button
                             onClick={handleCopyLink}
                             className={`px-4 py-2 rounded-md font-semibold transition-colors flex-1 sm:flex-none text-white whitespace-nowrap ${isCopied ? 'bg-green-500' : 'bg-indigo-600 hover:bg-indigo-700'}`}
-                          >
-                            {isCopied ? t('UserProfile.copied', 'Copiato!') : t('UserProfile.copy', 'Copia Link')}
+                          > 
+                            {isCopied ? t('UserProfile.copied') : t('UserProfile.copy')}
                           </button>
-                          
                           {/* Pulsanti Condivisione Rapida */}
                           <a 
-                            href={`https://wa.me/?text=${encodeURIComponent('Iscriviti tramite il mio link: ' + referralLink)}`} 
-                            target="_blank" 
+                            href={`https://wa.me/?text=${encodeURIComponent(t('UserProfile.signUpViaMyLink') + referralLink)}`} 
+                            target="_blank"
                             rel="noopener noreferrer"
                             className="flex items-center justify-center p-2 rounded-md bg-[#25D366] text-white hover:bg-[#1EBE5D] transition-colors"
-                            title="Condividi su WhatsApp"
-                          >
+                            title={t('UserProfile.shareWhatsApp')}
+                          > 
                             <FiMessageCircle className="w-5 h-5" />
                           </a>
                           <a 
-                            href={`https://t.me/share/url?url=${encodeURIComponent(referralLink)}&text=${encodeURIComponent('Iscriviti tramite il mio link!')}`} 
-                            target="_blank" 
+                            href={`https://t.me/share/url?url=${encodeURIComponent(referralLink)}&text=${encodeURIComponent(t('UserProfile.signUpViaMyLinkExclaim'))}`} 
+                            target="_blank"
                             rel="noopener noreferrer"
                             className="flex items-center justify-center p-2 rounded-md bg-[#0088cc] text-white hover:bg-[#0077b5] transition-colors"
-                            title="Condividi su Telegram"
-                          >
+                            title={t('UserProfile.shareTelegram')}
+                          > 
                             <FiSend className="w-5 h-5" />
                           </a>
                           <a 
-                            href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(referralLink)}`} 
-                            target="_blank" 
+                            href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(referralLink)}`}
+                            target="_blank"
                             rel="noopener noreferrer"
                             className="flex items-center justify-center p-2 rounded-md bg-[#1877F2] text-white hover:bg-[#166FE5] transition-colors"
-                            title="Condividi su Facebook"
-                          >
+                            title={t('UserProfile.shareFacebook')}
+                          > 
                             <FiFacebook className="w-5 h-5" />
                           </a>
                         </div>
                       </div>
                     </div>
                   )}
-
+ 
                   {user.hasReferred && (
                     <div className="flex items-center gap-2 text-green-700 text-sm font-bold bg-green-50 p-4 rounded-md border border-green-200">
                       <FiCheckCircle className="w-5 h-5" />
-                      {t('UserProfile.rewardReceived', 'Hai già riscattato il tuo premio per questa promozione!')}
+                      {t('UserProfile.rewardReceived')}
                     </div>
                   )}
-
+ 
                   {referralError && (
                     <div className="p-3 bg-yellow-50 border border-yellow-200 text-yellow-800 rounded-md text-sm">
                       {referralError}
@@ -825,13 +801,13 @@ if (isDelegate) {
                 </div>
               </SettingsCard>
             )}
-
+ 
             {/* TAB ADMIN BULK */}
             {activeTab === 'admin' && user.role === 'admin' && (
-              <SettingsCard title="Invio Email Bulk" icon={<FiMail className="text-indigo-500 w-6 h-6" />}>
+              <SettingsCard title={t('UserProfile.adminBulkEmail')} icon={<FiMail className="text-indigo-500 w-6 h-6" />}>
                 <form onSubmit={handleSendBulkEmail} className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-slate-600 mb-1">Filtri (JSON)</label>
+                    <label className="block text-sm font-medium text-slate-600 mb-1">{t('UserProfile.filtersJson')}</label>
                     <textarea
                       value={bulkFilters}
                       onChange={(e) => setBulkFilters(e.target.value)}
@@ -841,34 +817,34 @@ if (isDelegate) {
                   </div>
                   <InputField
                     id="bulkEmails"
-                    label="Email esterne (separate da virgola)"
+                    label={t('UserProfile.externalEmails')}
                     value={bulkEmails}
                     onChange={(e) => setBulkEmails(e.target.value)}
-                    placeholder="esempio1@email.com, esempio2@email.com"
+                    placeholder={t('UserProfile.emailsPlaceholder')}
                   />
                   <InputField
                     id="bulkSubject"
-                    label="Oggetto"
+                    label={t('UserProfile.subject')}
                     value={bulkSubject}
                     onChange={(e) => setBulkSubject(e.target.value)}
                     required
                   />
                   <div>
-                    <label className="block text-sm font-medium text-slate-600 mb-1">Contenuto HTML</label>
+                    <label className="block text-sm font-medium text-slate-600 mb-1">{t('UserProfile.htmlContent')}</label>
                     <textarea
                       value={bulkHtml}
                       onChange={(e) => setBulkHtml(e.target.value)}
-                      placeholder="<h1>Ciao premium user</h1>"
+                      placeholder={t('UserProfile.htmlPlaceholder')}
                       className="w-full border-slate-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition-colors bg-white text-black p-2 h-32"
                       required
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-600 mb-1">Testuale (opzionale)</label>
+                    <label className="block text-sm font-medium text-slate-600 mb-1">{t('UserProfile.textContent')}</label>
                     <textarea
                       value={bulkText}
                       onChange={(e) => setBulkText(e.target.value)}
-                      placeholder="Ciao premium user, versione testuale"
+                      placeholder={t('UserProfile.textPlaceholder')}
                       className="w-full border-slate-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition-colors bg-white text-black p-2 h-24"
                     />
                   </div>
@@ -876,23 +852,23 @@ if (isDelegate) {
                     type="submit"
                     className="w-full sm:w-auto bg-indigo-600 text-white py-2 px-6 rounded-md font-semibold hover:bg-indigo-700 transition-colors"
                     disabled={sendingBulk}
-                  >
-                    {sendingBulk ? "Invio in corso..." : "Invia Email"}
+                  > 
+                    {sendingBulk ? t('UserProfile.sending') : t('UserProfile.sendEmail')}
                   </button>
                 </form>
                 {bulkResult && (
                   <div className="mt-4 p-4 bg-slate-50 border border-slate-200 rounded-md text-sm text-slate-700">
-                    Totale utenti: {bulkResult.total}, Inviate: {bulkResult.sent}, Fallite: {bulkResult.failed}
+                    {t('UserProfile.bulkResult', { total: bulkResult.total, sent: bulkResult.sent, failed: bulkResult.failed })}
                   </div>
                 )}
               </SettingsCard>
             )}
-
+ 
           </main>
         </div>
       </div>
     </div>
   );
 };
-
+ 
 export default UserProfile;

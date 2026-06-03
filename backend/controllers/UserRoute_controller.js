@@ -108,12 +108,23 @@ if (!isActive || plan === 'NEOPHYTE') {
     // --- NUOVA GESTIONE SOCIALS ---
     // Aggiungiamo i campi social all'oggetto 'updates'
     // Mongoose può gestire l'aggiornamento di campi nidificati usando la dot notation
-    if (userData.socialsFacebook !== undefined) {
-      updates['socials.facebook'] = userData.socialsFacebook.trim();
-    }
-    if (userData.socialsInstagram !== undefined) {
-      updates['socials.instagram'] = userData.socialsInstagram.trim();
-    }
+if (userData.socialsFacebook !== undefined) {
+  // Rimuove l'eventuale URL intero lasciando solo lo username
+  const cleanedFB = userData.socialsFacebook
+    .trim()
+    .replace(/^(https?:\/\/)?(www\.)?facebook\.com\//i, '')
+    .replace(/\/$/, '');
+  updates['socials.facebook'] = cleanedFB;
+}
+
+if (userData.socialsInstagram !== undefined) {
+  // Rimuove l'eventuale URL intero lasciando solo lo username
+  const cleanedIG = userData.socialsInstagram
+    .trim()
+    .replace(/^(https?:\/\/)?(www\.)?instagram\.com\//i, '')
+    .replace(/\/$/, '');
+  updates['socials.instagram'] = cleanedIG;
+}
     // --- FINE NUOVA GESTIONE ---
 
     const updatedUser = await User.findByIdAndUpdate(id, updates, { new: true });

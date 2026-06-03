@@ -27,7 +27,7 @@ const Footer = () => {
       setMessage(res.data.message);
       if (!user) setEmail(""); 
     } catch (err) {
-      setMessage(err.response?.data?.message || "Errore");
+      setMessage(err.response?.data?.message || t("footer.newsletter.error", "Errore"));
     } finally {
       setLoading(false);
     }
@@ -46,46 +46,44 @@ const Footer = () => {
               <span className="text-2xl font-bold font-serif">SnakeBee</span>
             </div>
             <p className="text-sm leading-relaxed text-gray-700 text-center md:text-left">
-              La tua piattaforma completa per l'allevamento di rettili. 
-              Monitoraggio e valorizzazione professionali.
+              {t("footer.desc", "La tua piattaforma completa per l'allevamento di rettili. Monitoraggio e valorizzazione professionali.")}
             </p>
           </div>
 
           {/* 2. ESPLORA */}
           <div className="flex flex-col items-center md:items-start">
-            <h5 className="font-bold text-sm uppercase tracking-wider mb-5">Esplora</h5>
+            <h5 className="font-bold text-sm uppercase tracking-wider mb-5">{t("footer.explore", "Esplora")}</h5>
             <ul className="space-y-4">
-              <FooterLink to="/shop" icon={FaBullhorn} label="Annunci" />
-              <FooterLink to="/blog" icon={FaRegNewspaper} label="Blog" />
-              <FooterLink to="/dashboard" icon={FaChartLine} label="Dashboard" />
-              <FooterLink to="/pricing" icon={FaCreditCard} label="Abbonamento" />
+              <FooterLink to="/shop" icon={FaBullhorn} label={t("navbar.shop", "Annunci")} />
+              <FooterLink to="/blog" icon={FaRegNewspaper} label={t("navbar.blog", "Blog")} />
+              <FooterLink to="/dashboard" icon={FaChartLine} label={t("navbar.dashboard", "Dashboard")} />
+              <FooterLink to="/pricing" icon={FaCreditCard} label={t("navbar.subscription", "Abbonamento")} />
             </ul>
           </div>
 
           {/* 3. SUPPORTO */}
           <div className="flex flex-col items-center md:items-start">
-            <h5 className="font-bold text-sm uppercase tracking-wider mb-5">Supporto & Risorse</h5>
+            <h5 className="font-bold text-sm uppercase tracking-wider mb-5">{t("footer.info", "Supporto & Risorse")}</h5>
             <ul className="space-y-4">
-              <FooterLink to="/home#contatti" icon={FaEnvelope} label="Contatti" />
-              <FooterLink to="/home#faq" icon={FaQuestionCircle} label="FAQ (Domande Frequenti)" />
-              <FooterLink to="/home#chi-siamo" icon={FaInfoCircle} label="Chi Siamo" />
+              <FooterLink to="/home#contatti" icon={FaEnvelope} label={t("footer.contact", "Contatti")} />
+              <FooterLink to="/home#faq" icon={FaQuestionCircle} label={t("footer.faq", "FAQ (Domande Frequenti)")} />
+              <FooterLink to="/home#chi-siamo" icon={FaInfoCircle} label={t("footer.whoWeAre", "Chi Siamo")} />
             </ul>
           </div>
 
-          {/* 4. NEWSLETTER (RIMPICCIOLITA) */}
+          {/* 4. NEWSLETTER */}
           <div className="flex flex-col items-center md:items-start">
-            <h5 className="font-bold text-sm uppercase tracking-wider mb-5">Resta Connesso</h5>
+            <h5 className="font-bold text-sm uppercase tracking-wider mb-5">{t("footer.follow", "Resta Connesso")}</h5>
             <p className="text-xs mb-3 text-gray-600 text-center md:text-left">
-              Iscriviti alla nostra Newsletter per aggiornamenti esclusivi.
+              {t("footer.newsletter.prompt", "Iscriviti alla nostra Newsletter per aggiornamenti esclusivi.")}
             </p>
             
-            {/* Input e Button più stretti (max-w-[260px]) */}
             <div className="flex w-full max-w-[260px]"> 
               <input 
                 type="email" 
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder={t("newsletter.placeholder", "La tua email")} 
+                placeholder={t("footer.newsletter.placeholder", "La tua email")} 
                 className="flex-1 bg-white border border-gray-300 px-3 py-1.5 text-xs rounded-l focus:outline-none focus:border-[#228B22] text-black"
               />
               <button 
@@ -93,12 +91,12 @@ const Footer = () => {
                 disabled={loading}
                 className="bg-white border border-gray-300 border-l-0 px-3 py-1.5 text-xs font-bold hover:bg-gray-50 transition-colors rounded-r disabled:opacity-50 whitespace-nowrap"
               >
-                {loading ? "..." : "Iscriviti"}
+                {loading ? "..." : t("footer.newsletter.subscribeBtn", "Iscriviti")}
               </button>
             </div>
             
             {message && (
-              <p className={`text-[10px] mt-2 font-semibold ${message.includes("Errore") ? "text-red-600" : "text-[#228B22]"}`}>
+              <p className={`text-[10px] mt-2 font-semibold ${message.includes("Errore") || message.includes("Error") ? "text-red-600" : "text-[#228B22]"}`}>
                 {message}
               </p>
             )}
@@ -121,14 +119,14 @@ const Footer = () => {
 
         <div className="border-t border-[#E5DCC3] pt-6 flex flex-col lg:flex-row justify-between items-center text-[11px] text-gray-500 gap-4 text-center lg:text-left">
           <div>
-            © 2025 SnakeBee – Simone Vaira | Sede: Via Varaita 10, Torino (TO) | P.IVA: 13308020018 | 
+            {t("footer.legalCopyright", "© 2025 SnakeBee – Simone Vaira | Sede: Via Varaita 10, Torino (TO) | P.IVA: 13308020018")} | 
             <a href="mailto:support@snakebee.it" className="ml-1 hover:text-[#228B22]">support@snakebee.it</a>
           </div>
           
           <div className="flex gap-4">
-            <Link to="/it/terms" className="hover:underline hover:text-[#228B22]">Termini e condizioni generali</Link>
+            <Link to={t("footer.legal.termsUrl", "/en/terms")} className="hover:underline hover:text-[#228B22]">{t("footer.legal.terms", "Termini e condizioni generali")}</Link>
             <span>|</span>
-            <Link to="/it/privacypolicy" className="hover:underline hover:text-[#228B22]">Politica sulla riservatezza</Link>
+            <Link to={t("footer.legal.privacyUrl", "/en/privacypolicy")} className="hover:underline hover:text-[#228B22]">{t("footer.legal.privacy", "Politica sulla riservatezza")}</Link>
           </div>
         </div>
 

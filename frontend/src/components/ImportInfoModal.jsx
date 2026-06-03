@@ -12,7 +12,6 @@ const ImportInfoModal = ({ show, onClose, onImport }) => {
 
     if (!show) return null;
 
-    // Intercettiamo il cambio file per gestire feedback e intercettare errori senza alert di sistema
     const handleFileChange = async (e) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -21,17 +20,13 @@ const ImportInfoModal = ({ show, onClose, onImport }) => {
         setIsUploading(true);
         
         try {
-            // Chiamiamo la funzione passata come prop
             await onImport(e);
-            // Se va a buon fine, ripuliamo gli stati locali prima della chiusura automatica
             setError(null);
         } catch (err) {
-            // Gestione dell'errore centralizzata (stringa o fallback dell'oggetto errore dell'API)
-            const errorMessage = err.response?.data?.message || err.message || "Errore durante l'importazione del file.";
+            const errorMessage = err.response?.data?.message || err.message || t('importAnimals.errors.default', 'Errore durante l\'importazione del file.');
             setError(errorMessage);
         } finally {
             setIsUploading(false);
-            // Resettiamo il valore dell'input per permettere lo stesso file in caso di correzione rapida
             e.target.value = "";
         }
     };
@@ -49,7 +44,7 @@ const ImportInfoModal = ({ show, onClose, onImport }) => {
                 {/* Header */}
                 <div className="p-6 bg-forest text-white flex justify-between items-center">
                     <h2 className="text-xl font-bold flex items-center gap-2.5">
-                        <FaFileExcel className="text-emerald-300" /> Importazione Massiva Rettili
+                        <FaFileExcel className="text-emerald-300" /> {t('importAnimals.title', 'Importazione Massiva Rettili')}
                     </h2>
                     <button 
                         onClick={handleModalClose} 
@@ -63,12 +58,12 @@ const ImportInfoModal = ({ show, onClose, onImport }) => {
                 {/* Body (Scrollabile) */}
                 <div className="p-6 overflow-y-auto text-charcoal space-y-6">
                     
-                    {/* BANNER NOTIFICA ERRORE (Sostituisce l'alert di sistema) */}
+                    {/* BANNER NOTIFICA ERRORE */}
                     {error && (
                         <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-r-xl animate-fade-in flex gap-3 items-start">
                             <FaExclamationTriangle className="text-red-500 shrink-0 mt-0.5" size={18} />
                             <div className="text-sm">
-                                <h4 className="font-bold text-red-800 mb-0.5">Impossibile completare l'importazione</h4>
+                                <h4 className="font-bold text-red-800 mb-0.5">{t('importAnimals.errors.title', 'Impossibile completare l\'importazione')}</h4>
                                 <p className="text-red-700 font-medium leading-relaxed">{error}</p>
                             </div>
                         </div>
@@ -78,22 +73,22 @@ const ImportInfoModal = ({ show, onClose, onImport }) => {
                     <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-xl flex gap-3 items-start">
                         <FaInfoCircle className="text-blue-500 shrink-0 mt-0.5" size={18} />
                         <p className="text-sm text-blue-800 leading-relaxed">
-                            Prepara un file Excel (<span className="font-semibold">.xlsx</span>) o <span className="font-semibold">CSV</span>. La prima riga deve contenere le intestazioni delle colonne. Il sistema mappa i campi in modo intelligente, ma ti consigliamo di seguire lo schema sottostante.
+                            {t('importAnimals.infoAlert', 'Prepara un file Excel (.xlsx) o CSV. La prima riga deve contenere le intestazioni delle colonne. Il sistema mappa i campi in modo intelligente, ma ti consigliamo di seguire lo schema sottostante.')}
                         </p>
                     </div>
 
                     {/* Card Download Template */}
                     <div className="bg-sand/40 border border-sand p-4 rounded-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                         <div className="space-y-0.5">
-                            <h4 className="font-bold text-sm text-charcoal">Hai bisogno di una base di partenza?</h4>
-                            <p className="text-xs text-charcoal/60">Scarica il file pre-compilato con le intestazioni corrette e i dati di esempio.</p>
+                            <h4 className="font-bold text-sm text-charcoal">{t('importAnimals.templateCard.title', 'Hai bisogno di una base di partenza?')}</h4>
+                            <p className="text-xs text-charcoal/60">{t('importAnimals.templateCard.subtitle', 'Scarica il file pre-compilato con le intestazioni corrette e i dati di esempio.')}</p>
                         </div>
                         <a 
                             href="/template_importazione_rettili.xlsx" 
                             download="Template_Importazione_Rettili.xlsx"
                             className="inline-flex items-center gap-2 bg-white hover:bg-gray-50 border border-gray-300 rounded-xl px-4 py-2.5 text-xs font-bold text-forest shadow-sm hover:shadow transition-all no-underline shrink-0"
                         >
-                            <FaClipboardList className="text-emerald-600" /> Scarica Modello Excel
+                            <FaClipboardList className="text-emerald-600" /> {t('importAnimals.templateCard.button', 'Scarica Modello Excel')}
                         </a>
                     </div>
 
@@ -101,32 +96,32 @@ const ImportInfoModal = ({ show, onClose, onImport }) => {
                     <div className="space-y-3">
                         <h3 className="font-bold text-md text-olive flex items-center gap-2">
                             <span className="bg-olive/10 text-olive text-xs h-5 w-5 rounded-full inline-flex items-center justify-center font-bold">1</span>
-                            Campi Principali
+                            {t('importAnimals.sections.mainFields', 'Campi Principali')}
                         </h3>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm bg-gray-50 p-4 rounded-xl border border-gray-100">
                             <div className="flex items-center gap-2">
                                 <FaCheckCircle className="text-red-500 shrink-0" size={14} />
-                                <span><strong className="font-mono bg-white px-1.5 py-0.5 rounded border border-gray-200">specie</strong> <span className="text-xs text-red-500 font-semibold">(Obbligatorio)</span></span>
+                                <span><strong className="font-mono bg-white px-1.5 py-0.5 rounded border border-gray-200">specie</strong> <span className="text-xs text-red-500 font-semibold">({t('importAnimals.fields.required', 'Obbligatorio')})</span></span>
                             </div>
                             <div className="flex items-center gap-2">
                                 <FaCheckCircle className="text-red-500 shrink-0" size={14} />
-                                <span><strong className="font-mono bg-white px-1.5 py-0.5 rounded border border-gray-200">sesso</strong> <span className="text-xs text-red-500 font-semibold">(Obbligatorio: M, F, Unknown)</span></span>
+                                <span><strong className="font-mono bg-white px-1.5 py-0.5 rounded border border-gray-200">sesso</strong> <span className="text-xs text-red-500 font-semibold">({t('importAnimals.fields.sexRequired', 'Obbligatorio: M, F, Unknown')})</span></span>
                             </div>
                             <div className="flex items-center gap-2">
                                 <FaCheckCircle className="text-gray-400 shrink-0" size={14} />
-                                <span><strong className="font-mono bg-white px-1.5 py-0.5 rounded border border-gray-200">nome</strong> <span className="text-xs text-charcoal/40">(Opzionale)</span></span>
+                                <span><strong className="font-mono bg-white px-1.5 py-0.5 rounded border border-gray-200">nome</strong> <span className="text-xs text-charcoal/40">({t('importAnimals.fields.optional', 'Opzionale')})</span></span>
                             </div>
                             <div className="flex items-center gap-2">
                                 <FaCheckCircle className="text-gray-400 shrink-0" size={14} />
-                                <span><strong className="font-mono bg-white px-1.5 py-0.5 rounded border border-gray-200">morph</strong> <span className="text-xs text-charcoal/40">(Opzionale)</span></span>
+                                <span><strong className="font-mono bg-white px-1.5 py-0.5 rounded border border-gray-200">morph</strong> <span className="text-xs text-charcoal/40">({t('importAnimals.fields.optional', 'Opzionale')})</span></span>
                             </div>
                             <div className="flex items-center gap-2">
                                 <FaCheckCircle className="text-gray-400 shrink-0" size={14} />
-                                <span><strong className="font-mono bg-white px-1.5 py-0.5 rounded border border-gray-200">nascita</strong> <span className="text-xs text-charcoal/40">(Formato data: GG/MM/AAAA)</span></span>
+                                <span><strong className="font-mono bg-white px-1.5 py-0.5 rounded border border-gray-200">nascita</strong> <span className="text-xs text-charcoal/40">({t('importAnimals.fields.dateFormat', 'Formato data: GG/MM/AAAA')})</span></span>
                             </div>
                             <div className="flex items-center gap-2">
                                 <FaCheckCircle className="text-gray-400 shrink-0" size={14} />
-                                <span><strong className="font-mono bg-white px-1.5 py-0.5 rounded border border-gray-200">tipo cibo</strong> / <strong className="font-mono bg-white px-1.5 py-0.5 rounded border border-gray-200">peso cibo</strong></span>
+                                <span><strong className="font-mono bg-white px-1.5 py-0.5 rounded border border-gray-200">{t('importAnimals.fields.foodType', 'tipo cibo')}</strong> / <strong className="font-mono bg-white px-1.5 py-0.5 rounded border border-gray-200">{t('importAnimals.fields.foodWeight', 'peso cibo')}</strong></span>
                             </div>
                         </div>
                     </div>
@@ -135,38 +130,38 @@ const ImportInfoModal = ({ show, onClose, onImport }) => {
                     <div className="space-y-3">
                         <h3 className="font-bold text-md text-olive flex items-center gap-2">
                             <span className="bg-olive/10 text-olive text-xs h-5 w-5 rounded-full inline-flex items-center justify-center font-bold">2</span>
-                            Campi Avanzati e Annidati
+                            {t('importAnimals.sections.advancedFields', 'Campi Avanzati e Annidati')}
                         </h3>
-                        <p className="text-xs text-charcoal/60">Per associare dati contabili, genealogici o sanitari usa queste esatte intestazioni:</p>
+                        <p className="text-xs text-charcoal/60">{t('importAnimals.sections.advancedFieldsDesc', 'Per associare dati contabili, genealogici o sanitari usa queste esatte intestazioni:')}</p>
                         
                         <div className="overflow-hidden border border-gray-200 rounded-xl shadow-sm">
                             <table className="w-full text-xs text-left border-collapse">
                                 <thead>
                                     <tr className="bg-sand text-charcoal font-bold border-b border-gray-200">
-                                        <th className="p-3 w-5/12">Intestazione Excel</th>
-                                        <th className="p-3 w-7/12">Proprietà Database Assegnata</th>
+                                        <th className="p-3 w-5/12">{t('importAnimals.table.headerExcel', 'Intestazione Excel')}</th>
+                                        <th className="p-3 w-7/12">{t('importAnimals.table.headerDb', 'Proprietà Database Assegnata')}</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-100">
                                     <tr className="hover:bg-gray-50 transition-colors">
-                                        <td className="p-3 font-mono font-bold text-forest bg-gray-50/50">prezzo acquisto</td>
-                                        <td className="p-3 text-charcoal/80">Costo d'acquisto iniziale dell'animale</td>
+                                        <td className="p-3 font-mono font-bold text-forest bg-gray-50/50">{t('importAnimals.table.headers.purchasePrice', 'prezzo acquisto')}</td>
+                                        <td className="p-3 text-charcoal/80">{t('importAnimals.table.descriptions.purchasePrice', "Costo d'acquisto iniziale dell'animale")}</td>
                                     </tr>
                                     <tr className="hover:bg-gray-50 transition-colors">
-                                        <td className="p-3 font-mono font-bold text-forest bg-gray-50/50">prezzo</td>
-                                        <td className="p-3 text-charcoal/80">Prezzo o valore stimato per la vendita</td>
+                                        <td className="p-3 font-mono font-bold text-forest bg-gray-50/50">{t('importAnimals.table.headers.price', 'prezzo')}</td>
+                                        <td className="p-3 text-charcoal/80">{t('importAnimals.table.descriptions.price', 'Prezzo o valore stimato per la vendita')}</td>
                                     </tr>
                                     <tr className="hover:bg-gray-50 transition-colors">
-                                        <td className="p-3 font-mono font-bold text-forest bg-gray-50/50">padre / madre</td>
-                                        <td className="p-3 text-charcoal/80">Identificativo dei genitori per l'albero genealogico</td>
+                                        <td className="p-3 font-mono font-bold text-forest bg-gray-50/50">{t('importAnimals.table.headers.parents', 'padre / madre')}</td>
+                                        <td className="p-3 text-charcoal/80">{t('importAnimals.table.descriptions.parents', "Identificativo dei genitori per l'albero genealogico")}</td>
                                     </tr>
                                     <tr className="hover:bg-gray-50 transition-colors">
-                                        <td className="p-3 font-mono font-bold text-forest bg-gray-50/50">numero cites</td>
-                                        <td className="p-3 text-charcoal/80">Codice del documento CITES o di protocollo</td>
+                                        <td className="p-3 font-mono font-bold text-forest bg-gray-50/50">{t('importAnimals.table.headers.cites', 'numero cites')}</td>
+                                        <td className="p-3 text-charcoal/80">{t('importAnimals.table.descriptions.cites', 'Codice del documento CITES o di protocollo')}</td>
                                     </tr>
                                     <tr className="hover:bg-gray-50 transition-colors">
-                                        <td className="p-3 font-mono font-bold text-forest bg-gray-50/50">microchip</td>
-                                        <td className="p-3 text-charcoal/80">Codice identificativo del transponder/chip</td>
+                                        <td className="p-3 font-mono font-bold text-forest bg-gray-50/50">{t('importAnimals.table.headers.microchip', 'microchip')}</td>
+                                        <td className="p-3 text-charcoal/80">{t('importAnimals.table.descriptions.microchip', 'Codice identificativo del transponder/chip')}</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -175,14 +170,14 @@ const ImportInfoModal = ({ show, onClose, onImport }) => {
 
                 </div>
 
-                {/* Footer (Azione di caricamento) */}
+                {/* Footer */}
                 <div className="p-4 border-t border-sand bg-gray-50 flex justify-end items-center gap-3">
                     <button 
                         onClick={handleModalClose}
                         className="px-5 py-2.5 rounded-xl font-semibold text-sm bg-white border border-gray-300 hover:bg-gray-50 text-charcoal transition-all"
                         disabled={isUploading}
                     >
-                        Annulla
+                        {t('importAnimals.buttons.cancel', 'Annulla')}
                     </button>
                     
                     <label className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold shadow-md transform transition-all select-none ${
@@ -192,11 +187,11 @@ const ImportInfoModal = ({ show, onClose, onImport }) => {
                     }`}>
                         {isUploading ? (
                             <>
-                                <FaSpinner className="animate-spin" /> Elaborazione file...
+                                <FaSpinner className="animate-spin" /> {t('importAnimals.buttons.processing', 'Elaborazione file...')}
                             </>
                         ) : (
                             <>
-                                <FaUpload /> Scegli File e Importa
+                                <FaUpload /> {t('importAnimals.buttons.upload', 'Scegli File e Importa')}
                             </>
                         )}
                         <input 

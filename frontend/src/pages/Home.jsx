@@ -30,20 +30,21 @@ const FeatureGroup = ({ title, description, features, videoSrc, reverse }) => (
             <img 
                 autoPlay loop muted playsInline 
                 className="w-full h-full object-cover opacity-90"
-            src={videoSrc}
-            >
-            </img>
+                src={videoSrc}
+                alt={title}
+            />
         </div>
     </div>
 );
 
 // --- SEZIONE STATISTICHE DELLA COMMUNITY (Live Stats) ---
 const CommunityStats = () => {
-    // In futuro puoi sostituire questi dati statici con una chiamata axios (es. /api/stats)
+    const { t } = useTranslation();
+
     const stats = [
-        { label: "Rettili Registrati", value: "300+" },
-        { label: "Pasti Tracciati", value: "2.500+" },
-        { label: "Documenti CITES generati", value: "60+" },
+        { label: t('home.stats.reptiles', 'Rettili Registrati'), value: "300+" },
+        { label: t('home.stats.meals', 'Pasti Tracciati'), value: "2.500+" },
+        { label: t('home.stats.cites', 'Documenti CITES generati'), value: "60+" },
     ];
 
     return (
@@ -64,6 +65,7 @@ const CommunityStats = () => {
 
 // --- SEZIONE CLASSIFICHE COMPATTA ---
 const CompactLeaderboard = () => {
+    const { t } = useTranslation();
     const [data, setData] = useState(null);
 
     useEffect(() => {
@@ -85,7 +87,7 @@ const CompactLeaderboard = () => {
                 <h4 className="font-bold text-slate-800 uppercase text-xs tracking-widest">{title}</h4>
             </div>
             <div className="space-y-2">
-                {items.slice(0, 5).map((item, i) => (
+                {items?.slice(0, 5).map((item, i) => (
                     <div key={i} className="flex items-center justify-between p-2 rounded-lg hover:bg-slate-50 transition-colors">
                         <div className="flex items-center gap-3">
                             <span className={`text-xs font-bold w-5 ${i === 0 ? 'text-amber-500' : 'text-slate-400'}`}>#{i+1}</span>
@@ -103,11 +105,11 @@ const CompactLeaderboard = () => {
     return (
         <section className="py-12 border-y ">
             <div className="container mx-auto px-6">
-                <h2 className="text-2xl font-black text-center mb-8">La nostra Community</h2>
+                <h2 className="text-2xl font-black text-center mb-8">{t('home.leaderboard.title', 'La nostra Community')}</h2>
                 <div className="flex flex-wrap gap-6 justify-center">
-                    <Board title="Top Allevatori" items={data.topKeepers} icon={Trophy} unit="🐍" color="text-amber-500" />
-                    <Board title="Più Attivi" items={data.topActive} icon={Activity} unit="🔥" color="text-blue-500" />
-                    <Board title="Aiutanti" items={data.topReferrers} icon={Star} unit="✨" color="text-purple-500" />
+                    <Board title={t('home.leaderboard.keepers', 'Top Allevatori')} items={data.topKeepers} icon={Trophy} unit="🐍" color="text-amber-500" />
+                    <Board title={t('home.leaderboard.active', 'Più Attivi')} items={data.topActive} icon={Activity} unit="🔥" color="text-blue-500" />
+                    <Board title={t('home.leaderboard.helpers', 'Aiutanti')} items={data.topReferrers} icon={Star} unit="✨" color="text-purple-500" />
                 </div>
             </div>
         </section>
@@ -116,16 +118,33 @@ const CompactLeaderboard = () => {
 
 // --- SEZIONE TESTIMONIAL ---
 const Testimonials = () => {
+    const { t } = useTranslation();
+
     const reviews = [
-        { name: "Marco R.", role: "Allevatore Professionista", text: "Finalmente un software che parla la nostra lingua. La gestione CITES mi risparmia ore di lavoro ogni mese.", stars: 5 },
-        { name: "Sara V.", role: "Appassionata", text: "Il bot Telegram è la svolta. Posso segnare i pasti mentre sono in allevamento senza toccare il PC.", stars: 5 },
-        { name: "Luca T.", role: "Vendor", text: "Professionale, intuitivo e completo. Il QR Code su ogni teca dà un'immagine pazzesca ai miei clienti.", stars: 5 },
+        { 
+            name: "Marco R.", 
+            role: t('home.testimonials.roles.pro', 'Allevatore Professionista'), 
+            text: t('home.testimonials.reviews.marco', 'Finalmente un software che parla la nostra lingua. La gestione CITES mi risparmia ore di lavoro ogni mese.'), 
+            stars: 5 
+        },
+        { 
+            name: "Sara V.", 
+            role: t('home.testimonials.roles.hobbyist', 'Appassionata'), 
+            text: t('home.testimonials.reviews.sara', 'Il bot Telegram è la svolta. Posso segnare i pasti mentre sono in allevamento senza toccare il PC.'), 
+            stars: 5 
+        },
+        { 
+            name: "Luca T.", 
+            role: t('home.testimonials.roles.vendor', 'Vendor'), 
+            text: t('home.testimonials.reviews.luca', "Professionale, intuitivo e completo. Il QR Code su ogni teca dà un'immagine pazzesca ai miei clienti."), 
+            stars: 5 
+        },
     ];
 
     return (
         <section className="py-20">
             <div className="container mx-auto px-6 text-center">
-                <h2 className="text-3xl font-black mb-12">Cosa dicono gli abbonati</h2>
+                <h2 className="text-3xl font-black mb-12">{t('home.testimonials.title', 'Cosa dicono gli abbonati')}</h2>
                 <div className="grid md:grid-cols-3 gap-8">
                     {reviews.map((rev, i) => (
                         <div key={i} className="p-8 rounded-3xl relative text-left border border-amber-100 bg-white shadow-sm hover:shadow-md transition-shadow">
@@ -147,61 +166,60 @@ const Testimonials = () => {
 };
 
 // --- SEZIONE PREZZI & PIANI ---
-// --- SEZIONE PREZZI & PIANI ---
 const PricingSection = () => {
-    // Sostituisci questi dati con i testi esatti della tua immagine
+    const { t } = useTranslation();
+
     const plans = [
         {
-            name: "Neofita",
+            name: t('home.pricing.plans.neofita.name', 'Neofita'),
             price: "0€",
-            period: "/ mese",
-            description: "L'essenziale per iniziare a tracciare i tuoi primi animali.",
+            period: t('home.pricing.period', '/ mese'),
+            description: t('home.pricing.plans.neofita.desc', "L'essenziale per iniziare a tracciare i tuoi primi animali."),
             features: [
-                "Fino a 5 animali",
-                "Registrazione pasti e mute",
-                "Statistiche di base",
-                "Generazione documenti CITES",
+                t('home.pricing.plans.neofita.f1', 'Fino a 5 animali'),
+                t('home.pricing.plans.neofita.f2', 'Registrazione pasti e mute'),
+                t('home.pricing.plans.neofita.f3', 'Statistiche di base'),
+                t('home.pricing.plans.neofita.f4', 'Generazione documenti CITES'),
             ],
-            cta: "Inizia Gratis",
+            cta: t('home.pricing.plans.neofita.cta', 'Inizia Gratis'),
             highlighted: false
         },
         {
-            name: "Praticante",
-            price: "6.99€", // Cambia con il tuo prezzo
-            period: "/ mese",
-            description: "Il piano perfetto per un piccolo allevamento",
+            name: t('home.pricing.plans.praticante.name', 'Praticante'),
+            price: "6.99€",
+            period: t('home.pricing.period', '/ mese'),
+            description: t('home.pricing.plans.praticante.desc', 'Il piano perfetto per un piccolo allevamento'),
             features: [
-                "Fino a 50 animali",
-                "Bot Telegram incluso",
-                "Gestione riproduzioni"
+                t('home.pricing.plans.praticante.f1', 'Fino a 50 animali'),
+                t('home.pricing.plans.praticante.f2', 'Bot Telegram incluso'),
+                t('home.pricing.plans.praticante.f3', 'Gestione riproduzioni')
             ],
-            cta: "Prova SnakeBee",
+            cta: t('home.pricing.plans.praticante.cta', 'Prova SnakeBee'),
             highlighted: false
         },
         {
-            name: "Allevatore",
-            price: "14.99€", // Cambia con il tuo prezzo
-            period: "/ mese",
-            description: "Nessun limite. Il massimo per il tuo allevamento professionale.",
+            name: t('home.pricing.plans.allevatore.name', 'Allevatore'),
+            price: "14.99€",
+            period: t('home.pricing.period', '/ mese'),
+            description: t('home.pricing.plans.allevatore.desc', 'Nessun limite. Il massimo per il tuo allevamento professionale.'),
             features: [
-                "Animali ILLIMITATI",
-                "Inventario cibo",
-                "QR Code per i tuoi animali",
-                "Gestione finanziaria del tuo allevamento",
-                "Accesso multi-dispositivo"
-
+                t('home.pricing.plans.allevatore.f1', 'Animali ILLIMITATI'),
+                t('home.pricing.plans.allevatore.f2', 'Inventario cibo'),
+                t('home.pricing.plans.allevatore.f3', 'QR Code per i tuoi animali'),
+                t('home.pricing.plans.allevatore.f4', 'Gestione finanziaria del tuo allevamento'),
+                t('home.pricing.plans.allevatore.f5', 'Accesso multi-dispositivo')
             ],
-            cta: "Scegli il meglio",
+            cta: t('home.pricing.plans.allevatore.cta', 'Scegli il meglio'),
             highlighted: false
         }
     ];
 
     return (
-        <section id="pricing" className="py-24  border-t">
+        <section id="pricing" className="py-24 border-t">
             <div className="container mx-auto px-6 max-w-6xl text-center">
-                <h2 className="text-4xl font-black text-slate-900 mb-4">Scegli il piano giusto per te</h2>
+                <h2 className="text-4xl font-black text-slate-900 mb-4">{t('home.pricing.title', 'Scegli il piano giusto per te')}</h2>
                 <p className="text-slate-600 mb-12 max-w-2xl mx-auto text-lg">
-                    Inizia gratuitamente, fai l'upgrade quando il tuo allevamento cresce. Tutti i piani a pagamento includono una prova di 14 giorni, senza vincoli.
+                    {t('home.pricing.subtitle', "Inizia gratuitamente, fai l'upgrade quando il tuo allevamento cresce. Tutti i piani a pagamento includono una prova di 14 giorni, senza vincoli.")}
                 </p>
                 
                 <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
@@ -216,7 +234,7 @@ const PricingSection = () => {
                         >
                             {plan.highlighted && (
                                 <div className="absolute top-0 right-6 transform -translate-y-1/2 bg-amber-500 text-slate-900 text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-wider shadow-lg">
-                                    Il Più Scelto
+                                    {t('home.pricing.mostPopular', 'Il Più Scelto')}
                                 </div>
                             )}
                             
@@ -228,7 +246,7 @@ const PricingSection = () => {
                             </p>
                             
                             <div className={`text-5xl font-black mb-6 ${plan.highlighted ? 'text-white' : 'text-slate-900'}`}>
-                                {plan.price} <span className={`text-lg font-normal ${plan.highlighted ? 'text-slate-400' : 'text-slate-400'}`}>{plan.period}</span>
+                                {plan.price} <span className="text-lg font-normal text-slate-400">{plan.period}</span>
                             </div>
                             
                             <ul className="space-y-4 mb-8 flex-1">
@@ -260,84 +278,37 @@ const PricingSection = () => {
 
 // --- SEZIONE FAQ ---
 const FAQSection = () => {
-        const [openIndex, setOpenIndex] = useState(null);
+    const { t } = useTranslation();
+    const [openIndex, setOpenIndex] = useState(null);
 
-const faqs = [
-    {
-        q: "Quanti rettili posso aggiungere sul mio account?",
-        a: "Il numero massimo dipende dal piano attivo. Neofita: fino a 5 rettili. Praticante: fino a 50 rettili. Allevatore: rettili illimitati. Una volta raggiunto il limite, SnakeBee ti inviterà a effettuare l'upgrade."
-    },
-    {
-        q: "Posso caricare più immagini per lo stesso rettile?",
-        a: "Sì. Con il piano Neofita puoi caricare 1 immagine. Con il piano Praticante fino a 3 immagini. Con il piano Allevatore fino a 10 immagini per creare una vera e propria galleria fotografica."
-    },
-    {
-        q: "Come funziona la compilazione automatica e manuale del documento CITES?",
-        a: "SnakeBee genera PDF precompilati utilizzando i dati salvati nella scheda del rettile. Se possiedi documenti personalizzati, puoi caricarli dalla sezione 'Aggiorna File CITES' presente nella modifica del rettile."
-    },
-    {
-        q: "Che cos'è l'Automazione Post-Nascita?",
-        a: "Dopo aver registrato una schiusa o una nascita nella sezione Accoppiamenti, SnakeBee crea automaticamente le schede dei nuovi nati compilando i dati principali."
-    },
-    {
-        q: "Posso registrare un pasto contemporaneamente per più rettili?",
-        a: "Sì. Ti basta selezionare gli animali interessati e utilizzare il pulsante 'Alimenta selezionati'. Il sistema aggiornerà automaticamente i diari alimentari di tutti gli esemplari scelti."
-    },
-    {
-        q: "In cosa consiste l'Inventario del Cibo?",
-        a: "È un magazzino virtuale per gestire le tue scorte alimentari. Quando registri un pasto, SnakeBee scala automaticamente la quantità consumata e ti avvisa quando le scorte stanno terminando."
-    },
-    {
-        q: "Il sistema può suggerirmi quando e quanto dare da mangiare al mio rettile?",
-        a: "Sì. Grazie alla funzione Suggerimenti Alimentari, SnakeBee analizza lo storico delle alimentazioni e suggerisce la taglia ideale della preda disponibile nel tuo inventario."
-    },
-    {
-        q: "Posso registrarmi o accedere tramite Google?",
-        a: "Sì. Puoi utilizzare il pulsante 'Accedi con Google' per registrarti o effettuare il login senza dover creare una password dedicata."
-    },
-    {
-        q: "Ho dimenticato la password, come posso recuperarla?",
-        a: "Dalla schermata di login clicca su 'Password dimenticata?'. Riceverai via email un codice temporaneo che ti consentirà di impostare una nuova password."
-    },
-    {
-        q: "Posso condividere la gestione del mio allevamento con un collaboratore?",
-        a: "Sì, tramite la funzione Team disponibile nel piano Allevatore. Potrai invitare collaboratori o soci e assegnare loro l'accesso al tuo workspace."
-    },
-    {
-        q: "Come posso cancellare o modificare il mio abbonamento premium?",
-        a: "Tutti gli abbonamenti sono gestiti tramite Stripe. Dalla sezione Abbonamento del profilo potrai modificare il piano, aggiornare il metodo di pagamento o disattivare il rinnovo automatico."
-    },
-    {
-        q: "A cosa serve l'integrazione con Telegram e come si attiva?",
-        a: "Cerca il bot @snakebee_bot su Telegram e segui la procedura guidata di collegamento. Riceverai notifiche e potrai registrare pasti, mute e pesate direttamente dalla chat."
-    },
-    {
-        q: "Come funziona il sistema dei promemoria?",
-        a: "Quando pianifichi un evento nel calendario, SnakeBee invia notifiche automatiche via email per ricordarti attività importanti come pulizie, visite veterinarie o integrazioni."
-    },
-    {
-        q: "Posso tenere traccia delle spese e dei guadagni del mio allevamento?",
-        a: "Sì. La sezione Gestione Finanziaria ti permette di registrare costi, entrate e vendite, fornendo una panoramica completa dell'andamento economico."
-    },
-    {
-        q: "I miei dati sono al sicuro?",
-        a: "Assolutamente sì. I tuoi dati sono crittografati, conservati su server protetti e accessibili esclusivamente al proprietario dell'account."
-    },
-    {
-        q: "Serve installare un'applicazione?",
-        a: "No. SnakeBee è una piattaforma cloud accessibile da PC, tablet e smartphone direttamente dal browser."
-    }
-];
+    const faqs = [
+        { q: t('home.faq.q1', "Quanti rettili posso aggiungere sul mio account?"), a: t('home.faq.a1', "Il numero massimo dipende dal piano attivo. Neofita: fino a 5 rettili. Praticante: fino a 50 rettili. Allevatore: rettili illimitati. Una volta raggiunto il limite, SnakeBee ti inviterà a effettuare l'upgrade.") },
+        { q: t('home.faq.q2', "Posso caricare più immagini per lo stesso rettile?"), a: t('home.faq.a2', "Sì. Con il piano Neofita puoi caricare 1 immagine. Con il piano Praticante fino a 3 immagini. Con il piano Allevatore fino a 10 immagini per creare una vera e propria galleria fotografica.") },
+        { q: t('home.faq.q3', "Come funziona la compilazione automatica e manuale del documento CITES?"), a: t('home.faq.a3', "SnakeBee genera PDF precompilati utilizzando i dati salvati nella scheda del rettile. Se possiedi documenti personalizzati, puoi caricarli dalla sezione 'Aggiorna File CITES' presente nella modifica del rettile.") },
+        { q: t('home.faq.q4', "Che cos'è l'Automazione Post-Nascita?"), a: t('home.faq.a4', "Dopo aver registrato una schiusa o una nascita nella sezione Accoppiamenti, SnakeBee crea automaticamente le schede dei nuovi nati compilando i dati principali.") },
+        { q: t('home.faq.q5', "Posso registrare un pasto contemporaneamente per più rettili?"), a: t('home.faq.a5', "Sì. Ti basta selezionare gli animali interessati e utilizzare il pulsante 'Alimenta selezionati'. Il sistema aggiornerà automaticamente i diari alimentari di tutti gli esemplari scelti.") },
+        { q: t('home.faq.q6', "In cosa consiste l'Inventario del Cibo?"), a: t('home.faq.a6', "È un magazzino virtuale per gestire le tue scorte alimentari. Quando registri un pasto, SnakeBee scala automaticamente la quantità consumata e ti avvisa quando le scorte stanno terminando.") },
+        { q: t('home.faq.q7', "Il sistema può suggerirmi quando e quanto dare da mangiare al mio rettile?"), a: t('home.faq.a7', "Sì. Grazie alla funzione Suggerimenti Alimentari, SnakeBee analizza lo storico delle alimentazioni e suggerisce la taglia ideale della preda disponibile nel tuo inventario.") },
+        { q: t('home.faq.q8', "Posso registrarmi o accedere tramite Google?"), a: t('home.faq.a8', "Sì. Puoi utilizzare il pulsante 'Accedi con Google' per registrarti o effettuare il login senza dover creare una password dedicata.") },
+        { q: t('home.faq.q9', "Ho dimenticato la password, come posso recuperarla?"), a: t('home.faq.a9', "Dalla schermata di login clicca su 'Password dimenticata?'. Riceverai via email un codice temporaneo che ti consentirà di impostare una nuova password.") },
+        { q: t('home.faq.q10', "Posso condividere la gestione del mio allevamento con un collaboratore?"), a: t('home.faq.a10', "Sì, tramite la funzione Team disponibile nel piano Allevatore. Potrai invitare collaboratori o soci e assegnare loro l'accesso al tuo workspace.") },
+        { q: t('home.faq.q11', "Come posso cancellare o modificare il mio abbonamento premium?"), a: t('home.faq.a11', "Tutti gli abbonamenti sono gestiti tramite Stripe. Dalla sezione Abbonamento del profilo potrai modificare il piano, aggiornare il metodo di pagamento o disattivare il rinnovo automatico.") },
+        { q: t('home.faq.q12', "A cosa serve l'integrazione con Telegram e come si attiva?"), a: t('home.faq.a12', "Cerca il bot @snakebee_bot su Telegram e segui la procedura guidata di collegamento. Riceverai notifiche e potrai registrare pasti, mute e pesate direttamente dalla chat.") },
+        { q: t('home.faq.q13', "Come funziona il sistema dei promemoria?"), a: t('home.faq.a13', "Quando pianifichi un evento nel calendario, SnakeBee invia notifiche automatiche via email per ricordarti attività importanti come pulizie, visite veterinarie o integrazioni.") },
+        { q: t('home.faq.q14', "Posso tenere traccia delle spese e dei guadagni del mio allevamento?"), a: t('home.faq.a14', "Sì. La sezione Gestione Finanziaria ti permette di registrare costi, entrate e vendite, fornendo una panoramica completa dell'andamento economico.") },
+        { q: t('home.faq.q15', "I miei dati sono al sicuro?"), a: t('home.faq.a15', "Assolutamente sì. I tuoi dati sono crittografati, conservati su server protetti e accessibili esclusivamente al proprietario dell'account.") },
+        { q: t('home.faq.q16', "Serve installare un'applicazione?"), a: t('home.faq.a16', "No. SnakeBee è una piattaforma cloud accessibile da PC, tablet e smartphone direttamente dal browser.") }
+    ];
 
-   return (
+    return (
         <section className="py-24">
             <div className="container mx-auto px-6 max-w-4xl">
                 <div className="text-center mb-16">
                     <h2 className="text-4xl font-black text-slate-900 mb-4">
-                        Domande Frequenti
+                        {t('home.faq.title', 'Domande Frequenti')}
                     </h2>
                     <p className="text-slate-600 text-lg">
-                        Hai dubbi? Ecco le risposte alle domande più comuni della nostra community.
+                        {t('home.faq.subtitle', 'Hai dubbi? Ecco le risposte alle domande più comuni della nostra community.')}
                     </p>
                 </div>
 
@@ -346,39 +317,21 @@ const faqs = [
                         const isOpen = openIndex === i;
 
                         return (
-                            <div
-                                key={i}
-                                className="bg-white rounded-2xl border border-slate-200 overflow-hidden"
-                            >
+                            <div key={i} className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
                                 <button
-                                    onClick={() =>
-                                        setOpenIndex(isOpen ? null : i)
-                                    }
+                                    onClick={() => setOpenIndex(isOpen ? null : i)}
                                     className="w-full p-6 flex items-center justify-between text-left hover:bg-slate-50 transition"
                                 >
                                     <div className="flex items-center gap-3">
-                                        <HelpCircle
-                                            size={20}
-                                            className="text-amber-500 shrink-0"
-                                        />
-                                        <span className="font-bold text-slate-900">
-                                            {faq.q}
-                                        </span>
+                                        <HelpCircle size={20} className="text-amber-500 shrink-0" />
+                                        <span className="font-bold text-slate-900">{faq.q}</span>
                                     </div>
-
-                                    <ChevronDown
-                                        size={20}
-                                        className={`transition-transform ${
-                                            isOpen ? "rotate-180" : ""
-                                        }`}
-                                    />
+                                    <ChevronDown size={20} className={`transition-transform ${isOpen ? "rotate-180" : ""}`} />
                                 </button>
 
                                 {isOpen && (
                                     <div className="px-6 pb-6 pl-14">
-                                        <p className="text-slate-600 leading-relaxed">
-                                            {faq.a}
-                                        </p>
+                                        <p className="text-slate-600 leading-relaxed">{faq.a}</p>
                                     </div>
                                 )}
                             </div>
@@ -389,13 +342,13 @@ const faqs = [
         </section>
     );
 };
+
 // --- FINAL CTA BANNER ---
 const FinalCTA = () => {
     const { t } = useTranslation();
     
     return (
-        <section className="py-24 bg-gradient-to-br  text-center px-6 relative overflow-hidden">
-            {/* Decorazioni di background */}
+        <section className="py-24 bg-gradient-to-br text-center px-6 relative overflow-hidden">
             <div className="absolute top-0 left-0 w-full h-full overflow-hidden opacity-10 pointer-events-none">
                 <div className="absolute -top-20 -left-20 w-64 h-64 bg-amber-500 rounded-full blur-3xl"></div>
                 <div className="absolute top-1/2 -right-20 w-80 h-80 bg-amber-400 rounded-full blur-3xl"></div>
@@ -443,7 +396,7 @@ const Home = () => {
                             <span className="flex -space-x-2">
                                 {[1,2,3,4].map(i => <div key={i} className="w-8 h-8 rounded-full border-2 border-white bg-slate-200 flex items-center justify-center text-[10px] font-bold overflow-hidden"><img src={`https://i.pravatar.cc/100?img=${i+10}`} alt="user"/></div>)}
                             </span>
-                            +150 Allevatori attivi
+                            {t('home.hero.activeKeepersCount', '+150 Allevatori attivi')}
                         </div>
                     </div>
                 </div>
@@ -462,8 +415,13 @@ const Home = () => {
 
                     <FeatureGroup 
                         title={t('home.features.biological.title', 'Gestione Biologica & Allevamento')}
-                        description={t('home.features.biological.desc', "Monitora ogni aspetto vitale dei tuoi animali con una precisione chirurgica. Genetica, crescita e benessere in un'unica vista.")}
-                        features={["Schede Rettili Dettagliate", "Pianificazione riproduzioni", "Inventario Pasti Auto-aggiornante", "Calcolatore morph"]}
+                        description={t('home.features.biological.desc', "Monitora ogni aspect vitale dei tuoi animali con una precisione chirurgica. Genetica, crescita e benessere in un'unica vista.")}
+                        features={[
+                            t('home.features.biological.f1', 'Schede Rettili Dettagliate'),
+                            t('home.features.biological.f2', 'Pianificazione riproduzioni'),
+                            t('home.features.biological.f3', 'Inventario Pasti Auto-aggiornante'),
+                            t('home.features.biological.f4', 'Calcolatore morph')
+                        ]}
                         videoSrc="/snakebeeDashboard.png" 
                         reverse={false}
                     />
@@ -471,7 +429,12 @@ const Home = () => {
                     <FeatureGroup 
                         title={t('home.features.admin.title', 'Amministrazione & CITES')}
                         description={t('home.features.admin.desc', "Dimentica la burocrazia manuale. Genera documenti legali e traccia la genealogia con un click.")}
-                        features={["Generatore CITES PDF", "Gestione finanza dell'allevamento", "Archivio Documenti Digitali", "QR Code Professionali"]}
+                        features={[
+                            t('home.features.admin.f1', 'Generatore CITES PDF'),
+                            t('home.features.admin.f2', "Gestione finanza dell'allevamento"),
+                            t('home.features.admin.f3', 'Archivio Documenti Digitali'),
+                            t('home.features.admin.f4', 'QR Code Professionali')
+                        ]}
                         videoSrc="/snakebeefinance.png"
                         reverse={true}
                     />
@@ -479,18 +442,23 @@ const Home = () => {
                     <FeatureGroup 
                         title={t('home.features.automation.title', 'Automazioni & Smart Tools')}
                         description={t('home.features.automation.desc', "Il software lavora per te. Gestisci l'allevamento mentre sei fuori casa o direttamente dalla tua chat preferita.")}
-                        features={["Bot Telegram Dedicato", "Calendario Eventi Intelligente", "Notifiche Real-time", "Accesso Multi-dispositivo"]}
+                        features={[
+                            t('home.features.automation.f1', 'Bot Telegram Dedicato'),
+                            t('home.features.automation.f2', 'Calendario Eventi Intelligente'),
+                            t('home.features.automation.f3', 'Notifiche Real-time'),
+                            t('home.features.automation.f4', 'Accesso Multi-dispositivo')
+                        ]}
                         videoSrc="/SnakeBeeTelegram.jpg"
                         reverse={false}
                     />
                 </div>
             </section>
 
-            {/* SOCIAL PROOF */}
+            {/* TESTIMONIALS */}
+            <Testimonials />
 
             {/* LEADERBOARD COMPATTA */}
             <CompactLeaderboard />
-
 
             {/* PIANI E PREZZI */}
             <PricingSection />
@@ -516,7 +484,6 @@ const Home = () => {
                 <FAQSection />
             </section>
             
-
             {/* FINAL CTA BANNER */}
             <FinalCTA />
 
@@ -542,8 +509,8 @@ const Home = () => {
                                     <Mail size={32} />
                                 </div>
                                 <div>
-                                    <h4 className="font-bold text-xl text-slate-900">Supporto Email</h4>
-                                    <p className="text-slate-500 text-sm mb-1">Rispondiamo entro 24h</p>
+                                    <h4 className="font-bold text-xl text-slate-900">{t('home.contact.emailSupport', 'Supporto Email')}</h4>
+                                    <p className="text-slate-500 text-sm mb-1">{t('home.contact.emailResponseTime', 'Rispondiamo entro 24h')}</p>
                                     <span className="text-amber-600 font-semibold group-hover:underline flex items-center gap-1">
                                         support@snakebee.it <ExternalLink size={14} />
                                     </span>
@@ -562,7 +529,7 @@ const Home = () => {
                                 </div>
                                 <div>
                                     <h4 className="font-bold text-xl text-slate-900">{t('home.contact.instagram', 'Instagram')}</h4>
-                                    <p className="text-slate-500 text-sm mb-1">Segui i nostri update</p>
+                                    <p className="text-slate-500 text-sm mb-1">{t('home.contact.instagramSub', 'Segui i nostri update')}</p>
                                     <span className="text-pink-600 font-semibold group-hover:underline flex items-center gap-1">
                                         @snakebeeofficial <ExternalLink size={14} />
                                     </span>
